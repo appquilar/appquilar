@@ -43,7 +43,6 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       to={`/product/${product.slug}`}
       className="group flex flex-col bg-background border border-border rounded-lg overflow-hidden transition-all duration-350 hover:shadow-md hover-lift"
       style={{ 
-        animationDelay: `${index * 50}ms`,
         opacity: 0,
         animation: 'fade-in 0.5s ease-out forwards',
         animationDelay: `${index * 75}ms`
