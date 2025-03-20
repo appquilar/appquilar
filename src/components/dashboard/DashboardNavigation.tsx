@@ -12,15 +12,34 @@ import {
 } from 'lucide-react';
 
 /**
+ * Props para el componente de navegación del panel de control
+ */
+interface DashboardNavigationProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}
+
+/**
+ * Tipo para los enlaces de navegación
+ */
+interface NavLink {
+  title: string;
+  href: string;
+  icon: React.ReactNode;
+  badge?: string;
+  exact?: boolean;
+}
+
+/**
  * Navegación lateral del panel de control
  */
-const DashboardNavigation = () => {
+const DashboardNavigation = ({ activeTab, onTabChange }: DashboardNavigationProps) => {
   const location = useLocation();
   const { user } = useAuth();
   const isCompanyUser = user?.role === 'company_admin' || user?.role === 'company_user';
 
   // Enlaces de navegación
-  const navLinks = [
+  const navLinks: NavLink[] = [
     {
       title: 'Panel General',
       href: '/dashboard',
@@ -36,7 +55,7 @@ const DashboardNavigation = () => {
   ];
 
   // Enlaces adicionales para usuarios de tipo empresa
-  const companyLinks = [
+  const companyLinks: NavLink[] = [
     {
       title: 'Productos',
       href: '/dashboard/products',
@@ -51,7 +70,7 @@ const DashboardNavigation = () => {
   ];
 
   // Enlaces adicionales para administradores de empresa
-  const adminLinks = [
+  const adminLinks: NavLink[] = [
     {
       title: 'Usuarios',
       href: '/dashboard/users',
@@ -70,6 +89,13 @@ const DashboardNavigation = () => {
       return location.pathname === href;
     }
     return location.pathname.startsWith(href);
+  };
+
+  // Manejador de clic para cambiar pestañas
+  const handleTabChange = (href: string) => {
+    // Extraer la última parte de la URL para usarla como identificador de pestaña
+    const tabName = href.split('/').pop() || 'overview';
+    onTabChange(tabName);
   };
 
   return (
@@ -105,6 +131,7 @@ const DashboardNavigation = () => {
                     ? 'bg-secondary text-primary font-medium'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
+                onClick={() => handleTabChange(link.href)}
               >
                 <div className="flex items-center">
                   <span className="mr-3">{link.icon}</span>
@@ -136,6 +163,7 @@ const DashboardNavigation = () => {
                         ? 'bg-secondary text-primary font-medium'
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
+                    onClick={() => handleTabChange(link.href)}
                   >
                     <div className="flex items-center">
                       <span className="mr-3">{link.icon}</span>
@@ -169,6 +197,7 @@ const DashboardNavigation = () => {
                         ? 'bg-secondary text-primary font-medium'
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
+                    onClick={() => handleTabChange(link.href)}
                   >
                     <div className="flex items-center">
                       <span className="mr-3">{link.icon}</span>
