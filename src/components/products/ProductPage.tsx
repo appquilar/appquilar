@@ -1,20 +1,23 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Mail, MapPin, Phone, Star, Heart, Share, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MapPin, Phone, Star, Heart, Share, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Product } from './ProductCard';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
+import ChatModal from '../chat/ChatModal';
+import { SeoService } from '@/infrastructure/services/SeoService';
 
-// Sample product data - will be fetched from backend in production
+// Datos de ejemplo del producto - en producción se obtendrían del backend
 const SAMPLE_PRODUCT: Product = {
   id: '1',
-  name: 'Professional Hammer Drill 20V',
+  name: 'Taladro Profesional 20V',
   slug: 'professional-hammer-drill-20v',
   imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
   thumbnailUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
-  description: 'Heavy-duty hammer drill perfect for concrete and masonry work. Features include variable speed, reverse function, and ergonomic grip. Includes battery, charger, and carrying case.',
+  description: 'Taladro percutor de alta potencia perfecto para trabajos en concreto y mampostería. Incluye función de velocidad variable, reversa y empuñadura ergonómica. Incluye batería, cargador y estuche de transporte.',
   price: {
     hourly: 8,
     daily: 25,
@@ -28,13 +31,16 @@ const SAMPLE_PRODUCT: Product = {
   },
   category: {
     id: '1',
-    name: 'Power Tools',
+    name: 'Herramientas Eléctricas',
     slug: 'power-tools'
   },
   rating: 4.8,
   reviewCount: 124
 };
 
+/**
+ * Página de detalle del producto
+ */
 const ProductPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -42,11 +48,13 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedPeriod, setSelectedPeriod] = useState<'hourly' | 'daily' | 'weekly' | 'monthly'>('daily');
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const { isLoggedIn, user } = useAuth();
   
-  // Refs for the slider
+  // Referencias para el slider
   const sliderRef = useRef<HTMLDivElement>(null);
   
-  // Image gallery - in a real app, this would come from the product data
+  // Galería de imágenes - en una app real, esto vendría de los datos del producto
   const images = [
     'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
     'https://images.unsplash.com/photo-1487252665478-49b61b47f302',
@@ -54,19 +62,46 @@ const ProductPage = () => {
     'https://images.unsplash.com/photo-1452378174528-3090a4bba7b2',
   ];
 
-  // Fetch product data
+  // Configurar SEO
   useEffect(() => {
-    // Simulating API call
+    const setupSeo = async () => {
+      if (product) {
+        const seoService = SeoService.getInstance();
+        const seoInfo = await seoService.getProductSeoInfo(
+          product.slug,
+          product.name,
+          product.company.name,
+          product.category.name,
+          product.price.daily
+        );
+        
+        // Actualizar meta tags - en una app real esto se haría con un componente SEO
+        document.title = seoInfo.title;
+        
+        // Aquí podrías actualizar otros meta tags si tuvieras acceso directo al head del documento
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) {
+          metaDescription.setAttribute('content', seoInfo.description);
+        }
+      }
+    };
+    
+    setupSeo();
+  }, [product]);
+
+  // Obtener datos del producto
+  useEffect(() => {
+    // Simulando una llamada a la API
     setLoading(true);
-    // In a real app, we would fetch the product data from the backend
+    // En una app real, obtendríamos el producto desde el backend
     setTimeout(() => {
-      // For demo, we'll just use the sample product
+      // Para la demo, usamos el producto de ejemplo
       setProduct(SAMPLE_PRODUCT);
       setLoading(false);
     }, 500);
   }, [slug]);
 
-  // Handle slider navigation
+  // Manejar la navegación del slider
   const slideToIndex = (index: number) => {
     if (!sliderRef.current) return;
     
@@ -79,9 +114,21 @@ const ProductPage = () => {
     }
   };
 
-  // Handle contact button click
+  // Manejar clic en botón de contacto
   const handleContact = () => {
-    toast.success("Contact request sent! The company will reach out to you soon.");
+    if (!isLoggedIn) {
+      toast.error("Debes iniciar sesión para contactar con el propietario.", {
+        action: {
+          label: "Iniciar sesión",
+          onClick: () => {
+            // Aquí podrías abrir el modal de autenticación
+          }
+        }
+      });
+      return;
+    }
+    
+    setChatModalOpen(true);
   };
 
   if (loading) {
@@ -95,16 +142,16 @@ const ProductPage = () => {
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center px-4">
-        <h1 className="text-2xl font-medium mb-4">Product not found</h1>
-        <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
-        <Button onClick={() => navigate('/')}>Back to Home</Button>
+        <h1 className="text-2xl font-medium mb-4">Producto no encontrado</h1>
+        <p className="text-muted-foreground mb-6">El producto que buscas no existe o ha sido eliminado.</p>
+        <Button onClick={() => navigate('/')}>Volver al Inicio</Button>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen pt-20 animate-fade-in">
-      {/* Back button */}
+      {/* Botón de volver */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Button 
           variant="ghost" 
@@ -112,13 +159,13 @@ const ProductPage = () => {
           onClick={() => navigate(-1)}
         >
           <ArrowLeft size={16} className="mr-2 transition-transform group-hover:-translate-x-1" />
-          Back
+          Volver
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Product Image Gallery */}
+          {/* Galería de imágenes del producto */}
           <div className="space-y-4">
-            {/* Main image slider */}
+            {/* Imagen principal con slider */}
             <div 
               ref={sliderRef}
               className="relative aspect-[4/3] overflow-hidden bg-muted rounded-xl"
@@ -131,20 +178,20 @@ const ProductPage = () => {
                   <div key={index} className="w-full h-full flex-shrink-0">
                     <img 
                       src={image} 
-                      alt={`${product.name} - Image ${index + 1}`}
+                      alt={`${product.name} - Imagen ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </div>
                 ))}
               </div>
               
-              {/* Navigation arrows */}
+              {/* Flechas de navegación */}
               <Button
                 variant="secondary"
                 size="icon"
                 className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100"
                 onClick={() => slideToIndex(currentImageIndex - 1)}
-                aria-label="Previous image"
+                aria-label="Imagen anterior"
               >
                 <ChevronLeft size={18} />
               </Button>
@@ -153,12 +200,12 @@ const ProductPage = () => {
                 size="icon"
                 className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100"
                 onClick={() => slideToIndex(currentImageIndex + 1)}
-                aria-label="Next image"
+                aria-label="Siguiente imagen"
               >
                 <ChevronRight size={18} />
               </Button>
               
-              {/* Image pagination dots */}
+              {/* Indicadores de paginación */}
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center space-x-2">
                 {images.map((_, index) => (
                   <button
@@ -169,13 +216,13 @@ const ProductPage = () => {
                         ? 'bg-white w-3' 
                         : 'bg-white/50'
                     }`}
-                    aria-label={`Go to image ${index + 1}`}
+                    aria-label={`Ir a imagen ${index + 1}`}
                   />
                 ))}
               </div>
             </div>
             
-            {/* Thumbnails */}
+            {/* Miniaturas */}
             <div className="flex space-x-2 overflow-x-auto pb-2">
               {images.map((image, index) => (
                 <button
@@ -189,7 +236,7 @@ const ProductPage = () => {
                 >
                   <img 
                     src={image} 
-                    alt={`Thumbnail ${index + 1}`}
+                    alt={`Miniatura ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
                 </button>
@@ -197,7 +244,7 @@ const ProductPage = () => {
             </div>
           </div>
           
-          {/* Product Info */}
+          {/* Información del producto */}
           <div className="space-y-6">
             <div>
               <div className="flex items-center mb-2">
@@ -218,7 +265,7 @@ const ProductPage = () => {
                     ))}
                   </div>
                   <span className="text-sm ml-2">
-                    {product.rating.toFixed(1)} ({product.reviewCount} reviews)
+                    {product.rating.toFixed(1)} ({product.reviewCount} opiniones)
                   </span>
                 </div>
               </div>
@@ -230,11 +277,11 @@ const ProductPage = () => {
               <div className="flex space-x-4 mb-6">
                 <Button variant="outline" size="sm" className="gap-2">
                   <Heart size={16} />
-                  <span className="sr-only sm:not-sr-only">Save</span>
+                  <span className="sr-only sm:not-sr-only">Guardar</span>
                 </Button>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Share size={16} />
-                  <span className="sr-only sm:not-sr-only">Share</span>
+                  <span className="sr-only sm:not-sr-only">Compartir</span>
                 </Button>
               </div>
               
@@ -243,53 +290,53 @@ const ProductPage = () => {
               </p>
             </div>
             
-            {/* Rental pricing */}
+            {/* Precios de alquiler */}
             <div>
-              <h3 className="text-lg font-medium mb-3">Rental Pricing</h3>
+              <h3 className="text-lg font-medium mb-3">Precios de Alquiler</h3>
               <Tabs defaultValue="daily" onValueChange={(value) => setSelectedPeriod(value as any)}>
                 <TabsList className="w-full grid grid-cols-4">
                   {product.price.hourly && (
-                    <TabsTrigger value="hourly">Hourly</TabsTrigger>
+                    <TabsTrigger value="hourly">Por hora</TabsTrigger>
                   )}
-                  <TabsTrigger value="daily">Daily</TabsTrigger>
+                  <TabsTrigger value="daily">Por día</TabsTrigger>
                   {product.price.weekly && (
-                    <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                    <TabsTrigger value="weekly">Por semana</TabsTrigger>
                   )}
                   {product.price.monthly && (
-                    <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                    <TabsTrigger value="monthly">Por mes</TabsTrigger>
                   )}
                 </TabsList>
                 
                 {product.price.hourly && (
                   <TabsContent value="hourly" className="pt-4">
                     <div className="flex items-baseline">
-                      <span className="text-3xl font-semibold">${product.price.hourly.toFixed(2)}</span>
-                      <span className="text-muted-foreground ml-2">/ hour</span>
+                      <span className="text-3xl font-semibold">{product.price.hourly.toFixed(2)}€</span>
+                      <span className="text-muted-foreground ml-2">/ hora</span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Best for short-term projects or quick tasks.
+                      Ideal para proyectos cortos o tareas rápidas.
                     </p>
                   </TabsContent>
                 )}
                 
                 <TabsContent value="daily" className="pt-4">
                   <div className="flex items-baseline">
-                    <span className="text-3xl font-semibold">${product.price.daily.toFixed(2)}</span>
-                    <span className="text-muted-foreground ml-2">/ day</span>
+                    <span className="text-3xl font-semibold">{product.price.daily.toFixed(2)}€</span>
+                    <span className="text-muted-foreground ml-2">/ día</span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Perfect for single-day projects or events.
+                    Perfecto para proyectos de un día o eventos.
                   </p>
                 </TabsContent>
                 
                 {product.price.weekly && (
                   <TabsContent value="weekly" className="pt-4">
                     <div className="flex items-baseline">
-                      <span className="text-3xl font-semibold">${product.price.weekly.toFixed(2)}</span>
-                      <span className="text-muted-foreground ml-2">/ week</span>
+                      <span className="text-3xl font-semibold">{product.price.weekly.toFixed(2)}€</span>
+                      <span className="text-muted-foreground ml-2">/ semana</span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Ideal for extended projects, save compared to daily rates.
+                      Ideal para proyectos extendidos, ahorra comparado con tarifas diarias.
                     </p>
                   </TabsContent>
                 )}
@@ -297,21 +344,21 @@ const ProductPage = () => {
                 {product.price.monthly && (
                   <TabsContent value="monthly" className="pt-4">
                     <div className="flex items-baseline">
-                      <span className="text-3xl font-semibold">${product.price.monthly.toFixed(2)}</span>
-                      <span className="text-muted-foreground ml-2">/ month</span>
+                      <span className="text-3xl font-semibold">{product.price.monthly.toFixed(2)}€</span>
+                      <span className="text-muted-foreground ml-2">/ mes</span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Best value for long-term projects or regular usage.
+                      Mejor valor para proyectos a largo plazo o uso regular.
                     </p>
                   </TabsContent>
                 )}
               </Tabs>
             </div>
             
-            {/* Company info */}
+            {/* Información de la empresa */}
             <div className="bg-secondary rounded-lg p-4">
               <h3 className="text-sm font-medium uppercase tracking-wider mb-3">
-                Provided by
+                Proporcionado por
               </h3>
               <div className="flex items-center">
                 <div className="w-12 h-12 bg-primary/10 text-primary flex items-center justify-center rounded-full mr-3">
@@ -321,7 +368,7 @@ const ProductPage = () => {
                   <h4 className="font-medium">{product.company.name}</h4>
                   <div className="flex items-center text-sm text-muted-foreground mt-1">
                     <MapPin size={14} className="mr-1" />
-                    <span>Sacramento, CA</span>
+                    <span>Madrid, España</span>
                   </div>
                 </div>
               </div>
@@ -331,21 +378,22 @@ const ProductPage = () => {
                   onClick={handleContact}
                 >
                   <Phone size={16} />
-                  Contact to Rent
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full gap-2"
-                  onClick={() => window.open(`mailto:contact@${product.company.slug}.com`)}
-                >
-                  <Mail size={16} />
-                  Email
+                  Contactar para Alquilar
                 </Button>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modal de chat */}
+      <ChatModal
+        isOpen={chatModalOpen}
+        onClose={() => setChatModalOpen(false)}
+        productId={product.id}
+        companyId={product.company.id}
+        productName={product.name}
+      />
     </div>
   );
 };

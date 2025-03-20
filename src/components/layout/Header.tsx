@@ -12,23 +12,26 @@ interface Category {
   slug: string;
 }
 
-// Placeholder categories - will be fetched from backend in production
+// Categorías de ejemplo - en producción se obtendrían del backend
 const CATEGORIES: Category[] = [
-  { id: '1', name: 'Power Tools', slug: 'power-tools' },
-  { id: '2', name: 'Hand Tools', slug: 'hand-tools' },
-  { id: '3', name: 'Gardening', slug: 'gardening' },
-  { id: '4', name: 'Construction', slug: 'construction' },
-  { id: '5', name: 'Event Equipment', slug: 'event-equipment' },
-  { id: '6', name: 'Cleaning', slug: 'cleaning' },
+  { id: '1', name: 'Herramientas Eléctricas', slug: 'power-tools' },
+  { id: '2', name: 'Herramientas Manuales', slug: 'hand-tools' },
+  { id: '3', name: 'Jardinería', slug: 'gardening' },
+  { id: '4', name: 'Construcción', slug: 'construction' },
+  { id: '5', name: 'Equipamiento para Eventos', slug: 'event-equipment' },
+  { id: '6', name: 'Limpieza', slug: 'cleaning' },
 ];
 
+/**
+ * Componente de cabecera principal de la aplicación
+ */
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const { isLoggedIn, user } = useAuth();
 
-  // Handle scroll events to update header appearance
+  // Manejar eventos de scroll para actualizar la apariencia del encabezado
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -53,10 +56,10 @@ const Header = () => {
             to="/" 
             className="text-2xl font-display font-semibold tracking-tight text-primary transition-all duration-350"
           >
-            RentTools
+            appquilar
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Navegación Desktop */}
           <nav className="hidden md:flex items-center space-x-6">
             {CATEGORIES.map((category) => (
               <Link
@@ -69,12 +72,12 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Actions (Search, User) */}
+          {/* Acciones (Búsqueda, Usuario) */}
           <div className="flex items-center space-x-4">
             <Link 
               to="/search" 
               className="p-2 rounded-full text-muted-foreground hover:text-primary transition-colors"
-              aria-label="Search"
+              aria-label="Buscar"
             >
               <Search size={20} />
             </Link>
@@ -87,7 +90,7 @@ const Header = () => {
                   className="hover-lift flex items-center gap-2 font-medium"
                 >
                   <User size={16} />
-                  <span className="hidden sm:inline">{user?.name || 'Account'}</span>
+                  <span className="hidden sm:inline">{user?.name || 'Cuenta'}</span>
                 </Button>
               </Link>
             ) : (
@@ -97,17 +100,17 @@ const Header = () => {
                 className="hover-lift font-medium"
                 onClick={() => setAuthModalOpen(true)}
               >
-                Sign In
+                Iniciar Sesión
               </Button>
             )}
             
-            {/* Mobile menu button */}
+            {/* Botón de menú móvil */}
             <Button
               variant="ghost"
               size="icon"
               className="md:hidden"
               onClick={() => setMobileMenuOpen(true)}
-              aria-label="Menu"
+              aria-label="Menú"
             >
               <Menu size={24} />
             </Button>
@@ -115,7 +118,7 @@ const Header = () => {
         </div>
       </header>
 
-      {/* Mobile menu */}
+      {/* Menú móvil */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-lg animate-fade-in md:hidden">
           <div className="flex flex-col h-full p-6">
@@ -125,13 +128,13 @@ const Header = () => {
                 className="text-2xl font-display font-semibold tracking-tight"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                RentTools
+                appquilar
               </Link>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileMenuOpen(false)}
-                aria-label="Close menu"
+                aria-label="Cerrar menú"
               >
                 <X size={24} />
               </Button>
@@ -153,7 +156,7 @@ const Header = () => {
             <div className="mt-auto pt-6 flex justify-center">
               {isLoggedIn ? (
                 <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full">My Dashboard</Button>
+                  <Button className="w-full">Mi Panel</Button>
                 </Link>
               ) : (
                 <Button 
@@ -163,7 +166,7 @@ const Header = () => {
                     setAuthModalOpen(true);
                   }}
                 >
-                  Sign In
+                  Iniciar Sesión
                 </Button>
               )}
             </div>
@@ -171,7 +174,7 @@ const Header = () => {
         </div>
       )}
 
-      {/* Auth Modal */}
+      {/* Modal de Autenticación */}
       <AuthModal 
         isOpen={authModalOpen} 
         onClose={() => setAuthModalOpen(false)} 

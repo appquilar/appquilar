@@ -1,136 +1,137 @@
 
 import { useState } from 'react';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from 'sonner';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+
+// Esquema de validación
+const formSchema = z.object({
+  email: z.string().email('Correo electrónico inválido'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface SignInFormProps {
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
+/**
+ * Formulario de inicio de sesión
+ */
 const SignInForm = ({ onSuccess }: SignInFormProps) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // Inicializar formulario con react-hook-form
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
+  // Manejar envío del formulario
+  const onSubmit = async (data: FormValues) => {
     try {
-      await login(email, password);
-      toast.success('Successfully signed in');
-      onSuccess();
+      setIsLoading(true);
+      await login(data.email, data.password);
+      
+      toast.success('Has iniciado sesión correctamente');
+      
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
-      console.error('Login error:', error);
-      toast.error('Failed to sign in. Please check your credentials.');
+      console.error('Error de inicio de sesión:', error);
+      toast.error('Credenciales incorrectas');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="email" className="text-sm font-medium">
-          Email
-        </label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="name@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={isSubmitting}
-          required
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Correo electrónico</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="nombre@ejemplo.com" 
+                  type="email" 
+                  autoComplete="email"
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      
-      <div className="space-y-2">
-        <label htmlFor="password" className="text-sm font-medium">
-          Password
-        </label>
-        <div className="relative">
-          <Input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isSubmitting}
-            required
-          />
-          <button
-            type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            onClick={() => setShowPassword(!showPassword)}
-            tabIndex={-1}
-          >
-            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
-        </div>
-        <div className="text-right">
-          <a href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-            Forgot password?
-          </a>
-        </div>
-      </div>
-      
-      <Button 
-        type="submit" 
-        className="w-full mt-6" 
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 size={16} className="mr-2 animate-spin" />
-            Signing in...
-          </>
-        ) : (
-          'Sign In'
-        )}
-      </Button>
-      
-      <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border"></div>
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-3">
+        
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contraseña</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Input 
+                    placeholder="••••••••" 
+                    type={showPassword ? 'text' : 'password'} 
+                    autoComplete="current-password"
+                    {...field} 
+                  />
+                  <Button 
+                    type="button"
+                    variant="ghost" 
+                    size="icon"
+                    className="absolute right-1 top-1 h-7 w-7"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </Button>
+                </div>
+              </FormControl>
+              <FormDescription className="text-xs">
+                <a href="#" className="text-primary hover:underline">
+                  ¿Olvidaste tu contraseña?
+                </a>
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
         <Button 
-          variant="outline" 
-          type="button"
-          className="hover-lift"
-          disabled={isSubmitting}
+          type="submit" 
+          className="w-full mt-2" 
+          disabled={isLoading}
         >
-          Google
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Iniciando sesión...
+            </>
+          ) : (
+            'Iniciar sesión'
+          )}
         </Button>
-        <Button 
-          variant="outline" 
-          type="button"
-          className="hover-lift"
-          disabled={isSubmitting}
-        >
-          Facebook
-        </Button>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 };
 

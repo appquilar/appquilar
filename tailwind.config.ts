@@ -62,6 +62,12 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Nuevo color primario personalizado para appquilar
+				appquilar: {
+					DEFAULT: 'rgb(241, 157, 112)',
+					light: 'rgb(250, 213, 194)',
+					dark: 'rgb(210, 130, 85)',
 				}
 			},
 			borderRadius: {

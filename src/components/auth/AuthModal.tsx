@@ -10,6 +10,9 @@ interface AuthModalProps {
   defaultTab?: 'signin' | 'signup';
 }
 
+/**
+ * Modal de autenticación con pestañas para inicio de sesión y registro
+ */
 const AuthModal = ({ isOpen, onClose, defaultTab = 'signin' }: AuthModalProps) => {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>(defaultTab);
 
@@ -29,7 +32,7 @@ const AuthModal = ({ isOpen, onClose, defaultTab = 'signin' }: AuthModalProps) =
             }`}
             onClick={() => setActiveTab('signin')}
           >
-            Sign In
+            Iniciar Sesión
           </button>
           <button
             className={`flex-1 py-4 text-center transition-colors ${
@@ -39,7 +42,7 @@ const AuthModal = ({ isOpen, onClose, defaultTab = 'signin' }: AuthModalProps) =
             }`}
             onClick={() => setActiveTab('signup')}
           >
-            Sign Up
+            Registrarse
           </button>
         </div>
 

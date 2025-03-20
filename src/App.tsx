@@ -10,9 +10,22 @@ import ProductDetail from "./pages/ProductDetail";
 import CategoryPage from "./pages/CategoryPage";
 import Dashboard from "./pages/Dashboard";
 import { AuthProvider } from "./context/AuthContext";
+import MessagesDashboard from "./components/dashboard/MessagesDashboard";
 
-const queryClient = new QueryClient();
+// Cliente de consulta para React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutos
+    },
+  },
+});
 
+/**
+ * Componente principal de la aplicación que configura proveedores y rutas
+ */
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -24,8 +37,14 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/product/:slug" element={<ProductDetail />} />
             <Route path="/category/:slug" element={<CategoryPage />} />
-            <Route path="/dashboard/*" element={<Dashboard />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/messages" element={<Dashboard />} />
+            <Route path="/dashboard/products" element={<Dashboard />} />
+            <Route path="/dashboard/rentals" element={<Dashboard />} />
+            <Route path="/dashboard/users" element={<Dashboard />} />
+            <Route path="/dashboard/settings" element={<Dashboard />} />
+            <Route path="/dashboard/upgrade" element={<Dashboard />} />
+            {/* AÑADE TODAS LAS RUTAS PERSONALIZADAS ENCIMA DE LA RUTA CATCH-ALL "*" */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
