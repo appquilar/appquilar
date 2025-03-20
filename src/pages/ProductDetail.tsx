@@ -2,12 +2,10 @@
 import { useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import Hero from '@/components/Home/Hero';
-import CategoryGrid from '@/components/Home/CategoryGrid';
-import FeaturedProducts from '@/components/Home/FeaturedProducts';
+import ProductPage from '@/components/products/ProductPage';
 import { AuthProvider } from '@/context/AuthContext';
 
-const Index = () => {
+const ProductDetail = () => {
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -18,9 +16,7 @@ const Index = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1">
-          <Hero />
-          <CategoryGrid />
-          <FeaturedProducts />
+          <ProductPage />
         </main>
         <Footer />
       </div>
@@ -28,4 +24,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default ProductDetail;
