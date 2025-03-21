@@ -18,6 +18,7 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
       } cursor-pointer transition-all hover:opacity-95`}
       onClick={() => !image.isPrimary && onSetPrimary(image.id)}
     >
+      {/* Image container */}
       <div className="aspect-square">
         <img
           src={image.url}
@@ -26,8 +27,11 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
         />
       </div>
       
-      {/* Remove button - positioned outside the image container using negative margins */}
-      <div className="absolute -top-3 -right-3 z-20">
+      {/* Remove button - positioned completely outside the image */}
+      <div 
+        className="absolute -top-3 -right-3" 
+        style={{ zIndex: 30 }}
+      >
         <Button
           size="sm"
           variant="destructive"
@@ -41,8 +45,12 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
         </Button>
       </div>
       
+      {/* Principal badge */}
       {image.isPrimary && (
-        <div className="absolute top-2 left-2 bg-primary text-white rounded-full px-2 py-1 flex items-center gap-1 text-xs">
+        <div 
+          className="absolute top-2 left-2 bg-primary text-white rounded-full px-2 py-1 flex items-center gap-1 text-xs"
+          style={{ zIndex: 20 }}
+        >
           <Star className="h-3 w-3" />
           Principal
         </div>
