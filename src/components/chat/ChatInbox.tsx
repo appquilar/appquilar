@@ -20,7 +20,7 @@ const ChatInbox = () => {
     <div className="flex flex-col h-full border border-border rounded-lg overflow-hidden md:grid md:grid-cols-3">
       {/* Lista de conversaciones (siempre visible en desktop, condicional en mobile) */}
       <div className={`md:col-span-1 md:border-r border-border ${selectedConversation ? 'hidden md:block' : 'block'}`}>
-        <div className="p-4 border-b border-border bg-background">
+        <div className="sticky top-0 z-10 p-4 border-b border-border bg-background">
           <h2 className="text-lg font-medium flex items-center gap-2">
             <MessageCircle size={18} />
             Conversaciones

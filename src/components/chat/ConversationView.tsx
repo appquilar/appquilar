@@ -100,8 +100,8 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
   
   return (
     <div className="flex flex-col h-full">
-      {/* Encabezado */}
-      <div className="p-4 border-b border-border flex items-center gap-3 bg-background">
+      {/* Encabezado - Fijo en la parte superior */}
+      <div className="sticky top-0 z-10 p-4 border-b border-border flex items-center gap-3 bg-background">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -126,53 +126,50 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
         </div>
       </div>
       
-      {/* Contenedor principal con altura fija */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Mensajes - ScrollArea optimizado */}
-        <ScrollArea className="flex-1">
-          <div className="p-4 space-y-4">
-            {isLoading ? (
-              <div className="h-24 flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="h-24 flex items-center justify-center text-center p-4">
-                <p className="text-muted-foreground">No hay mensajes en esta conversación.</p>
-              </div>
-            ) : (
-              messages.map((message) => {
-                const isUserMessage = message.senderType === 'user';
-                const formattedTime = format(message.timestamp, 'HH:mm - d MMM', { locale: es });
-                
-                return (
+      {/* Área de mensajes con ScrollArea para asegurar el scroll */}
+      <ScrollArea className="flex-1 py-2">
+        <div className="px-4 space-y-4">
+          {isLoading ? (
+            <div className="h-24 flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="h-24 flex items-center justify-center text-center p-4">
+              <p className="text-muted-foreground">No hay mensajes en esta conversación.</p>
+            </div>
+          ) : (
+            messages.map((message) => {
+              const isUserMessage = message.senderType === 'user';
+              const formattedTime = format(message.timestamp, 'HH:mm - d MMM', { locale: es });
+              
+              return (
+                <div 
+                  key={message.id} 
+                  className={`flex ${isUserMessage ? 'justify-end' : 'justify-start'}`}
+                >
                   <div 
-                    key={message.id} 
-                    className={`flex ${isUserMessage ? 'justify-end' : 'justify-start'}`}
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                      isUserMessage 
+                        ? 'bg-primary text-primary-foreground rounded-tr-none' 
+                        : 'bg-secondary text-secondary-foreground rounded-tl-none'
+                    }`}
                   >
-                    <div 
-                      className={`max-w-[80%] rounded-lg p-3 ${
-                        isUserMessage 
-                          ? 'bg-primary text-primary-foreground rounded-tr-none' 
-                          : 'bg-secondary text-secondary-foreground rounded-tl-none'
-                      }`}
-                    >
-                      <p className="text-sm">{message.content}</p>
-                      <p className={`text-xs mt-1 ${isUserMessage ? 'text-primary-foreground/70' : 'text-secondary-foreground/70'}`}>
-                        {formattedTime}
-                      </p>
-                    </div>
+                    <p className="text-sm">{message.content}</p>
+                    <p className={`text-xs mt-1 ${isUserMessage ? 'text-primary-foreground/70' : 'text-secondary-foreground/70'}`}>
+                      {formattedTime}
+                    </p>
                   </div>
-                );
-              })
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
-      </div>
+                </div>
+              );
+            })
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
       
-      {/* Formulario de envío - Fijo en la parte inferior */}
-      <div className="sticky bottom-0 border-t border-border p-3 bg-background mt-auto">
-        <form onSubmit={handleSendMessage} className="flex gap-2">
+      {/* Formulario de envío - Sticky en la parte inferior */}
+      <div className="sticky bottom-0 z-10 border-t border-border p-3 bg-background">
+        <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
           <Textarea
             placeholder="Escribe tu mensaje..."
             className="min-h-[50px] max-h-[100px] resize-none"
@@ -182,8 +179,8 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
           />
           <Button 
             type="submit" 
-            size={isMobile ? "icon" : "default"}
-            className="self-end flex-shrink-0"
+            size="icon"
+            className="h-[50px] w-[50px] flex-shrink-0"
             disabled={!newMessage.trim() || isSending}
           >
             <Send size={18} />
