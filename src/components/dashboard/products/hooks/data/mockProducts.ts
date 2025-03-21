@@ -1,3 +1,4 @@
+
 import { Product, AvailabilityPeriod } from '@/components/products/ProductCard';
 
 // Sample availability periods for demo purposes
@@ -30,22 +31,24 @@ const createDefaultAvailability = (): AvailabilityPeriod[] => {
       id: `period-${i + 1}`,
       startDate: formatDateToISO(periodStart),
       endDate: formatDateToISO(periodEnd),
-      status: 'available'
+      status: 'available',
+      includeWeekends: i % 2 === 0, // Alternate including weekends
+      isAlwaysAvailable: i === 0    // First period is always available
     });
   }
   
-  // Add one upcoming rental period (example of a period that's already booked)
-  const rentalStart = new Date(startDate);
-  rentalStart.setDate(startDate.getDate() + 90); // 3 months from now
+  // Add one unavailable period
+  const unavailableStart = new Date(startDate);
+  unavailableStart.setDate(startDate.getDate() + 90); // 3 months from now
   
-  const rentalEnd = new Date(rentalStart);
-  rentalEnd.setDate(rentalStart.getDate() + 14); // 2 weeks rental
+  const unavailableEnd = new Date(unavailableStart);
+  unavailableEnd.setDate(unavailableStart.getDate() + 14); // 2 weeks 
   
   periods.push({
-    id: `period-rented`,
-    startDate: formatDateToISO(rentalStart),
-    endDate: formatDateToISO(rentalEnd),
-    status: 'rented'
+    id: `period-unavailable`,
+    startDate: formatDateToISO(unavailableStart),
+    endDate: formatDateToISO(unavailableEnd),
+    status: 'unavailable'
   });
   
   return periods;
@@ -386,5 +389,13 @@ export const MOCK_PRODUCTS: Product[] = [
 MOCK_PRODUCTS.forEach(product => {
   if (!product.availability) {
     product.availability = createDefaultAvailability();
+  } else {
+    // Convert any existing availability to the new format
+    product.availability = product.availability.map(period => ({
+      ...period,
+      status: period.status === 'pending' || period.status === 'rented' ? 'unavailable' : period.status,
+      includeWeekends: period.includeWeekends || false,
+      isAlwaysAvailable: period.isAlwaysAvailable || false
+    }));
   }
 });

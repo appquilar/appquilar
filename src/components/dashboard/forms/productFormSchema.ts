@@ -25,13 +25,15 @@ export const productFormSchema = z.object({
   imageUrl: z.string().url({ message: 'Por favor introduce una URL válida.' }),
   // New field for images
   images: z.array(z.any()).optional(),
-  // New field for availability periods
+  // Updated field for availability periods
   availability: z.array(
     z.object({
       id: z.string(),
       startDate: z.string(),
       endDate: z.string(),
-      status: z.enum(['available', 'unavailable', 'pending', 'rented'])
+      status: z.enum(['available', 'unavailable']),
+      includeWeekends: z.boolean().optional(),
+      isAlwaysAvailable: z.boolean().optional()
     })
   ).optional(),
 });
@@ -72,7 +74,9 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
     id: period.id,
     startDate: period.startDate,
     endDate: period.endDate,
-    status: period.status
+    status: period.status,
+    includeWeekends: period.includeWeekends,
+    isAlwaysAvailable: period.isAlwaysAvailable
   })) as AvailabilityPeriod[] | undefined;
 
   return {

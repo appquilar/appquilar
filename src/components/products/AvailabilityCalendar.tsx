@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { format, isWithinInterval, parseISO } from 'date-fns';
+import { format, isWithinInterval, parseISO, isWeekend } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -43,8 +43,14 @@ const AvailabilityCalendar = ({
     return availabilityPeriods.some(period => {
       if (period.status !== 'available') return false;
       
+      // Check if it's marked as always available
+      if (period.isAlwaysAvailable) return true;
+      
       const start = parseISO(period.startDate);
       const end = parseISO(period.endDate);
+      
+      // Check if the date is a weekend and if weekends are excluded
+      if (isWeekend(date) && !period.includeWeekends) return false;
       
       return isWithinInterval(date, { start, end });
     });
@@ -93,30 +99,14 @@ const AvailabilityCalendar = ({
   const modifiers = {
     available: (date: Date) => isDateAvailable(date),
     unavailable: (date: Date) => isDateUnavailable(date),
-    booked: (date: Date) => availabilityPeriods.some(period => {
-      if (period.status !== 'rented') return false;
-      
-      const start = parseISO(period.startDate);
-      const end = parseISO(period.endDate);
-      
-      return isWithinInterval(date, { start, end });
-    }),
-    pending: (date: Date) => availabilityPeriods.some(period => {
-      if (period.status !== 'pending') return false;
-      
-      const start = parseISO(period.startDate);
-      const end = parseISO(period.endDate);
-      
-      return isWithinInterval(date, { start, end });
-    })
+    weekend: (date: Date) => isWeekend(date)
   };
 
   // Custom styling for different date types
   const modifiersClassNames = {
     available: "bg-green-50 text-green-900 hover:bg-green-100",
     unavailable: "bg-gray-100 text-gray-400 hover:bg-gray-100 cursor-not-allowed",
-    booked: "bg-blue-50 text-blue-900 hover:bg-blue-100",
-    pending: "bg-yellow-50 text-yellow-900 hover:bg-yellow-100"
+    weekend: ""  // Additional styling can be added here if needed
   };
 
   return (
@@ -172,14 +162,6 @@ const AvailabilityCalendar = ({
         <div className="flex items-center">
           <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
           <span>Disponible</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-          <span>Alquilado</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
-          <span>Pendiente</span>
         </div>
         <div className="flex items-center">
           <div className="w-3 h-3 rounded-full bg-gray-300 mr-2"></div>

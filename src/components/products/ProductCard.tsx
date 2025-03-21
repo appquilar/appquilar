@@ -32,7 +32,9 @@ export interface AvailabilityPeriod {
   id: string;
   startDate: string; // ISO date string
   endDate: string;   // ISO date string
-  status: 'available' | 'unavailable' | 'pending' | 'rented';
+  status: 'available' | 'unavailable';
+  includeWeekends?: boolean; // New field for weekend availability
+  isAlwaysAvailable?: boolean; // New field for always available
 }
 
 // Core product data structure

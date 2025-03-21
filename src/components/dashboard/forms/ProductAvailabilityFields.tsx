@@ -12,6 +12,7 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import {
   Popover,
@@ -25,15 +26,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Toggle, ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface ProductAvailabilityFieldsProps {
   control: Control<ProductFormValues>;
@@ -42,8 +38,6 @@ interface ProductAvailabilityFieldsProps {
 const statusColors = {
   available: 'bg-green-100 text-green-800 hover:bg-green-200',
   unavailable: 'bg-gray-100 text-gray-800 hover:bg-gray-200',
-  pending: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
-  rented: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
 };
 
 const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) => {
@@ -54,6 +48,8 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
 
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [includeWeekends, setIncludeWeekends] = useState<boolean>(false);
+  const [isAlwaysAvailable, setIsAlwaysAvailable] = useState<boolean>(false);
 
   // Format date to ISO string (YYYY-MM-DD)
   const formatToISODate = (date: Date): string => {
@@ -67,12 +63,16 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
         id: `period-${Date.now()}`,
         startDate: formatToISODate(startDate),
         endDate: formatToISODate(endDate),
-        status: 'available'
+        status: 'available',
+        includeWeekends,
+        isAlwaysAvailable
       });
       
-      // Reset the selected dates
+      // Reset the selected dates and options
       setStartDate(undefined);
       setEndDate(undefined);
+      setIncludeWeekends(false);
+      setIsAlwaysAvailable(false);
     }
   };
 
@@ -89,36 +89,39 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
           <Card key={field.id} className="overflow-hidden">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <FormField
                       control={control}
                       name={`availability.${index}.status`}
                       render={({ field }) => (
-                        <Select
+                        <ToggleGroup
+                          type="single"
                           value={field.value}
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => {
+                            if (value) field.onChange(value);
+                          }}
+                          className="flex gap-1"
                         >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="available">Disponible</SelectItem>
-                            <SelectItem value="unavailable">No Disponible</SelectItem>
-                            <SelectItem value="pending">Pendiente</SelectItem>
-                            <SelectItem value="rented">Alquilado</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          <ToggleGroupItem 
+                            value="available"
+                            className={cn(
+                              field.value === 'available' ? 'bg-green-100 text-green-800' : ''
+                            )}
+                          >
+                            Disponible
+                          </ToggleGroupItem>
+                          <ToggleGroupItem 
+                            value="unavailable"
+                            className={cn(
+                              field.value === 'unavailable' ? 'bg-red-100 text-red-800' : ''
+                            )}
+                          >
+                            No Disponible
+                          </ToggleGroupItem>
+                        </ToggleGroup>
                       )}
                     />
-                    <Badge className={cn(
-                      statusColors[fields[index].status as keyof typeof statusColors]
-                    )}>
-                      {fields[index].status === 'available' && 'Disponible'}
-                      {fields[index].status === 'unavailable' && 'No Disponible'}
-                      {fields[index].status === 'pending' && 'Pendiente'}
-                      {fields[index].status === 'rented' && 'Alquilado'}
-                    </Badge>
                   </div>
                   <div className="flex items-center gap-2">
                     <FormField
@@ -201,6 +204,40 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
                               />
                             </PopoverContent>
                           </Popover>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="mt-3 flex items-center gap-6">
+                    <FormField
+                      control={control}
+                      name={`availability.${index}.includeWeekends`}
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-2">
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm">También fines de semana</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={control}
+                      name={`availability.${index}.isAlwaysAvailable`}
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-2">
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm">Siempre disponible</FormLabel>
                         </FormItem>
                       )}
                     />
@@ -294,11 +331,35 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
               </Popover>
             </div>
 
+            <div className="flex flex-col gap-2 pl-1">
+              <div className="flex items-center gap-2">
+                <Switch 
+                  id="include-weekends" 
+                  checked={includeWeekends}
+                  onCheckedChange={setIncludeWeekends}
+                />
+                <FormLabel htmlFor="include-weekends" className="text-sm">
+                  También fines de semana
+                </FormLabel>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Switch 
+                  id="always-available" 
+                  checked={isAlwaysAvailable}
+                  onCheckedChange={setIsAlwaysAvailable}
+                />
+                <FormLabel htmlFor="always-available" className="text-sm">
+                  Siempre disponible
+                </FormLabel>
+              </div>
+            </div>
+
             <Button
               type="button"
               onClick={handleAddPeriod}
               disabled={!startDate || !endDate}
-              className="ml-auto"
+              className="ml-auto mt-4"
             >
               <Plus size={16} className="mr-2" />
               Añadir Periodo
