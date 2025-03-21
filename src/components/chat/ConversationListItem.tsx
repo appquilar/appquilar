@@ -57,27 +57,30 @@ const ConversationListItem = ({
           )}
         </div>
         
-        {/* Información de la conversación */}
-        <div className="grow min-w-0 overflow-hidden flex flex-col">
-          <h4 className="font-medium text-sm sm:text-base truncate">
-            {conversation.productName}
-          </h4>
-          <p className="text-xs text-muted-foreground truncate">
-            {conversation.companyName}
-          </p>
-          <p className="text-xs mt-1 truncate">
-            hace {formatDistanceToNow(conversation.lastMessageAt, { 
-              locale: es
-            }).replace('alrededor de ', '')}
-          </p>
+        {/* Contenedor principal con flex-1 para ocupar todo el espacio disponible */}
+        <div className="flex-1 min-w-0 flex justify-between items-start">
+          {/* Información de la conversación */}
+          <div className="min-w-0 overflow-hidden flex flex-col">
+            <h4 className="font-medium text-sm sm:text-base truncate">
+              {conversation.productName}
+            </h4>
+            <p className="text-xs text-muted-foreground truncate">
+              {conversation.companyName}
+            </p>
+            <p className="text-xs mt-1 truncate">
+              hace {formatDistanceToNow(conversation.lastMessageAt, { 
+                locale: es
+              }).replace('alrededor de ', '')}
+            </p>
+          </div>
+          
+          {/* Indicador de mensajes no leídos */}
+          {conversation.unreadCount > 0 && (
+            <Badge variant="default" className="flex-shrink-0 rounded-full py-1 px-2.5 text-xs ml-2">
+              {conversation.unreadCount}
+            </Badge>
+          )}
         </div>
-        
-        {/* Indicador de mensajes no leídos */}
-        {conversation.unreadCount > 0 && (
-          <Badge variant="default" className="flex-shrink-0 rounded-full py-1 px-2.5 text-xs">
-            {conversation.unreadCount}
-          </Badge>
-        )}
       </button>
     </li>
   );
