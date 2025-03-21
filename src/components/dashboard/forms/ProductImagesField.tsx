@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ImageFile, ProductImagesFieldProps } from "./image-upload/types";
 import ImageDropZone from "./image-upload/ImageDropZone";
@@ -68,6 +68,7 @@ const ProductImagesField = ({ control }: ProductImagesFieldProps) => {
   };
 
   const setPrimaryImage = (id: string) => {
+    // Use stopPropagation to ensure the event doesn't bubble up to the form
     setImages((prevImages) =>
       prevImages.map((image) => ({
         ...image,
@@ -80,31 +81,38 @@ const ProductImagesField = ({ control }: ProductImagesFieldProps) => {
     <FormField
       control={control}
       name="images"
-      render={({ field }) => (
-        <FormItem className="space-y-3">
-          <FormLabel>Imágenes del Producto</FormLabel>
-          <p className="text-sm text-muted-foreground mb-2">
-            Arrastra imágenes o haz clic para seleccionarlas. Haz clic en el icono de estrella para establecer una imagen como principal, y en la X para eliminarla.
-          </p>
-          <FormControl>
-            <div className="space-y-4">
-              <ImageDropZone
-                isDragging={isDragging}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onFileChange={handleFileChange}
-              />
-              <ImageGallery 
-                images={images} 
-                onRemoveImage={removeImage}
-                onSetPrimaryImage={setPrimaryImage}
-              />
-            </div>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
+      render={({ field }) => {
+        // Update the form value when images change
+        useEffect(() => {
+          field.onChange(images);
+        }, [images, field]);
+        
+        return (
+          <FormItem className="space-y-3">
+            <FormLabel>Imágenes del Producto</FormLabel>
+            <p className="text-sm text-muted-foreground mb-2">
+              Arrastra imágenes o haz clic para seleccionarlas. Haz clic en el icono de estrella para establecer una imagen como principal, y en la X para eliminarla.
+            </p>
+            <FormControl>
+              <div className="space-y-4">
+                <ImageDropZone
+                  isDragging={isDragging}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onFileChange={handleFileChange}
+                />
+                <ImageGallery 
+                  images={images} 
+                  onRemoveImage={removeImage}
+                  onSetPrimaryImage={setPrimaryImage}
+                />
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 };

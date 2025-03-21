@@ -40,6 +40,7 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
       {/* Action buttons container */}
       <div className="flex justify-between p-2 bg-gray-50">
         <Button
+          type="button" // Explicitly set button type to prevent form submission
           size="sm"
           variant="ghost"
           className="h-8 w-8 p-0 hover:bg-gray-200"
@@ -50,6 +51,7 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
         </Button>
         
         <Button
+          type="button" // Explicitly set button type to prevent form submission
           size="sm"
           variant="ghost"
           className="h-8 w-8 p-0 hover:bg-gray-200"
