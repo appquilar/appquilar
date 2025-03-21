@@ -1,4 +1,3 @@
-
 import { Product } from '@/components/products/ProductCard';
 
 // Productos de ejemplo - vendrían de una API backend en producción
@@ -133,6 +132,189 @@ export const MOCK_PRODUCTS: Product[] = [
       slug: 'power-tools'
     },
     rating: 4.5,
+    reviewCount: 42
+  },
+  {
+    id: '6',
+    internalId: 'PRD006',
+    name: 'Compactadora de Placa',
+    slug: 'plate-compactor',
+    imageUrl: 'https://images.unsplash.com/photo-1588351829776-51410dbd1da1',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1588351829776-51410dbd1da1',
+    description: 'Compactadora de placa para consolidación de suelos y asfalto. Perfecta para proyectos de pavimentación pequeños y medianos.',
+    price: {
+      daily: 45,
+      weekly: 180,
+      monthly: 500
+    },
+    company: {
+      id: '3',
+      name: 'Construction Rentals',
+      slug: 'construction-rentals'
+    },
+    category: {
+      id: '4',
+      name: 'Construcción',
+      slug: 'construction'
+    },
+    rating: 4.7,
+    reviewCount: 28
+  },
+  {
+    id: '7',
+    internalId: 'PRD007',
+    name: 'Generador Portátil 3500W',
+    slug: 'portable-generator-3500w',
+    imageUrl: 'https://images.unsplash.com/photo-1590496794008-383c8070b257',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1590496794008-383c8070b257',
+    description: 'Generador portátil de 3500W para suministro eléctrico en obras y eventos. Incluye ruedas para facilitar el transporte.',
+    price: {
+      daily: 60,
+      weekly: 240,
+      monthly: 650
+    },
+    company: {
+      id: '3',
+      name: 'Construction Rentals',
+      slug: 'construction-rentals'
+    },
+    category: {
+      id: '2',
+      name: 'Equipos Eléctricos',
+      slug: 'electrical-equipment'
+    },
+    rating: 4.9,
+    reviewCount: 45
+  },
+  {
+    id: '8',
+    internalId: 'PRD008',
+    name: 'Cortadora de Césped Profesional',
+    slug: 'professional-lawn-mower',
+    imageUrl: 'https://images.unsplash.com/photo-1559060680-13019d0181ab',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1559060680-13019d0181ab',
+    description: 'Cortadora de césped autopropulsada para grandes áreas. Sistema de mulching incluido para fertilización natural.',
+    price: {
+      daily: 35,
+      weekly: 150,
+      monthly: 400
+    },
+    company: {
+      id: '2',
+      name: 'Garden Pros',
+      slug: 'garden-pros'
+    },
+    category: {
+      id: '3',
+      name: 'Jardinería',
+      slug: 'gardening'
+    },
+    rating: 4.6,
+    reviewCount: 31
+  },
+  {
+    id: '9',
+    internalId: 'PRD009',
+    name: 'Martillo Demoledor 30kg',
+    slug: 'demolition-hammer-30kg',
+    imageUrl: 'https://images.unsplash.com/photo-1504663246566-8e19a5efec2f',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1504663246566-8e19a5efec2f',
+    description: 'Martillo demoledor potente para trabajos de demolición en concreto y mampostería. Incluye estuche de transporte y brocas.',
+    price: {
+      daily: 55,
+      weekly: 220,
+      monthly: 600
+    },
+    company: {
+      id: '1',
+      name: 'Pro Tools Inc.',
+      slug: 'pro-tools-inc'
+    },
+    category: {
+      id: '1',
+      name: 'Herramientas Eléctricas',
+      slug: 'power-tools'
+    },
+    rating: 4.8,
+    reviewCount: 37
+  },
+  {
+    id: '10',
+    internalId: 'PRD010',
+    name: 'Andamio Plegable Multifunción',
+    slug: 'folding-scaffold-tower',
+    imageUrl: 'https://images.unsplash.com/photo-1581094271901-8022df4466f9',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1581094271901-8022df4466f9',
+    description: 'Torre de andamio plegable ajustable en altura. Fácil montaje y transporte, incluye plataforma de trabajo y ruedas bloqueables.',
+    price: {
+      daily: 40,
+      weekly: 170,
+      monthly: 480
+    },
+    company: {
+      id: '3',
+      name: 'Construction Rentals',
+      slug: 'construction-rentals'
+    },
+    category: {
+      id: '4',
+      name: 'Construcción',
+      slug: 'construction'
+    },
+    rating: 4.5,
+    reviewCount: 24
+  },
+  {
+    id: '11',
+    internalId: 'PRD011',
+    name: 'Desbrozadora Profesional 52cc',
+    slug: 'professional-brush-cutter-52cc',
+    imageUrl: 'https://images.unsplash.com/photo-1590595978583-3967cf17d2ea',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1590595978583-3967cf17d2ea',
+    description: 'Desbrozadora con motor de 52cc para trabajos intensivos de jardinería. Incluye arnés ergonómico y accesorios intercambiables.',
+    price: {
+      daily: 30,
+      weekly: 130,
+      monthly: 350
+    },
+    company: {
+      id: '2',
+      name: 'Garden Pros',
+      slug: 'garden-pros'
+    },
+    category: {
+      id: '3',
+      name: 'Jardinería',
+      slug: 'gardening'
+    },
+    rating: 4.7,
+    reviewCount: 29
+  },
+  {
+    id: '12',
+    internalId: 'PRD012',
+    name: 'Sierra Circular 7-1/4"',
+    slug: 'circular-saw-7-1-4',
+    imageUrl: 'https://images.unsplash.com/photo-1572981779307-38e922a83e9e',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1572981779307-38e922a83e9e',
+    description: 'Sierra circular de mano con guía láser para cortes precisos. Motor de 1800W y ajuste de profundidad y ángulo.',
+    price: {
+      hourly: 6,
+      daily: 18,
+      weekly: 80,
+      monthly: 220
+    },
+    company: {
+      id: '1',
+      name: 'Pro Tools Inc.',
+      slug: 'pro-tools-inc'
+    },
+    category: {
+      id: '1',
+      name: 'Herramientas Eléctricas',
+      slug: 'power-tools'
+    },
+    rating: 4.6,
     reviewCount: 42
   }
 ];
