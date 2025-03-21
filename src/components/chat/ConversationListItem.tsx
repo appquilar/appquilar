@@ -7,6 +7,7 @@
 import { Conversation } from '@/core/domain/Message';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ConversationListItemProps {
   conversation: Conversation;
@@ -22,16 +23,18 @@ const ConversationListItem = ({
   isSelected, 
   onSelect 
 }: ConversationListItemProps) => {
+  const isMobile = useIsMobile();
+  
   return (
     <li>
       <button
         onClick={() => onSelect(conversation)}
-        className={`w-full text-left p-4 flex gap-3 transition-colors hover:bg-secondary/50 ${
+        className={`w-full text-left p-3 sm:p-4 flex gap-3 transition-colors hover:bg-secondary/50 ${
           isSelected ? 'bg-secondary' : ''
         }`}
       >
         {/* Imagen del producto */}
-        <div className="relative flex-shrink-0 w-12 h-12 rounded overflow-hidden border border-border">
+        <div className="relative flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded overflow-hidden border border-border">
           <img 
             src={conversation.productImage} 
             alt={conversation.productName}
