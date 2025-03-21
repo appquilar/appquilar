@@ -35,7 +35,7 @@ const MessageForm = ({ onSendMessage, isSending }: MessageFormProps) => {
 
   return (
     <div className="border-t border-border p-3 bg-background sticky bottom-0">
-      <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+      <form onSubmit={handleSubmit} className="flex gap-2 items-stretch">
         <Textarea
           placeholder="Escribe tu mensaje..."
           className="min-h-[50px] max-h-[100px] resize-none"
@@ -46,7 +46,7 @@ const MessageForm = ({ onSendMessage, isSending }: MessageFormProps) => {
         <Button 
           type="submit" 
           size="icon"
-          className="h-[50px] flex-shrink-0" 
+          className="h-auto flex-shrink-0" 
           disabled={!newMessage.trim() || isSending}
         >
           <Send size={18} />
