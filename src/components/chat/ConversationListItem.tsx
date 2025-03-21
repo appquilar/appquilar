@@ -34,7 +34,7 @@ const ConversationListItem = ({
   };
   
   return (
-    <li className="w-full bg-red-100">
+    <li className="w-full">
       <button
         onClick={() => onSelect(conversation)}
         className={`w-full text-left p-3 sm:p-4 flex items-center space-x-3 transition-colors hover:bg-secondary/50 ${

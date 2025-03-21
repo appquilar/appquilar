@@ -20,9 +20,9 @@ const ChatInbox = () => {
   const isMobile = useIsMobile();
   
   return (
-    <div className={`flex w-full h-full border border-border rounded-lg overflow-hidden ${!selectedConversation ? 'md:block' : 'md:grid md:grid-cols-3'} bg-blue-50`}>
+    <div className={`flex w-full h-full border border-border rounded-lg overflow-hidden ${!selectedConversation ? 'md:block' : 'md:grid md:grid-cols-3'}`}>
       {/* Lista de conversaciones (siempre visible en desktop si no hay conversación seleccionada, o como columna si hay una seleccionada) */}
-      <div className={`${selectedConversation ? 'md:col-span-1 md:border-r border-border' : 'w-full'} flex flex-col h-full overflow-hidden bg-yellow-50 ${selectedConversation && isMobile ? 'hidden' : 'flex'}`}>
+      <div className={`${selectedConversation ? 'md:col-span-1 md:border-r border-border' : 'w-full'} flex flex-col h-full overflow-hidden ${selectedConversation && isMobile ? 'hidden' : 'flex'}`}>
         <div className="sticky top-0 z-10 p-4 border-b border-border bg-background">
           <h2 className="text-lg font-medium flex items-center gap-2">
             <MessageCircle size={18} />
@@ -40,7 +40,7 @@ const ChatInbox = () => {
       
       {/* Vista de conversación - solo mostrar si hay una conversación seleccionada */}
       {selectedConversation && (
-        <div className={`flex flex-col md:col-span-2 h-full overflow-hidden bg-pink-50 ${selectedConversation || !isMobile ? 'block' : 'hidden'}`}>
+        <div className={`flex flex-col md:col-span-2 h-full overflow-hidden ${selectedConversation || !isMobile ? 'block' : 'hidden'}`}>
           <ConversationView 
             conversation={selectedConversation} 
             onBack={() => setSelectedConversation(null)}
