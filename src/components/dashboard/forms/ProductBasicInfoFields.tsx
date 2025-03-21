@@ -51,22 +51,8 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
         )}
       />
       
-      {/* Add new images field */}
+      {/* Image upload field */}
       <ProductImagesField control={control} />
-      
-      <FormField
-        control={control}
-        name="imageUrl"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>URL de la Imagen (o usa el selector de arriba)</FormLabel>
-            <FormControl>
-              <Input placeholder="https://ejemplo.com/imagen.jpg" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
     </>
   );
 };

@@ -5,7 +5,7 @@ import { Control } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ProductFormValues } from "./productFormSchema";
-import { Plus, X, Check, ImageIcon } from "lucide-react";
+import { Plus, X, ImageIcon } from "lucide-react";
 
 interface ProductImagesFieldProps {
   control: Control<ProductFormValues>;
@@ -128,7 +128,7 @@ const ProductImagesField = ({ control }: ProductImagesFieldProps) => {
           <FormControl>
             <div className="space-y-4">
               <div
-                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
                   isDragging
                     ? "border-primary bg-primary/5"
                     : "border-gray-300 hover:border-primary"
@@ -138,7 +138,7 @@ const ProductImagesField = ({ control }: ProductImagesFieldProps) => {
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
               >
-                <div className="flex flex-col items-center space-y-2 cursor-pointer">
+                <div className="flex flex-col items-center space-y-2">
                   <Plus className="h-8 w-8 text-muted-foreground" />
                   <div className="text-sm text-muted-foreground">
                     <span className="font-medium">Haz clic para subir</span> o arrastra y suelta
@@ -176,7 +176,7 @@ const ProductImagesField = ({ control }: ProductImagesFieldProps) => {
                         />
                       </div>
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2">
                           <Button
                             size="sm"
                             variant="destructive"
@@ -192,20 +192,20 @@ const ProductImagesField = ({ control }: ProductImagesFieldProps) => {
                             <Button
                               size="sm"
                               variant="default"
-                              className="h-8 w-8 p-0"
+                              className="h-auto py-1 px-2 text-xs"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setPrimaryImage(image.id);
                               }}
                             >
-                              <Check className="h-4 w-4" />
+                              Hacer principal
                             </Button>
                           )}
                         </div>
                       </div>
                       {image.isPrimary && (
-                        <div className="absolute top-1 right-1 bg-primary text-white rounded-full p-1">
-                          <Check className="h-3 w-3" />
+                        <div className="absolute top-1 right-1 bg-primary text-white text-xs rounded-full px-2 py-1">
+                          Principal
                         </div>
                       )}
                     </div>
