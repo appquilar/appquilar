@@ -27,11 +27,11 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
         />
       </div>
       
-      {/* Remove button - positioned outside the image container */}
+      {/* Remove button - positioned completely outside the image container */}
       <Button
         size="sm"
         variant="destructive"
-        className="absolute -top-3 right-0 translate-x-1/2 h-7 w-7 p-0 rounded-full shadow-md z-30"
+        className="absolute -top-3.5 -right-3.5 h-7 w-7 p-0 rounded-full shadow-md z-30"
         onClick={(e) => {
           e.stopPropagation();
           onRemove(image.id);
