@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import ProductCard, { Product } from '../products/ProductCard';
 
@@ -163,14 +162,13 @@ const FeaturedProducts = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-10">
           <div>
-            <span className="block text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wider">Discover</span>
-            <h2 className="text-3xl font-display font-semibold tracking-tight">Featured Tools</h2>
+            <h2 className="text-3xl font-display font-semibold tracking-tight">Últimos productos</h2>
           </div>
           <Link 
             to="/products" 
             className="text-sm font-medium hover:underline"
           >
-            View all products
+            Ver todos los productos
           </Link>
         </div>
         

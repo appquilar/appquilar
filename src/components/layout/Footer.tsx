@@ -81,13 +81,13 @@ const Footer = () => {
               <p className="text-sm text-muted-foreground">
                 Sign up for our newsletter to receive updates and special offers.
               </p>
-              <div className="mt-2 flex">
+              <div className="mt-2 flex flex-wrap">
                 <input 
                   type="email" 
                   placeholder="Your email" 
-                  className="flex-1 px-3 py-2 text-sm border border-border rounded-l-md"
+                  className="flex-1 min-w-[180px] w-full sm:w-auto px-3 py-2 text-sm border border-border rounded-l-md sm:rounded-l-md sm:rounded-r-none rounded-r-md mb-2 sm:mb-0"
                 />
-                <button className="bg-primary text-primary-foreground px-4 py-2 text-sm rounded-r-md hover:bg-primary/90 transition-colors">
+                <button className="bg-primary text-primary-foreground px-4 py-2 text-sm sm:rounded-l-none rounded-l-md sm:rounded-r-md rounded-r-md hover:bg-primary/90 transition-colors w-full sm:w-auto">
                   Subscribe
                 </button>
               </div>

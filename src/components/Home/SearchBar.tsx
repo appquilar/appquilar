@@ -22,7 +22,7 @@ const SearchBar = () => {
       <div className="flex items-center pl-5 pr-2 py-3">
         <input
           type="text"
-          placeholder="Search for tools, equipment, or categories..."
+          placeholder="Buscar herramientas, equipos o categorías..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-1 bg-transparent border-none focus:outline-none text-base focus:ring-0"

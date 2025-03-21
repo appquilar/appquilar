@@ -78,8 +78,7 @@ const CategoryGrid = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-10">
           <div>
-            <span className="block text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wider">Explorar</span>
-            <h2 className="text-3xl font-display font-semibold tracking-tight">Categorías</h2>
+            <h2 className="text-3xl font-display font-semibold tracking-tight">Explorar</h2>
           </div>
           <Link 
             to="/categories" 
