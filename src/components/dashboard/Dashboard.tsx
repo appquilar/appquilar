@@ -54,49 +54,47 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">      
-      <div className="flex flex-1 h-screen overflow-hidden">
-        {/* Navegación del panel - fixed */}
-        <div className="h-screen sticky top-0 overflow-y-auto">
-          <DashboardNavigation activeTab={activeTab} onTabChange={handleTabChange} />
-        </div>
-        
-        {/* Contenido principal - scrollable */}
-        <main className="flex-1 overflow-y-auto h-screen animate-fade-in">
-          <div className="max-w-6xl mx-auto px-4 py-6">
-            {/* Usuario no es una empresa */}
-            {user && user.role === 'user' ? (
-              <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
-                <h1 className="text-3xl font-display font-semibold mb-4">Actualizar a Cuenta de Empresa</h1>
-                <p className="text-muted-foreground max-w-md mb-8">
-                  Como empresa, puedes listar tus herramientas para alquilar, gestionar alquileres y hacer crecer tu negocio en nuestra plataforma.
-                </p>
-                <button 
-                  className="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
-                  onClick={() => setUpgradeModalOpen(true)}
-                >
-                  Actualizar Ahora
-                </button>
-              </div>
-            ) : (
-              <>
-                {/* Contenido del panel para empresas */}
-                {activeTab === 'overview' && <CompanyStats />}
-                {activeTab === 'rentals' && <RentalsManagement />}
-                {activeTab === 'products' && <ProductsManagement />}
-                {activeTab === 'users' && <UserManagement />}
-                {activeTab === 'messages' && <MessagesDashboard />}
-                {activeTab === 'settings' && (
-                  <div className="space-y-6">
-                    <h1 className="text-2xl font-display font-semibold">Configuración de la Cuenta</h1>
-                    <p>El contenido de configuración aparecerá aquí.</p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </main>
+    <div className="h-screen flex overflow-hidden">
+      {/* Navegación del panel - fixed */}
+      <div className="fixed h-screen w-64 z-10">
+        <DashboardNavigation activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
+      
+      {/* Contenido principal - scrollable con margen izquierdo para la navegación */}
+      <main className="flex-1 overflow-y-auto ml-64 h-screen">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          {/* Usuario no es una empresa */}
+          {user && user.role === 'user' ? (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
+              <h1 className="text-3xl font-display font-semibold mb-4">Actualizar a Cuenta de Empresa</h1>
+              <p className="text-muted-foreground max-w-md mb-8">
+                Como empresa, puedes listar tus herramientas para alquilar, gestionar alquileres y hacer crecer tu negocio en nuestra plataforma.
+              </p>
+              <button 
+                className="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
+                onClick={() => setUpgradeModalOpen(true)}
+              >
+                Actualizar Ahora
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Contenido del panel para empresas */}
+              {activeTab === 'overview' && <CompanyStats />}
+              {activeTab === 'rentals' && <RentalsManagement />}
+              {activeTab === 'products' && <ProductsManagement />}
+              {activeTab === 'users' && <UserManagement />}
+              {activeTab === 'messages' && <MessagesDashboard />}
+              {activeTab === 'settings' && (
+                <div className="space-y-6">
+                  <h1 className="text-2xl font-display font-semibold">Configuración de la Cuenta</h1>
+                  <p>El contenido de configuración aparecerá aquí.</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </main>
       
       {/* Modal de actualización a empresa */}
       <UpgradeToCompanyModal 
