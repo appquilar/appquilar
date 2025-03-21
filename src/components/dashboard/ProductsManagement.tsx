@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Product } from '../products/ProductCard';
@@ -7,15 +8,15 @@ import ProductGrid from './products/ProductGrid';
 import SearchToolbar from './products/SearchToolbar';
 import ProductEditDialog from './products/ProductEditDialog';
 
-// Mock products - would come from backend API in production
+// Productos de ejemplo - vendrían de una API backend en producción
 const MOCK_PRODUCTS: Product[] = [
   {
     id: '1',
-    name: 'Professional Hammer Drill 20V',
+    name: 'Taladro Percutor Profesional 20V',
     slug: 'professional-hammer-drill-20v',
     imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
     thumbnailUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
-    description: 'Heavy-duty hammer drill perfect for concrete and masonry work. Includes battery, charger, and carrying case.',
+    description: 'Taladro percutor de alta potencia perfecto para trabajos en concreto y mampostería. Incluye batería, cargador y estuche de transporte.',
     price: {
       hourly: 8,
       daily: 25,
@@ -29,7 +30,7 @@ const MOCK_PRODUCTS: Product[] = [
     },
     category: {
       id: '1',
-      name: 'Power Tools',
+      name: 'Herramientas Eléctricas',
       slug: 'power-tools'
     },
     rating: 4.8,
@@ -37,11 +38,11 @@ const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: '2',
-    name: 'Table Saw with Stand',
+    name: 'Sierra de Mesa con Soporte',
     slug: 'table-saw-with-stand',
     imageUrl: 'https://images.unsplash.com/photo-1487252665478-49b61b47f302',
     thumbnailUrl: 'https://images.unsplash.com/photo-1487252665478-49b61b47f302',
-    description: 'Portable table saw with folding stand. Great for job sites and DIY projects.',
+    description: 'Sierra de mesa portátil con soporte plegable. Ideal para obras y proyectos DIY.',
     price: {
       daily: 35,
       weekly: 160,
@@ -54,7 +55,7 @@ const MOCK_PRODUCTS: Product[] = [
     },
     category: {
       id: '1',
-      name: 'Power Tools',
+      name: 'Herramientas Eléctricas',
       slug: 'power-tools'
     },
     rating: 4.6,
@@ -62,11 +63,11 @@ const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: '3',
-    name: 'Landscaping Tool Set',
+    name: 'Set de Herramientas de Jardinería',
     slug: 'landscaping-tool-set',
     imageUrl: 'https://images.unsplash.com/photo-1469041797191-50ace28483c3',
     thumbnailUrl: 'https://images.unsplash.com/photo-1469041797191-50ace28483c3',
-    description: 'Complete set of landscaping tools including rake, shovel, pruners, and more.',
+    description: 'Conjunto completo de herramientas de jardinería incluyendo rastrillo, pala, podadoras y más.',
     price: {
       daily: 20,
       weekly: 90,
@@ -79,7 +80,7 @@ const MOCK_PRODUCTS: Product[] = [
     },
     category: {
       id: '3',
-      name: 'Gardening',
+      name: 'Jardinería',
       slug: 'gardening'
     },
     rating: 4.7,
@@ -87,11 +88,11 @@ const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: '4',
-    name: '48" Concrete Bull Float',
+    name: 'Fratás para Concreto 48"',
     slug: 'concrete-bull-float',
     imageUrl: 'https://images.unsplash.com/photo-1452378174528-3090a4bba7b2',
     thumbnailUrl: 'https://images.unsplash.com/photo-1452378174528-3090a4bba7b2',
-    description: 'Professional grade concrete bull float for smoothing freshly poured concrete surfaces.',
+    description: 'Fratás para concreto de grado profesional para alisar superficies de concreto recién vertidas.',
     price: {
       daily: 28,
       weekly: 120,
@@ -104,7 +105,7 @@ const MOCK_PRODUCTS: Product[] = [
     },
     category: {
       id: '4',
-      name: 'Construction',
+      name: 'Construcción',
       slug: 'construction'
     },
     rating: 4.9,
@@ -118,7 +119,7 @@ const ProductsManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
-  // Filter products based on search query
+  // Filtrar productos basado en la búsqueda
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -127,11 +128,11 @@ const ProductsManagement = () => {
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, we might call an API endpoint here
+    // En una app real, podríamos llamar a un endpoint de API aquí
   };
   
   const handleAddProduct = () => {
-    toast.info("Product creation form would open here");
+    toast.info("Aquí se abriría el formulario de creación de producto");
   };
   
   const handleEditProduct = (productId: string) => {
@@ -145,14 +146,14 @@ const ProductsManagement = () => {
   const handleSaveProduct = (updatedProduct: Partial<Product>) => {
     if (!selectedProduct) return;
     
-    // Update the product in the state
+    // Actualizar el producto en el estado
     setProducts(prevProducts => 
       prevProducts.map(p => 
         p.id === selectedProduct.id ? { ...p, ...updatedProduct } : p
       )
     );
     
-    // Close the dialog
+    // Cerrar el diálogo
     setIsEditDialogOpen(false);
     setSelectedProduct(null);
   };
@@ -163,21 +164,21 @@ const ProductsManagement = () => {
   };
   
   const handleDeleteProduct = (productId: string) => {
-    // Remove the product from the state
+    // Eliminar el producto del estado
     setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
-    toast.success(`Product deleted successfully`);
+    toast.success(`Producto eliminado correctamente`);
   };
   
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-semibold">Products Management</h1>
-          <p className="text-muted-foreground">Manage your rental inventory.</p>
+          <h1 className="text-2xl font-display font-semibold">Gestión de Productos</h1>
+          <p className="text-muted-foreground">Gestiona tu inventario de alquiler.</p>
         </div>
       </div>
       
-      {/* Search and filter toolbar */}
+      {/* Barra de búsqueda y filtros */}
       <SearchToolbar 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -185,7 +186,7 @@ const ProductsManagement = () => {
         onSearch={handleSearch}
       />
       
-      {/* Products grid */}
+      {/* Cuadrícula de productos */}
       <ProductGrid 
         products={filteredProducts}
         onEdit={handleEditProduct}
@@ -193,7 +194,7 @@ const ProductsManagement = () => {
         onAdd={handleAddProduct}
       />
       
-      {/* Edit Product Dialog */}
+      {/* Diálogo de edición de producto */}
       <ProductEditDialog 
         isOpen={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}

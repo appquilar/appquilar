@@ -24,7 +24,7 @@ const ProductEditDialog = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Product</DialogTitle>
+          <DialogTitle>Editar Producto</DialogTitle>
         </DialogHeader>
         
         <ProductEditForm 

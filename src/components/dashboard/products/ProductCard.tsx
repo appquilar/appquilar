@@ -27,7 +27,7 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
       </CardHeader>
       <CardContent className="py-2">
         <p className="text-xs text-muted-foreground mb-2">
-          {product.category.name} • ${product.price.daily}/day
+          {product.category.name} • {product.price.daily}€/día
         </p>
         <p className="text-sm line-clamp-2">{product.description}</p>
       </CardContent>
@@ -39,7 +39,7 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
           onClick={() => onEdit(product.id)}
         >
           <Edit size={14} />
-          Edit
+          Editar
         </Button>
         <Button 
           variant="outline" 
@@ -48,7 +48,7 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
           onClick={() => onDelete(product.id)}
         >
           <Trash size={14} />
-          Delete
+          Eliminar
         </Button>
       </CardFooter>
     </Card>

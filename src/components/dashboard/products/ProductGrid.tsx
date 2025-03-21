@@ -15,11 +15,11 @@ const ProductGrid = ({ products, onEdit, onDelete, onAdd }: ProductGridProps) =>
   if (products.length === 0) {
     return (
       <div className="text-center py-12 bg-muted/30 rounded-lg">
-        <h3 className="text-lg font-medium mb-2">No products found</h3>
-        <p className="text-muted-foreground mb-6">Try adjusting your search or add a new product.</p>
+        <h3 className="text-lg font-medium mb-2">No se encontraron productos</h3>
+        <p className="text-muted-foreground mb-6">Ajusta tu búsqueda o añade un nuevo producto.</p>
         <Button onClick={onAdd} className="gap-2">
           <Plus size={16} />
-          Add New Product
+          Añadir Nuevo Producto
         </Button>
       </div>
     );

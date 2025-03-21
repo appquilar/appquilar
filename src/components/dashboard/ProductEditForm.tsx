@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -18,13 +19,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
-// Validation schema for product form
+// Esquema de validación para el formulario de producto
 const productFormSchema = z.object({
-  name: z.string().min(3, { message: 'Product name must be at least 3 characters.' }),
-  description: z.string().min(10, { message: 'Description must be at least 10 characters.' }),
+  name: z.string().min(3, { message: 'El nombre del producto debe tener al menos 3 caracteres.' }),
+  description: z.string().min(10, { message: 'La descripción debe tener al menos 10 caracteres.' }),
   price: z.object({
     hourly: z.number().optional(),
-    daily: z.number().min(1, { message: 'Daily price is required.' }),
+    daily: z.number().min(1, { message: 'El precio diario es obligatorio.' }),
     weekly: z.number().optional(),
     monthly: z.number().optional(),
   }),
@@ -32,7 +33,7 @@ const productFormSchema = z.object({
     id: z.string(),
     name: z.string()
   }),
-  imageUrl: z.string().url({ message: 'Please enter a valid URL.' }),
+  imageUrl: z.string().url({ message: 'Por favor introduce una URL válida.' }),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -46,7 +47,7 @@ interface ProductEditFormProps {
 const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form with existing product values
+  // Inicializar formulario con los valores existentes del producto
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
@@ -66,38 +67,38 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
   const onSubmit = async (values: ProductFormValues) => {
     setIsSubmitting(true);
     try {
-      // In a real app, this would send data to a backend API
-      console.log('Saving product:', values);
+      // En una aplicación real, esto enviaría datos a una API backend
+      console.log('Guardando producto:', values);
       
-      // Create updated product object
+      // Crear objeto de producto actualizado
       const updatedProduct: Partial<Product> = {
         ...product,
         name: values.name,
         description: values.description,
         price: {
           hourly: values.price.hourly,
-          daily: values.price.daily, // Now this is guaranteed to be present
+          daily: values.price.daily, // Ahora esto está garantizado que esté presente
           weekly: values.price.weekly,
           monthly: values.price.monthly,
         },
         imageUrl: values.imageUrl,
-        thumbnailUrl: values.imageUrl, // Using same URL for thumbnail for simplicity
+        thumbnailUrl: values.imageUrl, // Usando la misma URL para la miniatura por simplicidad
         category: {
           id: values.category.id,
           name: values.category.name,
-          slug: product.category.slug, // Ensure slug is included
+          slug: product.category.slug, // Asegurar que se incluye el slug
         },
       };
       
-      // Simulate API delay
+      // Simular retraso de API
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Call the onSave callback with updated product
+      // Llamar al callback onSave con el producto actualizado
       onSave(updatedProduct);
-      toast.success('Product updated successfully');
+      toast.success('Producto actualizado correctamente');
     } catch (error) {
-      console.error('Error updating product:', error);
-      toast.error('Failed to update product');
+      console.error('Error al actualizar el producto:', error);
+      toast.error('Error al actualizar el producto');
     } finally {
       setIsSubmitting(false);
     }
@@ -111,9 +112,9 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Product Name</FormLabel>
+              <FormLabel>Nombre del Producto</FormLabel>
               <FormControl>
-                <Input placeholder="Professional Tool Name" {...field} />
+                <Input placeholder="Nombre de Herramienta Profesional" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -125,10 +126,10 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Descripción</FormLabel>
               <FormControl>
                 <Textarea 
-                  placeholder="Describe your product in detail" 
+                  placeholder="Describe tu producto en detalle" 
                   className="min-h-[120px]" 
                   {...field} 
                 />
@@ -144,7 +145,7 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
             name="price.daily"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Daily Price ($)</FormLabel>
+                <FormLabel>Precio Diario (€)</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
@@ -153,7 +154,7 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
                     onChange={e => field.onChange(parseFloat(e.target.value))}
                   />
                 </FormControl>
-                <FormDescription>Required price per day</FormDescription>
+                <FormDescription>Precio requerido por día</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -164,7 +165,7 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
             name="price.hourly"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Hourly Price ($)</FormLabel>
+                <FormLabel>Precio por Hora (€)</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
@@ -174,7 +175,7 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
                     value={field.value || ''}
                   />
                 </FormControl>
-                <FormDescription>Optional hourly rate</FormDescription>
+                <FormDescription>Tarifa por hora (opcional)</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -185,7 +186,7 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
             name="price.weekly"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Weekly Price ($)</FormLabel>
+                <FormLabel>Precio Semanal (€)</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
@@ -195,7 +196,7 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
                     value={field.value || ''}
                   />
                 </FormControl>
-                <FormDescription>Optional weekly rate</FormDescription>
+                <FormDescription>Tarifa semanal (opcional)</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -206,7 +207,7 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
             name="price.monthly"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Monthly Price ($)</FormLabel>
+                <FormLabel>Precio Mensual (€)</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
@@ -216,7 +217,7 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
                     value={field.value || ''}
                   />
                 </FormControl>
-                <FormDescription>Optional monthly rate</FormDescription>
+                <FormDescription>Tarifa mensual (opcional)</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -228,11 +229,11 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
           name="imageUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Image URL</FormLabel>
+              <FormLabel>URL de la Imagen</FormLabel>
               <FormControl>
-                <Input placeholder="https://example.com/image.jpg" {...field} />
+                <Input placeholder="https://ejemplo.com/imagen.jpg" {...field} />
               </FormControl>
-              <FormDescription>URL to the product image</FormDescription>
+              <FormDescription>URL de la imagen del producto</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -240,10 +241,10 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
         
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            Cancelar
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : 'Save Changes'}
+            {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
           </Button>
         </div>
       </form>
