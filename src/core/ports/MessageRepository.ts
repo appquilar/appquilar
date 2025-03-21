@@ -17,10 +17,30 @@ export interface MessageRepository {
   getUserConversations(userId: string): Promise<Conversation[]>;
   
   /**
+   * Obtiene solo los contadores de mensajes no leídos para todas las conversaciones de un usuario
+   * @param userId ID del usuario
+   */
+  getUnreadMessageCounts(userId: string): Promise<Array<{conversationId: string, unreadCount: number}>>;
+  
+  /**
    * Obtiene los mensajes de una conversación
    * @param conversationId ID de la conversación
    */
   getConversationMessages(conversationId: string): Promise<Message[]>;
+  
+  /**
+   * Obtiene los mensajes más recientes de una conversación
+   * @param conversationId ID de la conversación
+   * @param limit Número máximo de mensajes a obtener
+   */
+  getLatestMessages(conversationId: string, limit: number): Promise<Message[]>;
+  
+  /**
+   * Obtiene los mensajes nuevos desde una fecha determinada
+   * @param conversationId ID de la conversación
+   * @param since Fecha desde la que obtener mensajes nuevos
+   */
+  getNewMessagesSince(conversationId: string, since: Date): Promise<Message[]>;
   
   /**
    * Crea un nuevo mensaje

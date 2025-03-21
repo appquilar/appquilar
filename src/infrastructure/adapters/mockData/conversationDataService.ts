@@ -39,11 +39,46 @@ export class ConversationDataService {
   }
 
   /**
+   * Obtiene solo los contadores de mensajes no leídos para todas las conversaciones de un usuario
+   */
+  getUnreadMessageCounts(userId: string): Array<{conversationId: string, unreadCount: number}> {
+    return this.conversations
+      .filter(conv => conv.userId === userId)
+      .map(conv => ({
+        conversationId: conv.id,
+        unreadCount: conv.unreadCount
+      }));
+  }
+
+  /**
    * Obtiene los mensajes de una conversación
    */
   getConversationMessages(conversationId: string): Message[] {
     return this.messages
       .filter(msg => msg.conversationId === conversationId)
+      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+  }
+
+  /**
+   * Obtiene los mensajes más recientes de una conversación
+   */
+  getLatestMessages(conversationId: string, limit: number): Message[] {
+    return this.messages
+      .filter(msg => msg.conversationId === conversationId)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()) // Ordenar del más reciente al más antiguo
+      .slice(0, limit) // Limitar la cantidad de mensajes
+      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()); // Volver a ordenar cronológicamente
+  }
+
+  /**
+   * Obtiene los mensajes nuevos desde una fecha determinada
+   */
+  getNewMessagesSince(conversationId: string, since: Date): Message[] {
+    return this.messages
+      .filter(msg => 
+        msg.conversationId === conversationId && 
+        msg.timestamp.getTime() > since.getTime()
+      )
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
   }
 

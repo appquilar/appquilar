@@ -43,12 +43,41 @@ export class MessageService {
   }
 
   /**
+   * Obtiene solo los contadores de mensajes no leídos para todas las conversaciones de un usuario
+   * @param userId ID del usuario
+   * @returns Array de objetos con el ID de la conversación y el número de mensajes no leídos
+   */
+  async getUnreadMessageCounts(userId: string): Promise<Array<{conversationId: string, unreadCount: number}>> {
+    return this.messageRepository.getUnreadMessageCounts(userId);
+  }
+
+  /**
    * Obtiene los mensajes de una conversación
    * @param conversationId ID de la conversación
    * @returns Lista de mensajes
    */
   async getConversationMessages(conversationId: string): Promise<Message[]> {
     return this.messageRepository.getConversationMessages(conversationId);
+  }
+
+  /**
+   * Obtiene los mensajes más recientes de una conversación
+   * @param conversationId ID de la conversación
+   * @param limit Número máximo de mensajes a obtener
+   * @returns Lista de mensajes más recientes
+   */
+  async getLatestMessages(conversationId: string, limit: number = 10): Promise<Message[]> {
+    return this.messageRepository.getLatestMessages(conversationId, limit);
+  }
+
+  /**
+   * Obtiene los mensajes nuevos desde una fecha determinada
+   * @param conversationId ID de la conversación
+   * @param since Fecha desde la que obtener mensajes nuevos
+   * @returns Lista de mensajes nuevos
+   */
+  async getNewMessagesSince(conversationId: string, since: Date): Promise<Message[]> {
+    return this.messageRepository.getNewMessagesSince(conversationId, since);
   }
 
   /**

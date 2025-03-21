@@ -4,7 +4,7 @@
  * @module components/chat/ConversationList
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Conversation } from '@/core/domain/Message';
 import { MessageService } from '@/infrastructure/services/MessageService';
@@ -34,6 +34,7 @@ const ConversationList = ({
   const [currentPage, setCurrentPage] = useState(1);
   const { user } = useAuth();
   const messageService = MessageService.getInstance();
+  const conversationsRef = useRef<Conversation[]>([]);
 
   // Calcular páginas totales
   const totalPages = Math.ceil(conversations.length / ITEMS_PER_PAGE);
@@ -44,7 +45,7 @@ const ConversationList = ({
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Cargar conversaciones al inicializar
+  // Cargar conversaciones completas solo al inicializar
   useEffect(() => {
     const loadConversations = async () => {
       if (!user) return;
@@ -54,11 +55,12 @@ const ConversationList = ({
         const userConversations = await messageService.getUserConversations(user.id);
         
         // Ordenar por fecha del último mensaje (más reciente primero)
-        setConversations(
-          userConversations.sort((a, b) => 
-            b.lastMessageAt.getTime() - a.lastMessageAt.getTime()
-          )
+        const sortedConversations = userConversations.sort((a, b) => 
+          b.lastMessageAt.getTime() - a.lastMessageAt.getTime()
         );
+        
+        setConversations(sortedConversations);
+        conversationsRef.current = sortedConversations;
       } catch (error) {
         console.error('Error al cargar conversaciones:', error);
       } finally {
@@ -67,9 +69,45 @@ const ConversationList = ({
     };
 
     loadConversations();
+  }, [user]);
+  
+  // Actualizar solo contadores de mensajes no leídos periódicamente
+  useEffect(() => {
+    if (!user) return;
     
-    // Configurar un intervalo para actualizar periódicamente
-    const intervalId = setInterval(loadConversations, 30000);
+    const updateUnreadCounts = async () => {
+      try {
+        const unreadCounts = await messageService.getUnreadMessageCounts(user.id);
+        
+        // Actualizar solo los contadores sin recargar todas las conversaciones
+        setConversations(prevConversations => {
+          // Crear una copia profunda para no mutar el estado directamente
+          const updatedConversations = [...prevConversations];
+          
+          // Actualizar contadores
+          unreadCounts.forEach(({ conversationId, unreadCount }) => {
+            const conversationIndex = updatedConversations.findIndex(
+              conv => conv.id === conversationId
+            );
+            
+            if (conversationIndex !== -1) {
+              updatedConversations[conversationIndex] = {
+                ...updatedConversations[conversationIndex],
+                unreadCount
+              };
+            }
+          });
+          
+          return updatedConversations;
+        });
+      } catch (error) {
+        console.error('Error al actualizar contadores de mensajes:', error);
+      }
+    };
+    
+    // Actualizar inmediatamente y luego cada 10 segundos
+    updateUnreadCounts();
+    const intervalId = setInterval(updateUnreadCounts, 10000);
     
     return () => clearInterval(intervalId);
   }, [user]);
