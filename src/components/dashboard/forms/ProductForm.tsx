@@ -6,7 +6,6 @@ import ProductPriceFields from './ProductPriceFields';
 import ProductImagesField from './ProductImagesField';
 import ProductFormActions from './ProductFormActions';
 import { useProductForm } from './hooks/useProductForm';
-import { ProductFormValues } from './productFormSchema';
 
 interface ProductFormProps {
   product: Product;
