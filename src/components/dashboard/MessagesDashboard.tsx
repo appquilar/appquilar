@@ -26,17 +26,17 @@ const MessagesDashboard = () => {
   }, []);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-6">Mensajes</h1>
+    <div className="p-4 h-full">
+      <h1 className="text-2xl font-semibold mb-4">Mensajes</h1>
       
-      <div className="mb-6">
+      <div className="mb-4">
         <p className="text-muted-foreground">
           Gestiona tus conversaciones con usuarios y empresas sobre productos.
         </p>
       </div>
       
-      {/* Contenedor del chat con altura fija */}
-      <div className="h-[calc(100vh-240px)]">
+      {/* Contenedor del chat con altura optimizada */}
+      <div className="h-[calc(100vh-200px)]">
         <ChatInbox />
       </div>
     </div>
