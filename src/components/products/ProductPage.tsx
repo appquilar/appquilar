@@ -1,7 +1,7 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, MapPin, Phone, Star, Heart, Share, ArrowLeft } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Product } from './ProductCard';
@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import ChatModal from '../chat/ChatModal';
 import { SeoService } from '@/infrastructure/services/SeoService';
+import AvailabilityCalendar from './AvailabilityCalendar';
 
 // Datos de ejemplo del producto - en producción se obtendrían del backend
 const SAMPLE_PRODUCT: Product = {
@@ -35,7 +36,27 @@ const SAMPLE_PRODUCT: Product = {
     slug: 'power-tools'
   },
   rating: 4.8,
-  reviewCount: 124
+  reviewCount: 124,
+  availability: [
+    {
+      id: 'period-1',
+      startDate: '2023-10-01',
+      endDate: '2023-10-15',
+      status: 'available'
+    },
+    {
+      id: 'period-2',
+      startDate: '2023-10-20',
+      endDate: '2023-10-30',
+      status: 'available'
+    },
+    {
+      id: 'period-3',
+      startDate: '2023-11-05',
+      endDate: '2023-11-15',
+      status: 'rented'
+    }
+  ]
 };
 
 /**
@@ -49,6 +70,8 @@ const ProductPage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedPeriod, setSelectedPeriod] = useState<'hourly' | 'daily' | 'weekly' | 'monthly'>('daily');
   const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(null);
+  const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
   const { isLoggedIn, user } = useAuth();
   
   // Referencias para el slider
@@ -129,6 +152,15 @@ const ProductPage = () => {
     }
     
     setChatModalOpen(true);
+  };
+
+  // Handler for date range selection
+  const handleDateRangeSelected = (startDate: Date, endDate: Date) => {
+    setSelectedStartDate(startDate);
+    setSelectedEndDate(endDate);
+    
+    // You could calculate rental cost based on selected period here
+    console.log(`Selected rental period: ${format(startDate, 'PP')} to ${format(endDate, 'PP')}`);
   };
 
   if (loading) {
@@ -386,6 +418,79 @@ const ProductPage = () => {
         </div>
       </div>
 
+      {/* Availability calendar */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mt-12">
+          <div>
+            <h2 className="text-2xl font-semibold mb-6">Disponibilidad</h2>
+            {product?.availability && (
+              <AvailabilityCalendar 
+                availabilityPeriods={product.availability}
+                onSelectDateRange={handleDateRangeSelected}
+              />
+            )}
+          </div>
+          
+          <div>
+            {/* Rental calculator panel */}
+            <div className="bg-white rounded-lg border p-6 sticky top-24">
+              <h3 className="text-xl font-semibold mb-4">Resumen de Alquiler</h3>
+              
+              {selectedStartDate && selectedEndDate ? (
+                <div className="space-y-4">
+                  <div className="flex justify-between py-2 border-b">
+                    <span>Periodo:</span>
+                    <span className="font-medium">
+                      {format(selectedStartDate, 'PP')} - {format(selectedEndDate, 'PP')}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between py-2 border-b">
+                    <span>Duración:</span>
+                    <span className="font-medium">
+                      {differenceInDays(selectedEndDate, selectedStartDate) + 1} días
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between py-2 border-b">
+                    <span>Precio por día:</span>
+                    <span className="font-medium">{product?.price.daily}€</span>
+                  </div>
+                  
+                  <div className="flex justify-between py-2 border-b text-lg font-semibold">
+                    <span>Total:</span>
+                    <span>
+                      {((differenceInDays(selectedEndDate, selectedStartDate) + 1) * (product?.price.daily || 0)).toFixed(2)}€
+                    </span>
+                  </div>
+                  
+                  <Button 
+                    className="w-full mt-4" 
+                    size="lg"
+                    onClick={handleContact}
+                  >
+                    Solicitar Alquiler
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground mb-4">
+                    Selecciona fechas en el calendario para calcular el precio del alquiler
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    disabled
+                  >
+                    Solicitar Alquiler
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Modal de chat */}
       <ChatModal
         isOpen={chatModalOpen}
@@ -399,3 +504,4 @@ const ProductPage = () => {
 };
 
 export default ProductPage;
+

@@ -1,4 +1,55 @@
-import { Product } from '@/components/products/ProductCard';
+import { Product, AvailabilityPeriod } from '@/components/products/ProductCard';
+
+// Sample availability periods for demo purposes
+const currentDate = new Date();
+const nextMonth = new Date(currentDate);
+nextMonth.setMonth(currentDate.getMonth() + 1);
+const twoMonthsLater = new Date(currentDate);
+twoMonthsLater.setMonth(currentDate.getMonth() + 2);
+
+// Helper to create ISO date strings without time component
+const formatDateToISO = (date: Date): string => {
+  return date.toISOString().split('T')[0];
+};
+
+// Create some default availability periods
+const createDefaultAvailability = (): AvailabilityPeriod[] => {
+  // Create next 3 months of availability
+  const periods: AvailabilityPeriod[] = [];
+  const startDate = new Date();
+  
+  // Add 3 available periods, each 20 days long with 10-day gaps
+  for (let i = 0; i < 3; i++) {
+    const periodStart = new Date(startDate);
+    periodStart.setDate(startDate.getDate() + (i * 30));
+    
+    const periodEnd = new Date(periodStart);
+    periodEnd.setDate(periodStart.getDate() + 20);
+    
+    periods.push({
+      id: `period-${i + 1}`,
+      startDate: formatDateToISO(periodStart),
+      endDate: formatDateToISO(periodEnd),
+      status: 'available'
+    });
+  }
+  
+  // Add one upcoming rental period (example of a period that's already booked)
+  const rentalStart = new Date(startDate);
+  rentalStart.setDate(startDate.getDate() + 90); // 3 months from now
+  
+  const rentalEnd = new Date(rentalStart);
+  rentalEnd.setDate(rentalStart.getDate() + 14); // 2 weeks rental
+  
+  periods.push({
+    id: `period-rented`,
+    startDate: formatDateToISO(rentalStart),
+    endDate: formatDateToISO(rentalEnd),
+    status: 'rented'
+  });
+  
+  return periods;
+};
 
 // Productos de ejemplo - vendrían de una API backend en producción
 export const MOCK_PRODUCTS: Product[] = [
@@ -27,7 +78,8 @@ export const MOCK_PRODUCTS: Product[] = [
       slug: 'power-tools'
     },
     rating: 4.8,
-    reviewCount: 124
+    reviewCount: 124,
+    availability: createDefaultAvailability()
   },
   {
     id: '2',
@@ -53,7 +105,8 @@ export const MOCK_PRODUCTS: Product[] = [
       slug: 'power-tools'
     },
     rating: 4.6,
-    reviewCount: 89
+    reviewCount: 89,
+    availability: createDefaultAvailability()
   },
   {
     id: '3',
@@ -79,7 +132,8 @@ export const MOCK_PRODUCTS: Product[] = [
       slug: 'gardening'
     },
     rating: 4.7,
-    reviewCount: 54
+    reviewCount: 54,
+    availability: createDefaultAvailability()
   },
   {
     id: '4',
@@ -105,7 +159,8 @@ export const MOCK_PRODUCTS: Product[] = [
       slug: 'construction'
     },
     rating: 4.9,
-    reviewCount: 37
+    reviewCount: 37,
+    availability: createDefaultAvailability()
   },
   {
     id: '5',
@@ -132,7 +187,8 @@ export const MOCK_PRODUCTS: Product[] = [
       slug: 'power-tools'
     },
     rating: 4.5,
-    reviewCount: 42
+    reviewCount: 42,
+    availability: createDefaultAvailability()
   },
   {
     id: '6',
@@ -158,7 +214,8 @@ export const MOCK_PRODUCTS: Product[] = [
       slug: 'construction'
     },
     rating: 4.7,
-    reviewCount: 28
+    reviewCount: 28,
+    availability: createDefaultAvailability()
   },
   {
     id: '7',
@@ -184,7 +241,8 @@ export const MOCK_PRODUCTS: Product[] = [
       slug: 'electrical-equipment'
     },
     rating: 4.9,
-    reviewCount: 45
+    reviewCount: 45,
+    availability: createDefaultAvailability()
   },
   {
     id: '8',
@@ -210,7 +268,8 @@ export const MOCK_PRODUCTS: Product[] = [
       slug: 'gardening'
     },
     rating: 4.6,
-    reviewCount: 31
+    reviewCount: 31,
+    availability: createDefaultAvailability()
   },
   {
     id: '9',
@@ -236,7 +295,8 @@ export const MOCK_PRODUCTS: Product[] = [
       slug: 'power-tools'
     },
     rating: 4.8,
-    reviewCount: 37
+    reviewCount: 37,
+    availability: createDefaultAvailability()
   },
   {
     id: '10',
@@ -262,7 +322,8 @@ export const MOCK_PRODUCTS: Product[] = [
       slug: 'construction'
     },
     rating: 4.5,
-    reviewCount: 24
+    reviewCount: 24,
+    availability: createDefaultAvailability()
   },
   {
     id: '11',
@@ -288,7 +349,8 @@ export const MOCK_PRODUCTS: Product[] = [
       slug: 'gardening'
     },
     rating: 4.7,
-    reviewCount: 29
+    reviewCount: 29,
+    availability: createDefaultAvailability()
   },
   {
     id: '12',
@@ -315,6 +377,14 @@ export const MOCK_PRODUCTS: Product[] = [
       slug: 'power-tools'
     },
     rating: 4.6,
-    reviewCount: 42
+    reviewCount: 42,
+    availability: createDefaultAvailability()
   }
 ];
+
+// For each product in MOCK_PRODUCTS array, add the availability property if it doesn't exist
+MOCK_PRODUCTS.forEach(product => {
+  if (!product.availability) {
+    product.availability = createDefaultAvailability();
+  }
+});

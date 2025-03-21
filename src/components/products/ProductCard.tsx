@@ -1,7 +1,40 @@
-import { useState } from 'react';
+import React from 'react';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Edit, Trash } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-// Product interface
+// Pricing structure for products
+export interface ProductPrice {
+  hourly?: number;
+  daily: number;
+  weekly?: number;
+  monthly?: number;
+}
+
+// Product company information
+export interface ProductCompany {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+// Product category information
+export interface ProductCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+// Availability period for a product
+export interface AvailabilityPeriod {
+  id: string;
+  startDate: string; // ISO date string
+  endDate: string;   // ISO date string
+  status: 'available' | 'unavailable' | 'pending' | 'rented';
+}
+
+// Core product data structure
 export interface Product {
   id: string;
   internalId?: string;
@@ -10,96 +43,68 @@ export interface Product {
   imageUrl: string;
   thumbnailUrl: string;
   description: string;
-  price: {
-    hourly?: number;
-    daily: number;
-    weekly?: number;
-    monthly?: number;
-  };
-  company: {
-    id: string;
-    name: string;
-    slug: string;
-  };
-  category: {
-    id: string;
-    name: string;
-    slug: string;
-  };
-  rating?: number;
+  price: ProductPrice;
+  company: ProductCompany;
+  category: ProductCategory;
+  rating: number;
   reviewCount: number;
-  isFeatured?: boolean;
+  availability?: AvailabilityPeriod[];
 }
 
+// Component props
 interface ProductCardProps {
   product: Product;
-  index?: number;
+  onEdit: (productId: string) => void;
+  onDelete: (productId: string) => void;
 }
 
-const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
-  const [imageLoaded, setImageLoaded] = useState(false);
-
+const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
   return (
-    <Link 
-      to={`/product/${product.slug}`}
-      className="group flex flex-col bg-background border border-border rounded-lg overflow-hidden transition-all duration-350 hover:shadow-md hover-lift"
-      style={{ 
-        opacity: 0,
-        animation: 'fade-in 0.5s ease-out forwards',
-        animationDelay: `${index * 75}ms`
-      }}
-    >
-      {/* Product image */}
-      <div className="relative aspect-[4/3] bg-muted overflow-hidden">
-        {!imageLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-muted">
-            <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-          </div>
-        )}
+    <Card className="overflow-hidden hover:shadow-sm transition-shadow">
+      <div className="aspect-[4/3] relative">
         <img 
           src={product.thumbnailUrl || product.imageUrl} 
           alt={product.name}
-          className={`w-full h-full object-cover transition-transform duration-500 ease-spring group-hover:scale-105 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          onLoad={() => setImageLoaded(true)}
-          loading="lazy"
+          className="w-full h-full object-cover"
         />
-      </div>
-      
-      {/* Content */}
-      <div className="flex-1 p-4 flex flex-col">
-        <div className="flex items-center mb-2">
-          <span className="text-xs bg-primary/10 px-2 py-0.5 rounded-full text-primary font-medium">
-            {product.category.name}
-          </span>
-          <div className="ml-auto flex items-center">
-            <span className="text-xs font-medium text-amber-500">★ {product.rating?.toFixed(1)}</span>
-            <span className="text-xs text-muted-foreground ml-1">({product.reviewCount})</span>
+        {product.internalId && (
+          <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+            {product.internalId}
           </div>
-        </div>
-        
-        <h3 className="text-base font-medium mb-1 line-clamp-1 transition-colors duration-250 group-hover:text-primary">
+        )}
+      </div>
+      <CardHeader className="py-3">
+        <CardTitle className="text-base font-medium truncate">
           {product.name}
-        </h3>
-        
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-          {product.description}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="py-2">
+        <p className="text-xs text-muted-foreground mb-2">
+          {product.category.name} • {product.price.daily}€/día
         </p>
-        
-        <div className="mt-auto">
-          <div className="flex items-end justify-between pt-2 border-t border-border">
-            <div>
-              <span className="text-sm text-muted-foreground">From</span>
-              <p className="text-base font-semibold tracking-tight">
-                ${product.price.daily.toFixed(2)}<span className="text-xs text-muted-foreground font-normal"> / day</span>
-              </p>
-            </div>
-            <span className="text-xs text-muted-foreground">{product.company.name}</span>
-          </div>
-        </div>
-      </div>
-    </Link>
+        <p className="text-sm line-clamp-2">{product.description}</p>
+      </CardContent>
+      <CardFooter className="pt-2 pb-4 flex justify-between">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-1"
+          onClick={() => onEdit(product.id)}
+        >
+          <Edit size={14} />
+          Editar
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-1 text-red-500 hover:text-red-600 hover:bg-red-50"
+          onClick={() => onDelete(product.id)}
+        >
+          <Trash size={14} />
+          Eliminar
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 

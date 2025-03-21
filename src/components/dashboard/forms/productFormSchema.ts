@@ -25,6 +25,15 @@ export const productFormSchema = z.object({
   imageUrl: z.string().url({ message: 'Por favor introduce una URL válida.' }),
   // New field for images
   images: z.array(z.any()).optional(),
+  // New field for availability periods
+  availability: z.array(
+    z.object({
+      id: z.string(),
+      startDate: z.string(),
+      endDate: z.string(),
+      status: z.enum(['available', 'unavailable', 'pending', 'rented'])
+    })
+  ).optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -44,6 +53,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
     category: product.category,
     imageUrl: product.imageUrl,
     images: [],
+    availability: product.availability || [],
   };
 };
 
@@ -76,5 +86,6 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
       name: values.category.name,
       slug: product.category.slug, // Asegurar que se incluye el slug de la categoría
     },
+    availability: values.availability,
   };
 };
