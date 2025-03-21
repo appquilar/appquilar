@@ -27,23 +27,18 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
         />
       </div>
       
-      {/* Remove button - positioned completely outside the image */}
-      <div 
-        className="absolute -top-3 -right-3" 
-        style={{ zIndex: 30 }}
+      {/* Remove button - absolutely positioned outside the parent container */}
+      <Button
+        size="sm"
+        variant="destructive"
+        className="absolute -top-3 -right-3 h-7 w-7 p-0 rounded-full shadow-md z-30"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove(image.id);
+        }}
       >
-        <Button
-          size="sm"
-          variant="destructive"
-          className="h-7 w-7 p-0 rounded-full shadow-md"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove(image.id);
-          }}
-        >
-          <X className="h-3 w-3" />
-        </Button>
-      </div>
+        <X className="h-3 w-3" />
+      </Button>
       
       {/* Principal badge */}
       {image.isPrimary && (
