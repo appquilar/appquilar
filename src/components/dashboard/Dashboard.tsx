@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { Menu, X } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
 import DashboardNavigation from './DashboardNavigation';
 import RentalsManagement from './RentalsManagement';
 import ProductsManagement from './ProductsManagement';
@@ -22,9 +25,11 @@ type DashboardTab = 'overview' | 'rentals' | 'products' | 'users' | 'settings' |
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
 
   // Synchronize active tab with URL on component mount and URL changes
   useEffect(() => {
@@ -37,6 +42,13 @@ const Dashboard = () => {
       if (tab) setActiveTab(tab);
     }
   }, [location.pathname]);
+
+  // Close mobile menu when changing tabs
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      setMobileMenuOpen(false);
+    }
+  }, [activeTab]);
 
   /**
    * Maneja el cambio de pestaña en el panel
@@ -54,14 +66,37 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="h-screen flex overflow-hidden">
-      {/* Navegación del panel - fixed */}
-      <div className="fixed h-screen w-64 z-10">
+    <div className="h-screen flex overflow-hidden relative">
+      {/* Mobile Menu Button */}
+      {isMobile && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed top-4 left-4 z-50"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </Button>
+      )}
+
+      {/* Navegación del panel - conditional rendering */}
+      <div className={`${isMobile 
+        ? `fixed inset-0 z-40 transform transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`
+        : 'fixed h-screen w-64 z-10'}`}
+      >
         <DashboardNavigation activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
       
-      {/* Contenido principal - scrollable con margen izquierdo para la navegación */}
-      <main className="flex-1 overflow-y-auto ml-64 h-screen">
+      {/* Overlay for mobile */}
+      {isMobile && mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      
+      {/* Contenido principal - scrollable con margen izquierdo para la navegación en desktop */}
+      <main className={`flex-1 overflow-y-auto ${isMobile ? 'w-full' : 'ml-64'} h-screen transition-all duration-300`}>
         <div className="max-w-6xl mx-auto px-4 py-6">
           {/* Usuario no es una empresa */}
           {user && user.role === 'user' ? (

@@ -1,6 +1,7 @@
 
 import { useLocation } from 'react-router-dom';
 import { useNavLinks } from './useNavLinks';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { DashboardNavigationProps } from './types';
 import UserProfile from './UserProfile';
 import NavItem from './NavItem';
@@ -13,6 +14,7 @@ import UpgradeLink from './UpgradeLink';
 const DashboardNavigationContent = ({ activeTab, onTabChange }: DashboardNavigationProps) => {
   const location = useLocation();
   const { navLinks, companyLinks, adminLinks, isCompanyUser, isAdmin } = useNavLinks();
+  const isMobile = useIsMobile();
 
   // Función para verificar si un enlace está activo
   const isActive = (href: string, exact = false) => {
@@ -32,7 +34,7 @@ const DashboardNavigationContent = ({ activeTab, onTabChange }: DashboardNavigat
   return (
     <div className="flex flex-col h-full">
       {/* Enlaces de navegación */}
-      <nav className="p-2 flex-grow">
+      <nav className={`p-2 flex-grow ${isMobile ? 'py-4' : ''}`}>
         <ul className="space-y-1">
           {/* Enlaces básicos */}
           {navLinks.map((link) => (
