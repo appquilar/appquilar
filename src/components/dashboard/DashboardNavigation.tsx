@@ -9,7 +9,7 @@ import DashboardNavigationContent from './navigation/DashboardNavigationContent'
  */
 const DashboardNavigation = (props: DashboardNavigationProps) => {
   return (
-    <div className="lg:w-64 lg:shrink-0 border-r border-border h-full overflow-auto flex flex-col">
+    <div className="w-64 shrink-0 border-r border-border h-full flex flex-col">
       {/* Logo en la parte superior */}
       <div className="p-4 border-b border-border">
         <Link 

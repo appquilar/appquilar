@@ -55,13 +55,15 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-col">      
-      <div className="flex flex-1">
-        {/* Navegación del panel */}
-        <DashboardNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+      <div className="flex flex-1 h-screen overflow-hidden">
+        {/* Navegación del panel - fixed */}
+        <div className="h-screen sticky top-0 overflow-y-auto">
+          <DashboardNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+        </div>
         
-        {/* Contenido principal */}
-        <main className="flex-1 px-4 py-6 animate-fade-in">
-          <div className="max-w-6xl mx-auto">
+        {/* Contenido principal - scrollable */}
+        <main className="flex-1 overflow-y-auto h-screen animate-fade-in">
+          <div className="max-w-6xl mx-auto px-4 py-6">
             {/* Usuario no es una empresa */}
             {user && user.role === 'user' ? (
               <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
