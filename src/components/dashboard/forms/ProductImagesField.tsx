@@ -83,6 +83,9 @@ const ProductImagesField = ({ control }: ProductImagesFieldProps) => {
       render={({ field }) => (
         <FormItem className="space-y-3">
           <FormLabel>Imágenes del Producto</FormLabel>
+          <p className="text-sm text-muted-foreground mb-2">
+            Arrastra imágenes o haz clic para seleccionarlas. Haz clic en una imagen para establecerla como principal.
+          </p>
           <FormControl>
             <div className="space-y-4">
               <ImageDropZone

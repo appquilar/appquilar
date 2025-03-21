@@ -1,5 +1,5 @@
 
-import { X } from "lucide-react";
+import { X, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ImageFile } from "./types";
 
@@ -14,8 +14,9 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
     <div
       key={image.id}
       className={`relative group rounded-lg overflow-hidden border ${
-        image.isPrimary ? "border-primary" : "border-gray-200"
-      }`}
+        image.isPrimary ? "border-primary border-2" : "border-gray-200"
+      } cursor-pointer transition-all hover:opacity-95`}
+      onClick={() => !image.isPrimary && onSetPrimary(image.id)}
     >
       <div className="aspect-square">
         <img
@@ -25,35 +26,27 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
         />
       </div>
       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="flex flex-col gap-2">
-          <Button
-            size="sm"
-            variant="destructive"
-            className="h-8 w-8 p-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove(image.id);
-            }}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-          {!image.isPrimary && (
-            <Button
-              size="sm"
-              variant="default"
-              className="h-auto py-1 px-2 text-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSetPrimary(image.id);
-              }}
-            >
-              Hacer principal
-            </Button>
-          )}
-        </div>
+        <Button
+          size="sm"
+          variant="destructive"
+          className="h-8 w-8 p-0 absolute top-2 right-2"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(image.id);
+          }}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+        
+        {!image.isPrimary && (
+          <span className="text-white text-xs bg-black/60 px-2 py-1 rounded">
+            Click to set as primary
+          </span>
+        )}
       </div>
       {image.isPrimary && (
-        <div className="absolute top-1 right-1 bg-primary text-white text-xs rounded-full px-2 py-1">
+        <div className="absolute top-2 left-2 bg-primary text-white rounded-full px-2 py-1 flex items-center gap-1 text-xs">
+          <Star className="h-3 w-3" />
           Principal
         </div>
       )}

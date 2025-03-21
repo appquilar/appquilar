@@ -1,7 +1,7 @@
 
 import { z } from "zod";
 import { Product } from "@/components/products/ProductCard";
-import { ImageFile } from "./ProductImagesField";
+import { ImageFile } from "./image-upload/types";
 
 // Esquema de validación para el formulario de producto
 export const productFormSchema = z.object({
