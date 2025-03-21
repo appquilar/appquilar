@@ -55,8 +55,8 @@ export interface Product {
 // Component props
 interface ProductCardProps {
   product: Product;
-  onEdit: (productId: string) => void;
-  onDelete: (productId: string) => void;
+  onEdit?: (productId: string) => void;
+  onDelete?: (productId: string) => void;
 }
 
 const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
@@ -85,26 +85,32 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
         </p>
         <p className="text-sm line-clamp-2">{product.description}</p>
       </CardContent>
-      <CardFooter className="pt-2 pb-4 flex justify-between">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-1"
-          onClick={() => onEdit(product.id)}
-        >
-          <Edit size={14} />
-          Editar
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-1 text-red-500 hover:text-red-600 hover:bg-red-50"
-          onClick={() => onDelete(product.id)}
-        >
-          <Trash size={14} />
-          Eliminar
-        </Button>
-      </CardFooter>
+      {(onEdit || onDelete) && (
+        <CardFooter className="pt-2 pb-4 flex justify-between">
+          {onEdit && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1"
+              onClick={() => onEdit(product.id)}
+            >
+              <Edit size={14} />
+              Editar
+            </Button>
+          )}
+          {onDelete && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1 text-red-500 hover:text-red-600 hover:bg-red-50"
+              onClick={() => onDelete(product.id)}
+            >
+              <Trash size={14} />
+              Eliminar
+            </Button>
+          )}
+        </CardFooter>
+      )}
     </Card>
   );
 };

@@ -1,11 +1,12 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Heart, Share, MapPin, Phone } from 'lucide-react';
+import { Heart, Share } from 'lucide-react';
 import { Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Product } from './ProductCard';
 import { toast } from 'sonner';
+import CompanyInfo from './CompanyInfo';
 
 interface ProductInfoProps {
   product: Product;
@@ -144,33 +145,12 @@ const ProductInfo = ({ product, onContact, isLoggedIn }: ProductInfoProps) => {
         </Tabs>
       </div>
       
-      {/* Información de la empresa */}
-      <div className="bg-secondary rounded-lg p-4">
-        <h3 className="text-sm font-medium uppercase tracking-wider mb-3">
-          Proporcionado por
-        </h3>
-        <div className="flex items-center">
-          <div className="w-12 h-12 bg-primary/10 text-primary flex items-center justify-center rounded-full mr-3">
-            {product.company.name.charAt(0)}
-          </div>
-          <div>
-            <h4 className="font-medium">{product.company.name}</h4>
-            <div className="flex items-center text-sm text-muted-foreground mt-1">
-              <MapPin size={14} className="mr-1" />
-              <span>Madrid, España</span>
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-border mt-4 pt-4">
-          <Button 
-            className="w-full mb-2 gap-2" 
-            onClick={handleContact}
-          >
-            <Phone size={16} />
-            Contactar para Alquilar
-          </Button>
-        </div>
-      </div>
+      {/* Company information - now using the new component */}
+      <CompanyInfo 
+        company={product.company}
+        onContact={handleContact}
+        isLoggedIn={isLoggedIn}
+      />
     </div>
   );
 };

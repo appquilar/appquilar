@@ -67,6 +67,14 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
     }
   }
 
+  // Ensure that the availability periods have all required fields
+  const availability = values.availability?.map(period => ({
+    id: period.id,
+    startDate: period.startDate,
+    endDate: period.endDate,
+    status: period.status
+  })) as AvailabilityPeriod[] | undefined;
+
   return {
     ...product,
     internalId: values.internalId,
@@ -86,6 +94,6 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
       name: values.category.name,
       slug: product.category.slug, // Asegurar que se incluye el slug de la categoría
     },
-    availability: values.availability,
+    availability: availability,
   };
 };
