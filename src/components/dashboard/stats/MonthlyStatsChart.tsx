@@ -5,6 +5,7 @@ import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis, ResponsiveContai
 import { ChartContainer } from '@/components/ui/chart';
 import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -34,9 +35,9 @@ const CustomTooltip = ({ active, payload }: any) => {
     
     return (
       <div className="bg-background border border-border rounded-md shadow-md p-2 text-xs">
-        <p className="font-medium">Day {data.day}</p>
+        <p className="font-medium">Día {data.day}</p>
         <p className="text-foreground">
-          {name === 'views' ? 'Views' : 'Rentals'}: <span className="font-medium">{value}</span>
+          {name === 'views' ? 'Vistas' : 'Alquileres'}: <span className="font-medium">{value}</span>
         </p>
       </div>
     );
@@ -114,7 +115,7 @@ const MonthlyStatsChart = ({
             variant="outline" 
             size="icon" 
             onClick={goToPreviousMonth}
-            aria-label="Previous month"
+            aria-label="Mes anterior"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -123,15 +124,15 @@ const MonthlyStatsChart = ({
             <PopoverTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">
                 <CalendarIcon className="h-4 w-4" />
-                <span>{format(currentDate, 'MMMM yyyy')}</span>
+                <span>{format(currentDate, 'MMMM yyyy', { locale: es })}</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="center">
               <Calendar
-                mode="month"
                 selected={currentDate}
                 onSelect={handleSelectMonth}
                 initialFocus
+                locale={es}
                 className={cn("p-3 pointer-events-auto")}
               />
             </PopoverContent>
@@ -141,7 +142,7 @@ const MonthlyStatsChart = ({
             variant="outline" 
             size="icon" 
             onClick={goToNextMonth}
-            aria-label="Next month"
+            aria-label="Mes siguiente"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

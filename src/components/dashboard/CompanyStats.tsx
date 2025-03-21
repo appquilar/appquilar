@@ -29,7 +29,7 @@ const CompanyStats = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-medium">
-              Popular Products
+              Productos Populares
             </CardTitle>
             <Package size={18} className="text-muted-foreground" />
           </CardHeader>
@@ -39,7 +39,7 @@ const CompanyStats = () => {
                 <div key={product.id} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">{product.views} views, {product.rentals} rentals</p>
+                    <p className="text-xs text-muted-foreground">{product.views} vistas, {product.rentals} alquileres</p>
                   </div>
                   <div className="text-sm font-medium">
                     #{product.id}
@@ -54,7 +54,7 @@ const CompanyStats = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-medium">
-              Recent Rentals
+              Alquileres Recientes
             </CardTitle>
             <Truck size={18} className="text-muted-foreground" />
           </CardHeader>
@@ -70,7 +70,7 @@ const CompanyStats = () => {
                     <div>
                       <p className="font-medium">{rental.product}</p>
                       <p className="text-xs text-muted-foreground">
-                        {rental.customer} • {rental.date} • {rental.days} days
+                        {rental.customer} • {rental.date} • {rental.days} días
                       </p>
                     </div>
                     <div className={`text-xs font-medium px-2 py-1 rounded-full ${
@@ -78,7 +78,7 @@ const CompanyStats = () => {
                         ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
                         : 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
                     }`}>
-                      {rental.status === 'active' ? 'Active' : 'Completed'}
+                      {rental.status === 'active' ? 'Activo' : 'Completado'}
                     </div>
                   </div>
                 </Link>
@@ -92,23 +92,23 @@ const CompanyStats = () => {
       <div className="space-y-6">
         {/* Views Chart - Full Width */}
         <MonthlyStatsChart 
-          title="Product Views"
-          description="Daily views trend for your products"
+          title="Vistas de Productos"
+          description="Tendencia diaria de vistas de tus productos"
           data={MOCK_STATS.monthlyViews}
           dataKey="views"
           chartColor="var(--color-views)"
-          label="Views"
+          label="Vistas"
           config={chartConfig}
         />
         
         {/* Rentals Chart - Full Width */}
         <MonthlyStatsChart 
-          title="Rentals"
-          description="Daily rental transactions"
+          title="Alquileres"
+          description="Transacciones diarias de alquiler"
           data={MOCK_STATS.monthlyRentals}
           dataKey="rentals"
           chartColor="var(--color-rentals)"
-          label="Rentals"
+          label="Alquileres"
           config={chartConfig}
         />
       </div>

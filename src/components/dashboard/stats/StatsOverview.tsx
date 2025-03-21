@@ -7,42 +7,42 @@ const StatsOverview = () => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatsCard
-        title="Total Rentals"
+        title="Total Alquileres"
         value={MOCK_STATS.totalRentals}
         icon={Truck}
         trend={{
           value: "+12%",
           positive: true,
-          label: "from last month"
+          label: "respecto al mes pasado"
         }}
       />
       
       <StatsCard
-        title="Active Rentals"
+        title="Alquileres Activos"
         value={MOCK_STATS.activeRentals}
         icon={Truck}
         trend={{
           value: "+4%",
           positive: true,
-          label: "from last week"
+          label: "respecto a la semana pasada"
         }}
       />
       
       <StatsCard
-        title="Total Products"
+        title="Total Productos"
         value={MOCK_STATS.totalProducts}
         icon={Package}
-        description="In your inventory"
+        description="En tu inventario"
       />
       
       <StatsCard
-        title="Product Views"
+        title="Vistas de Productos"
         value={MOCK_STATS.productViews}
         icon={Eye}
         trend={{
           value: "-3%",
           positive: false,
-          label: "from last week"
+          label: "respecto a la semana pasada"
         }}
       />
     </div>

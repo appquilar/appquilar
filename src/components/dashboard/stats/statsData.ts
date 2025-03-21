@@ -6,14 +6,14 @@ export const MOCK_STATS = {
   totalProducts: 42,
   productViews: 3458,
   popularProducts: [
-    { id: '1', name: 'Hammer Drill 20V', views: 421, rentals: 34 },
-    { id: '2', name: 'Table Saw with Stand', views: 386, rentals: 29 },
-    { id: '3', name: 'Concrete Bull Float', views: 312, rentals: 18 },
+    { id: '1', name: 'Taladro Percutor 20V', views: 421, rentals: 34 },
+    { id: '2', name: 'Sierra de Mesa con Soporte', views: 386, rentals: 29 },
+    { id: '3', name: 'Flotador para Hormigón', views: 312, rentals: 18 },
   ],
   recentRentals: [
-    { id: '1', product: 'Hammer Drill 20V', customer: 'John Smith', date: '2023-07-15', days: 3, status: 'active' },
-    { id: '2', product: 'Table Saw with Stand', customer: 'Sarah Johnson', date: '2023-07-12', days: 7, status: 'active' },
-    { id: '3', product: 'Landscaping Tool Set', customer: 'Michael Brown', date: '2023-07-10', days: 2, status: 'completed' },
+    { id: '1', product: 'Taladro Percutor 20V', customer: 'Juan Pérez', date: '2023-07-15', days: 3, status: 'active' },
+    { id: '2', product: 'Sierra de Mesa con Soporte', customer: 'Sara Martínez', date: '2023-07-12', days: 7, status: 'active' },
+    { id: '3', product: 'Set de Herramientas de Jardinería', customer: 'Miguel Rodríguez', date: '2023-07-10', days: 2, status: 'completed' },
   ],
   // Mock data for monthly views chart
   monthlyViews: [
@@ -86,14 +86,14 @@ export const MOCK_STATS = {
 // Chart configuration
 export const chartConfig = {
   views: {
-    label: 'Views',
+    label: 'Vistas',
     theme: {
       light: '#0ea5e9',
       dark: '#0ea5e9',
     },
   },
   rentals: {
-    label: 'Rentals',
+    label: 'Alquileres',
     theme: {
       light: '#10b981',
       dark: '#10b981',
