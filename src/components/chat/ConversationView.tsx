@@ -14,6 +14,7 @@ import { ArrowLeft, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ConversationViewProps {
   conversation: Conversation;
@@ -117,47 +118,50 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
         <div>
           <h3 className="font-medium text-sm">{conversation.productName}</h3>
           <p className="text-xs text-muted-foreground">{conversation.companyName}</p>
+          <p className="text-xs text-muted-foreground">Usuario: {conversation.userName}</p>
         </div>
       </div>
       
       {/* Mensajes */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {isLoading ? (
-          <div className="h-full flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-center p-4">
-            <p className="text-muted-foreground">No hay mensajes en esta conversación.</p>
-          </div>
-        ) : (
-          messages.map((message) => {
-            const isUserMessage = message.senderType === 'user';
-            const formattedTime = format(message.timestamp, 'HH:mm - d MMM', { locale: es });
-            
-            return (
-              <div 
-                key={message.id} 
-                className={`flex ${isUserMessage ? 'justify-end' : 'justify-start'}`}
-              >
+      <ScrollArea className="flex-1 p-4">
+        <div className="space-y-4">
+          {isLoading ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-center p-4">
+              <p className="text-muted-foreground">No hay mensajes en esta conversación.</p>
+            </div>
+          ) : (
+            messages.map((message) => {
+              const isUserMessage = message.senderType === 'user';
+              const formattedTime = format(message.timestamp, 'HH:mm - d MMM', { locale: es });
+              
+              return (
                 <div 
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    isUserMessage 
-                      ? 'bg-primary text-primary-foreground rounded-tr-none' 
-                      : 'bg-secondary text-secondary-foreground rounded-tl-none'
-                  }`}
+                  key={message.id} 
+                  className={`flex ${isUserMessage ? 'justify-end' : 'justify-start'}`}
                 >
-                  <p className="text-sm">{message.content}</p>
-                  <p className={`text-xs mt-1 ${isUserMessage ? 'text-primary-foreground/70' : 'text-secondary-foreground/70'}`}>
-                    {formattedTime}
-                  </p>
+                  <div 
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                      isUserMessage 
+                        ? 'bg-primary text-primary-foreground rounded-tr-none' 
+                        : 'bg-secondary text-secondary-foreground rounded-tl-none'
+                    }`}
+                  >
+                    <p className="text-sm">{message.content}</p>
+                    <p className={`text-xs mt-1 ${isUserMessage ? 'text-primary-foreground/70' : 'text-secondary-foreground/70'}`}>
+                      {formattedTime}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            );
-          })
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+              );
+            })
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
       
       {/* Formulario de envío */}
       <form onSubmit={handleSendMessage} className="p-4 border-t border-border">

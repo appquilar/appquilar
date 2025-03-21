@@ -29,6 +29,7 @@ export interface Conversation {
   productName: string;
   productImage: string;
   companyName: string;
+  userName: string;
   unreadCount: number;
 }
 
