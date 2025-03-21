@@ -57,10 +57,11 @@ const ConversationListItem = ({
           )}
         </div>
         
-        {/* Contenedor principal con flex para que ocupe el espacio disponible */}
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-start w-full">
-            {/* Información del producto y empresa */}
+        {/* Contenedor principal que ocupa todo el ancho disponible */}
+        <div className="flex-1 flex flex-col w-full">
+          {/* Fila superior con nombre del producto y contador de no leídos */}
+          <div className="flex justify-between items-center w-full">
+            {/* Información del producto */}
             <div className="min-w-0 overflow-hidden">
               <h4 className="font-medium text-sm sm:text-base truncate">
                 {conversation.productName}
@@ -70,15 +71,17 @@ const ConversationListItem = ({
               </p>
             </div>
             
-            {/* Indicador de mensajes no leídos (siempre a la derecha) */}
-            {conversation.unreadCount > 0 && (
-              <Badge variant="default" className="flex-shrink-0 rounded-full py-1 px-2.5 text-xs">
-                {conversation.unreadCount}
-              </Badge>
-            )}
+            {/* Indicador de mensajes no leídos (extremo derecho) */}
+            <div className="flex-shrink-0 ml-2">
+              {conversation.unreadCount > 0 && (
+                <Badge variant="default" className="rounded-full py-1 px-2.5 text-xs">
+                  {conversation.unreadCount}
+                </Badge>
+              )}
+            </div>
           </div>
           
-          {/* Tiempo desde el último mensaje (debajo de la info del producto) */}
+          {/* Tiempo desde el último mensaje */}
           <p className="text-xs mt-1 truncate">
             hace {formatDistanceToNow(conversation.lastMessageAt, { 
               locale: es
