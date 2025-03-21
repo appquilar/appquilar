@@ -8,6 +8,7 @@ import { Form } from '@/components/ui/form';
 
 import ProductBasicInfoFields from './forms/ProductBasicInfoFields';
 import ProductPriceFields from './forms/ProductPriceFields';
+import ProductImagesField from './forms/ProductImagesField';
 import ProductFormActions from './forms/ProductFormActions';
 import { 
   ProductFormValues, 
@@ -59,6 +60,7 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <ProductBasicInfoFields control={form.control} />
         <ProductPriceFields control={form.control} />
+        <ProductImagesField control={form.control} />
         <ProductFormActions isSubmitting={isSubmitting} onCancel={onCancel} />
       </form>
     </Form>
