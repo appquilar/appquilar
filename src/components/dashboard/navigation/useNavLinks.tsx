@@ -21,7 +21,7 @@ export const useNavLinks = () => {
   // Enlaces de navegación básicos
   const navLinks: NavLink[] = [
     {
-      title: 'Panel General',
+      title: 'Panel',
       href: '/dashboard',
       icon: <LayoutDashboard size={18} />,
       exact: true,

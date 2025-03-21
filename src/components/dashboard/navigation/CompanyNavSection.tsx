@@ -15,7 +15,7 @@ interface CompanyNavSectionProps {
 const CompanyNavSection = ({ links, title, isActive, onTabChange }: CompanyNavSectionProps) => {
   return (
     <>
-      <li className="mt-6 mb-2 px-3">
+      <li className="mt-8 mb-3 px-3">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           {title}
         </p>
