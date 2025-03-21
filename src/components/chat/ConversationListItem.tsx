@@ -27,7 +27,7 @@ const ConversationListItem = ({
   const isMobile = useIsMobile();
   
   return (
-    <li>
+    <li className="w-full">
       <button
         onClick={() => onSelect(conversation)}
         className={`w-full text-left p-3 sm:p-4 flex items-center gap-3 transition-colors hover:bg-secondary/50 ${
