@@ -9,6 +9,7 @@ interface ProductEditDialogProps {
   selectedProduct: Product | null;
   onSave: (product: Partial<Product>) => void;
   onCancel: () => void;
+  isAddMode?: boolean;
 }
 
 const ProductEditDialog = ({ 
@@ -16,7 +17,8 @@ const ProductEditDialog = ({
   onOpenChange, 
   selectedProduct, 
   onSave, 
-  onCancel 
+  onCancel,
+  isAddMode = false
 }: ProductEditDialogProps) => {
   if (!selectedProduct) return null;
 
@@ -24,7 +26,9 @@ const ProductEditDialog = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Editar Producto</DialogTitle>
+          <DialogTitle>
+            {isAddMode ? 'Añadir Nuevo Producto' : 'Editar Producto'}
+          </DialogTitle>
         </DialogHeader>
         
         <ProductEditForm 

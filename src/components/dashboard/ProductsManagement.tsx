@@ -6,6 +6,7 @@ import ProductGrid from './products/ProductGrid';
 import SearchToolbar from './products/SearchToolbar';
 import ProductEditDialog from './products/ProductEditDialog';
 import ProductsHeader from './products/ProductsHeader';
+import ProductPagination from './products/ProductPagination';
 import { useProductsManagement } from './products/hooks/useProductsManagement';
 
 const ProductsManagement = () => {
@@ -15,7 +16,12 @@ const ProductsManagement = () => {
     filteredProducts,
     isEditDialogOpen,
     setIsEditDialogOpen,
+    isAddDialogOpen,
+    setIsAddDialogOpen,
     selectedProduct,
+    currentPage,
+    totalPages,
+    handlePageChange,
     handleSearch,
     handleAddProduct,
     handleEditProduct,
@@ -28,7 +34,7 @@ const ProductsManagement = () => {
     <div className="space-y-6">
       <ProductsHeader />
       
-      {/* Barra de búsqueda y filtros */}
+      {/* Barra de búsqueda */}
       <SearchToolbar 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -44,6 +50,13 @@ const ProductsManagement = () => {
         onAdd={handleAddProduct}
       />
       
+      {/* Paginación */}
+      <ProductPagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
+      
       {/* Diálogo de edición de producto */}
       <ProductEditDialog 
         isOpen={isEditDialogOpen}
@@ -51,6 +64,16 @@ const ProductsManagement = () => {
         selectedProduct={selectedProduct}
         onSave={handleSaveProduct}
         onCancel={handleCancelEdit}
+      />
+      
+      {/* Diálogo de añadir producto (reutilizamos el mismo componente) */}
+      <ProductEditDialog 
+        isOpen={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        selectedProduct={selectedProduct}
+        onSave={handleSaveProduct}
+        onCancel={handleCancelEdit}
+        isAddMode={true}
       />
     </div>
   );
