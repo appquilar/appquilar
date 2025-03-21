@@ -1,6 +1,6 @@
 
 import { CardContent, CardDescription, CardHeader, CardTitle, Card } from '@/components/ui/card';
-import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 
 interface DataPoint {
@@ -48,45 +48,47 @@ const MonthlyStatsChart = ({
   config
 }: MonthlyStatsChartProps) => {
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="h-80">
+      <CardContent className="h-80 w-full">
         <ChartContainer 
           config={config} 
-          className="h-full"
+          className="h-full w-full"
         >
-          <LineChart 
-            data={data}
-            margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-          >
-            <XAxis 
-              dataKey="day" 
-              tickLine={false} 
-              axisLine={false} 
-              tickFormatter={(value) => `${value}`}
-              tick={{ fontSize: 12 }}
-            />
-            <YAxis 
-              tickLine={false} 
-              axisLine={false}
-              width={30}
-              tick={{ fontSize: 12 }}
-            />
-            <CartesianGrid stroke="#f5f5f5" strokeDasharray="3 3" vertical={false} />
-            <Tooltip content={<CustomTooltip />} />
-            <Line 
-              type="monotone" 
-              dataKey={dataKey} 
-              name={dataKey}
-              stroke={`var(--color-${dataKey})`} 
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 6, strokeWidth: 0 }}
-            />
-          </LineChart>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart 
+              data={data}
+              margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+            >
+              <XAxis 
+                dataKey="day" 
+                tickLine={false} 
+                axisLine={false} 
+                tickFormatter={(value) => `${value}`}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis 
+                tickLine={false} 
+                axisLine={false}
+                width={30}
+                tick={{ fontSize: 12 }}
+              />
+              <CartesianGrid stroke="#f5f5f5" strokeDasharray="3 3" vertical={false} />
+              <Tooltip content={<CustomTooltip />} />
+              <Line 
+                type="monotone" 
+                dataKey={dataKey} 
+                name={dataKey}
+                stroke={`var(--color-${dataKey})`} 
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 6, strokeWidth: 0 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </ChartContainer>
       </CardContent>
     </Card>
