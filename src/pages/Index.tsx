@@ -6,12 +6,14 @@ import Hero from '@/components/Home/Hero';
 import CategoryGrid from '@/components/Home/CategoryGrid';
 import FeaturedProducts from '@/components/Home/FeaturedProducts';
 import { AuthProvider } from '@/context/AuthContext';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 
+/**
+ * Página principal de la aplicación
+ */
 const Index = () => {
-  // Scroll to top on page load
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  // Hook personalizado para volver al inicio de la página
+  useScrollToTop();
 
   return (
     <AuthProvider>

@@ -1,0 +1,22 @@
+
+{
+  "users": [],
+  "products": [],
+  "categories": [],
+  "rentals": [],
+  "companies": [],
+  "messages": [],
+  "conversations": [],
+  "seo": {
+    "home": {
+      "title": "appquilar - La plataforma de alquiler de herramientas",
+      "description": "Alquila herramientas y equipos de calidad para tus proyectos. Encuentra el mejor equipo sin necesidad de comprar.",
+      "keywords": "alquiler herramientas, equipos, construcción, eventos, jardín"
+    },
+    "about": {
+      "title": "Sobre nosotros - appquilar",
+      "description": "Conoce más sobre appquilar, la plataforma que conecta propietarios de herramientas con personas que las necesitan.",
+      "keywords": "appquilar, sobre nosotros, misión, visión, equipo"
+    }
+  }
+}

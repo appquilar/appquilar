@@ -1,0 +1,33 @@
+
+version: '3.8'
+
+services:
+  # Aplicación web
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    networks:
+      - appquilar-network
+
+  # API mock (opcional, para desarrollo)
+  api-mock:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./mock-api:/app
+    command: >
+      sh -c "npm install -g json-server json-server-auth cors && 
+             json-server --watch db.json --port 3000 --middlewares ./node_modules/json-server-auth --host 0.0.0.0"
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - appquilar-network
+
+networks:
+  appquilar-network:
+    driver: bridge

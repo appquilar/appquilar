@@ -2,7 +2,9 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-// Category interface
+/**
+ * Interfaz para la categoría
+ */
 interface Category {
   id: string;
   name: string;
@@ -11,54 +13,59 @@ interface Category {
   count: number;
 }
 
-// Placeholder categories - will be fetched from backend in production
+/**
+ * Categorías de ejemplo - se obtendrán del backend en producción
+ */
 const CATEGORIES: Category[] = [
   { 
     id: '1',
-    name: 'Power Tools', 
+    name: 'Eléctricas', 
     slug: 'power-tools',
     imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
     count: 42
   },
   { 
     id: '2', 
-    name: 'Hand Tools', 
+    name: 'Manuales', 
     slug: 'hand-tools',
     imageUrl: 'https://images.unsplash.com/photo-1487252665478-49b61b47f302',
     count: 38
   },
   { 
     id: '3', 
-    name: 'Gardening', 
+    name: 'Jardín', 
     slug: 'gardening',
     imageUrl: 'https://images.unsplash.com/photo-1469041797191-50ace28483c3',
     count: 24
   },
   { 
     id: '4', 
-    name: 'Construction', 
+    name: 'Construcción', 
     slug: 'construction',
     imageUrl: 'https://images.unsplash.com/photo-1452378174528-3090a4bba7b2',
     count: 31
   },
   { 
     id: '5', 
-    name: 'Event Equipment', 
+    name: 'Eventos', 
     slug: 'event-equipment',
     imageUrl: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04',
     count: 29
   },
   { 
     id: '6', 
-    name: 'Cleaning', 
+    name: 'Limpieza', 
     slug: 'cleaning',
     imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
     count: 19
   },
 ];
 
+/**
+ * Componente de cuadrícula de categorías para la página de inicio
+ */
 const CategoryGrid = () => {
-  // Preview image loading
+  // Precarga de imágenes
   useEffect(() => {
     CATEGORIES.forEach(category => {
       const img = new Image();
@@ -71,14 +78,14 @@ const CategoryGrid = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-10">
           <div>
-            <span className="block text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wider">Browse</span>
-            <h2 className="text-3xl font-display font-semibold tracking-tight">Categories</h2>
+            <span className="block text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wider">Explorar</span>
+            <h2 className="text-3xl font-display font-semibold tracking-tight">Categorías</h2>
           </div>
           <Link 
             to="/categories" 
             className="text-sm font-medium hover:underline"
           >
-            View all categories
+            Ver todas las categorías
           </Link>
         </div>
         
@@ -90,7 +97,7 @@ const CategoryGrid = () => {
               className="group relative overflow-hidden rounded-xl aspect-[4/3] transition-all duration-350 hover-glow"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              {/* Category image */}
+              {/* Imagen de categoría */}
               <div className="absolute inset-0 bg-muted">
                 <img 
                   src={category.imageUrl} 
@@ -100,10 +107,10 @@ const CategoryGrid = () => {
                 />
               </div>
               
-              {/* Gradient overlay */}
+              {/* Superposición de gradiente */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/10 transition-opacity duration-350 group-hover:opacity-90"></div>
               
-              {/* Content */}
+              {/* Contenido */}
               <div className="absolute inset-0 p-6 flex flex-col justify-end">
                 <h3 className="text-xl font-medium text-white font-display">{category.name}</h3>
                 <p className="text-sm text-white/80 mt-1">{category.count} items</p>

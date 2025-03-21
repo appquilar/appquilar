@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,9 +9,10 @@ import ProductDetail from "./pages/ProductDetail";
 import CategoryPage from "./pages/CategoryPage";
 import Dashboard from "./pages/Dashboard";
 import { AuthProvider } from "./context/AuthContext";
-import MessagesDashboard from "./components/dashboard/MessagesDashboard";
 
-// Cliente de consulta para React Query
+/**
+ * Cliente de consulta para React Query con configuración predeterminada
+ */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -37,13 +37,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/product/:slug" element={<ProductDetail />} />
             <Route path="/category/:slug" element={<CategoryPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/messages" element={<Dashboard />} />
-            <Route path="/dashboard/products" element={<Dashboard />} />
-            <Route path="/dashboard/rentals" element={<Dashboard />} />
-            <Route path="/dashboard/users" element={<Dashboard />} />
-            <Route path="/dashboard/settings" element={<Dashboard />} />
-            <Route path="/dashboard/upgrade" element={<Dashboard />} />
+            <Route path="/dashboard/*" element={<Dashboard />} />
             {/* AÑADE TODAS LAS RUTAS PERSONALIZADAS ENCIMA DE LA RUTA CATCH-ALL "*" */}
             <Route path="*" element={<NotFound />} />
           </Routes>
