@@ -31,7 +31,7 @@ const Hero = () => {
       <div className="max-w-4xl mx-auto text-center">
         <div className="inline-block mb-3 px-3 py-1 bg-primary/10 rounded-full">
           <span className="text-xs font-medium uppercase tracking-wider">
-            Alquila herramientas de calidad cuando las necesites
+            Alquila lo que necesitas, cuando lo necesitas
           </span>
         </div>
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-semibold tracking-tight mb-6 animate-slide-down">
