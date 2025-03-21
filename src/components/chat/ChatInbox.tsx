@@ -34,7 +34,7 @@ const ChatInbox = () => {
       </div>
       
       {/* Vista de conversación */}
-      <div className={`flex flex-col md:col-span-2 h-full ${selectedConversation ? 'block' : 'hidden md:flex md:items-center md:justify-center'}`}>
+      <div className={`flex flex-col md:col-span-2 h-full overflow-hidden ${selectedConversation ? 'block' : 'hidden md:flex md:items-center md:justify-center'}`}>
         {selectedConversation ? (
           <ConversationView 
             conversation={selectedConversation} 

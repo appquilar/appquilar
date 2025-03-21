@@ -34,6 +34,7 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
   const messageService = MessageService.getInstance();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   // Cargar mensajes al inicializar
   useEffect(() => {
@@ -64,10 +65,18 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
   
   // Desplazar automáticamente al último mensaje
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (!isLoading && scrollAreaRef.current) {
+      // Primero intentamos usar scrollHeight si está disponible
+      if (scrollAreaRef.current.scrollHeight) {
+        scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+      }
+      
+      // Como respaldo, desplazamos al último mensaje usando el ref
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+      }
     }
-  }, [messages]);
+  }, [messages, isLoading]);
   
   // Manejar el envío de un nuevo mensaje
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -126,50 +135,51 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
         </div>
       </div>
       
-      {/* Área de mensajes con ScrollArea para asegurar el scroll */}
-      <ScrollArea className="flex-1 py-2">
-        <div className="px-4 space-y-4">
-          {isLoading ? (
-            <div className="h-24 flex items-center justify-center">
-              <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="h-24 flex items-center justify-center text-center p-4">
-              <p className="text-muted-foreground">No hay mensajes en esta conversación.</p>
-            </div>
-          ) : (
-            messages.map((message) => {
-              const isUserMessage = message.senderType === 'user';
-              const formattedTime = format(message.timestamp, 'HH:mm - d MMM', { locale: es });
-              
-              return (
+      {/* Área de mensajes con overflow auto para permitir scroll nativo */}
+      <div 
+        ref={scrollAreaRef}
+        className="flex-1 overflow-y-auto py-2 px-4 space-y-4"
+      >
+        {isLoading ? (
+          <div className="h-24 flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="h-24 flex items-center justify-center text-center p-4">
+            <p className="text-muted-foreground">No hay mensajes en esta conversación.</p>
+          </div>
+        ) : (
+          messages.map((message) => {
+            const isUserMessage = message.senderType === 'user';
+            const formattedTime = format(message.timestamp, 'HH:mm - d MMM', { locale: es });
+            
+            return (
+              <div 
+                key={message.id} 
+                className={`flex ${isUserMessage ? 'justify-end' : 'justify-start'}`}
+              >
                 <div 
-                  key={message.id} 
-                  className={`flex ${isUserMessage ? 'justify-end' : 'justify-start'}`}
+                  className={`max-w-[80%] rounded-lg p-3 ${
+                    isUserMessage 
+                      ? 'bg-primary text-primary-foreground rounded-tr-none' 
+                      : 'bg-secondary text-secondary-foreground rounded-tl-none'
+                  }`}
                 >
-                  <div 
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      isUserMessage 
-                        ? 'bg-primary text-primary-foreground rounded-tr-none' 
-                        : 'bg-secondary text-secondary-foreground rounded-tl-none'
-                    }`}
-                  >
-                    <p className="text-sm">{message.content}</p>
-                    <p className={`text-xs mt-1 ${isUserMessage ? 'text-primary-foreground/70' : 'text-secondary-foreground/70'}`}>
-                      {formattedTime}
-                    </p>
-                  </div>
+                  <p className="text-sm">{message.content}</p>
+                  <p className={`text-xs mt-1 ${isUserMessage ? 'text-primary-foreground/70' : 'text-secondary-foreground/70'}`}>
+                    {formattedTime}
+                  </p>
                 </div>
-              );
-            })
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
+              </div>
+            );
+          })
+        )}
+        <div ref={messagesEndRef} />
+      </div>
       
       {/* Formulario de envío - Sticky en la parte inferior */}
       <div className="sticky bottom-0 z-10 border-t border-border p-3 bg-background">
-        <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+        <form onSubmit={handleSendMessage} className="flex gap-2 items-end">
           <Textarea
             placeholder="Escribe tu mensaje..."
             className="min-h-[50px] max-h-[100px] resize-none"
@@ -180,7 +190,7 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
           <Button 
             type="submit" 
             size="icon"
-            className="h-[50px] w-[50px] flex-shrink-0"
+            className="h-[50px] flex-shrink-0 mb-[1px]" 
             disabled={!newMessage.trim() || isSending}
           >
             <Send size={18} />

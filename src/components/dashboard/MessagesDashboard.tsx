@@ -35,8 +35,8 @@ const MessagesDashboard = () => {
         </p>
       </div>
       
-      {/* Contenedor del chat con altura calculada para asegurar que todo sea visible */}
-      <div className="flex-1 h-[calc(100vh-180px)]">
+      {/* Contenedor del chat con altura fija para que se ajuste bien al dashboard */}
+      <div className="flex-1 h-[calc(100vh-220px)] overflow-hidden">
         <ChatInbox />
       </div>
     </div>
