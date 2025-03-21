@@ -90,7 +90,7 @@ const ConversationList = ({
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-green-100">
       <ScrollArea className="flex-1">
         <ul className="divide-y divide-border">
           {paginatedConversations.map((conversation) => (

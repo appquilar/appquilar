@@ -20,9 +20,9 @@ const ChatInbox = () => {
   const isMobile = useIsMobile();
   
   return (
-    <div className="flex w-full h-full border border-border rounded-lg overflow-hidden md:grid md:grid-cols-3">
+    <div className="flex w-full h-full border border-border rounded-lg overflow-hidden md:grid md:grid-cols-3 bg-blue-50">
       {/* Lista de conversaciones (siempre visible en desktop, condicional en mobile) */}
-      <div className={`md:col-span-1 md:border-r border-border flex flex-col h-full overflow-hidden ${selectedConversation && isMobile ? 'hidden' : 'flex'}`}>
+      <div className={`md:col-span-1 md:border-r border-border flex flex-col h-full overflow-hidden bg-yellow-50 ${selectedConversation && isMobile ? 'hidden' : 'flex'}`}>
         <div className="sticky top-0 z-10 p-4 border-b border-border bg-background">
           <h2 className="text-lg font-medium flex items-center gap-2">
             <MessageCircle size={18} />
@@ -39,7 +39,7 @@ const ChatInbox = () => {
       </div>
       
       {/* Vista de conversación */}
-      <div className={`flex flex-col md:col-span-2 h-full overflow-hidden ${selectedConversation || !isMobile ? 'block' : 'hidden'}`}>
+      <div className={`flex flex-col md:col-span-2 h-full overflow-hidden bg-pink-50 ${selectedConversation || !isMobile ? 'block' : 'hidden'}`}>
         {selectedConversation ? (
           <ConversationView 
             conversation={selectedConversation} 
