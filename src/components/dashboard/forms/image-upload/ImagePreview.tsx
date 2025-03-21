@@ -25,25 +25,20 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
           className="w-full h-full object-cover"
         />
       </div>
-      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button
-          size="sm"
-          variant="destructive"
-          className="h-8 w-8 p-0 absolute top-2 right-2"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove(image.id);
-          }}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-        
-        {!image.isPrimary && (
-          <span className="text-white text-xs bg-black/60 px-2 py-1 rounded">
-            Click to set as primary
-          </span>
-        )}
-      </div>
+      
+      {/* Remove button - always visible with bubble styling */}
+      <Button
+        size="sm"
+        variant="destructive"
+        className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full shadow-md z-10"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove(image.id);
+        }}
+      >
+        <X className="h-3 w-3" />
+      </Button>
+      
       {image.isPrimary && (
         <div className="absolute top-2 left-2 bg-primary text-white rounded-full px-2 py-1 flex items-center gap-1 text-xs">
           <Star className="h-3 w-3" />
