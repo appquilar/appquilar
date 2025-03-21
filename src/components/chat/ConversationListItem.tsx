@@ -37,7 +37,7 @@ const ConversationListItem = ({
     <li className="w-full">
       <button
         onClick={() => onSelect(conversation)}
-        className={`w-full text-left p-3 sm:p-4 flex items-center gap-3 transition-colors hover:bg-secondary/50 ${
+        className={`w-full text-left p-3 sm:p-4 flex items-center space-x-3 transition-colors hover:bg-secondary/50 ${
           isSelected ? 'bg-secondary' : ''
         }`}
       >
@@ -57,12 +57,10 @@ const ConversationListItem = ({
           )}
         </div>
         
-        {/* Contenedor principal que ocupa todo el ancho disponible */}
-        <div className="flex-1 flex flex-col w-full pr-1">
-          {/* Fila superior con nombre del producto y contador de no leídos */}
-          <div className="flex items-center w-full">
-            {/* Información del producto */}
-            <div className="flex-1 min-w-0 overflow-hidden">
+        {/* Contenedor principal con información y badge */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex items-center justify-between w-full">
+            <div className="truncate">
               <h4 className="font-medium text-sm sm:text-base truncate">
                 {conversation.productName}
               </h4>
@@ -71,18 +69,15 @@ const ConversationListItem = ({
               </p>
             </div>
             
-            {/* Indicador de mensajes no leídos (extremo derecho) */}
-            <div className="flex-shrink-0">
-              {conversation.unreadCount > 0 && (
-                <Badge variant="default" className="rounded-full py-1 px-2.5 text-xs">
-                  {conversation.unreadCount}
-                </Badge>
-              )}
-            </div>
+            {conversation.unreadCount > 0 && (
+              <Badge variant="default" className="ml-2 flex-shrink-0 rounded-full py-1 px-2.5 text-xs">
+                {conversation.unreadCount}
+              </Badge>
+            )}
           </div>
           
           {/* Tiempo desde el último mensaje */}
-          <p className="text-xs mt-1 truncate">
+          <p className="text-xs mt-1 truncate text-muted-foreground">
             hace {formatDistanceToNow(conversation.lastMessageAt, { 
               locale: es
             }).replace('alrededor de ', '')}

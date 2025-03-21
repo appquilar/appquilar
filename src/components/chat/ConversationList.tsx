@@ -90,9 +90,9 @@ const ConversationList = ({
   }
 
   return (
-    <div className="h-full flex flex-col w-full">
-      <ScrollArea className="flex-1 w-full">
-        <ul className="divide-y divide-border w-full">
+    <div className="h-full flex flex-col">
+      <ScrollArea className="flex-1">
+        <ul className="divide-y divide-border">
           {paginatedConversations.map((conversation) => (
             <ConversationListItem 
               key={conversation.id}
@@ -105,7 +105,7 @@ const ConversationList = ({
       </ScrollArea>
       
       {totalPages > 1 && (
-        <div className="mt-auto w-full">
+        <div className="mt-auto">
           <ConversationPagination 
             currentPage={currentPage}
             totalPages={totalPages}
