@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Product } from '../products/ProductCard';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import ProductEditForm from './ProductEditForm';
 
 // Mock products - would come from backend API in production
 const MOCK_PRODUCTS: Product[] = [
@@ -114,9 +116,12 @@ const MOCK_PRODUCTS: Product[] = [
 
 const ProductsManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
   // Filter products based on search query
-  const filteredProducts = MOCK_PRODUCTS.filter(product => 
+  const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.category.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -132,11 +137,37 @@ const ProductsManagement = () => {
   };
   
   const handleEditProduct = (productId: string) => {
-    toast.info(`Editing product ${productId}`);
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      setSelectedProduct(product);
+      setIsEditDialogOpen(true);
+    }
+  };
+  
+  const handleSaveProduct = (updatedProduct: Partial<Product>) => {
+    if (!selectedProduct) return;
+    
+    // Update the product in the state
+    setProducts(prevProducts => 
+      prevProducts.map(p => 
+        p.id === selectedProduct.id ? { ...p, ...updatedProduct } : p
+      )
+    );
+    
+    // Close the dialog
+    setIsEditDialogOpen(false);
+    setSelectedProduct(null);
+  };
+  
+  const handleCancelEdit = () => {
+    setIsEditDialogOpen(false);
+    setSelectedProduct(null);
   };
   
   const handleDeleteProduct = (productId: string) => {
-    toast.success(`Product ${productId} deleted successfully`);
+    // Remove the product from the state
+    setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
+    toast.success(`Product deleted successfully`);
   };
   
   return (
@@ -225,6 +256,23 @@ const ProductsManagement = () => {
           </Button>
         </div>
       )}
+      
+      {/* Edit Product Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+          </DialogHeader>
+          
+          {selectedProduct && (
+            <ProductEditForm 
+              product={selectedProduct}
+              onSave={handleSaveProduct}
+              onCancel={handleCancelEdit}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
