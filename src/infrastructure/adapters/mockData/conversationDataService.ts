@@ -6,7 +6,11 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { Conversation, Message } from '../../../core/domain/Message';
-import { createMockConversations, createMockMessages, createNewConversation } from './conversationMockData';
+import { 
+  createMockConversations, 
+  createMockMessages, 
+  createNewConversation 
+} from './conversations';
 
 /**
  * Servicio que gestiona los datos mock de las conversaciones
