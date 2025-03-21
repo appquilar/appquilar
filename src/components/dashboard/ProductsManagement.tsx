@@ -1,13 +1,11 @@
-
 import { useState } from 'react';
-import { Edit, Filter, Plus, Search, Trash } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Product } from '../products/ProductCard';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import ProductEditForm from './ProductEditForm';
+import { Product } from '../products/ProductCard';
+
+// Import refactored components
+import ProductGrid from './products/ProductGrid';
+import SearchToolbar from './products/SearchToolbar';
+import ProductEditDialog from './products/ProductEditDialog';
 
 // Mock products - would come from backend API in production
 const MOCK_PRODUCTS: Product[] = [
@@ -177,102 +175,32 @@ const ProductsManagement = () => {
           <h1 className="text-2xl font-display font-semibold">Products Management</h1>
           <p className="text-muted-foreground">Manage your rental inventory.</p>
         </div>
-        <Button onClick={handleAddProduct} className="gap-2">
-          <Plus size={16} />
-          Add New Product
-        </Button>
       </div>
       
-      {/* Search and filter */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <form onSubmit={handleSearch} className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </form>
-        <Button variant="outline" className="gap-2 sm:w-auto w-full">
-          <Filter size={16} />
-          Filters
-        </Button>
-      </div>
+      {/* Search and filter toolbar */}
+      <SearchToolbar 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onAddProduct={handleAddProduct}
+        onSearch={handleSearch}
+      />
       
       {/* Products grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filteredProducts.map((product) => (
-          <Card key={product.id} className="overflow-hidden hover:shadow-sm transition-shadow">
-            <div className="aspect-[4/3] relative">
-              <img 
-                src={product.thumbnailUrl || product.imageUrl} 
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <CardHeader className="py-3">
-              <CardTitle className="text-base font-medium truncate">
-                {product.name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="py-2">
-              <p className="text-xs text-muted-foreground mb-2">
-                {product.category.name} • ${product.price.daily}/day
-              </p>
-              <p className="text-sm line-clamp-2">{product.description}</p>
-            </CardContent>
-            <CardFooter className="pt-2 pb-4 flex justify-between">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-1"
-                onClick={() => handleEditProduct(product.id)}
-              >
-                <Edit size={14} />
-                Edit
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-1 text-red-500 hover:text-red-600 hover:bg-red-50"
-                onClick={() => handleDeleteProduct(product.id)}
-              >
-                <Trash size={14} />
-                Delete
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-      
-      {filteredProducts.length === 0 && (
-        <div className="text-center py-12 bg-muted/30 rounded-lg">
-          <h3 className="text-lg font-medium mb-2">No products found</h3>
-          <p className="text-muted-foreground mb-6">Try adjusting your search or add a new product.</p>
-          <Button onClick={handleAddProduct} className="gap-2">
-            <Plus size={16} />
-            Add New Product
-          </Button>
-        </div>
-      )}
+      <ProductGrid 
+        products={filteredProducts}
+        onEdit={handleEditProduct}
+        onDelete={handleDeleteProduct}
+        onAdd={handleAddProduct}
+      />
       
       {/* Edit Product Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Product</DialogTitle>
-          </DialogHeader>
-          
-          {selectedProduct && (
-            <ProductEditForm 
-              product={selectedProduct}
-              onSave={handleSaveProduct}
-              onCancel={handleCancelEdit}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <ProductEditDialog 
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        selectedProduct={selectedProduct}
+        onSave={handleSaveProduct}
+        onCancel={handleCancelEdit}
+      />
     </div>
   );
 };

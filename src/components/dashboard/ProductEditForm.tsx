@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -75,10 +74,19 @@ const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) =>
         ...product,
         name: values.name,
         description: values.description,
-        price: values.price,
+        price: {
+          hourly: values.price.hourly,
+          daily: values.price.daily, // Now this is guaranteed to be present
+          weekly: values.price.weekly,
+          monthly: values.price.monthly,
+        },
         imageUrl: values.imageUrl,
         thumbnailUrl: values.imageUrl, // Using same URL for thumbnail for simplicity
-        category: values.category,
+        category: {
+          id: values.category.id,
+          name: values.category.name,
+          slug: product.category.slug, // Ensure slug is included
+        },
       };
       
       // Simulate API delay
