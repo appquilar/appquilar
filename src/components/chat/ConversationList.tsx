@@ -4,7 +4,7 @@
  * @module components/chat/ConversationList
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Conversation } from '@/core/domain/Message';
 import { MessageService } from '@/infrastructure/services/MessageService';
@@ -18,6 +18,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from '@/components/ui/carousel';
+import type { UseEmblaCarouselType } from 'embla-carousel-react';
 
 interface ConversationListProps {
   onSelectConversation: (conversation: Conversation) => void;
@@ -39,6 +40,9 @@ const ConversationList = ({
   const [currentPage, setCurrentPage] = useState(1);
   const { user } = useAuth();
   const messageService = MessageService.getInstance();
+  
+  // Referencia para el carrusel
+  const [emblaRef, emblaApi] = useRef<UseEmblaCarouselType>([null, null]);
 
   // Calcular páginas totales
   const totalPages = Math.ceil(conversations.length / ITEMS_PER_PAGE);
@@ -79,10 +83,32 @@ const ConversationList = ({
     return () => clearInterval(intervalId);
   }, [user]);
 
-  // Manejar cambio de página
-  const handlePageChange = (page: number) => {
+  // Actualizar el embla cuando el currentPage cambie
+  useEffect(() => {
+    if (emblaApi[1] && emblaApi[1].scrollTo) {
+      emblaApi[1].scrollTo(currentPage - 1);
+    }
+  }, [currentPage]);
+
+  // Añadir listener para detectar cambios de slide
+  useEffect(() => {
+    const api = emblaApi[1];
+    if (!api) return;
+
+    const onSelect = () => {
+      setCurrentPage(api.selectedScrollSnap() + 1);
+    };
+
+    api.on('select', onSelect);
+    return () => {
+      api.off('select', onSelect);
+    };
+  }, [emblaApi]);
+
+  // Manejar cambio de página desde la paginación
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-  };
+  }, []);
 
   // Si está cargando, mostrar indicador
   if (isLoading) {
@@ -108,9 +134,8 @@ const ConversationList = ({
           align: 'start',
           loop: false,
         }}
-        onSlideChange={(carouselApi) => {
-          const currentSlide = carouselApi?.selectedScrollSnap() || 0;
-          setCurrentPage(currentSlide + 1);
+        setApi={(api) => {
+          emblaApi[1] = api;
         }}
         defaultSlide={currentPage - 1}
       >
