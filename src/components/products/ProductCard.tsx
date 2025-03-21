@@ -1,10 +1,10 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 // Product interface
 export interface Product {
   id: string;
+  internalId?: string;
   name: string;
   slug: string;
   imageUrl: string;
@@ -26,8 +26,9 @@ export interface Product {
     name: string;
     slug: string;
   };
-  rating: number;
+  rating?: number;
   reviewCount: number;
+  isFeatured?: boolean;
 }
 
 interface ProductCardProps {
@@ -73,7 +74,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             {product.category.name}
           </span>
           <div className="ml-auto flex items-center">
-            <span className="text-xs font-medium text-amber-500">★ {product.rating.toFixed(1)}</span>
+            <span className="text-xs font-medium text-amber-500">★ {product.rating?.toFixed(1)}</span>
             <span className="text-xs text-muted-foreground ml-1">({product.reviewCount})</span>
           </div>
         </div>

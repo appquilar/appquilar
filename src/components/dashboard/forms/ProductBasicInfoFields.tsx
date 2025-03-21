@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Control } from "react-hook-form";
 import { ProductFormValues } from "./productFormSchema";
-import ProductImagesField from "./ProductImagesField";
 
 interface ProductBasicInfoFieldsProps {
   control: Control<ProductFormValues>;
@@ -50,9 +49,6 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
           </FormItem>
         )}
       />
-      
-      {/* Image upload field */}
-      <ProductImagesField control={control} />
     </>
   );
 };

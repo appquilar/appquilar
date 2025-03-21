@@ -5,6 +5,7 @@ import { ImageFile } from "./image-upload/types";
 
 // Esquema de validación para el formulario de producto
 export const productFormSchema = z.object({
+  internalId: z.string().optional(),
   name: z.string().min(3, { message: 'El nombre del producto debe tener al menos 3 caracteres.' }),
   description: z.string().min(10, { message: 'La descripción debe tener al menos 10 caracteres.' }),
   price: z.object({
@@ -26,6 +27,7 @@ export type ProductFormValues = z.infer<typeof productFormSchema>;
 
 export const mapProductToFormValues = (product: Product): ProductFormValues => {
   return {
+    internalId: product.internalId || '',
     name: product.name,
     description: product.description,
     price: {
@@ -52,6 +54,7 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
 
   return {
     ...product,
+    internalId: values.internalId,
     name: values.name,
     description: values.description,
     price: {
