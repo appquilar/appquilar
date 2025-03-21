@@ -47,6 +47,22 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
         )}
       />
       
+      {/* New slug field */}
+      <FormField
+        control={control}
+        name="slug"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Slug</FormLabel>
+            <FormControl>
+              <Input placeholder="slug-del-producto" {...field} />
+            </FormControl>
+            <FormMessage />
+            <p className="text-xs text-muted-foreground mt-1">Usado en URLs - debe ser único (ejemplo: taladro-profesional-20v)</p>
+          </FormItem>
+        )}
+      />
+      
       <FormField
         control={control}
         name="description"

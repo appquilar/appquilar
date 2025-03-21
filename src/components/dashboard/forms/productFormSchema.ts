@@ -7,6 +7,10 @@ import { ImageFile } from "./image-upload/types";
 export const productFormSchema = z.object({
   internalId: z.string().optional(),
   name: z.string().min(3, { message: 'El nombre del producto debe tener al menos 3 caracteres.' }),
+  slug: z.string().min(3, { message: 'El slug debe tener al menos 3 caracteres.' })
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { 
+      message: 'El slug solo puede contener letras minúsculas, números y guiones (-).' 
+    }),
   description: z.string().min(10, { message: 'La descripción debe tener al menos 10 caracteres.' }),
   price: z.object({
     hourly: z.number().optional(),
@@ -29,6 +33,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
   return {
     internalId: product.internalId || '',
     name: product.name,
+    slug: product.slug || '',
     description: product.description,
     price: {
       hourly: product.price.hourly || undefined,
@@ -56,6 +61,7 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
     ...product,
     internalId: values.internalId,
     name: values.name,
+    slug: values.slug,
     description: values.description,
     price: {
       hourly: values.price.hourly,
@@ -68,7 +74,7 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
     category: {
       id: values.category.id,
       name: values.category.name,
-      slug: product.category.slug, // Asegurar que se incluye el slug
+      slug: product.category.slug, // Asegurar que se incluye el slug de la categoría
     },
   };
 };
