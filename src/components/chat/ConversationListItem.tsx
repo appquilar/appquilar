@@ -40,7 +40,6 @@ const ConversationListItem = ({
         className={`w-full text-left p-3 sm:p-4 flex items-center gap-3 transition-colors hover:bg-secondary/50 ${
           isSelected ? 'bg-secondary' : ''
         }`}
-        style={{ width: '100%' }}
       >
         {/* Imagen del producto */}
         <div className="relative flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded overflow-hidden border border-border bg-secondary/20">
@@ -59,7 +58,7 @@ const ConversationListItem = ({
         </div>
         
         {/* Información de la conversación */}
-        <div className="w-full min-w-0 overflow-hidden flex flex-col mr-2">
+        <div className="grow min-w-0 overflow-hidden flex flex-col">
           <h4 className="font-medium text-sm sm:text-base truncate">
             {conversation.productName}
           </h4>
@@ -75,7 +74,7 @@ const ConversationListItem = ({
         
         {/* Indicador de mensajes no leídos */}
         {conversation.unreadCount > 0 && (
-          <Badge variant="default" className="flex-shrink-0 ml-auto rounded-full py-1 px-2.5 text-xs">
+          <Badge variant="default" className="flex-shrink-0 rounded-full py-1 px-2.5 text-xs">
             {conversation.unreadCount}
           </Badge>
         )}

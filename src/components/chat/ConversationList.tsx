@@ -91,26 +91,28 @@ const ConversationList = ({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="w-full flex-1">
-        <ScrollArea className="h-full w-full">
-          <ul className="divide-y divide-border w-full">
-            {paginatedConversations.map((conversation) => (
-              <ConversationListItem 
-                key={conversation.id}
-                conversation={conversation}
-                isSelected={selectedConversationId === conversation.id}
-                onSelect={onSelectConversation}
-              />
-            ))}
-          </ul>
-        </ScrollArea>
-      </div>
+      <ScrollArea className="flex-1 w-full">
+        <ul className="divide-y divide-border w-full">
+          {paginatedConversations.map((conversation) => (
+            <ConversationListItem 
+              key={conversation.id}
+              conversation={conversation}
+              isSelected={selectedConversationId === conversation.id}
+              onSelect={onSelectConversation}
+            />
+          ))}
+        </ul>
+      </ScrollArea>
       
-      <ConversationPagination 
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
+      {totalPages > 1 && (
+        <div className="mt-auto">
+          <ConversationPagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      )}
     </div>
   );
 };
