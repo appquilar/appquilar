@@ -4,7 +4,7 @@
  * @module components/chat/ConversationList
  */
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Conversation } from '@/core/domain/Message';
 import { MessageService } from '@/infrastructure/services/MessageService';
@@ -18,7 +18,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from '@/components/ui/carousel';
-import type { UseEmblaCarouselType } from 'embla-carousel-react';
+import useEmblaCarousel from 'embla-carousel-react';
 
 interface ConversationListProps {
   onSelectConversation: (conversation: Conversation) => void;
@@ -41,8 +41,11 @@ const ConversationList = ({
   const { user } = useAuth();
   const messageService = MessageService.getInstance();
   
-  // Referencia para el carrusel
-  const [emblaRef, emblaApi] = useRef<UseEmblaCarouselType>([null, null]);
+  // Configurar el carrusel con Embla
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: 'start',
+    loop: false,
+  });
 
   // Calcular páginas totales
   const totalPages = Math.ceil(conversations.length / ITEMS_PER_PAGE);
@@ -85,23 +88,22 @@ const ConversationList = ({
 
   // Actualizar el embla cuando el currentPage cambie
   useEffect(() => {
-    if (emblaApi[1] && emblaApi[1].scrollTo) {
-      emblaApi[1].scrollTo(currentPage - 1);
+    if (emblaApi && emblaApi.scrollTo) {
+      emblaApi.scrollTo(currentPage - 1);
     }
-  }, [currentPage]);
+  }, [currentPage, emblaApi]);
 
   // Añadir listener para detectar cambios de slide
   useEffect(() => {
-    const api = emblaApi[1];
-    if (!api) return;
+    if (!emblaApi) return;
 
     const onSelect = () => {
-      setCurrentPage(api.selectedScrollSnap() + 1);
+      setCurrentPage(emblaApi.selectedScrollSnap() + 1);
     };
 
-    api.on('select', onSelect);
+    emblaApi.on('select', onSelect);
     return () => {
-      api.off('select', onSelect);
+      emblaApi.off('select', onSelect);
     };
   }, [emblaApi]);
 
@@ -128,36 +130,34 @@ const ConversationList = ({
 
   return (
     <div className="h-full flex flex-col">
-      <Carousel 
-        className="w-full flex-1"
-        opts={{
-          align: 'start',
-          loop: false,
-        }}
-        setApi={(api) => {
-          emblaApi[1] = api;
-        }}
-        defaultSlide={currentPage - 1}
-      >
-        <CarouselContent className="h-full -ml-0 -mt-0">
-          {conversationPages.map((pageConversations, index) => (
-            <CarouselItem key={index} className="w-full pl-0 pt-0 h-full">
-              <ScrollArea className="h-full">
-                <ul className="divide-y divide-border">
-                  {pageConversations.map((conversation) => (
-                    <ConversationListItem 
-                      key={conversation.id}
-                      conversation={conversation}
-                      isSelected={selectedConversationId === conversation.id}
-                      onSelect={onSelectConversation}
-                    />
-                  ))}
-                </ul>
-              </ScrollArea>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-      </Carousel>
+      <div className="w-full flex-1">
+        <div ref={emblaRef} className="overflow-hidden h-full">
+          <div className="flex h-full">
+            {conversationPages.map((pageConversations, index) => (
+              <div 
+                key={index} 
+                className="flex-shrink-0 flex-grow-0 min-w-full h-full"
+                style={{ 
+                  flex: '0 0 100%' 
+                }}
+              >
+                <ScrollArea className="h-full">
+                  <ul className="divide-y divide-border">
+                    {pageConversations.map((conversation) => (
+                      <ConversationListItem 
+                        key={conversation.id}
+                        conversation={conversation}
+                        isSelected={selectedConversationId === conversation.id}
+                        onSelect={onSelectConversation}
+                      />
+                    ))}
+                  </ul>
+                </ScrollArea>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
       
       <ConversationPagination 
         currentPage={currentPage}
