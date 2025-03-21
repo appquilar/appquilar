@@ -13,7 +13,6 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from '@/components/ui/pagination';
-import { MoveHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ConversationPaginationProps {
   currentPage: number;
@@ -42,13 +41,6 @@ const ConversationPagination = ({
 
   return (
     <div className="py-2 border-t border-border bg-background sticky bottom-0">
-      {isMobile && (
-        <div className="flex justify-center items-center text-muted-foreground text-xs mb-1">
-          <MoveHorizontal className="h-3 w-3 mr-1" />
-          <span>Desliza para navegar</span>
-        </div>
-      )}
-      
       <Pagination>
         <PaginationContent>
           {currentPage > 1 && (

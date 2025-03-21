@@ -13,12 +13,6 @@ import EmptyConversationList from './EmptyConversationList';
 import ConversationListSkeleton from './ConversationListSkeleton';
 import ConversationPagination from './ConversationPagination';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from '@/components/ui/carousel';
-import useEmblaCarousel from 'embla-carousel-react';
 
 interface ConversationListProps {
   onSelectConversation: (conversation: Conversation) => void;
@@ -40,12 +34,6 @@ const ConversationList = ({
   const [currentPage, setCurrentPage] = useState(1);
   const { user } = useAuth();
   const messageService = MessageService.getInstance();
-  
-  // Configurar el carrusel con Embla
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: 'start',
-    loop: false,
-  });
 
   // Calcular páginas totales
   const totalPages = Math.ceil(conversations.length / ITEMS_PER_PAGE);
@@ -86,27 +74,6 @@ const ConversationList = ({
     return () => clearInterval(intervalId);
   }, [user]);
 
-  // Actualizar el embla cuando el currentPage cambie
-  useEffect(() => {
-    if (emblaApi && emblaApi.scrollTo) {
-      emblaApi.scrollTo(currentPage - 1);
-    }
-  }, [currentPage, emblaApi]);
-
-  // Añadir listener para detectar cambios de slide
-  useEffect(() => {
-    if (!emblaApi) return;
-
-    const onSelect = () => {
-      setCurrentPage(emblaApi.selectedScrollSnap() + 1);
-    };
-
-    emblaApi.on('select', onSelect);
-    return () => {
-      emblaApi.off('select', onSelect);
-    };
-  }, [emblaApi]);
-
   // Manejar cambio de página desde la paginación
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
@@ -122,41 +89,21 @@ const ConversationList = ({
     return <EmptyConversationList />;
   }
 
-  // Preparar los grupos de conversaciones para carrusel
-  const conversationPages = Array.from({ length: totalPages }, (_, i) => {
-    const startIdx = i * ITEMS_PER_PAGE;
-    return conversations.slice(startIdx, startIdx + ITEMS_PER_PAGE);
-  });
-
   return (
     <div className="h-full flex flex-col">
       <div className="w-full flex-1">
-        <div ref={emblaRef} className="overflow-hidden h-full">
-          <div className="flex h-full">
-            {conversationPages.map((pageConversations, index) => (
-              <div 
-                key={index} 
-                className="flex-shrink-0 flex-grow-0 min-w-full h-full"
-                style={{ 
-                  flex: '0 0 100%' 
-                }}
-              >
-                <ScrollArea className="h-full">
-                  <ul className="divide-y divide-border">
-                    {pageConversations.map((conversation) => (
-                      <ConversationListItem 
-                        key={conversation.id}
-                        conversation={conversation}
-                        isSelected={selectedConversationId === conversation.id}
-                        onSelect={onSelectConversation}
-                      />
-                    ))}
-                  </ul>
-                </ScrollArea>
-              </div>
+        <ScrollArea className="h-full">
+          <ul className="divide-y divide-border">
+            {paginatedConversations.map((conversation) => (
+              <ConversationListItem 
+                key={conversation.id}
+                conversation={conversation}
+                isSelected={selectedConversationId === conversation.id}
+                onSelect={onSelectConversation}
+              />
             ))}
-          </div>
-        </div>
+          </ul>
+        </ScrollArea>
       </div>
       
       <ConversationPagination 
