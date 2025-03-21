@@ -30,9 +30,10 @@ const ConversationListItem = ({
     <li className="w-full">
       <button
         onClick={() => onSelect(conversation)}
-        className={`w-full text-left p-3 sm:p-4 flex items-center gap-3 transition-colors hover:bg-secondary/50 border-b border-border ${
+        className={`w-full text-left p-3 sm:p-4 flex items-center gap-3 transition-colors hover:bg-secondary/50 ${
           isSelected ? 'bg-secondary' : ''
         }`}
+        style={{ width: '100%' }}
       >
         {/* Imagen del producto */}
         <div className="relative flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded overflow-hidden border border-border">

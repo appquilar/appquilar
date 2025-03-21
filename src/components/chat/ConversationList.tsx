@@ -92,8 +92,8 @@ const ConversationList = ({
   return (
     <div className="h-full flex flex-col">
       <div className="w-full flex-1">
-        <ScrollArea className="h-full">
-          <ul className="divide-y divide-border">
+        <ScrollArea className="h-full w-full">
+          <ul className="divide-y divide-border w-full">
             {paginatedConversations.map((conversation) => (
               <ConversationListItem 
                 key={conversation.id}
