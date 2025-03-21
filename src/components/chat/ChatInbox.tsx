@@ -17,10 +17,10 @@ const ChatInbox = () => {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   
   return (
-    <div className="h-full border border-border rounded-lg overflow-hidden grid grid-cols-1 md:grid-cols-3">
+    <div className="flex flex-col h-full border border-border rounded-lg overflow-hidden md:grid md:grid-cols-3">
       {/* Lista de conversaciones (siempre visible en desktop, condicional en mobile) */}
       <div className={`md:col-span-1 md:border-r border-border ${selectedConversation ? 'hidden md:block' : 'block'}`}>
-        <div className="p-4 border-b border-border">
+        <div className="p-4 border-b border-border bg-background">
           <h2 className="text-lg font-medium flex items-center gap-2">
             <MessageCircle size={18} />
             Conversaciones
@@ -34,7 +34,7 @@ const ChatInbox = () => {
       </div>
       
       {/* Vista de conversación */}
-      <div className={`md:col-span-2 h-full ${selectedConversation ? 'block' : 'hidden md:flex md:items-center md:justify-center'}`}>
+      <div className={`flex flex-col md:col-span-2 h-full ${selectedConversation ? 'block' : 'hidden md:flex md:items-center md:justify-center'}`}>
         {selectedConversation ? (
           <ConversationView 
             conversation={selectedConversation} 

@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ConversationViewProps {
   conversation: Conversation;
@@ -32,6 +33,7 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
   const { user } = useAuth();
   const messageService = MessageService.getInstance();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   
   // Cargar mensajes al inicializar
   useEffect(() => {
@@ -97,9 +99,9 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
   };
   
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col h-full">
       {/* Encabezado */}
-      <div className="p-4 border-b border-border flex items-center gap-3">
+      <div className="p-4 border-b border-border flex items-center gap-3 bg-background">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -124,16 +126,17 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
         </div>
       </div>
       
-      {/* Mensajes - Ajustar tamaño y scroll */}
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-[calc(100%-60px)] max-h-[calc(100vh-240px)] p-4">
-          <div className="space-y-4">
+      {/* Contenedor principal con altura fija */}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        {/* Mensajes - ScrollArea optimizado */}
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-4">
             {isLoading ? (
-              <div className="h-full flex items-center justify-center">
+              <div className="h-24 flex items-center justify-center">
                 <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
               </div>
             ) : messages.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-center p-4">
+              <div className="h-24 flex items-center justify-center text-center p-4">
                 <p className="text-muted-foreground">No hay mensajes en esta conversación.</p>
               </div>
             ) : (
@@ -167,19 +170,20 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
         </ScrollArea>
       </div>
       
-      {/* Formulario de envío - Asegurar que sea visible y fijo en la parte inferior */}
-      <div className="border-t border-border p-4 bg-background">
+      {/* Formulario de envío - Fijo en la parte inferior */}
+      <div className="sticky bottom-0 border-t border-border p-3 bg-background mt-auto">
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <Textarea
             placeholder="Escribe tu mensaje..."
-            className="min-h-[60px] max-h-[120px] resize-none"
+            className="min-h-[50px] max-h-[100px] resize-none"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             disabled={isSending}
           />
           <Button 
             type="submit" 
-            className="self-end"
+            size={isMobile ? "icon" : "default"}
+            className="self-end flex-shrink-0"
             disabled={!newMessage.trim() || isSending}
           >
             <Send size={18} />
