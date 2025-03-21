@@ -34,6 +34,7 @@ export class MockMessageRepository implements MessageRepository {
       productName: 'Taladro Profesional 20V',
       productImage: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
       companyName: 'Pro Tools Inc.',
+      userName: 'Juan Pérez',
       unreadCount: 2,
     };
 
@@ -46,6 +47,7 @@ export class MockMessageRepository implements MessageRepository {
       productName: 'Sierra Circular 1500W',
       productImage: 'https://images.unsplash.com/photo-1487252665478-49b61b47f302',
       companyName: 'Herramientas Express',
+      userName: 'Juan Pérez',
       unreadCount: 0,
     };
 
@@ -255,6 +257,7 @@ export class MockMessageRepository implements MessageRepository {
       productName: 'Taladro Profesional 20V', // Esto normalmente vendría de una consulta a productos
       productImage: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
       companyName: 'Pro Tools Inc.', // Esto normalmente vendría de una consulta a empresas
+      userName: 'Juan Pérez', // En una implementación real, obtendríamos el nombre del usuario
       unreadCount: 0,
     };
     
