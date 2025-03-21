@@ -82,9 +82,11 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
   };
   
   return (
-    <div className="flex flex-col h-full max-h-full overflow-hidden">
+    <div className="flex flex-col h-full">
       <ChatHeader conversation={conversation} onBack={onBack} />
-      <MessageList messages={messages} isLoading={isLoading} userId={user?.id} />
+      <div className="flex-1 overflow-hidden">
+        <MessageList messages={messages} isLoading={isLoading} userId={user?.id} />
+      </div>
       <MessageForm onSendMessage={handleSendMessage} isSending={isSending} />
     </div>
   );
