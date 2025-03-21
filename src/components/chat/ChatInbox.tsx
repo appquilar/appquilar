@@ -61,13 +61,16 @@ const ChatInbox = () => {
             />
           </>
         ) : (
-          <div className="text-center p-8">
-            <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium">Selecciona una conversación</h3>
-            <p className="text-muted-foreground mt-2">
-              Elige una conversación de la lista para ver los mensajes.
-            </p>
-          </div>
+          // Solo mostrar el mensaje "Selecciona una conversación" en desktop
+          !isMobile && (
+            <div className="text-center p-8">
+              <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium">Selecciona una conversación</h3>
+              <p className="text-muted-foreground mt-2">
+                Elige una conversación de la lista para ver los mensajes.
+              </p>
+            </div>
+          )
         )}
       </div>
     </div>
