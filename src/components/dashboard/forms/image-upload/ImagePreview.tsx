@@ -31,7 +31,7 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
       <Button
         size="sm"
         variant="destructive"
-        className="absolute -top-3 -right-3 translate-x-1/2 translate-y-[-50%] h-7 w-7 p-0 rounded-full shadow-md z-30"
+        className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full shadow-md z-30"
         onClick={(e) => {
           e.stopPropagation();
           onRemove(image.id);
