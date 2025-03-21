@@ -28,7 +28,7 @@ interface ConversationListProps {
 }
 
 // Definir cuántas conversaciones mostrar por página
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 7; // Incrementado de 6 a 7
 
 /**
  * Lista de conversaciones del usuario
@@ -100,7 +100,7 @@ const ConversationList = ({
 
   return (
     <div className="h-full flex flex-col">
-      <ScrollArea className={`flex-1 ${isMobile ? 'h-[calc(100vh-300px)]' : 'h-full'}`}>
+      <ScrollArea className="flex-1 h-full">
         <ul className="divide-y divide-border">
           {paginatedConversations.map((conversation) => (
             <ConversationListItem 

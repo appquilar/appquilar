@@ -44,7 +44,7 @@ const ConversationListItem = ({
         </div>
         
         {/* Información de la conversación */}
-        <div className="flex-grow min-w-0 overflow-hidden flex flex-col">
+        <div className="w-full min-w-0 overflow-hidden flex flex-col mr-2">
           <h4 className="font-medium text-sm sm:text-base truncate">
             {conversation.productName}
           </h4>
