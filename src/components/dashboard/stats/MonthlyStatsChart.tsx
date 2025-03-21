@@ -1,7 +1,14 @@
 
+import { useState } from 'react';
 import { CardContent, CardDescription, CardHeader, CardTitle, Card } from '@/components/ui/card';
 import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
+import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 interface DataPoint {
   day: string;
@@ -38,6 +45,21 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+// Function to filter data for the selected month
+const filterDataForMonth = (data: DataPoint[], date: Date): DataPoint[] => {
+  const monthStr = format(date, 'MM');
+  // In a real app, this would filter data from an API call based on the month
+  // For mock data, we'll simulate it by shifting values randomly
+  return data.map(item => {
+    const randomFactor = 0.7 + Math.random() * 0.6; // between 0.7 and 1.3
+    const value = Number(item[Object.keys(item).find(key => key !== 'day') as string]);
+    return {
+      ...item,
+      [Object.keys(item).find(key => key !== 'day') as string]: Math.round(value * randomFactor)
+    };
+  });
+};
+
 const MonthlyStatsChart = ({ 
   title, 
   description, 
@@ -47,11 +69,83 @@ const MonthlyStatsChart = ({
   label,
   config
 }: MonthlyStatsChartProps) => {
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [chartData, setChartData] = useState<DataPoint[]>(data);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  // Generate days in current month for display
+  const daysInMonth = eachDayOfInterval({
+    start: startOfMonth(currentDate),
+    end: endOfMonth(currentDate)
+  });
+  
+  // Navigate to previous month
+  const goToPreviousMonth = () => {
+    const prevMonth = subMonths(currentDate, 1);
+    setCurrentDate(prevMonth);
+    setChartData(filterDataForMonth(data, prevMonth));
+  };
+  
+  // Navigate to next month
+  const goToNextMonth = () => {
+    const nextMonth = addMonths(currentDate, 1);
+    setCurrentDate(nextMonth);
+    setChartData(filterDataForMonth(data, nextMonth));
+  };
+  
+  // Handle month selection from calendar
+  const handleSelectMonth = (date: Date | undefined) => {
+    if (date) {
+      setCurrentDate(date);
+      setChartData(filterDataForMonth(data, date));
+      setCalendarOpen(false);
+    }
+  };
+  
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={goToPreviousMonth}
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                <span>{format(currentDate, 'MMMM yyyy')}</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center">
+              <Calendar
+                mode="month"
+                selected={currentDate}
+                onSelect={handleSelectMonth}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+          
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={goToNextMonth}
+            aria-label="Next month"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="h-80 w-full">
         <ChartContainer 
@@ -60,7 +154,7 @@ const MonthlyStatsChart = ({
         >
           <ResponsiveContainer width="100%" height="100%">
             <LineChart 
-              data={data}
+              data={chartData}
               margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
             >
               <XAxis 

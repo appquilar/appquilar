@@ -5,6 +5,7 @@ import MonthlyStatsChart from './stats/MonthlyStatsChart';
 import { MOCK_STATS, chartConfig } from './stats/statsData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const CompanyStats = () => {
   const { user } = useAuth();
@@ -60,21 +61,27 @@ const CompanyStats = () => {
           <CardContent>
             <div className="space-y-4">
               {MOCK_STATS.recentRentals.map((rental) => (
-                <div key={rental.id} className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{rental.product}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {rental.customer} • {rental.date} • {rental.days} days
-                    </p>
+                <Link 
+                  key={rental.id} 
+                  to={`/dashboard/rentals/${rental.id}`}
+                  className="block hover:bg-muted transition-colors rounded-md p-2 -m-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{rental.product}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {rental.customer} • {rental.date} • {rental.days} days
+                      </p>
+                    </div>
+                    <div className={`text-xs font-medium px-2 py-1 rounded-full ${
+                      rental.status === 'active' 
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                        : 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
+                    }`}>
+                      {rental.status === 'active' ? 'Active' : 'Completed'}
+                    </div>
                   </div>
-                  <div className={`text-xs font-medium px-2 py-1 rounded-full ${
-                    rental.status === 'active' 
-                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
-                      : 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
-                  }`}>
-                    {rental.status === 'active' ? 'Active' : 'Completed'}
-                  </div>
-                </div>
+                </Link>
               ))}
             </div>
           </CardContent>
@@ -85,7 +92,7 @@ const CompanyStats = () => {
       <div className="space-y-6">
         {/* Views Chart - Full Width */}
         <MonthlyStatsChart 
-          title="Product Views - Last Month"
+          title="Product Views"
           description="Daily views trend for your products"
           data={MOCK_STATS.monthlyViews}
           dataKey="views"
@@ -96,7 +103,7 @@ const CompanyStats = () => {
         
         {/* Rentals Chart - Full Width */}
         <MonthlyStatsChart 
-          title="Rentals - Last Month"
+          title="Rentals"
           description="Daily rental transactions"
           data={MOCK_STATS.monthlyRentals}
           dataKey="rentals"
