@@ -5,12 +5,11 @@ import { Menu, Search, User, X, LayoutDashboard, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AuthModal from '../auth/AuthModal';
 import { useAuth } from '@/context/AuthContext';
-import { 
-  Drawer, 
-  DrawerContent, 
-  DrawerTrigger,
-  DrawerClose
-} from "@/components/ui/drawer";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface Category {
   id: string;
@@ -93,8 +92,8 @@ const Header = () => {
             </Link>
             
             {isLoggedIn ? (
-              <Drawer>
-                <DrawerTrigger asChild>
+              <Popover>
+                <PopoverTrigger asChild>
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -103,30 +102,29 @@ const Header = () => {
                     <User size={16} />
                     <span className="hidden sm:inline">{user?.name || 'Cuenta'}</span>
                   </Button>
-                </DrawerTrigger>
-                <DrawerContent className="p-4">
-                  <div className="mt-4 space-y-4">
-                    <h3 className="font-medium">¡Hola, {user?.name || 'Usuario'}!</h3>
-                    <div className="space-y-2">
-                      <DrawerClose asChild>
-                        <Link to="/dashboard" className="flex items-center gap-2 p-2 hover:bg-secondary rounded-md w-full">
-                          <LayoutDashboard size={18} />
-                          <span>Panel de Control</span>
-                        </Link>
-                      </DrawerClose>
-                      <DrawerClose asChild>
-                        <button 
-                          onClick={handleLogout}
-                          className="flex items-center gap-2 p-2 hover:bg-secondary rounded-md w-full text-left text-destructive"
-                        >
-                          <LogOut size={18} />
-                          <span>Cerrar Sesión</span>
-                        </button>
-                      </DrawerClose>
-                    </div>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 w-56" align="end">
+                  <div className="p-3 border-b">
+                    <p className="font-medium">¡Hola, {user?.name || 'Usuario'}!</p>
                   </div>
-                </DrawerContent>
-              </Drawer>
+                  <div className="p-1">
+                    <Link 
+                      to="/dashboard" 
+                      className="flex items-center gap-2 p-2 hover:bg-secondary rounded-md w-full text-sm"
+                    >
+                      <LayoutDashboard size={16} />
+                      <span>Panel de Control</span>
+                    </Link>
+                    <button 
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 p-2 hover:bg-secondary rounded-md w-full text-left text-destructive text-sm"
+                    >
+                      <LogOut size={16} />
+                      <span>Cerrar Sesión</span>
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             ) : (
               <Button 
                 variant="outline" 
