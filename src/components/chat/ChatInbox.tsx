@@ -19,7 +19,7 @@ const ChatInbox = () => {
   return (
     <div className="flex flex-col h-full border border-border rounded-lg overflow-hidden md:grid md:grid-cols-3">
       {/* Lista de conversaciones (siempre visible en desktop, condicional en mobile) */}
-      <div className={`md:col-span-1 md:border-r border-border ${selectedConversation ? 'hidden md:block' : 'block'}`}>
+      <div className={`md:col-span-1 md:border-r border-border flex flex-col h-full ${selectedConversation ? 'hidden md:flex' : 'flex'}`}>
         <div className="sticky top-0 z-10 p-4 border-b border-border bg-background">
           <h2 className="text-lg font-medium flex items-center gap-2">
             <MessageCircle size={18} />
@@ -27,10 +27,12 @@ const ChatInbox = () => {
           </h2>
         </div>
         
-        <ConversationList 
-          onSelectConversation={setSelectedConversation}
-          selectedConversationId={selectedConversation?.id}
-        />
+        <div className="flex-1 overflow-hidden">
+          <ConversationList 
+            onSelectConversation={setSelectedConversation}
+            selectedConversationId={selectedConversation?.id}
+          />
+        </div>
       </div>
       
       {/* Vista de conversación */}

@@ -14,7 +14,6 @@ import { ArrowLeft, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ConversationViewProps {
@@ -34,7 +33,7 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
   const messageService = MessageService.getInstance();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   // Cargar mensajes al inicializar
   useEffect(() => {
@@ -65,16 +64,17 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
   
   // Desplazar automáticamente al último mensaje
   useEffect(() => {
-    if (!isLoading && scrollAreaRef.current) {
-      // Primero intentamos usar scrollHeight si está disponible
-      if (scrollAreaRef.current.scrollHeight) {
-        scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-      }
+    if (!isLoading && messagesEndRef.current && scrollContainerRef.current) {
+      const scrollToBottom = () => {
+        // Intentar múltiples métodos de scroll para mayor compatibilidad
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+          messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+        }
+      };
       
-      // Como respaldo, desplazamos al último mensaje usando el ref
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
-      }
+      // Usar setTimeout para asegurar que el DOM se ha actualizado completamente
+      setTimeout(scrollToBottom, 100);
     }
   }, [messages, isLoading]);
   
@@ -108,9 +108,9 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
   };
   
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full max-h-full overflow-hidden">
       {/* Encabezado - Fijo en la parte superior */}
-      <div className="sticky top-0 z-10 p-4 border-b border-border flex items-center gap-3 bg-background">
+      <div className="flex items-center gap-3 p-4 border-b border-border bg-background">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -135,9 +135,9 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
         </div>
       </div>
       
-      {/* Área de mensajes con overflow auto para permitir scroll nativo */}
+      {/* Área de mensajes con overflow auto para permitir scroll */}
       <div 
-        ref={scrollAreaRef}
+        ref={scrollContainerRef}
         className="flex-1 overflow-y-auto py-2 px-4 space-y-4"
       >
         {isLoading ? (
@@ -178,7 +178,7 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
       </div>
       
       {/* Formulario de envío - Sticky en la parte inferior */}
-      <div className="sticky bottom-0 z-10 border-t border-border p-3 bg-background">
+      <div className="border-t border-border p-3 bg-background">
         <form onSubmit={handleSendMessage} className="flex gap-2 items-end">
           <Textarea
             placeholder="Escribe tu mensaje..."
@@ -190,7 +190,7 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
           <Button 
             type="submit" 
             size="icon"
-            className="h-[50px] flex-shrink-0 mb-[1px]" 
+            className="h-[50px] flex-shrink-0" 
             disabled={!newMessage.trim() || isSending}
           >
             <Send size={18} />
