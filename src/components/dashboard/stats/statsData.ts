@@ -1,0 +1,102 @@
+
+// Mock stats data - would come from backend API in production
+export const MOCK_STATS = {
+  totalRentals: 156,
+  activeRentals: 24,
+  totalProducts: 42,
+  productViews: 3458,
+  popularProducts: [
+    { id: '1', name: 'Hammer Drill 20V', views: 421, rentals: 34 },
+    { id: '2', name: 'Table Saw with Stand', views: 386, rentals: 29 },
+    { id: '3', name: 'Concrete Bull Float', views: 312, rentals: 18 },
+  ],
+  recentRentals: [
+    { id: '1', product: 'Hammer Drill 20V', customer: 'John Smith', date: '2023-07-15', days: 3, status: 'active' },
+    { id: '2', product: 'Table Saw with Stand', customer: 'Sarah Johnson', date: '2023-07-12', days: 7, status: 'active' },
+    { id: '3', product: 'Landscaping Tool Set', customer: 'Michael Brown', date: '2023-07-10', days: 2, status: 'completed' },
+  ],
+  // Mock data for monthly views chart
+  monthlyViews: [
+    { day: '01', views: 45 },
+    { day: '02', views: 52 },
+    { day: '03', views: 49 },
+    { day: '04', views: 62 },
+    { day: '05', views: 74 },
+    { day: '06', views: 58 },
+    { day: '07', views: 63 },
+    { day: '08', views: 71 },
+    { day: '09', views: 84 },
+    { day: '10', views: 96 },
+    { day: '11', views: 88 },
+    { day: '12', views: 110 },
+    { day: '13', views: 102 },
+    { day: '14', views: 119 },
+    { day: '15', views: 124 },
+    { day: '16', views: 118 },
+    { day: '17', views: 132 },
+    { day: '18', views: 140 },
+    { day: '19', views: 145 },
+    { day: '20', views: 151 },
+    { day: '21', views: 148 },
+    { day: '22', views: 156 },
+    { day: '23', views: 165 },
+    { day: '24', views: 171 },
+    { day: '25', views: 185 },
+    { day: '26', views: 195 },
+    { day: '27', views: 201 },
+    { day: '28', views: 215 },
+    { day: '29', views: 218 },
+    { day: '30', views: 223 },
+  ],
+  // Mock data for monthly rentals chart
+  monthlyRentals: [
+    { day: '01', rentals: 2 },
+    { day: '02', rentals: 3 },
+    { day: '03', rentals: 1 },
+    { day: '04', rentals: 4 },
+    { day: '05', rentals: 2 },
+    { day: '06', rentals: 5 },
+    { day: '07', rentals: 3 },
+    { day: '08', rentals: 4 },
+    { day: '09', rentals: 6 },
+    { day: '10', rentals: 5 },
+    { day: '11', rentals: 3 },
+    { day: '12', rentals: 7 },
+    { day: '13', rentals: 5 },
+    { day: '14', rentals: 6 },
+    { day: '15', rentals: 8 },
+    { day: '16', rentals: 7 },
+    { day: '17', rentals: 9 },
+    { day: '18', rentals: 8 },
+    { day: '19', rentals: 10 },
+    { day: '20', rentals: 8 },
+    { day: '21', rentals: 7 },
+    { day: '22', rentals: 9 },
+    { day: '23', rentals: 8 },
+    { day: '24', rentals: 10 },
+    { day: '25', rentals: 11 },
+    { day: '26', rentals: 9 },
+    { day: '27', rentals: 12 },
+    { day: '28', rentals: 10 },
+    { day: '29', rentals: 11 },
+    { day: '30', rentals: 13 },
+  ]
+};
+
+// Chart configuration
+export const chartConfig = {
+  views: {
+    label: 'Views',
+    theme: {
+      light: '#0ea5e9',
+      dark: '#0ea5e9',
+    },
+  },
+  rentals: {
+    label: 'Rentals',
+    theme: {
+      light: '#10b981',
+      dark: '#10b981',
+    },
+  },
+};
