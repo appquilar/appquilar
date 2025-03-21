@@ -41,25 +41,10 @@ const ChatInbox = () => {
       {/* Vista de conversación */}
       <div className={`flex flex-col md:col-span-2 h-full overflow-hidden ${selectedConversation || !isMobile ? 'block' : 'hidden'}`}>
         {selectedConversation ? (
-          <>
-            {isMobile && (
-              <div className="sticky top-0 z-10 p-2 border-b border-border bg-background">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setSelectedConversation(null)}
-                  className="px-2"
-                >
-                  <ArrowLeft className="h-5 w-5 mr-1" />
-                  <span>Volver</span>
-                </Button>
-              </div>
-            )}
-            <ConversationView 
-              conversation={selectedConversation} 
-              onBack={() => setSelectedConversation(null)}
-            />
-          </>
+          <ConversationView 
+            conversation={selectedConversation} 
+            onBack={() => setSelectedConversation(null)}
+          />
         ) : (
           // Solo mostrar el mensaje "Selecciona una conversación" en desktop
           !isMobile && (
