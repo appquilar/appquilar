@@ -24,8 +24,8 @@ const DashboardNavigationContent = ({ activeTab, onTabChange }: DashboardNavigat
 
   // Manejador de clic para cambiar pestañas
   const handleTabChange = (href: string) => {
-    // Extraer la última parte de la URL para usarla como identificador de pestaña
-    const tabName = href.split('/').pop() || 'overview';
+    // Extraer la última parte de la URL como identificador de pestaña, o 'overview' para la ruta principal
+    const tabName = href === '/dashboard' ? 'overview' : href.split('/').pop() || 'overview';
     onTabChange(tabName);
   };
 

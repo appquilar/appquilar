@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import DashboardNavigation from './DashboardNavigation';
 import RentalsManagement from './RentalsManagement';
@@ -24,6 +24,19 @@ const Dashboard = () => {
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Synchronize active tab with URL on component mount and URL changes
+  useEffect(() => {
+    const path = location.pathname;
+    
+    if (path === '/dashboard') {
+      setActiveTab('overview');
+    } else if (path.includes('/dashboard/')) {
+      const tab = path.split('/').pop() as DashboardTab;
+      if (tab) setActiveTab(tab);
+    }
+  }, [location.pathname]);
 
   /**
    * Maneja el cambio de pestaña en el panel
@@ -31,6 +44,13 @@ const Dashboard = () => {
    */
   const handleTabChange = (tab: string) => {
     setActiveTab(tab as DashboardTab);
+    
+    // Update URL to reflect current tab
+    if (tab === 'overview') {
+      navigate('/dashboard');
+    } else {
+      navigate(`/dashboard/${tab}`);
+    }
   };
 
   return (
