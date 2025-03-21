@@ -22,31 +22,6 @@ const CompanyStats = () => {
       {/* Stats overview */}
       <StatsOverview />
       
-      {/* Monthly Charts - Each chart takes full width */}
-      <div className="space-y-6">
-        {/* Views Chart - Full Width */}
-        <MonthlyStatsChart 
-          title="Product Views - Last Month"
-          description="Daily views trend for your products"
-          data={MOCK_STATS.monthlyViews}
-          dataKey="views"
-          chartColor="var(--color-views)"
-          label="Views"
-          config={chartConfig}
-        />
-        
-        {/* Rentals Chart - Full Width */}
-        <MonthlyStatsChart 
-          title="Rentals - Last Month"
-          description="Daily rental transactions"
-          data={MOCK_STATS.monthlyRentals}
-          dataKey="rentals"
-          chartColor="var(--color-rentals)"
-          label="Rentals"
-          config={chartConfig}
-        />
-      </div>
-      
       {/* Additional Stats Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Popular Products */}
@@ -104,6 +79,31 @@ const CompanyStats = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+      
+      {/* Monthly Charts - Each chart takes full width */}
+      <div className="space-y-6">
+        {/* Views Chart - Full Width */}
+        <MonthlyStatsChart 
+          title="Product Views - Last Month"
+          description="Daily views trend for your products"
+          data={MOCK_STATS.monthlyViews}
+          dataKey="views"
+          chartColor="var(--color-views)"
+          label="Views"
+          config={chartConfig}
+        />
+        
+        {/* Rentals Chart - Full Width */}
+        <MonthlyStatsChart 
+          title="Rentals - Last Month"
+          description="Daily rental transactions"
+          data={MOCK_STATS.monthlyRentals}
+          dataKey="rentals"
+          chartColor="var(--color-rentals)"
+          label="Rentals"
+          config={chartConfig}
+        />
       </div>
     </div>
   );
