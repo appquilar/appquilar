@@ -1,10 +1,16 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, Search, User, X } from 'lucide-react';
+import { Menu, Search, User, X, LayoutDashboard, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AuthModal from '../auth/AuthModal';
 import { useAuth } from '@/context/AuthContext';
+import { 
+  Drawer, 
+  DrawerContent, 
+  DrawerTrigger,
+  DrawerClose
+} from "@/components/ui/drawer";
 
 interface Category {
   id: string;
@@ -29,7 +35,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, logout } = useAuth();
 
   // Manejar eventos de scroll para actualizar la apariencia del encabezado
   useEffect(() => {
@@ -40,6 +46,10 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <>
@@ -83,21 +93,45 @@ const Header = () => {
             </Link>
             
             {isLoggedIn ? (
-              <Link to="/dashboard">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="hover-lift flex items-center gap-2 font-medium"
-                >
-                  <User size={16} />
-                  <span className="hidden sm:inline">{user?.name || 'Cuenta'}</span>
-                </Button>
-              </Link>
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center gap-2 font-medium hover:bg-accent transition-colors"
+                  >
+                    <User size={16} />
+                    <span className="hidden sm:inline">{user?.name || 'Cuenta'}</span>
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent className="p-4">
+                  <div className="mt-4 space-y-4">
+                    <h3 className="font-medium">¡Hola, {user?.name || 'Usuario'}!</h3>
+                    <div className="space-y-2">
+                      <DrawerClose asChild>
+                        <Link to="/dashboard" className="flex items-center gap-2 p-2 hover:bg-secondary rounded-md w-full">
+                          <LayoutDashboard size={18} />
+                          <span>Panel de Control</span>
+                        </Link>
+                      </DrawerClose>
+                      <DrawerClose asChild>
+                        <button 
+                          onClick={handleLogout}
+                          className="flex items-center gap-2 p-2 hover:bg-secondary rounded-md w-full text-left text-destructive"
+                        >
+                          <LogOut size={18} />
+                          <span>Cerrar Sesión</span>
+                        </button>
+                      </DrawerClose>
+                    </div>
+                  </div>
+                </DrawerContent>
+              </Drawer>
             ) : (
               <Button 
                 variant="outline" 
                 size="sm"
-                className="hover-lift font-medium"
+                className="hover:bg-accent transition-colors font-medium"
                 onClick={() => setAuthModalOpen(true)}
               >
                 Iniciar Sesión
