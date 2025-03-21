@@ -1,16 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import SearchBar from './SearchBar';
-
-/**
- * Lista de palabras para la animación del título
- */
-const TOOL_TYPES = ['Herramientas', 'Eléctricas', 'Manuales', 'Maquinaria', 'Equipos', 'Accesorios'];
+import { CATEGORIES } from '../layout/Header';
 
 /**
  * Componente Hero para la página de inicio
  */
 const Hero = () => {
+  // Usamos los nombres de las categorías para la animación del título
+  const CATEGORIAS_ANIMADAS = CATEGORIES.map(category => category.name);
+  
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -19,13 +18,13 @@ const Hero = () => {
     const wordInterval = setInterval(() => {
       setIsAnimating(true);
       setTimeout(() => {
-        setCurrentWordIndex((prevIndex) => (prevIndex + 1) % TOOL_TYPES.length);
+        setCurrentWordIndex((prevIndex) => (prevIndex + 1) % CATEGORIAS_ANIMADAS.length);
         setIsAnimating(false);
       }, 500); // Duración de la animación de desvanecimiento
     }, 3000); // Cambiar cada 3 segundos
 
     return () => clearInterval(wordInterval);
-  }, []);
+  }, [CATEGORIAS_ANIMADAS.length]);
 
   return (
     <div className="pt-28 pb-10 px-4 sm:px-6 md:px-8 animate-fade-in">
@@ -38,7 +37,7 @@ const Hero = () => {
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-semibold tracking-tight mb-6 animate-slide-down">
           La Forma Inteligente de Alquilar{' '}
           <span className={`inline-block text-primary transition-opacity duration-500 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
-            {TOOL_TYPES[currentWordIndex]}
+            {CATEGORIAS_ANIMADAS[currentWordIndex]}
           </span>
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-slide-down" style={{ animationDelay: '50ms' }}>

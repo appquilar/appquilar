@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import DashboardNavigation from './DashboardNavigation';
 import RentalsManagement from './RentalsManagement';
@@ -34,45 +34,57 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen pt-20 flex">
-      {/* Navegación del panel */}
-      <DashboardNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+    <div className="min-h-screen flex flex-col">
+      {/* Logo que enlaza a la página principal */}
+      <div className="bg-white border-b p-4">
+        <Link 
+          to="/" 
+          className="text-2xl font-display font-semibold tracking-tight text-primary transition-all duration-350"
+        >
+          appquilar
+        </Link>
+      </div>
       
-      {/* Contenido principal */}
-      <main className="flex-1 px-4 py-6 animate-fade-in">
-        <div className="max-w-6xl mx-auto">
-          {/* Usuario no es una empresa */}
-          {user && user.role === 'user' ? (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
-              <h1 className="text-3xl font-display font-semibold mb-4">Actualizar a Cuenta de Empresa</h1>
-              <p className="text-muted-foreground max-w-md mb-8">
-                Como empresa, puedes listar tus herramientas para alquilar, gestionar alquileres y hacer crecer tu negocio en nuestra plataforma.
-              </p>
-              <button 
-                className="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
-                onClick={() => setUpgradeModalOpen(true)}
-              >
-                Actualizar Ahora
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* Contenido del panel para empresas */}
-              {activeTab === 'overview' && <CompanyStats />}
-              {activeTab === 'rentals' && <RentalsManagement />}
-              {activeTab === 'products' && <ProductsManagement />}
-              {activeTab === 'users' && <UserManagement />}
-              {activeTab === 'messages' && <MessagesDashboard />}
-              {activeTab === 'settings' && (
-                <div className="space-y-6">
-                  <h1 className="text-2xl font-display font-semibold">Configuración de la Cuenta</h1>
-                  <p>El contenido de configuración aparecerá aquí.</p>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </main>
+      <div className="flex flex-1">
+        {/* Navegación del panel */}
+        <DashboardNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+        
+        {/* Contenido principal */}
+        <main className="flex-1 px-4 py-6 animate-fade-in">
+          <div className="max-w-6xl mx-auto">
+            {/* Usuario no es una empresa */}
+            {user && user.role === 'user' ? (
+              <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
+                <h1 className="text-3xl font-display font-semibold mb-4">Actualizar a Cuenta de Empresa</h1>
+                <p className="text-muted-foreground max-w-md mb-8">
+                  Como empresa, puedes listar tus herramientas para alquilar, gestionar alquileres y hacer crecer tu negocio en nuestra plataforma.
+                </p>
+                <button 
+                  className="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
+                  onClick={() => setUpgradeModalOpen(true)}
+                >
+                  Actualizar Ahora
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Contenido del panel para empresas */}
+                {activeTab === 'overview' && <CompanyStats />}
+                {activeTab === 'rentals' && <RentalsManagement />}
+                {activeTab === 'products' && <ProductsManagement />}
+                {activeTab === 'users' && <UserManagement />}
+                {activeTab === 'messages' && <MessagesDashboard />}
+                {activeTab === 'settings' && (
+                  <div className="space-y-6">
+                    <h1 className="text-2xl font-display font-semibold">Configuración de la Cuenta</h1>
+                    <p>El contenido de configuración aparecerá aquí.</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </main>
+      </div>
       
       {/* Modal de actualización a empresa */}
       <UpgradeToCompanyModal 

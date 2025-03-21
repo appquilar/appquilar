@@ -1,7 +1,6 @@
 
 import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import Header from '@/components/layout/Header';
 import DashboardComponent from '@/components/dashboard/Dashboard';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 
@@ -29,7 +28,6 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
       <DashboardComponent />
     </div>
   );

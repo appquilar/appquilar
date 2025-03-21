@@ -27,6 +27,8 @@ const CATEGORIES: Category[] = [
   { id: '6', name: 'Limpieza', slug: 'cleaning' },
 ];
 
+export { CATEGORIES };
+
 /**
  * Componente de cabecera principal de la aplicación
  */
@@ -55,7 +57,7 @@ const Header = () => {
       <header 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-350 px-4 md:px-8 ${
           isScrolled 
-            ? 'py-3 bg-background/95 backdrop-blur-md shadow-sm' 
+            ? 'py-3 bg-white shadow-sm' 
             : 'py-5 bg-transparent'
         }`}
       >
@@ -68,7 +70,7 @@ const Header = () => {
             appquilar
           </Link>
 
-          {/* Navegación Desktop */}
+          {/* Navegación Desktop - Solo nombres de categorías */}
           <nav className="hidden md:flex items-center space-x-6">
             {CATEGORIES.map((category) => (
               <Link
