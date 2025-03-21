@@ -72,7 +72,7 @@ const ConversationList = ({
 
   return (
     <div className="h-full flex flex-col">
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 h-full">
         <ul className="divide-y divide-border">
           {conversations.map((conversation) => (
             <ConversationListItem 
