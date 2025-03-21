@@ -181,22 +181,6 @@ const AvailabilityPeriodItem = ({
                   </FormItem>
                 )}
               />
-              
-              <FormField
-                control={control}
-                name={`availability.${index}.isAlwaysAvailable`}
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-2">
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel className="text-sm">Siempre disponible</FormLabel>
-                  </FormItem>
-                )}
-              />
             </div>
           </div>
           <Button

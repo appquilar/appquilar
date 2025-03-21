@@ -15,24 +15,22 @@ import {
 import { cn } from '@/lib/utils';
 
 interface NewAvailabilityPeriodProps {
-  onAddPeriod: (startDate: Date, endDate: Date, includeWeekends: boolean, isAlwaysAvailable: boolean) => void;
+  onAddPeriod: (startDate: Date, endDate: Date, includeWeekends: boolean) => void;
 }
 
 const NewAvailabilityPeriod = ({ onAddPeriod }: NewAvailabilityPeriodProps) => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [includeWeekends, setIncludeWeekends] = useState<boolean>(false);
-  const [isAlwaysAvailable, setIsAlwaysAvailable] = useState<boolean>(false);
 
   const handleAddPeriodClick = () => {
     if (startDate && endDate) {
-      onAddPeriod(startDate, endDate, includeWeekends, isAlwaysAvailable);
+      onAddPeriod(startDate, endDate, includeWeekends);
       
       // Reset the form
       setStartDate(undefined);
       setEndDate(undefined);
       setIncludeWeekends(false);
-      setIsAlwaysAvailable(false);
     }
   };
 
@@ -119,17 +117,6 @@ const NewAvailabilityPeriod = ({ onAddPeriod }: NewAvailabilityPeriodProps) => {
               />
               <FormLabel htmlFor="include-weekends" className="text-sm">
                 También fines de semana
-              </FormLabel>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Switch 
-                id="always-available" 
-                checked={isAlwaysAvailable}
-                onCheckedChange={setIsAlwaysAvailable}
-              />
-              <FormLabel htmlFor="always-available" className="text-sm">
-                Siempre disponible
               </FormLabel>
             </div>
           </div>

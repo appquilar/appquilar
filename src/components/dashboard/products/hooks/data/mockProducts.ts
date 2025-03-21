@@ -31,8 +31,7 @@ const createDefaultAvailability = (): AvailabilityPeriod[] => {
       startDate: formatDateToISO(periodStart),
       endDate: formatDateToISO(periodEnd),
       status: 'available',
-      includeWeekends: i % 2 === 0, // Alternate including weekends
-      isAlwaysAvailable: i === 0    // First period is always available
+      includeWeekends: i % 2 === 0 // Alternate including weekends
     });
   }
   
@@ -81,6 +80,7 @@ export const MOCK_PRODUCTS: Product[] = [
     },
     rating: 4.8,
     reviewCount: 124,
+    isAlwaysAvailable: true, // This product is always available
     availability: createDefaultAvailability()
   },
   {
@@ -393,8 +393,12 @@ MOCK_PRODUCTS.forEach(product => {
     product.availability = product.availability.map(period => ({
       ...period,
       status: period.status === 'available' ? 'available' : 'unavailable',
-      includeWeekends: period.includeWeekends || false,
-      isAlwaysAvailable: period.isAlwaysAvailable || false
+      includeWeekends: period.includeWeekends || false
     }));
+  }
+  
+  // Make some products always available
+  if (product.id === '5' || product.id === '9') {
+    product.isAlwaysAvailable = true;
   }
 });

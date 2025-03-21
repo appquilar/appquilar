@@ -25,6 +25,8 @@ export const productFormSchema = z.object({
   imageUrl: z.string().url({ message: 'Por favor introduce una URL válida.' }),
   // New field for images
   images: z.array(z.any()).optional(),
+  // Added isAlwaysAvailable at the product level
+  isAlwaysAvailable: z.boolean().default(false),
   // Updated field for availability periods
   availability: z.array(
     z.object({
@@ -33,7 +35,6 @@ export const productFormSchema = z.object({
       endDate: z.string(),
       status: z.enum(['available', 'unavailable']),
       includeWeekends: z.boolean().optional(),
-      isAlwaysAvailable: z.boolean().optional()
     })
   ).optional(),
 });
@@ -55,6 +56,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
     category: product.category,
     imageUrl: product.imageUrl,
     images: [],
+    isAlwaysAvailable: product.isAlwaysAvailable || false,
     availability: product.availability || [],
   };
 };
@@ -75,8 +77,7 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
     startDate: period.startDate,
     endDate: period.endDate,
     status: period.status,
-    includeWeekends: period.includeWeekends,
-    isAlwaysAvailable: period.isAlwaysAvailable
+    includeWeekends: period.includeWeekends
   })) as AvailabilityPeriod[] | undefined;
 
   return {
@@ -98,6 +99,7 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
       name: values.category.name,
       slug: product.category.slug, // Asegurar que se incluye el slug de la categoría
     },
+    isAlwaysAvailable: values.isAlwaysAvailable,
     availability: availability,
   };
 };

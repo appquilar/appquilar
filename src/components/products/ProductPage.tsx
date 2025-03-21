@@ -123,6 +123,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
           
           <AvailabilityCalendar 
             availabilityPeriods={product.availability || []}
+            isAlwaysAvailable={product.isAlwaysAvailable}
             onSelectDateRange={handleDateRangeSelect}
           />
           

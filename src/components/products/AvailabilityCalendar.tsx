@@ -2,18 +2,20 @@
 import React, { useState } from 'react';
 import { format, isWithinInterval, parseISO, isWeekend } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlarmCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { AvailabilityPeriod } from './ProductCard';
 
 interface AvailabilityCalendarProps {
   availabilityPeriods: AvailabilityPeriod[];
+  isAlwaysAvailable?: boolean;
   onSelectDateRange?: (startDate: Date, endDate: Date) => void;
 }
 
 const AvailabilityCalendar = ({ 
   availabilityPeriods, 
+  isAlwaysAvailable = false,
   onSelectDateRange 
 }: AvailabilityCalendarProps) => {
   const [month, setMonth] = useState<Date>(new Date());
@@ -40,11 +42,13 @@ const AvailabilityCalendar = ({
 
   // Check if a date is within any of the available periods
   const isDateAvailable = (date: Date) => {
+    // If product is marked as always available, all future dates are available
+    if (isAlwaysAvailable) {
+      return date >= new Date(new Date().setHours(0, 0, 0, 0));
+    }
+    
     return availabilityPeriods.some(period => {
       if (period.status !== 'available') return false;
-      
-      // Check if it's marked as always available
-      if (period.isAlwaysAvailable) return true;
       
       const start = parseISO(period.startDate);
       const end = parseISO(period.endDate);
@@ -58,6 +62,9 @@ const AvailabilityCalendar = ({
 
   // Check if a date is within any of the unavailable periods
   const isDateUnavailable = (date: Date) => {
+    // If product is marked as always available, no dates are unavailable
+    if (isAlwaysAvailable) return false;
+    
     return availabilityPeriods.some(period => {
       if (period.status === 'available') return false;
       
@@ -134,29 +141,36 @@ const AvailabilityCalendar = ({
         </div>
       </div>
       
-      <div className="bg-white p-4 rounded-lg border">
-        <Calendar
-          mode="range"
-          month={month}
-          selected={selectedRange}
-          onSelect={(value) => {
-            if (!value) return;
-            if ('from' in value) {
-              setSelectedRange(value as any);
-              if (value.from && value.to && onSelectDateRange) {
-                onSelectDateRange(value.from, value.to);
+      {isAlwaysAvailable ? (
+        <div className="bg-green-50 text-green-800 p-4 rounded-lg border border-green-200 flex items-center gap-2 mb-4">
+          <AlarmCheck className="h-5 w-5" />
+          <span>Este producto está siempre disponible para alquilar</span>
+        </div>
+      ) : (
+        <div className="bg-white p-4 rounded-lg border">
+          <Calendar
+            mode="range"
+            month={month}
+            selected={selectedRange}
+            onSelect={(value) => {
+              if (!value) return;
+              if ('from' in value) {
+                setSelectedRange(value as any);
+                if (value.from && value.to && onSelectDateRange) {
+                  onSelectDateRange(value.from, value.to);
+                }
               }
-            }
-          }}
-          modifiers={modifiers}
-          modifiersClassNames={modifiersClassNames}
-          disabled={(date) => {
-            // Disable dates in the past
-            return date < new Date(new Date().setHours(0, 0, 0, 0));
-          }}
-          className="p-3 pointer-events-auto"
-        />
-      </div>
+            }}
+            modifiers={modifiers}
+            modifiersClassNames={modifiersClassNames}
+            disabled={(date) => {
+              // Disable dates in the past
+              return date < new Date(new Date().setHours(0, 0, 0, 0));
+            }}
+            className="p-3 pointer-events-auto"
+          />
+        </div>
+      )}
       
       <div className="flex flex-wrap gap-3 mt-4 text-sm">
         <div className="flex items-center">

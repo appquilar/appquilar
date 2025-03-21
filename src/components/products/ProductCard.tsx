@@ -33,8 +33,7 @@ export interface AvailabilityPeriod {
   startDate: string; // ISO date string
   endDate: string;   // ISO date string
   status: 'available' | 'unavailable';
-  includeWeekends?: boolean; // New field for weekend availability
-  isAlwaysAvailable?: boolean; // New field for always available
+  includeWeekends?: boolean; // Field for weekend availability
 }
 
 // Core product data structure
@@ -51,6 +50,7 @@ export interface Product {
   category: ProductCategory;
   rating: number;
   reviewCount: number;
+  isAlwaysAvailable?: boolean; // Global setting for product availability
   availability?: AvailabilityPeriod[];
 }
 
