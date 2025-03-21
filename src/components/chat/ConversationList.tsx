@@ -11,16 +11,8 @@ import { MessageService } from '@/infrastructure/services/MessageService';
 import ConversationListItem from './ConversationListItem';
 import EmptyConversationList from './EmptyConversationList';
 import ConversationListSkeleton from './ConversationListSkeleton';
+import ConversationPagination from './ConversationPagination';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationNext, 
-  PaginationPrevious 
-} from '@/components/ui/pagination';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ConversationListProps {
   onSelectConversation: (conversation: Conversation) => void;
@@ -28,7 +20,7 @@ interface ConversationListProps {
 }
 
 // Definir cuántas conversaciones mostrar por página
-const ITEMS_PER_PAGE = 7; // Incrementado de 6 a 7
+const ITEMS_PER_PAGE = 7;
 
 /**
  * Lista de conversaciones del usuario
@@ -42,7 +34,6 @@ const ConversationList = ({
   const [currentPage, setCurrentPage] = useState(1);
   const { user } = useAuth();
   const messageService = MessageService.getInstance();
-  const isMobile = useIsMobile();
 
   // Calcular páginas totales
   const totalPages = Math.ceil(conversations.length / ITEMS_PER_PAGE);
@@ -113,92 +104,11 @@ const ConversationList = ({
         </ul>
       </ScrollArea>
       
-      {totalPages > 1 && (
-        <div className="py-2 border-t border-border bg-background sticky bottom-0">
-          <Pagination>
-            <PaginationContent>
-              {currentPage > 1 && (
-                <PaginationItem>
-                  <PaginationPrevious 
-                    href="#" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage - 1);
-                    }} 
-                  />
-                </PaginationItem>
-              )}
-              
-              {Array.from({ length: totalPages }).map((_, index) => {
-                const page = index + 1;
-                
-                // En móvil, mostrar menos páginas en la paginación
-                if (isMobile && totalPages > 5) {
-                  if (
-                    page === 1 || 
-                    page === totalPages || 
-                    (page >= currentPage - 1 && page <= currentPage + 1)
-                  ) {
-                    return (
-                      <PaginationItem key={page}>
-                        <PaginationLink 
-                          href="#" 
-                          isActive={page === currentPage}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handlePageChange(page);
-                          }}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  }
-                  // Añadir puntos suspensivos
-                  if (page === currentPage - 2 || page === currentPage + 2) {
-                    return (
-                      <PaginationItem key={`ellipsis-${page}`}>
-                        <PaginationLink href="#" onClick={(e) => e.preventDefault()}>
-                          ...
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  }
-                  return null;
-                }
-                
-                // En desktop, mostrar todas las páginas
-                return (
-                  <PaginationItem key={page}>
-                    <PaginationLink 
-                      href="#" 
-                      isActive={page === currentPage}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(page);
-                      }}
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                );
-              })}
-              
-              {currentPage < totalPages && (
-                <PaginationItem>
-                  <PaginationNext 
-                    href="#" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage + 1);
-                    }} 
-                  />
-                </PaginationItem>
-              )}
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
+      <ConversationPagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 };
