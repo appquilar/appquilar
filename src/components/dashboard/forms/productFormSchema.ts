@@ -1,6 +1,7 @@
 
 import { z } from "zod";
 import { Product } from "@/components/products/ProductCard";
+import { ImageFile } from "./ProductImagesField";
 
 // Esquema de validación para el formulario de producto
 export const productFormSchema = z.object({
@@ -17,6 +18,8 @@ export const productFormSchema = z.object({
     name: z.string()
   }),
   imageUrl: z.string().url({ message: 'Por favor introduce una URL válida.' }),
+  // New field for images
+  images: z.array(z.any()).optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -33,10 +36,20 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
     },
     category: product.category,
     imageUrl: product.imageUrl,
+    images: [],
   };
 };
 
 export const mapFormValuesToProduct = (values: ProductFormValues, product: Product): Partial<Product> => {
+  // Find primary image if it exists
+  let primaryImageUrl = values.imageUrl;
+  if (values.images && Array.isArray(values.images) && values.images.length > 0) {
+    const primaryImage = values.images.find((img: ImageFile) => img.isPrimary);
+    if (primaryImage) {
+      primaryImageUrl = primaryImage.url;
+    }
+  }
+
   return {
     ...product,
     name: values.name,
@@ -47,8 +60,8 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
       weekly: values.price.weekly,
       monthly: values.price.monthly,
     },
-    imageUrl: values.imageUrl,
-    thumbnailUrl: values.imageUrl, // Usando la misma URL para la miniatura por simplicidad
+    imageUrl: primaryImageUrl,
+    thumbnailUrl: primaryImageUrl, // Usando la misma URL para la miniatura
     category: {
       id: values.category.id,
       name: values.category.name,

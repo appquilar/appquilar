@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Control } from "react-hook-form";
 import { ProductFormValues } from "./productFormSchema";
+import ProductImagesField from "./ProductImagesField";
 
 interface ProductBasicInfoFieldsProps {
   control: Control<ProductFormValues>;
@@ -50,12 +51,15 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
         )}
       />
       
+      {/* Add new images field */}
+      <ProductImagesField control={control} />
+      
       <FormField
         control={control}
         name="imageUrl"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>URL de la Imagen</FormLabel>
+            <FormLabel>URL de la Imagen (o usa el selector de arriba)</FormLabel>
             <FormControl>
               <Input placeholder="https://ejemplo.com/imagen.jpg" {...field} />
             </FormControl>
