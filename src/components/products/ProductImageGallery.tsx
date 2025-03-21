@@ -48,62 +48,70 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
         </div>
         
         {/* Flechas de navegación */}
-        <Button
-          variant="secondary"
-          size="icon"
-          className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100"
-          onClick={() => slideToIndex(currentImageIndex - 1)}
-          aria-label="Imagen anterior"
-        >
-          <ChevronLeft size={18} />
-        </Button>
-        <Button
-          variant="secondary"
-          size="icon"
-          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100"
-          onClick={() => slideToIndex(currentImageIndex + 1)}
-          aria-label="Siguiente imagen"
-        >
-          <ChevronRight size={18} />
-        </Button>
+        {images.length > 1 && (
+          <>
+            <Button
+              variant="secondary"
+              size="icon"
+              className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100"
+              onClick={() => slideToIndex(currentImageIndex - 1)}
+              aria-label="Imagen anterior"
+            >
+              <ChevronLeft size={18} />
+            </Button>
+            <Button
+              variant="secondary"
+              size="icon"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100"
+              onClick={() => slideToIndex(currentImageIndex + 1)}
+              aria-label="Siguiente imagen"
+            >
+              <ChevronRight size={18} />
+            </Button>
+          </>
+        )}
         
         {/* Indicadores de paginación */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center space-x-2">
-          {images.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => slideToIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                currentImageIndex === index 
-                  ? 'bg-white w-3' 
-                  : 'bg-white/50'
-              }`}
-              aria-label={`Ir a imagen ${index + 1}`}
-            />
-          ))}
-        </div>
+        {images.length > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center space-x-2">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => slideToIndex(index)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  currentImageIndex === index 
+                    ? 'bg-white w-3' 
+                    : 'bg-white/50'
+                }`}
+                aria-label={`Ir a imagen ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
       
       {/* Miniaturas */}
-      <div className="flex space-x-2 overflow-x-auto pb-2">
-        {images.map((image, index) => (
-          <button
-            key={index}
-            onClick={() => slideToIndex(index)}
-            className={`relative flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${
-              currentImageIndex === index 
-                ? 'border-primary' 
-                : 'border-transparent hover:border-primary/50'
-            }`}
-          >
-            <img 
-              src={image} 
-              alt={`Miniatura ${index + 1}`}
-              className="w-full h-full object-cover"
-            />
-          </button>
-        ))}
-      </div>
+      {images.length > 1 && (
+        <div className="flex space-x-2 overflow-x-auto pb-2">
+          {images.map((image, index) => (
+            <button
+              key={index}
+              onClick={() => slideToIndex(index)}
+              className={`relative flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${
+                currentImageIndex === index 
+                  ? 'border-primary' 
+                  : 'border-transparent hover:border-primary/50'
+              }`}
+            >
+              <img 
+                src={image} 
+                alt={`Miniatura ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

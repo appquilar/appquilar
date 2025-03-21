@@ -1,4 +1,3 @@
-
 import { Product, AvailabilityPeriod } from '@/components/products/ProductCard';
 
 // Sample availability periods for demo purposes
@@ -393,7 +392,7 @@ MOCK_PRODUCTS.forEach(product => {
     // Convert any existing availability to the new format
     product.availability = product.availability.map(period => ({
       ...period,
-      status: period.status === 'pending' || period.status === 'rented' ? 'unavailable' : period.status,
+      status: period.status === 'available' ? 'available' : 'unavailable',
       includeWeekends: period.includeWeekends || false,
       isAlwaysAvailable: period.isAlwaysAvailable || false
     }));

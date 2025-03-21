@@ -7,9 +7,11 @@ import ProductInfo from './ProductInfo';
 import RentalSummary from './RentalSummary';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import { CATEGORIES } from '../category/CategoryData';
+import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
 
 interface ProductPageProps {
-  productId: string;
+  productId?: string;
 }
 
 const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
@@ -17,14 +19,18 @@ const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
   const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(null);
   const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
     // Simulate API call to fetch product
     setTimeout(() => {
+      // If productId is undefined, try to find it in URL
+      const id = productId || window.location.pathname.split('/').pop() || '';
+      
       // Search for the product in all categories
       const foundProduct = Object.values(CATEGORIES)
         .flatMap(category => category.products)
-        .find(prod => prod.id === productId);
+        .find(prod => prod.id === id);
       
       if (foundProduct) {
         // Add mock availability periods if not present
@@ -58,6 +64,23 @@ const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
     setSelectedEndDate(endDate);
   };
 
+  const handleContactRequest = () => {
+    if (!isLoggedIn) {
+      toast.error("Debes iniciar sesión para contactar con el propietario", {
+        action: {
+          label: "Iniciar sesión",
+          onClick: () => {
+            // Logic to open login modal
+          }
+        }
+      });
+      return;
+    }
+
+    toast.success("Solicitud de contacto enviada");
+    // Additional logic to handle contact request
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-8">
@@ -84,12 +107,19 @@ const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Product Image Gallery - 6 columns on large screens */}
         <div className="lg:col-span-6">
-          <ProductImageGallery imageUrl={product.imageUrl} name={product.name} />
+          <ProductImageGallery 
+            images={[product.imageUrl]}
+            productName={product.name} 
+          />
         </div>
         
         {/* Product Info - 6 columns on large screens */}
         <div className="lg:col-span-6 space-y-8">
-          <ProductInfo product={product} />
+          <ProductInfo 
+            product={product}
+            onContact={handleContactRequest}
+            isLoggedIn={isLoggedIn}
+          />
           
           <AvailabilityCalendar 
             availabilityPeriods={product.availability || []}
@@ -98,15 +128,20 @@ const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
           
           <RentalSummary 
             product={product}
-            startDate={selectedStartDate}
-            endDate={selectedEndDate}
+            selectedStartDate={selectedStartDate}
+            selectedEndDate={selectedEndDate}
+            onContactClick={handleContactRequest}
           />
         </div>
       </div>
       
       {/* Company Info - full width */}
       <div className="mt-12">
-        <CompanyInfo company={product.company} />
+        <CompanyInfo 
+          company={product.company}
+          onContact={handleContactRequest}
+          isLoggedIn={isLoggedIn}
+        />
       </div>
     </div>
   );
