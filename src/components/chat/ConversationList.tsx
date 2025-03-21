@@ -8,10 +8,10 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Conversation } from '@/core/domain/Message';
 import { MessageService } from '@/infrastructure/services/MessageService';
-import { MessageCircle } from 'lucide-react';
 import ConversationListItem from './ConversationListItem';
 import EmptyConversationList from './EmptyConversationList';
 import ConversationListSkeleton from './ConversationListSkeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ConversationListProps {
   onSelectConversation: (conversation: Conversation) => void;
@@ -71,17 +71,19 @@ const ConversationList = ({
   }
 
   return (
-    <div className="h-full overflow-y-auto">
-      <ul className="divide-y divide-border">
-        {conversations.map((conversation) => (
-          <ConversationListItem 
-            key={conversation.id}
-            conversation={conversation}
-            isSelected={selectedConversationId === conversation.id}
-            onSelect={onSelectConversation}
-          />
-        ))}
-      </ul>
+    <div className="h-full flex flex-col">
+      <ScrollArea className="flex-1">
+        <ul className="divide-y divide-border">
+          {conversations.map((conversation) => (
+            <ConversationListItem 
+              key={conversation.id}
+              conversation={conversation}
+              isSelected={selectedConversationId === conversation.id}
+              onSelect={onSelectConversation}
+            />
+          ))}
+        </ul>
+      </ScrollArea>
     </div>
   );
 };
