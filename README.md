@@ -1,120 +1,69 @@
+# Welcome to your Lovable project
 
-# appquilar - Plataforma de Alquiler de Herramientas y Equipamiento
+## Project info
 
-Appquilar es una aplicación web que conecta a usuarios con empresas locales para el alquiler de herramientas y equipamiento para construcción, jardinería y eventos.
+**URL**: https://lovable.dev/projects/0aef52d0-776d-401b-a6c2-b25ca3659ce5
 
-## 📋 Requisitos
+## How can I edit this code?
 
-- Node.js 18 o superior
-- npm o yarn
+There are several ways of editing your application.
 
-## 🚀 Instalación y uso local
+**Use Lovable**
 
-### Clonar el repositorio
+Simply visit the [Lovable Project](https://lovable.dev/projects/0aef52d0-776d-401b-a6c2-b25ca3659ce5) and start prompting.
 
-```bash
-git clone https://github.com/tu-usuario/appquilar.git
-cd appquilar
-```
+Changes made via Lovable will be committed automatically to this repo.
 
-### Instalar dependencias
+**Use your preferred IDE**
 
-```bash
-npm install
-```
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-o con yarn:
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-```bash
-yarn install
-```
+Follow these steps:
 
-### Iniciar el servidor de desarrollo
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
 
-```bash
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
+
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-La aplicación estará disponible en `http://localhost:8080`
+**Edit a file directly in GitHub**
 
-### Ejecutar tests
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-```bash
-npm run test
-```
+**Use GitHub Codespaces**
 
-## 🏗️ Construir para producción
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-Para generar una versión optimizada para producción:
+## What technologies are used for this project?
 
-```bash
-npm run build
-```
+This project is built with .
 
-Los archivos generados estarán en la carpeta `dist`.
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-## 🐳 Despliegue con Docker
+## How can I deploy this project?
 
-Este proyecto incluye configuración para Docker, lo que facilita su despliegue en cualquier entorno.
+Simply open [Lovable](https://lovable.dev/projects/0aef52d0-776d-401b-a6c2-b25ca3659ce5) and click on Share -> Publish.
 
-### Construir la imagen Docker
+## I want to use a custom domain - is that possible?
 
-```bash
-docker build -t appquilar .
-```
-
-### Ejecutar el contenedor
-
-```bash
-docker run -p 8080:80 appquilar
-```
-
-La aplicación estará disponible en `http://localhost:8080`
-
-### Usando Docker Compose
-
-También puedes usar Docker Compose para iniciar la aplicación junto con servicios adicionales:
-
-```bash
-docker-compose up -d
-```
-
-## 📁 Estructura del proyecto
-
-```
-appquilar/
-├── docker/              # Configuración de Docker
-├── mock-api/            # API de simulación para desarrollo
-├── public/              # Archivos estáticos
-├── src/
-│   ├── components/      # Componentes React
-│   ├── context/         # Contextos de React
-│   ├── core/            # Lógica de dominio
-│   ├── hooks/           # Hooks personalizados
-│   ├── infrastructure/  # Implementaciones de infraestructura
-│   ├── lib/             # Utilidades y helpers
-│   ├── pages/           # Páginas/rutas principales
-│   └── main.tsx         # Punto de entrada
-└── ...
-```
-
-## 🔑 Características principales
-
-- Búsqueda de herramientas y equipamiento por categoría
-- Sistema de autenticación y gestión de usuarios
-- Panel de control para empresas
-- Sistema de mensajería integrado
-- Diseño responsive para móviles y escritorio
-
-## 🛠️ Tecnologías utilizadas
-
-- React + TypeScript
-- React Router para la navegación
-- TanStack Query para la gestión de estado y peticiones
-- Tailwind CSS para estilos
-- Shadcn/UI para componentes de interfaz
-- Docker para contenedorización
-
-## 📝 Licencia
-
-Este proyecto está bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
+We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)

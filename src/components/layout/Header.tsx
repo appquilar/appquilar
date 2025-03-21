@@ -1,11 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, Search, User, X, LogOut, Settings } from 'lucide-react';
+import { Menu, Search, User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AuthModal from '../auth/AuthModal';
 import { useAuth } from '@/context/AuthContext';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { toast } from 'sonner';
 
 interface Category {
   id: string;
@@ -13,6 +12,7 @@ interface Category {
   slug: string;
 }
 
+// Categorías de ejemplo - en producción se obtendrían del backend
 const CATEGORIES: Category[] = [
   { id: '1', name: 'Herramientas Eléctricas', slug: 'power-tools' },
   { id: '2', name: 'Herramientas Manuales', slug: 'hand-tools' },
@@ -29,8 +29,9 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isLoggedIn, user } = useAuth();
 
+  // Manejar eventos de scroll para actualizar la apariencia del encabezado
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -39,11 +40,6 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const handleLogout = () => {
-    logout();
-    toast.success('Has cerrado sesión correctamente');
-  };
 
   return (
     <>
@@ -55,6 +51,7 @@ const Header = () => {
         }`}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Logo */}
           <Link 
             to="/" 
             className="text-2xl font-display font-semibold tracking-tight text-primary transition-all duration-350"
@@ -62,6 +59,7 @@ const Header = () => {
             appquilar
           </Link>
 
+          {/* Navegación Desktop */}
           <nav className="hidden md:flex items-center space-x-6">
             {CATEGORIES.map((category) => (
               <Link
@@ -74,6 +72,7 @@ const Header = () => {
             ))}
           </nav>
 
+          {/* Acciones (Búsqueda, Usuario) */}
           <div className="flex items-center space-x-4">
             <Link 
               to="/search" 
@@ -84,40 +83,16 @@ const Header = () => {
             </Link>
             
             {isLoggedIn ? (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="hover-lift flex items-center gap-2 font-medium"
-                  >
-                    <User size={16} />
-                    <span className="hidden sm:inline">{user?.name || 'Cuenta'}</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-48 p-0" align="end">
-                  <div className="flex flex-col text-sm">
-                    <div className="border-b border-border px-3 py-2">
-                      <p className="font-medium">{user?.name}</p>
-                      <p className="text-muted-foreground text-xs">{user?.email}</p>
-                    </div>
-                    <Link 
-                      to="/dashboard" 
-                      className="flex items-center gap-2 px-3 py-2.5 hover:bg-secondary transition-colors"
-                    >
-                      <Settings size={16} />
-                      <span>Panel de control</span>
-                    </Link>
-                    <button 
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 px-3 py-2.5 hover:bg-secondary text-left transition-colors text-destructive hover:text-destructive"
-                    >
-                      <LogOut size={16} />
-                      <span>Cerrar sesión</span>
-                    </button>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <Link to="/dashboard">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="hover-lift flex items-center gap-2 font-medium"
+                >
+                  <User size={16} />
+                  <span className="hidden sm:inline">{user?.name || 'Cuenta'}</span>
+                </Button>
+              </Link>
             ) : (
               <Button 
                 variant="outline" 
@@ -129,6 +104,7 @@ const Header = () => {
               </Button>
             )}
             
+            {/* Botón de menú móvil */}
             <Button
               variant="ghost"
               size="icon"
@@ -142,6 +118,7 @@ const Header = () => {
         </div>
       </header>
 
+      {/* Menú móvil */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-lg animate-fade-in md:hidden">
           <div className="flex flex-col h-full p-6">
@@ -178,21 +155,9 @@ const Header = () => {
             
             <div className="mt-auto pt-6 flex justify-center">
               {isLoggedIn ? (
-                <div className="w-full space-y-2">
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full">Mi Panel</Button>
-                  </Link>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      logout();
-                    }}
-                  >
-                    Cerrar Sesión
-                  </Button>
-                </div>
+                <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                  <Button className="w-full">Mi Panel</Button>
+                </Link>
               ) : (
                 <Button 
                   className="w-full"
@@ -209,6 +174,7 @@ const Header = () => {
         </div>
       )}
 
+      {/* Modal de Autenticación */}
       <AuthModal 
         isOpen={authModalOpen} 
         onClose={() => setAuthModalOpen(false)} 

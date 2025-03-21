@@ -20,13 +20,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface SignInFormProps {
   onSuccess?: () => void;
-  onForgotPassword?: () => void;
 }
 
 /**
  * Formulario de inicio de sesión
  */
-const SignInForm = ({ onSuccess, onForgotPassword }: SignInFormProps) => {
+const SignInForm = ({ onSuccess }: SignInFormProps) => {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -108,13 +107,9 @@ const SignInForm = ({ onSuccess, onForgotPassword }: SignInFormProps) => {
                 </div>
               </FormControl>
               <FormDescription className="text-xs">
-                <button 
-                  type="button"
-                  onClick={onForgotPassword}
-                  className="text-primary hover:underline"
-                >
+                <a href="#" className="text-primary hover:underline">
                   ¿Olvidaste tu contraseña?
-                </button>
+                </a>
               </FormDescription>
               <FormMessage />
             </FormItem>
