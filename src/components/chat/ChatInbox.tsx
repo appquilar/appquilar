@@ -20,9 +20,9 @@ const ChatInbox = () => {
   const isMobile = useIsMobile();
   
   return (
-    <div className="flex w-full h-full border border-border rounded-lg overflow-hidden md:grid md:grid-cols-3 bg-blue-50">
-      {/* Lista de conversaciones (siempre visible en desktop, condicional en mobile) */}
-      <div className={`md:col-span-1 md:border-r border-border flex flex-col h-full overflow-hidden bg-yellow-50 ${selectedConversation && isMobile ? 'hidden' : 'flex'}`}>
+    <div className={`flex w-full h-full border border-border rounded-lg overflow-hidden ${!selectedConversation ? 'md:block' : 'md:grid md:grid-cols-3'} bg-blue-50`}>
+      {/* Lista de conversaciones (siempre visible en desktop si no hay conversación seleccionada, o como columna si hay una seleccionada) */}
+      <div className={`${selectedConversation ? 'md:col-span-1 md:border-r border-border' : 'w-full'} flex flex-col h-full overflow-hidden bg-yellow-50 ${selectedConversation && isMobile ? 'hidden' : 'flex'}`}>
         <div className="sticky top-0 z-10 p-4 border-b border-border bg-background">
           <h2 className="text-lg font-medium flex items-center gap-2">
             <MessageCircle size={18} />
@@ -38,26 +38,15 @@ const ChatInbox = () => {
         </div>
       </div>
       
-      {/* Vista de conversación */}
-      <div className={`flex flex-col md:col-span-2 h-full overflow-hidden bg-pink-50 ${selectedConversation || !isMobile ? 'block' : 'hidden'}`}>
-        {selectedConversation ? (
+      {/* Vista de conversación - solo mostrar si hay una conversación seleccionada */}
+      {selectedConversation && (
+        <div className={`flex flex-col md:col-span-2 h-full overflow-hidden bg-pink-50 ${selectedConversation || !isMobile ? 'block' : 'hidden'}`}>
           <ConversationView 
             conversation={selectedConversation} 
             onBack={() => setSelectedConversation(null)}
           />
-        ) : (
-          // Solo mostrar el mensaje "Selecciona una conversación" en desktop
-          !isMobile && (
-            <div className="text-center p-8">
-              <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium">Selecciona una conversación</h3>
-              <p className="text-muted-foreground mt-2">
-                Elige una conversación de la lista para ver los mensajes.
-              </p>
-            </div>
-          )
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
