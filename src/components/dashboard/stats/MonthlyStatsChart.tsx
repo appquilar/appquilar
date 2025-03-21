@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DataPoint {
   day: string;
@@ -73,6 +74,7 @@ const MonthlyStatsChart = ({
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [chartData, setChartData] = useState<DataPoint[]>(data);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   // Generate days in current month for display
   const daysInMonth = eachDayOfInterval({
@@ -105,12 +107,12 @@ const MonthlyStatsChart = ({
   
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-start justify-between">
+      <CardHeader className={isMobile ? "flex flex-col space-y-3" : "flex flex-row items-start justify-between"}>
         <div>
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className={`flex items-center ${isMobile ? "self-start" : "space-x-2"} gap-2`}>
           <Button 
             variant="outline" 
             size="icon" 
