@@ -4,16 +4,60 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>appquilar</title>
-    <meta name="description" content="Plataforma para alquiler de herramientas y equipamiento" />
+    <title>appquilar - Alquiler de herramientas y equipamiento</title>
+    <meta name="description" content="Plataforma para alquiler de herramientas y equipamiento. Conecta con empresas locales para cubrir tus necesidades de construcción, jardinería y eventos." />
+    <meta name="keywords" content="alquiler, herramientas, equipamiento, construcción, eventos, jardín" />
     <meta name="author" content="appquilar" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://appquilar.com/" />
+    <meta property="og:title" content="appquilar - Alquiler de herramientas y equipamiento" />
+    <meta property="og:description" content="Encuentra herramientas y equipos para alquilar. Conecta con empresas locales para cubrir tus necesidades." />
     <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://appquilar.com/" />
+    <meta property="twitter:title" content="appquilar - Alquiler de herramientas y equipamiento" />
+    <meta property="twitter:description" content="Encuentra herramientas y equipos para alquilar. Conecta con empresas locales para cubrir tus necesidades." />
+    <meta property="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://appquilar.com/" />
+    
+    <!-- Robots -->
+    <meta name="robots" content="index, follow" />
   </head>
-
   <body>
     <div id="root"></div>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "appquilar",
+        "url": "https://appquilar.com",
+        "logo": "https://appquilar.com/logo.png",
+        "description": "Plataforma para alquiler de herramientas y equipamiento. Conecta con empresas locales para cubrir tus necesidades.",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": "+34-XXX-XXX-XXX",
+          "contactType": "customer service"
+        },
+        "sameAs": [
+          "https://facebook.com/appquilar",
+          "https://twitter.com/appquilar",
+          "https://instagram.com/appquilar"
+        ]
+      }
+    </script>
   </body>
 </html>
