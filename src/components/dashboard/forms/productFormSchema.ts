@@ -1,6 +1,6 @@
 
 import { z } from "zod";
-import { Product } from "@/components/products/ProductCard";
+import { Product, AvailabilityPeriod } from "@/components/products/ProductCard";
 import { ImageFile } from "./image-upload/types";
 
 // Esquema de validación para el formulario de producto

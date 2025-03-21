@@ -1,15 +1,16 @@
-import { useState, useRef, useEffect } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, MapPin, Phone, Star, Heart, Share, ArrowLeft } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Product } from './ProductCard';
-import { toast } from 'sonner';
+import { SeoService } from '@/infrastructure/services/SeoService';
 import { useAuth } from '@/context/AuthContext';
 import ChatModal from '../chat/ChatModal';
-import { SeoService } from '@/infrastructure/services/SeoService';
+import ProductImageGallery from './ProductImageGallery';
+import ProductInfo from './ProductInfo';
 import AvailabilityCalendar from './AvailabilityCalendar';
+import RentalSummary from './RentalSummary';
 
 // Datos de ejemplo del producto - en producción se obtendrían del backend
 const SAMPLE_PRODUCT: Product = {
@@ -67,15 +68,10 @@ const ProductPage = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [selectedPeriod, setSelectedPeriod] = useState<'hourly' | 'daily' | 'weekly' | 'monthly'>('daily');
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(null);
   const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
   const { isLoggedIn, user } = useAuth();
-  
-  // Referencias para el slider
-  const sliderRef = useRef<HTMLDivElement>(null);
   
   // Galería de imágenes - en una app real, esto vendría de los datos del producto
   const images = [
@@ -124,43 +120,18 @@ const ProductPage = () => {
     }, 500);
   }, [slug]);
 
-  // Manejar la navegación del slider
-  const slideToIndex = (index: number) => {
-    if (!sliderRef.current) return;
-    
-    if (index < 0) {
-      setCurrentImageIndex(images.length - 1);
-    } else if (index >= images.length) {
-      setCurrentImageIndex(0);
-    } else {
-      setCurrentImageIndex(index);
-    }
-  };
-
-  // Manejar clic en botón de contacto
-  const handleContact = () => {
-    if (!isLoggedIn) {
-      toast.error("Debes iniciar sesión para contactar con el propietario.", {
-        action: {
-          label: "Iniciar sesión",
-          onClick: () => {
-            // Aquí podrías abrir el modal de autenticación
-          }
-        }
-      });
-      return;
-    }
-    
-    setChatModalOpen(true);
-  };
-
   // Handler for date range selection
   const handleDateRangeSelected = (startDate: Date, endDate: Date) => {
     setSelectedStartDate(startDate);
     setSelectedEndDate(endDate);
     
     // You could calculate rental cost based on selected period here
-    console.log(`Selected rental period: ${format(startDate, 'PP')} to ${format(endDate, 'PP')}`);
+    console.log(`Selected rental period: ${startDate.toDateString()} to ${endDate.toDateString()}`);
+  };
+
+  // Manejar clic en botón de contacto
+  const handleContact = () => {
+    setChatModalOpen(true);
   };
 
   if (loading) {
@@ -196,229 +167,18 @@ const ProductPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Galería de imágenes del producto */}
-          <div className="space-y-4">
-            {/* Imagen principal con slider */}
-            <div 
-              ref={sliderRef}
-              className="relative aspect-[4/3] overflow-hidden bg-muted rounded-xl"
-            >
-              <div 
-                className="flex transition-transform duration-500 ease-spring h-full"
-                style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
-              >
-                {images.map((image, index) => (
-                  <div key={index} className="w-full h-full flex-shrink-0">
-                    <img 
-                      src={image} 
-                      alt={`${product.name} - Imagen ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-              
-              {/* Flechas de navegación */}
-              <Button
-                variant="secondary"
-                size="icon"
-                className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100"
-                onClick={() => slideToIndex(currentImageIndex - 1)}
-                aria-label="Imagen anterior"
-              >
-                <ChevronLeft size={18} />
-              </Button>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100"
-                onClick={() => slideToIndex(currentImageIndex + 1)}
-                aria-label="Siguiente imagen"
-              >
-                <ChevronRight size={18} />
-              </Button>
-              
-              {/* Indicadores de paginación */}
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center space-x-2">
-                {images.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => slideToIndex(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      currentImageIndex === index 
-                        ? 'bg-white w-3' 
-                        : 'bg-white/50'
-                    }`}
-                    aria-label={`Ir a imagen ${index + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-            
-            {/* Miniaturas */}
-            <div className="flex space-x-2 overflow-x-auto pb-2">
-              {images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => slideToIndex(index)}
-                  className={`relative flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${
-                    currentImageIndex === index 
-                      ? 'border-primary' 
-                      : 'border-transparent hover:border-primary/50'
-                  }`}
-                >
-                  <img 
-                    src={image} 
-                    alt={`Miniatura ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
+          <ProductImageGallery images={images} productName={product.name} />
           
           {/* Información del producto */}
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center mb-2">
-                <span className="text-xs bg-primary/10 px-2 py-0.5 rounded-full text-primary font-medium">
-                  {product.category.name}
-                </span>
-                <div className="ml-auto flex items-center">
-                  <div className="flex items-center">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star 
-                        key={i} 
-                        size={14} 
-                        className={i < Math.round(product.rating) 
-                          ? 'fill-amber-500 text-amber-500' 
-                          : 'fill-muted text-muted'
-                        } 
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm ml-2">
-                    {product.rating.toFixed(1)} ({product.reviewCount} opiniones)
-                  </span>
-                </div>
-              </div>
-              
-              <h1 className="text-3xl font-display font-semibold tracking-tight mb-3">
-                {product.name}
-              </h1>
-              
-              <div className="flex space-x-4 mb-6">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Heart size={16} />
-                  <span className="sr-only sm:not-sr-only">Guardar</span>
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Share size={16} />
-                  <span className="sr-only sm:not-sr-only">Compartir</span>
-                </Button>
-              </div>
-              
-              <p className="text-muted-foreground">
-                {product.description}
-              </p>
-            </div>
-            
-            {/* Precios de alquiler */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Precios de Alquiler</h3>
-              <Tabs defaultValue="daily" onValueChange={(value) => setSelectedPeriod(value as any)}>
-                <TabsList className="w-full grid grid-cols-4">
-                  {product.price.hourly && (
-                    <TabsTrigger value="hourly">Por hora</TabsTrigger>
-                  )}
-                  <TabsTrigger value="daily">Por día</TabsTrigger>
-                  {product.price.weekly && (
-                    <TabsTrigger value="weekly">Por semana</TabsTrigger>
-                  )}
-                  {product.price.monthly && (
-                    <TabsTrigger value="monthly">Por mes</TabsTrigger>
-                  )}
-                </TabsList>
-                
-                {product.price.hourly && (
-                  <TabsContent value="hourly" className="pt-4">
-                    <div className="flex items-baseline">
-                      <span className="text-3xl font-semibold">{product.price.hourly.toFixed(2)}€</span>
-                      <span className="text-muted-foreground ml-2">/ hora</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Ideal para proyectos cortos o tareas rápidas.
-                    </p>
-                  </TabsContent>
-                )}
-                
-                <TabsContent value="daily" className="pt-4">
-                  <div className="flex items-baseline">
-                    <span className="text-3xl font-semibold">{product.price.daily.toFixed(2)}€</span>
-                    <span className="text-muted-foreground ml-2">/ día</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Perfecto para proyectos de un día o eventos.
-                  </p>
-                </TabsContent>
-                
-                {product.price.weekly && (
-                  <TabsContent value="weekly" className="pt-4">
-                    <div className="flex items-baseline">
-                      <span className="text-3xl font-semibold">{product.price.weekly.toFixed(2)}€</span>
-                      <span className="text-muted-foreground ml-2">/ semana</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Ideal para proyectos extendidos, ahorra comparado con tarifas diarias.
-                    </p>
-                  </TabsContent>
-                )}
-                
-                {product.price.monthly && (
-                  <TabsContent value="monthly" className="pt-4">
-                    <div className="flex items-baseline">
-                      <span className="text-3xl font-semibold">{product.price.monthly.toFixed(2)}€</span>
-                      <span className="text-muted-foreground ml-2">/ mes</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Mejor valor para proyectos a largo plazo o uso regular.
-                    </p>
-                  </TabsContent>
-                )}
-              </Tabs>
-            </div>
-            
-            {/* Información de la empresa */}
-            <div className="bg-secondary rounded-lg p-4">
-              <h3 className="text-sm font-medium uppercase tracking-wider mb-3">
-                Proporcionado por
-              </h3>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-primary/10 text-primary flex items-center justify-center rounded-full mr-3">
-                  {product.company.name.charAt(0)}
-                </div>
-                <div>
-                  <h4 className="font-medium">{product.company.name}</h4>
-                  <div className="flex items-center text-sm text-muted-foreground mt-1">
-                    <MapPin size={14} className="mr-1" />
-                    <span>Madrid, España</span>
-                  </div>
-                </div>
-              </div>
-              <div className="border-t border-border mt-4 pt-4">
-                <Button 
-                  className="w-full mb-2 gap-2" 
-                  onClick={handleContact}
-                >
-                  <Phone size={16} />
-                  Contactar para Alquilar
-                </Button>
-              </div>
-            </div>
-          </div>
+          <ProductInfo 
+            product={product} 
+            onContact={handleContact} 
+            isLoggedIn={isLoggedIn} 
+          />
         </div>
       </div>
 
-      {/* Availability calendar */}
+      {/* Availability calendar and rental summary */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mt-12">
           <div>
@@ -432,61 +192,13 @@ const ProductPage = () => {
           </div>
           
           <div>
-            {/* Rental calculator panel */}
-            <div className="bg-white rounded-lg border p-6 sticky top-24">
-              <h3 className="text-xl font-semibold mb-4">Resumen de Alquiler</h3>
-              
-              {selectedStartDate && selectedEndDate ? (
-                <div className="space-y-4">
-                  <div className="flex justify-between py-2 border-b">
-                    <span>Periodo:</span>
-                    <span className="font-medium">
-                      {format(selectedStartDate, 'PP')} - {format(selectedEndDate, 'PP')}
-                    </span>
-                  </div>
-                  
-                  <div className="flex justify-between py-2 border-b">
-                    <span>Duración:</span>
-                    <span className="font-medium">
-                      {differenceInDays(selectedEndDate, selectedStartDate) + 1} días
-                    </span>
-                  </div>
-                  
-                  <div className="flex justify-between py-2 border-b">
-                    <span>Precio por día:</span>
-                    <span className="font-medium">{product?.price.daily}€</span>
-                  </div>
-                  
-                  <div className="flex justify-between py-2 border-b text-lg font-semibold">
-                    <span>Total:</span>
-                    <span>
-                      {((differenceInDays(selectedEndDate, selectedStartDate) + 1) * (product?.price.daily || 0)).toFixed(2)}€
-                    </span>
-                  </div>
-                  
-                  <Button 
-                    className="w-full mt-4" 
-                    size="lg"
-                    onClick={handleContact}
-                  >
-                    Solicitar Alquiler
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <p className="text-muted-foreground mb-4">
-                    Selecciona fechas en el calendario para calcular el precio del alquiler
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    disabled
-                  >
-                    Solicitar Alquiler
-                  </Button>
-                </div>
-              )}
-            </div>
+            {/* Rental summary component */}
+            <RentalSummary 
+              selectedStartDate={selectedStartDate}
+              selectedEndDate={selectedEndDate}
+              product={product}
+              onContactClick={handleContact}
+            />
           </div>
         </div>
       </div>
@@ -504,4 +216,3 @@ const ProductPage = () => {
 };
 
 export default ProductPage;
-
