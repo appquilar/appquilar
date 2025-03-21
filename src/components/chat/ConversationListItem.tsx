@@ -9,6 +9,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
 
 interface ConversationListItemProps {
   conversation: Conversation;
@@ -25,6 +26,12 @@ const ConversationListItem = ({
   onSelect 
 }: ConversationListItemProps) => {
   const isMobile = useIsMobile();
+  const [imageError, setImageError] = useState(false);
+  
+  // Manejar error en la carga de imagen
+  const handleImageError = () => {
+    setImageError(true);
+  };
   
   return (
     <li className="w-full">
@@ -36,12 +43,19 @@ const ConversationListItem = ({
         style={{ width: '100%' }}
       >
         {/* Imagen del producto */}
-        <div className="relative flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded overflow-hidden border border-border">
-          <img 
-            src={conversation.productImage} 
-            alt={conversation.productName}
-            className="w-full h-full object-cover"
-          />
+        <div className="relative flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded overflow-hidden border border-border bg-secondary/20">
+          {!imageError ? (
+            <img 
+              src={conversation.productImage} 
+              alt={conversation.productName}
+              className="w-full h-full object-cover"
+              onError={handleImageError}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
+              {conversation.productName.charAt(0)}
+            </div>
+          )}
         </div>
         
         {/* Información de la conversación */}
