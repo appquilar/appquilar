@@ -13,6 +13,11 @@ import EmptyConversationList from './EmptyConversationList';
 import ConversationListSkeleton from './ConversationListSkeleton';
 import ConversationPagination from './ConversationPagination';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from '@/components/ui/carousel';
 
 interface ConversationListProps {
   onSelectConversation: (conversation: Conversation) => void;
@@ -89,20 +94,45 @@ const ConversationList = ({
     return <EmptyConversationList />;
   }
 
+  // Preparar los grupos de conversaciones para carrusel
+  const conversationPages = Array.from({ length: totalPages }, (_, i) => {
+    const startIdx = i * ITEMS_PER_PAGE;
+    return conversations.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+  });
+
   return (
     <div className="h-full flex flex-col">
-      <ScrollArea className="flex-1 h-full">
-        <ul className="divide-y divide-border">
-          {paginatedConversations.map((conversation) => (
-            <ConversationListItem 
-              key={conversation.id}
-              conversation={conversation}
-              isSelected={selectedConversationId === conversation.id}
-              onSelect={onSelectConversation}
-            />
+      <Carousel 
+        className="w-full flex-1"
+        opts={{
+          align: 'start',
+          loop: false,
+        }}
+        onSlideChange={(carouselApi) => {
+          const currentSlide = carouselApi?.selectedScrollSnap() || 0;
+          setCurrentPage(currentSlide + 1);
+        }}
+        defaultSlide={currentPage - 1}
+      >
+        <CarouselContent className="h-full -ml-0 -mt-0">
+          {conversationPages.map((pageConversations, index) => (
+            <CarouselItem key={index} className="w-full pl-0 pt-0 h-full">
+              <ScrollArea className="h-full">
+                <ul className="divide-y divide-border">
+                  {pageConversations.map((conversation) => (
+                    <ConversationListItem 
+                      key={conversation.id}
+                      conversation={conversation}
+                      isSelected={selectedConversationId === conversation.id}
+                      onSelect={onSelectConversation}
+                    />
+                  ))}
+                </ul>
+              </ScrollArea>
+            </CarouselItem>
           ))}
-        </ul>
-      </ScrollArea>
+        </CarouselContent>
+      </Carousel>
       
       <ConversationPagination 
         currentPage={currentPage}
