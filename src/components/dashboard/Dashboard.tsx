@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import DashboardNavigation from './DashboardNavigation';
 import RentalsManagement from './RentalsManagement';
@@ -34,17 +34,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Logo que enlaza a la página principal */}
-      <div className="bg-white border-b p-4">
-        <Link 
-          to="/" 
-          className="text-2xl font-display font-semibold tracking-tight text-primary transition-all duration-350"
-        >
-          appquilar
-        </Link>
-      </div>
-      
+    <div className="min-h-screen flex flex-col">      
       <div className="flex flex-1">
         {/* Navegación del panel */}
         <DashboardNavigation activeTab={activeTab} onTabChange={handleTabChange} />

@@ -30,12 +30,9 @@ const DashboardNavigationContent = ({ activeTab, onTabChange }: DashboardNavigat
   };
 
   return (
-    <>
-      {/* Información del usuario/empresa */}
-      <UserProfile />
-
+    <div className="flex flex-col h-full">
       {/* Enlaces de navegación */}
-      <nav className="p-2">
+      <nav className="p-2 flex-grow">
         <ul className="space-y-1">
           {/* Enlaces básicos */}
           {navLinks.map((link) => (
@@ -71,7 +68,12 @@ const DashboardNavigationContent = ({ activeTab, onTabChange }: DashboardNavigat
           {!isCompanyUser && <UpgradeLink />}
         </ul>
       </nav>
-    </>
+      
+      {/* Información del usuario/empresa en la parte inferior */}
+      <div className="mt-auto">
+        <UserProfile />
+      </div>
+    </div>
   );
 };
 

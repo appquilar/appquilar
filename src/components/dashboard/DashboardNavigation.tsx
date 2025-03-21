@@ -1,4 +1,5 @@
 
+import { Link } from 'react-router-dom';
 import { DashboardNavigationProps } from './navigation/types';
 import DashboardNavigationContent from './navigation/DashboardNavigationContent';
 
@@ -8,7 +9,17 @@ import DashboardNavigationContent from './navigation/DashboardNavigationContent'
  */
 const DashboardNavigation = (props: DashboardNavigationProps) => {
   return (
-    <div className="lg:w-64 lg:shrink-0 border-r border-border h-full overflow-auto">
+    <div className="lg:w-64 lg:shrink-0 border-r border-border h-full overflow-auto flex flex-col">
+      {/* Logo en la parte superior */}
+      <div className="p-4 border-b border-border">
+        <Link 
+          to="/" 
+          className="text-2xl font-display font-semibold tracking-tight text-primary transition-all duration-350"
+        >
+          appquilar
+        </Link>
+      </div>
+      
       <DashboardNavigationContent {...props} />
     </div>
   );
