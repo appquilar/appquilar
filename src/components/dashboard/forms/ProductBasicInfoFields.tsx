@@ -18,6 +18,21 @@ interface ProductBasicInfoFieldsProps {
 const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
   return (
     <>
+      {/* Internal ID (now editable) */}
+      <FormField
+        control={control}
+        name="internalId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>ID Interno</FormLabel>
+            <FormControl>
+              <Input placeholder="ID Interno (opcional)" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
       <FormField
         control={control}
         name="name"
