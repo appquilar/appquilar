@@ -26,18 +26,20 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
         />
       </div>
       
-      {/* Remove button - always visible with bubble styling */}
-      <Button
-        size="sm"
-        variant="destructive"
-        className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full shadow-md z-10"
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove(image.id);
-        }}
-      >
-        <X className="h-3 w-3" />
-      </Button>
+      {/* Remove button - positioned outside the image container using negative margins */}
+      <div className="absolute -top-3 -right-3 z-20">
+        <Button
+          size="sm"
+          variant="destructive"
+          className="h-7 w-7 p-0 rounded-full shadow-md"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(image.id);
+          }}
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      </div>
       
       {image.isPrimary && (
         <div className="absolute top-2 left-2 bg-primary text-white rounded-full px-2 py-1 flex items-center gap-1 text-xs">
