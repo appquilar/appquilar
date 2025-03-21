@@ -67,12 +67,12 @@ const Dashboard = () => {
 
   return (
     <div className="h-screen flex overflow-hidden relative">
-      {/* Mobile Menu Button */}
+      {/* Mobile Menu Button - moved to right side */}
       {isMobile && (
         <Button
           variant="ghost"
           size="icon"
-          className="fixed top-4 left-4 z-50"
+          className="fixed top-4 right-4 z-50"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
