@@ -31,8 +31,16 @@ export class SupabaseMessageRepository implements MessageRepository {
     }
     
     return data.map(conv => ({
-      ...conv,
+      id: conv.id,
+      productId: conv.product_id,
+      userId: conv.user_id,
+      companyId: conv.company_id,
       lastMessageAt: new Date(conv.last_message_at),
+      productName: conv.product_name,
+      productImage: conv.product_image,
+      companyName: conv.company_name,
+      userName: conv.user_name,
+      unreadCount: conv.unread_count
     }));
   }
 
@@ -75,11 +83,13 @@ export class SupabaseMessageRepository implements MessageRepository {
     }
     
     return data.map(msg => ({
-      ...msg,
+      id: msg.id,
       conversationId: msg.conversation_id,
       senderId: msg.sender_id,
       senderType: msg.sender_type as 'user' | 'company',
+      content: msg.content,
       timestamp: new Date(msg.timestamp),
+      read: msg.read
     }));
   }
 
@@ -103,11 +113,13 @@ export class SupabaseMessageRepository implements MessageRepository {
     
     return data
       .map(msg => ({
-        ...msg,
+        id: msg.id,
         conversationId: msg.conversation_id,
         senderId: msg.sender_id,
         senderType: msg.sender_type as 'user' | 'company',
+        content: msg.content,
         timestamp: new Date(msg.timestamp),
+        read: msg.read
       }))
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()); // Reordenar cronológicamente
   }
@@ -131,11 +143,13 @@ export class SupabaseMessageRepository implements MessageRepository {
     }
     
     return data.map(msg => ({
-      ...msg,
+      id: msg.id,
       conversationId: msg.conversation_id,
       senderId: msg.sender_id,
       senderType: msg.sender_type as 'user' | 'company',
+      content: msg.content,
       timestamp: new Date(msg.timestamp),
+      read: msg.read
     }));
   }
 
@@ -169,11 +183,13 @@ export class SupabaseMessageRepository implements MessageRepository {
     );
     
     return {
-      ...data,
+      id: data.id,
       conversationId: data.conversation_id,
       senderId: data.sender_id,
       senderType: data.sender_type as 'user' | 'company',
+      content: data.content,
       timestamp: new Date(data.timestamp),
+      read: data.read
     };
   }
 
@@ -280,12 +296,13 @@ export class SupabaseMessageRepository implements MessageRepository {
     });
     
     return {
-      ...conversationData,
+      id: conversationData.id,
       productId: conversationData.product_id,
       userId: conversationData.user_id,
       companyId: conversationData.company_id,
       lastMessageAt: new Date(conversationData.last_message_at),
       productName: conversationData.product_name,
+      productImage: conversationData.product_image,
       companyName: conversationData.company_name,
       userName: conversationData.user_name,
       unreadCount: conversationData.unread_count
@@ -306,9 +323,15 @@ export class SupabaseMessageRepository implements MessageRepository {
     
     // Si es un mensaje de la empresa, incrementar contador de no leídos
     if (isCompanyMessage) {
-      updates.unread_count = supabase.rpc('increment_unread', { 
+      const { error: rpcError, data } = await supabase.rpc('increment_unread', { 
         conversation_id: conversationId 
       });
+      
+      if (rpcError) {
+        console.error('Error al incrementar contador de no leídos:', rpcError);
+        // Si falla la RPC, actualizar directamente
+        updates.unread_count = supabase.raw('unread_count + 1');
+      }
     }
     
     const { error } = await supabase
