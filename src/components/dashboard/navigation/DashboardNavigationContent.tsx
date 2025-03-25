@@ -11,7 +11,7 @@ import UpgradeLink from './UpgradeLink';
 /**
  * Contenido principal de la navegación del panel de control
  */
-const DashboardNavigationContent = ({ activeTab, onTabChange }: DashboardNavigationProps) => {
+const DashboardNavigationContent = ({ activeTab, onTabChange, onNavigate }: DashboardNavigationProps) => {
   const location = useLocation();
   const { navLinks, companyLinks, adminLinks, isCompanyUser, isAdmin } = useNavLinks();
   const isMobile = useIsMobile();
@@ -28,7 +28,8 @@ const DashboardNavigationContent = ({ activeTab, onTabChange }: DashboardNavigat
   const handleTabChange = (href: string) => {
     // Extraer la última parte de la URL como identificador de pestaña, o 'overview' para la ruta principal
     const tabName = href === '/dashboard' ? 'overview' : href.split('/').pop() || 'overview';
-    onTabChange(tabName);
+    if (onTabChange) onTabChange(tabName);
+    if (onNavigate) onNavigate();
   };
 
   return (
