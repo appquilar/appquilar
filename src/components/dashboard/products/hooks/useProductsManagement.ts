@@ -5,18 +5,9 @@ import { useProductsPagination } from './useProductsPagination';
 import { MOCK_PRODUCTS } from './data/mockProducts';
 
 export function useProductsManagement() {
-  // Product operations (add, edit, delete)
+  // Product operations (delete)
   const {
     products,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    isAddDialogOpen,
-    setIsAddDialogOpen,
-    selectedProduct,
-    handleAddProduct,
-    handleEditProduct,
-    handleSaveProduct,
-    handleCancelEdit,
     handleDeleteProduct
   } = useProductOperations(MOCK_PRODUCTS);
   
@@ -53,23 +44,12 @@ export function useProductsManagement() {
     filteredProducts: currentProducts,
     handleSearch: handleProductSearch,
     
-    // Dialogs
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    isAddDialogOpen,
-    setIsAddDialogOpen,
-    selectedProduct,
-    
     // Pagination
     currentPage,
     totalPages,
     handlePageChange,
     
     // Product operations
-    handleAddProduct,
-    handleEditProduct,
-    handleSaveProduct,
-    handleCancelEdit,
     handleDeleteProduct
   };
 }

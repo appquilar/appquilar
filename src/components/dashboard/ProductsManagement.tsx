@@ -1,37 +1,37 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Import refactored components
 import ProductGrid from './products/ProductGrid';
 import SearchToolbar from './products/SearchToolbar';
-import ProductEditDialog from './products/ProductEditDialog';
 import ProductsHeader from './products/ProductsHeader';
 import ProductPagination from './products/ProductPagination';
 import { useProductsManagement } from './products/hooks/useProductsManagement';
 
 const ProductsManagement = () => {
+  const navigate = useNavigate();
   const {
     searchQuery,
     setSearchQuery,
     filteredProducts,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    isAddDialogOpen,
-    setIsAddDialogOpen,
-    selectedProduct,
     currentPage,
     totalPages,
     handlePageChange,
     handleSearch,
-    handleAddProduct,
-    handleEditProduct,
-    handleSaveProduct,
-    handleCancelEdit,
     handleDeleteProduct
   } = useProductsManagement();
   
+  const handleAddProduct = () => {
+    navigate('/dashboard/products/new');
+  };
+
+  const handleEditProduct = (productId: string) => {
+    navigate(`/dashboard/products/edit/${productId}`);
+  };
+  
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <ProductsHeader />
       
       {/* Barra de búsqueda */}
@@ -55,25 +55,6 @@ const ProductsManagement = () => {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}
-      />
-      
-      {/* Diálogo de edición de producto */}
-      <ProductEditDialog 
-        isOpen={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        selectedProduct={selectedProduct}
-        onSave={handleSaveProduct}
-        onCancel={handleCancelEdit}
-      />
-      
-      {/* Diálogo de añadir producto (reutilizamos el mismo componente) */}
-      <ProductEditDialog 
-        isOpen={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        selectedProduct={selectedProduct}
-        onSave={handleSaveProduct}
-        onCancel={handleCancelEdit}
-        isAddMode={true}
       />
     </div>
   );
