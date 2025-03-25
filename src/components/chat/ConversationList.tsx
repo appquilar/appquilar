@@ -8,6 +8,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Conversation } from '@/core/domain/Message';
 import { MessageService } from '@/infrastructure/services/MessageService';
+import { supabase } from '@/integrations/supabase/client';
 import ConversationListItem from './ConversationListItem';
 import EmptyConversationList from './EmptyConversationList';
 import ConversationListSkeleton from './ConversationListSkeleton';
@@ -71,45 +72,40 @@ const ConversationList = ({
     loadConversations();
   }, [user]);
   
-  // Actualizar solo contadores de mensajes no leídos periódicamente
+  // Suscribirse a actualizaciones en tiempo real de conversaciones
   useEffect(() => {
     if (!user) return;
     
-    const updateUnreadCounts = async () => {
-      try {
-        const unreadCounts = await messageService.getUnreadMessageCounts(user.id);
-        
-        // Actualizar solo los contadores sin recargar todas las conversaciones
-        setConversations(prevConversations => {
-          // Crear una copia profunda para no mutar el estado directamente
-          const updatedConversations = [...prevConversations];
+    // Suscribirse a cambios en la tabla de conversaciones
+    const channel = supabase
+      .channel('public:conversations')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversations',
+          filter: `user_id=eq.${user.id}`
+        },
+        async (payload) => {
+          console.log('Cambio detectado en conversaciones:', payload);
           
-          // Actualizar contadores
-          unreadCounts.forEach(({ conversationId, unreadCount }) => {
-            const conversationIndex = updatedConversations.findIndex(
-              conv => conv.id === conversationId
-            );
-            
-            if (conversationIndex !== -1) {
-              updatedConversations[conversationIndex] = {
-                ...updatedConversations[conversationIndex],
-                unreadCount
-              };
-            }
-          });
+          // Actualizar las conversaciones desde el servidor
+          const userConversations = await messageService.getUserConversations(user.id);
           
-          return updatedConversations;
-        });
-      } catch (error) {
-        console.error('Error al actualizar contadores de mensajes:', error);
-      }
+          // Ordenar por fecha del último mensaje
+          const sortedConversations = userConversations.sort((a, b) => 
+            b.lastMessageAt.getTime() - a.lastMessageAt.getTime()
+          );
+          
+          setConversations(sortedConversations);
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
     };
-    
-    // Actualizar inmediatamente y luego cada 10 segundos
-    updateUnreadCounts();
-    const intervalId = setInterval(updateUnreadCounts, 10000);
-    
-    return () => clearInterval(intervalId);
   }, [user]);
 
   // Manejar cambio de página desde la paginación

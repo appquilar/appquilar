@@ -7,6 +7,8 @@
 import { Conversation, Message } from "../../core/domain/Message";
 import { MessageRepository } from "../../core/ports/MessageRepository";
 import { MockMessageRepository } from "../adapters/MockMessageRepository";
+import { SupabaseMessageRepository } from "../adapters/SupabaseMessageRepository";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Servicio para la gestión de mensajes en la aplicación
@@ -14,13 +16,17 @@ import { MockMessageRepository } from "../adapters/MockMessageRepository";
 export class MessageService {
   private messageRepository: MessageRepository;
   private static instance: MessageService;
+  private useSupabase: boolean;
 
   /**
    * Constructor privado para implementar patrón Singleton
    */
   private constructor() {
-    // En producción, esto sería inyectado o configurado según el entorno
-    this.messageRepository = new MockMessageRepository();
+    // Determinar si usar Supabase o datos mock basado en la disponibilidad de auth
+    this.useSupabase = !!supabase;
+    this.messageRepository = this.useSupabase 
+      ? new SupabaseMessageRepository() 
+      : new MockMessageRepository();
   }
 
   /**

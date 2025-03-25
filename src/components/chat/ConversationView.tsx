@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Conversation, Message } from '@/core/domain/Message';
 import { MessageService } from '@/infrastructure/services/MessageService';
+import { supabase } from '@/integrations/supabase/client'; 
 import { toast } from 'sonner';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
@@ -65,39 +66,46 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
     loadInitialMessages();
   }, [conversation.id, user]);
   
-  // Actualizar solo los mensajes nuevos periódicamente
+  // Suscribirse a nuevos mensajes
   useEffect(() => {
-    if (!conversation.id) return;
+    if (!conversation.id || !user) return;
     
-    const checkForNewMessages = async () => {
-      try {
-        // Obtener solo los mensajes nuevos desde la última vez
-        const newMessages = await messageService.getNewMessagesSince(
-          conversation.id,
-          lastCheckedRef.current
-        );
-        
-        // Si hay mensajes nuevos, añadirlos a la lista
-        if (newMessages.length > 0) {
-          setMessages(prevMessages => [...prevMessages, ...newMessages]);
+    // Suscribirse a cambios en la tabla de mensajes para esta conversación
+    const channel = supabase
+      .channel('public:messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversation.id}`
+        },
+        async (payload) => {
+          console.log('Nuevo mensaje:', payload);
           
-          // Marcar como leídos si son mensajes entrantes
-          if (user) {
+          // Obtener mensajes nuevos
+          const newMessages = await messageService.getNewMessagesSince(
+            conversation.id,
+            lastCheckedRef.current
+          );
+          
+          if (newMessages.length > 0) {
+            setMessages(prevMessages => [...prevMessages, ...newMessages]);
+            
+            // Marcar como leídos si son mensajes entrantes
             await messageService.markMessagesAsRead(conversation.id, user.id);
           }
+          
+          // Actualizar el tiempo de referencia
+          lastCheckedRef.current = new Date();
         }
-        
-        // Actualizar el tiempo de referencia
-        lastCheckedRef.current = new Date();
-      } catch (error) {
-        console.error('Error al verificar nuevos mensajes:', error);
-      }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
     };
-    
-    // Verificar mensajes nuevos cada 5 segundos
-    const intervalId = setInterval(checkForNewMessages, 5000);
-    
-    return () => clearInterval(intervalId);
   }, [conversation.id, user]);
   
   // Manejar el envío de un nuevo mensaje

@@ -113,6 +113,104 @@ export type Database = {
         }
         Relationships: []
       }
+      conversations: {
+        Row: {
+          company_id: string | null
+          company_name: string
+          created_at: string
+          id: string
+          last_message_at: string
+          product_id: string | null
+          product_image: string
+          product_name: string
+          unread_count: number
+          updated_at: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          company_id?: string | null
+          company_name: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          product_id?: string | null
+          product_image: string
+          product_name: string
+          unread_count?: number
+          updated_at?: string
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          company_id?: string | null
+          company_name?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          product_id?: string | null
+          product_image?: string
+          product_name?: string
+          unread_count?: number
+          updated_at?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string | null
+          id: string
+          read: boolean
+          sender_id: string
+          sender_type: string
+          timestamp: string
+        }
+        Insert: {
+          content: string
+          conversation_id?: string | null
+          id?: string
+          read?: boolean
+          sender_id: string
+          sender_type: string
+          timestamp?: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string | null
+          id?: string
+          read?: boolean
+          sender_id?: string
+          sender_type?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_images: {
         Row: {
           created_at: string
