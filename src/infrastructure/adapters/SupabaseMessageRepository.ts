@@ -330,14 +330,22 @@ export class SupabaseMessageRepository implements MessageRepository {
         
         if (rpcError) {
           console.error('Error al incrementar contador de no leídos:', rpcError);
-          // Si falla la RPC, actualizar directamente con una expresión SQL
-          updates.unread_count = updates.unread_count || 0;
-          updates.unread_count += 1;
+          // Si falla la RPC, actualizar directamente con una expresión numérica
+          const { data: currentData, error: fetchError } = await supabase
+            .from('conversations')
+            .select('unread_count')
+            .eq('id', conversationId)
+            .single();
+            
+          if (!fetchError && currentData) {
+            updates.unread_count = (currentData.unread_count || 0) + 1;
+          } else {
+            updates.unread_count = 1; // Valor predeterminado si no se puede obtener el actual
+          }
         }
       } catch (error) {
         console.error('Error al llamar a RPC increment_unread:', error);
-        updates.unread_count = updates.unread_count || 0;
-        updates.unread_count += 1;
+        updates.unread_count = 1; // Valor predeterminado en caso de error
       }
     }
     
