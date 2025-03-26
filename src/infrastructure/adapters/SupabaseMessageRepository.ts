@@ -317,20 +317,27 @@ export class SupabaseMessageRepository implements MessageRepository {
     conversationId: string, 
     isCompanyMessage: boolean
   ): Promise<void> {
-    const updates: any = {
+    const updates: Record<string, any> = {
       last_message_at: new Date().toISOString(),
     };
     
     // Si es un mensaje de la empresa, incrementar contador de no leídos
     if (isCompanyMessage) {
-      const { error: rpcError, data } = await supabase.rpc('increment_unread', { 
-        conversation_id: conversationId 
-      });
-      
-      if (rpcError) {
-        console.error('Error al incrementar contador de no leídos:', rpcError);
-        // Si falla la RPC, actualizar directamente
-        updates.unread_count = supabase.raw('unread_count + 1');
+      try {
+        const { error: rpcError } = await supabase.rpc('increment_unread', { 
+          conversation_id: conversationId 
+        });
+        
+        if (rpcError) {
+          console.error('Error al incrementar contador de no leídos:', rpcError);
+          // Si falla la RPC, actualizar directamente con una expresión SQL
+          updates.unread_count = updates.unread_count || 0;
+          updates.unread_count += 1;
+        }
+      } catch (error) {
+        console.error('Error al llamar a RPC increment_unread:', error);
+        updates.unread_count = updates.unread_count || 0;
+        updates.unread_count += 1;
       }
     }
     
