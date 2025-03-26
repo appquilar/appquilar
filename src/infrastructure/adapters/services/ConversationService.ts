@@ -131,10 +131,8 @@ export class ConversationService {
     if (isCompanyMessage) {
       try {
         // Intentar usar la función RPC para incrementar el contador
-        const { data, error: rpcError } = await supabase.rpc(
-          'increment_unread', 
-          { conversation_id: conversationId }
-        );
+        const { error: rpcError } = await supabase
+          .rpc('increment_unread', { conversation_id: conversationId });
         
         if (rpcError) {
           console.error('Error al incrementar contador de no leídos:', rpcError);

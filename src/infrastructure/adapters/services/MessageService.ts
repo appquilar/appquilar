@@ -82,6 +82,7 @@ export class MessageService {
   async createMessage(messageData: Omit<Message, 'id' | 'timestamp'>): Promise<Message> {
     const dbMessage = mapMessageToDb(messageData);
     
+    // Fix: El insert espera un objeto, no un array ni un Record<string, any>
     const { data, error } = await supabase
       .from('messages')
       .insert(dbMessage)

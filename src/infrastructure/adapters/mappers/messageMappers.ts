@@ -45,7 +45,13 @@ export function mapDbToMessage(messageData: any): Message {
  * Mapea un mensaje del dominio a la base de datos
  * @param message Mensaje del dominio
  */
-export function mapMessageToDb(message: Omit<Message, 'id' | 'timestamp'>): Record<string, any> {
+export function mapMessageToDb(message: Omit<Message, 'id' | 'timestamp'>): {
+  conversation_id: string;
+  sender_id: string;
+  sender_type: string;
+  content: string;
+  read: boolean;
+} {
   return {
     conversation_id: message.conversationId,
     sender_id: message.senderId,
