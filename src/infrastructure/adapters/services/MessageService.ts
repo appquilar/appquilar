@@ -84,7 +84,7 @@ export class MessageService {
     
     const { data, error } = await supabase
       .from('messages')
-      .insert([dbMessage])
+      .insert(dbMessage)
       .select('*')
       .single();
     

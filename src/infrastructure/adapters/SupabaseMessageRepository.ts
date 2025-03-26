@@ -4,7 +4,6 @@
  * @module adapters/SupabaseMessageRepository
  */
 
-import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { Conversation, Message } from '../../core/domain/Message';
 import { MessageRepository } from '../../core/ports/MessageRepository';
