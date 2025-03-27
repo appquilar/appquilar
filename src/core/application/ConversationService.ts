@@ -1,24 +1,20 @@
 
 /**
- * @fileoverview Servicio para operaciones relacionadas con conversaciones
- * @module adapters/services/ConversationService
+ * @fileoverview Servicio de aplicación para conversaciones
+ * @module application/ConversationService
  */
 
-import { Conversation } from '../../../core/domain/Message';
-import { ConversationService as AppConversationService } from '../../../core/application/ConversationService';
-import { SupabaseConversationRepository } from '../repositories/SupabaseConversationRepository';
+import { Conversation } from '../domain/Message';
+import { ConversationRepository } from '../ports/ConversationRepository';
 
 /**
- * Servicio para operaciones relacionadas con conversaciones
- * Adaptador que utiliza el servicio de aplicación y el repositorio de Supabase
+ * Servicio de aplicación para operaciones relacionadas con conversaciones
  */
 export class ConversationService {
-  private appService: AppConversationService;
-  
-  constructor() {
-    // Inyectar la implementación de Supabase del repositorio
-    const repository = new SupabaseConversationRepository();
-    this.appService = new AppConversationService(repository);
+  private conversationRepository: ConversationRepository;
+
+  constructor(conversationRepository: ConversationRepository) {
+    this.conversationRepository = conversationRepository;
   }
 
   /**
@@ -26,7 +22,7 @@ export class ConversationService {
    * @param userId ID del usuario
    */
   async getUserConversations(userId: string): Promise<Conversation[]> {
-    return this.appService.getUserConversations(userId);
+    return this.conversationRepository.getUserConversations(userId);
   }
 
   /**
@@ -34,7 +30,7 @@ export class ConversationService {
    * @param userId ID del usuario
    */
   async getUnreadMessageCounts(userId: string): Promise<Array<{conversationId: string, unreadCount: number}>> {
-    return this.appService.getUnreadMessageCounts(userId);
+    return this.conversationRepository.getUnreadMessageCounts(userId);
   }
 
   /**
@@ -48,7 +44,7 @@ export class ConversationService {
     userId: string,
     companyId: string
   ): Promise<Conversation> {
-    return this.appService.createConversation(productId, userId, companyId);
+    return this.conversationRepository.createConversation(productId, userId, companyId);
   }
 
   /**
@@ -60,7 +56,7 @@ export class ConversationService {
     conversationId: string, 
     isCompanyMessage: boolean
   ): Promise<void> {
-    return this.appService.updateConversationOnNewMessage(conversationId, isCompanyMessage);
+    return this.conversationRepository.updateConversationOnNewMessage(conversationId, isCompanyMessage);
   }
 
   /**
@@ -69,6 +65,6 @@ export class ConversationService {
    * @param userId ID del usuario
    */
   async resetUnreadCounter(conversationId: string, userId: string): Promise<void> {
-    return this.appService.resetUnreadCounter(conversationId, userId);
+    return this.conversationRepository.resetUnreadCounter(conversationId, userId);
   }
 }

@@ -4,10 +4,8 @@
  * @module adapters/SupabaseMessageRepository
  */
 
-import { supabase } from '@/integrations/supabase/client';
 import { Conversation, Message } from '../../core/domain/Message';
 import { MessageRepository } from '../../core/ports/MessageRepository';
-import { mapDbToConversation, mapDbToMessage } from './mappers/messageMappers';
 import { ConversationService } from './services/ConversationService';
 import { MessageService } from './services/MessageService';
 
