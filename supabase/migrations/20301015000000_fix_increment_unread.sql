@@ -1,5 +1,5 @@
 
--- Función para incrementar el contador de mensajes no leídos
+-- Función para incrementar el contador de mensajes no leídos (versión corregida)
 CREATE OR REPLACE FUNCTION public.increment_unread(conversation_id UUID)
 RETURNS INTEGER
 LANGUAGE plpgsql

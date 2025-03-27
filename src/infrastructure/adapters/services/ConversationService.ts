@@ -130,9 +130,9 @@ export class ConversationService {
     // Si es un mensaje de la empresa, incrementar contador de no leídos
     if (isCompanyMessage) {
       try {
-        // Intentar usar la función RPC para incrementar el contador
+        // Usar la función RPC con tipo explícito para evitar error de TypeScript
         const { error: rpcError } = await supabase
-          .rpc('increment_unread', { conversation_id: conversationId });
+          .rpc('increment_unread', { conversation_id: conversationId } as any);
         
         if (rpcError) {
           console.error('Error al incrementar contador de no leídos:', rpcError);
