@@ -82,7 +82,7 @@ export class MessageService {
   async createMessage(messageData: Omit<Message, 'id' | 'timestamp'>): Promise<Message> {
     const dbMessage = mapMessageToDb(messageData);
     
-    // Usar dbMessage como un objeto para el insert, no como un array
+    // Pasar dbMessage como un objeto único, no como un array
     const { data, error } = await supabase
       .from('messages')
       .insert(dbMessage)

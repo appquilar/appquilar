@@ -8,6 +8,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Conversation } from '../../../core/domain/Message';
 import { mapDbToConversation } from '../mappers/messageMappers';
 
+// Define the RPC type for increment_unread to avoid TypeScript errors
+type IncrementUnreadParams = {
+  conversation_id: string;
+};
+
 /**
  * Servicio para operaciones relacionadas con conversaciones
  */
@@ -130,9 +135,10 @@ export class ConversationService {
     // Si es un mensaje de la empresa, incrementar contador de no leídos
     if (isCompanyMessage) {
       try {
-        // Usar la función RPC con tipo explícito para evitar error de TypeScript
+        // Usar la función RPC con el tipo correcto para evitar error de TypeScript
+        const params: IncrementUnreadParams = { conversation_id: conversationId };
         const { error: rpcError } = await supabase
-          .rpc('increment_unread', { conversation_id: conversationId } as any);
+          .rpc('increment_unread', params);
         
         if (rpcError) {
           console.error('Error al incrementar contador de no leídos:', rpcError);
