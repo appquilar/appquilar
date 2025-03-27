@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Servicio para operaciones relacionadas con conversaciones
  * @module adapters/services/ConversationService
@@ -6,27 +7,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Conversation } from '../../../core/domain/Message';
 import { mapDbToConversation } from '../mappers/messageMappers';
-
-// Define la estructura de la base de datos Supabase para las RPCs
-interface Database {
-  public: {
-    Tables: {
-      conversations: {
-        Row: {
-          id: string;
-          // ... other fields
-        }
-      }
-      // ... other tables
-    }
-    Functions: {
-      increment_unread: {
-        Args: { conversation_id: string };
-        Returns: number;
-      }
-    }
-  }
-}
 
 /**
  * Servicio para operaciones relacionadas con conversaciones
@@ -150,9 +130,9 @@ export class ConversationService {
     // Si es un mensaje de la empresa, incrementar contador de no leídos
     if (isCompanyMessage) {
       try {
-        // Usar la función RPC con el tipo correcto para evitar error de TypeScript
-        const { error: rpcError } = await supabase
-          .rpc<number, { conversation_id: string }>('increment_unread', { 
+        // Llamar directamente a la función increment_unread en Supabase
+        const { data, error: rpcError } = await supabase
+          .rpc('increment_unread', { 
             conversation_id: conversationId 
           });
         
