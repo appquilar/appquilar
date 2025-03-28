@@ -7,7 +7,8 @@ import {
   Calendar, 
   Users, 
   Settings,
-  MessageCircle
+  MessageCircle,
+  BarChart
 } from 'lucide-react';
 import { NavLink } from './types';
 
@@ -23,7 +24,7 @@ export const useNavLinks = () => {
     {
       title: 'Panel',
       href: '/dashboard',
-      icon: <LayoutDashboard size={18} />,
+      icon: <BarChart size={18} />,
       exact: true,
     },
     {

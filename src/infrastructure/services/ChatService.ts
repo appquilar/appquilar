@@ -37,6 +37,19 @@ export class ChatService {
   }
 
   /**
+   * Cambia entre el uso de datos reales (Supabase) y datos mock
+   * @param useSupabase Indica si se deben usar datos de Supabase
+   */
+  public setUseSupabase(useSupabase: boolean): void {
+    if (this.useSupabase === useSupabase) return;
+    
+    this.useSupabase = useSupabase;
+    this.messageRepository = useSupabase 
+      ? new SupabaseMessageRepository() 
+      : new MockMessageRepository();
+  }
+
+  /**
    * Obtiene las conversaciones de un usuario
    * @param userId ID del usuario
    * @returns Lista de conversaciones

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Product } from '@/components/products/ProductCard';
-import { supabase, testSupabaseConnection } from '@/integrations/supabase/client';
+import { testSupabaseConnection } from '@/integrations/supabase/client';
 
 export function useProductOperations(initialProducts: Product[]) {
   const [products, setProducts] = useState(initialProducts);
@@ -15,16 +15,19 @@ export function useProductOperations(initialProducts: Product[]) {
   useEffect(() => {
     const checkConnection = async () => {
       setIsCheckingConnection(true);
-      const result = await testSupabaseConnection();
-      setConnectionStatus(result);
-      
-      if (!result.success) {
-        toast.error(`Error connecting to database: ${result.message}`);
-      } else {
-        toast.success('Connected to database successfully');
+      try {
+        const result = await testSupabaseConnection();
+        setConnectionStatus(result);
+        
+        if (!result.success) {
+          console.warn(`Database connection issue: ${result.message}`);
+          // Don't show toast for connection error since we're using mock data anyway
+        }
+      } catch (error) {
+        console.error('Error checking connection:', error);
+      } finally {
+        setIsCheckingConnection(false);
       }
-      
-      setIsCheckingConnection(false);
     };
     
     checkConnection();
