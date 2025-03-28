@@ -8,7 +8,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Conversation, Message } from '@/core/domain/Message';
 import { MessageService } from '@/infrastructure/services/MessageService';
-import { supabase } from '@/integrations/supabase/client'; 
 import { toast } from 'sonner';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
@@ -21,6 +20,8 @@ interface ConversationViewProps {
 
 // Número de mensajes a cargar inicialmente
 const INITIAL_MESSAGE_LIMIT = 10;
+// Intervalo de actualización de mensajes en milisegundos
+const MESSAGE_POLLING_INTERVAL = 5000; 
 
 /**
  * Vista de conversación individual
@@ -66,45 +67,38 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
     loadInitialMessages();
   }, [conversation.id, user]);
   
-  // Suscribirse a nuevos mensajes
+  // Polling para simular tiempo real con mocks
   useEffect(() => {
     if (!conversation.id || !user) return;
     
-    // Suscribirse a cambios en la tabla de mensajes para esta conversación
-    const channel = supabase
-      .channel('public:messages')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${conversation.id}`
-        },
-        async (payload) => {
-          console.log('Nuevo mensaje:', payload);
+    // Función para verificar nuevos mensajes periódicamente
+    const checkNewMessages = async () => {
+      try {
+        // Obtener mensajes nuevos desde la última consulta
+        const newMessages = await messageService.getNewMessagesSince(
+          conversation.id,
+          lastCheckedRef.current
+        );
+        
+        if (newMessages.length > 0) {
+          setMessages(prevMessages => [...prevMessages, ...newMessages]);
           
-          // Obtener mensajes nuevos
-          const newMessages = await messageService.getNewMessagesSince(
-            conversation.id,
-            lastCheckedRef.current
-          );
-          
-          if (newMessages.length > 0) {
-            setMessages(prevMessages => [...prevMessages, ...newMessages]);
-            
-            // Marcar como leídos si son mensajes entrantes
-            await messageService.markMessagesAsRead(conversation.id, user.id);
-          }
-          
-          // Actualizar el tiempo de referencia
-          lastCheckedRef.current = new Date();
+          // Marcar como leídos si son mensajes entrantes
+          await messageService.markMessagesAsRead(conversation.id, user.id);
         }
-      )
-      .subscribe();
+        
+        // Actualizar el tiempo de referencia
+        lastCheckedRef.current = new Date();
+      } catch (error) {
+        console.error('Error al verificar nuevos mensajes:', error);
+      }
+    };
+    
+    // Configurar polling para simular actualizaciones en tiempo real
+    const intervalId = setInterval(checkNewMessages, MESSAGE_POLLING_INTERVAL);
     
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(intervalId);
     };
   }, [conversation.id, user]);
   

@@ -8,7 +8,6 @@ import { Conversation, Message } from "../../core/domain/Message";
 import { MessageRepository } from "../../core/ports/MessageRepository";
 import { MockMessageRepository } from "../adapters/MockMessageRepository";
 import { SupabaseMessageRepository } from "../adapters/SupabaseMessageRepository";
-import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Servicio para la gestión de mensajes en la aplicación
@@ -22,11 +21,9 @@ export class ChatService {
    * Constructor privado para implementar patrón Singleton
    */
   private constructor() {
-    // Determinar si usar Supabase o datos mock basado en la disponibilidad de auth
-    this.useSupabase = !!supabase;
-    this.messageRepository = this.useSupabase 
-      ? new SupabaseMessageRepository() 
-      : new MockMessageRepository();
+    // Forzar el uso de datos mock
+    this.useSupabase = false;
+    this.messageRepository = new MockMessageRepository();
   }
 
   /**

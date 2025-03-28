@@ -8,7 +8,6 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Conversation } from '@/core/domain/Message';
 import { MessageService } from '@/infrastructure/services/MessageService';
-import { supabase } from '@/integrations/supabase/client';
 import ConversationListItem from './ConversationListItem';
 import EmptyConversationList from './EmptyConversationList';
 import ConversationListSkeleton from './ConversationListSkeleton';
@@ -22,6 +21,8 @@ interface ConversationListProps {
 
 // Definir cuántas conversaciones mostrar por página
 const ITEMS_PER_PAGE = 7;
+// Intervalo de actualización de la lista en milisegundos
+const LIST_POLLING_INTERVAL = 10000;
 
 /**
  * Lista de conversaciones del usuario
@@ -72,25 +73,23 @@ const ConversationList = ({
     loadConversations();
   }, [user]);
   
-  // Suscribirse a actualizaciones en tiempo real de conversaciones
+  // Polling para actualizaciones en modo Mock
   useEffect(() => {
     if (!user) return;
     
-    // Suscribirse a cambios en la tabla de conversaciones
-    const channel = supabase
-      .channel('public:conversations')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversations',
-          filter: `user_id=eq.${user.id}`
-        },
-        async (payload) => {
-          console.log('Cambio detectado en conversaciones:', payload);
-          
-          // Actualizar las conversaciones desde el servidor
+    // Función para verificar actualizaciones en las conversaciones
+    const checkConversationsUpdates = async () => {
+      try {
+        // Obtener contadores de mensajes no leídos
+        const unreadCounts = await messageService.getUnreadMessageCounts(user.id);
+        
+        // Si hay cambios en los contadores, recargar las conversaciones
+        const hasChanges = unreadCounts.some(({ conversationId, unreadCount }) => {
+          const conversation = conversationsRef.current.find(c => c.id === conversationId);
+          return conversation && conversation.unreadCount !== unreadCount;
+        });
+        
+        if (hasChanges) {
           const userConversations = await messageService.getUserConversations(user.id);
           
           // Ordenar por fecha del último mensaje
@@ -99,12 +98,18 @@ const ConversationList = ({
           );
           
           setConversations(sortedConversations);
+          conversationsRef.current = sortedConversations;
         }
-      )
-      .subscribe();
+      } catch (error) {
+        console.error('Error al verificar actualizaciones de conversaciones:', error);
+      }
+    };
+    
+    // Configurar polling para simular actualizaciones en tiempo real
+    const intervalId = setInterval(checkConversationsUpdates, LIST_POLLING_INTERVAL);
     
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(intervalId);
     };
   }, [user]);
 

@@ -131,26 +131,17 @@ export class SupabaseConversationRepository implements ConversationRepository {
     
     // Si es un mensaje de la empresa, incrementar contador de no leídos
     if (isCompanyMessage) {
-      try {
-        // Intentar llamar a la función RPC para incrementar contador
-        await supabase.rpc('increment_unread', { 
-          conversation_id: conversationId 
-        });
-      } catch (error) {
-        console.error('Error al incrementar contador:', error);
+      // Debido a problemas de tipado con la función RPC, vamos a hacer un update directo
+      const { data: currentData, error: fetchError } = await supabase
+        .from('conversations')
+        .select('unread_count')
+        .eq('id', conversationId)
+        .single();
         
-        // Fallback: incrementar directamente en el update
-        const { data: currentData, error: fetchError } = await supabase
-          .from('conversations')
-          .select('unread_count')
-          .eq('id', conversationId)
-          .single();
-          
-        if (!fetchError && currentData) {
-          updates.unread_count = (currentData.unread_count || 0) + 1;
-        } else {
-          updates.unread_count = 1;
-        }
+      if (!fetchError && currentData) {
+        updates.unread_count = ConversationDomainService.calculateUnreadIncrement(currentData.unread_count || 0);
+      } else {
+        updates.unread_count = 1;
       }
     }
     
