@@ -47,7 +47,7 @@ const Dashboard = () => {
 
       {/* Main content */}
       <div className="flex-grow overflow-y-auto">
-        <div className={`${isMobile ? 'pt-14' : ''} h-full`}>
+        <div className={`${isMobile ? 'pt-14' : ''} h-full p-6`}>
           <DashboardRoutes />
         </div>
       </div>
