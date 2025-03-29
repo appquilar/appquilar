@@ -46,21 +46,6 @@ export const useNavLinks = () => {
       icon: <Package size={18} />,
     },
     {
-      title: 'Categorías',
-      href: '/dashboard/categories',
-      icon: <Tags size={18} />,
-    },
-    {
-      title: 'Empresas',
-      href: '/dashboard/companies',
-      icon: <Building size={18} />,
-    },
-    {
-      title: 'Sitios',
-      href: '/dashboard/sites',
-      icon: <Globe size={18} />,
-    },
-    {
       title: 'Alquileres',
       href: '/dashboard/rentals',
       icon: <Calendar size={18} />,
@@ -74,6 +59,21 @@ export const useNavLinks = () => {
       title: 'Usuarios',
       href: '/dashboard/users',
       icon: <Users size={18} />,
+    },
+    {
+      title: 'Categorías',
+      href: '/dashboard/categories',
+      icon: <Tags size={18} />,
+    },
+    {
+      title: 'Empresas',
+      href: '/dashboard/companies',
+      icon: <Building size={18} />,
+    },
+    {
+      title: 'Sitios',
+      href: '/dashboard/sites',
+      icon: <Globe size={18} />,
     },
     {
       title: 'Configuración',

@@ -17,16 +17,16 @@ const UserTable = ({ users, onEdit, onDelete }: UserTableProps) => {
     return (
       <Badge
         className={`${
-          status === 'active' 
+          status === 'active' || status === 'accepted'
             ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100' 
-            : status === 'invited'
+            : status === 'invited' || status === 'pending'
               ? 'bg-blue-100 text-blue-800 hover:bg-blue-100'
               : 'bg-gray-100 text-gray-800 hover:bg-gray-100'
         }`}
       >
-        {status === 'active' 
+        {status === 'active' || status === 'accepted'
           ? 'Activo' 
-          : status === 'invited' 
+          : status === 'invited' || status === 'pending'
             ? 'Invitado' 
             : 'Desactivado'
         }

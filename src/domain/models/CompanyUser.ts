@@ -7,7 +7,7 @@ export interface CompanyUser {
   name: string;
   email: string;
   role: 'company_admin' | 'company_user';
-  status: 'pending' | 'accepted' | 'expired';
+  status: 'pending' | 'accepted' | 'expired' | 'active' | 'invited' | 'deactivated';
   dateAdded: string;
   companyId: string;
 }
