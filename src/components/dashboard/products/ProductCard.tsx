@@ -36,11 +36,11 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
         </p>
         <p className="text-sm line-clamp-2">{product.description}</p>
       </CardContent>
-      <CardFooter className="pt-2 pb-4 flex justify-between">
+      <CardFooter className="pt-2 pb-4 flex flex-col gap-2">
         <Button 
           variant="outline" 
           size="sm" 
-          className="gap-1"
+          className="gap-1 w-full"
           onClick={() => onEdit(product.id)}
         >
           <Edit size={14} />
@@ -49,7 +49,7 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
         <Button 
           variant="outline" 
           size="sm" 
-          className="gap-1 text-red-500 hover:text-red-600 hover:bg-red-50"
+          className="gap-1 w-full text-red-500 hover:text-red-600 hover:bg-red-50"
           onClick={() => onDelete(product.id)}
         >
           <Trash size={14} />
