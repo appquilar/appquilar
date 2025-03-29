@@ -9,7 +9,8 @@ export const MOCK_USERS: CompanyUser[] = [
     email: 'john@example.com',
     role: 'company_admin',
     status: 'active',
-    dateAdded: '2023-05-15'
+    dateAdded: '2023-05-15',
+    companyId: '1'
   },
   {
     id: '2',
@@ -17,7 +18,8 @@ export const MOCK_USERS: CompanyUser[] = [
     email: 'sarah@example.com',
     role: 'company_user',
     status: 'active',
-    dateAdded: '2023-06-10'
+    dateAdded: '2023-06-10',
+    companyId: '1'
   },
   {
     id: '3',
@@ -25,7 +27,8 @@ export const MOCK_USERS: CompanyUser[] = [
     email: 'michael@example.com',
     role: 'company_user',
     status: 'active',
-    dateAdded: '2023-06-22'
+    dateAdded: '2023-06-22',
+    companyId: '2'
   },
   {
     id: '4',
@@ -33,7 +36,8 @@ export const MOCK_USERS: CompanyUser[] = [
     email: 'emily@example.com',
     role: 'company_user',
     status: 'invited',
-    dateAdded: '2023-07-14'
+    dateAdded: '2023-07-14',
+    companyId: '2'
   },
   {
     id: '5',
@@ -41,6 +45,7 @@ export const MOCK_USERS: CompanyUser[] = [
     email: 'david@example.com',
     role: 'company_user',
     status: 'deactivated',
-    dateAdded: '2023-06-05'
+    dateAdded: '2023-06-05',
+    companyId: '3'
   }
 ];
