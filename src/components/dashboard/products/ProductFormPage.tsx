@@ -13,7 +13,7 @@ const ProductFormPage = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const isAddMode = productId === 'new';
+  const isAddMode = !productId || productId === 'new';
 
   useEffect(() => {
     // Simulate API call to fetch product data or create new product template
@@ -82,6 +82,7 @@ const ProductFormPage = () => {
     );
   }
 
+  // When in add mode, always show the form even if product is null
   if (!product && !isAddMode) {
     return (
       <div className="p-6">

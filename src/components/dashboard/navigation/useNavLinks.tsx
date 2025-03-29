@@ -8,7 +8,10 @@ import {
   Users, 
   Settings,
   MessageCircle,
-  BarChart
+  BarChart,
+  Tags,
+  Building,
+  Globe
 } from 'lucide-react';
 import { NavLink } from './types';
 
@@ -41,6 +44,21 @@ export const useNavLinks = () => {
       title: 'Productos',
       href: '/dashboard/products',
       icon: <Package size={18} />,
+    },
+    {
+      title: 'Categorías',
+      href: '/dashboard/categories',
+      icon: <Tags size={18} />,
+    },
+    {
+      title: 'Empresas',
+      href: '/dashboard/companies',
+      icon: <Building size={18} />,
+    },
+    {
+      title: 'Sitios',
+      href: '/dashboard/sites',
+      icon: <Globe size={18} />,
     },
     {
       title: 'Alquileres',

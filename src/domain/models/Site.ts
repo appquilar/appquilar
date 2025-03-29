@@ -1,0 +1,29 @@
+
+/**
+ * Site model representing different websites
+ */
+export interface Site {
+  id: string;
+  name: string;
+  domain: string;
+  logo: string | null;
+  title: string;
+  description: string;
+  categoryIds: string[];
+  primaryColor: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Form data structure for site creation/editing
+ */
+export interface SiteFormData {
+  name: string;
+  domain: string;
+  logo: string | null;
+  title: string;
+  description: string;
+  categoryIds: string[];
+  primaryColor: string;
+}

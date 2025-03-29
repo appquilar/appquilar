@@ -7,6 +7,16 @@ export interface CompanyUser {
   name: string;
   email: string;
   role: 'company_admin' | 'company_user';
-  status: 'active' | 'invited' | 'deactivated';
+  status: 'pending' | 'accepted' | 'expired';
   dateAdded: string;
+  companyId: string;
+}
+
+/**
+ * Invitation form data for inviting users to a company
+ */
+export interface UserInvitationFormData {
+  email: string;
+  role: 'company_admin' | 'company_user';
+  companyId: string;
 }
