@@ -120,8 +120,8 @@ const CategoryFormPage = () => {
               <FormItem>
                 <FormLabel>Categoría Padre</FormLabel>
                 <Select
-                  onValueChange={field.onChange}
-                  value={field.value || undefined}
+                  onValueChange={(value) => field.onChange(value === "none" ? null : value)}
+                  value={field.value || "none"}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -129,7 +129,7 @@ const CategoryFormPage = () => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Ninguna (Categoría principal)</SelectItem>
+                    <SelectItem value="none">Ninguna (Categoría principal)</SelectItem>
                     {MOCK_CATEGORIES
                       .filter(c => c.id !== categoryId) // Prevent circular reference
                       .map(category => (
