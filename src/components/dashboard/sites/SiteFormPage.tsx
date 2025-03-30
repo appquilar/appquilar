@@ -7,13 +7,13 @@ import { toast } from 'sonner';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 
 import FormHeader from '../common/FormHeader';
 import FormActions from '../common/FormActions';
 import { Site, SiteFormData } from '@/domain/models/Site';
 import { MOCK_SITES } from './data/mockSites';
 import { MOCK_CATEGORIES } from '../categories/data/mockCategories';
+import CategoryMultiSelector from '../categories/CategoryMultiSelector';
 
 const SiteFormPage = () => {
   const { siteId } = useParams();
@@ -180,49 +180,21 @@ const SiteFormPage = () => {
             )}
           />
           
-          {/* Categorías */}
+          {/* Categorías - Using the new multi-selector component */}
           <FormField
             control={form.control}
             name="categoryIds"
-            render={() => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Categorías</FormLabel>
-                <div className="space-y-2">
-                  {MOCK_CATEGORIES.map((category) => (
-                    <FormField
-                      key={category.id}
-                      control={form.control}
-                      name="categoryIds"
-                      render={({ field }) => {
-                        return (
-                          <FormItem
-                            key={category.id}
-                            className="flex flex-row items-start space-x-3 space-y-0"
-                          >
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(category.id)}
-                                onCheckedChange={(checked) => {
-                                  const currentValues = field.value || [];
-                                  if (checked) {
-                                    field.onChange([...currentValues, category.id]);
-                                  } else {
-                                    field.onChange(
-                                      currentValues.filter((value) => value !== category.id)
-                                    );
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal cursor-pointer">
-                              {category.name}
-                            </FormLabel>
-                          </FormItem>
-                        );
-                      }}
-                    />
-                  ))}
-                </div>
+                <FormControl>
+                  <CategoryMultiSelector
+                    categories={MOCK_CATEGORIES}
+                    selectedCategoryIds={field.value}
+                    onCategoriesChange={field.onChange}
+                    placeholder="Seleccionar categorías"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
