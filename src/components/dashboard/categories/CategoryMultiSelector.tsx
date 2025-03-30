@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { Check, ChevronsUpDown, Search, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Check, ChevronsUpDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -53,7 +53,7 @@ export function CategoryMultiSelector({
   );
 
   // Filter categories based on search query
-  const filteredCategories = searchQuery
+  const filteredCategories = searchQuery.trim() !== ''
     ? categories.filter(cat => 
         cat.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : categories;
@@ -116,13 +116,11 @@ export function CategoryMultiSelector({
         </PopoverTrigger>
         <PopoverContent className="p-0 w-full min-w-[300px]" align="start">
           <Command>
-            <div className="flex items-center border-b px-3">
-              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-              <CommandInput 
-                placeholder="Buscar categoría..." 
-                onValueChange={setSearchQuery}
-              />
-            </div>
+            <CommandInput 
+              placeholder="Buscar categoría..." 
+              onValueChange={setSearchQuery}
+              className="border-none"
+            />
             <CommandList className="max-h-[300px]">
               <CommandEmpty>No se encontraron categorías</CommandEmpty>
               <CommandGroup>
