@@ -6,13 +6,13 @@ import { toast } from 'sonner';
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 import FormHeader from '../common/FormHeader';
 import FormActions from '../common/FormActions';
 import { Category, CategoryFormData } from '@/domain/models/Category';
 import { MOCK_CATEGORIES } from './data/mockCategories';
+import CategorySelector from './CategorySelector';
 
 const CategoryFormPage = () => {
   const { categoryId } = useParams();
@@ -119,26 +119,14 @@ const CategoryFormPage = () => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Categoría Padre</FormLabel>
-                <Select
-                  onValueChange={(value) => field.onChange(value === "none" ? null : value)}
-                  value={field.value || "none"}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar categoría padre (opcional)" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">Ninguna (Categoría principal)</SelectItem>
-                    {MOCK_CATEGORIES
-                      .filter(c => c.id !== categoryId) // Prevent circular reference
-                      .map(category => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <CategorySelector
+                    categories={MOCK_CATEGORIES.filter(c => c.id !== categoryId)} // Prevent circular reference
+                    selectedCategoryId={field.value}
+                    onCategoryChange={field.onChange}
+                    placeholder="Seleccionar categoría padre (opcional)"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

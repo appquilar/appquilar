@@ -1,11 +1,12 @@
 
 import { useState } from 'react';
-import { Calendar, Filter, Search, Truck } from 'lucide-react';
+import { Calendar, Truck } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import RentalFilters from './rentals/RentalFilters';
+import RentalCalendar from './rentals/RentalCalendar';
 
 // Mock rental data - would come from backend API in production
 const MOCK_RENTALS = [
@@ -103,20 +104,45 @@ const MOCK_RENTALS = [
 
 const RentalsManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [rentalId, setRentalId] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   
-  // Filter rentals based on search query and active tab
+  // Filter rentals based on search query, dates, rental ID and active tab
   const filteredRentals = MOCK_RENTALS.filter(rental => {
-    const matchesSearch = searchQuery 
+    // Filter by search query (name or email)
+    const nameMatch = searchQuery 
       ? rental.product.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        rental.customer.name.toLowerCase().includes(searchQuery.toLowerCase())
+        rental.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        rental.customer.email.toLowerCase().includes(searchQuery.toLowerCase())
       : true;
     
-    const matchesTab = activeTab === 'all' 
+    // Filter by rental ID
+    const idMatch = rentalId 
+      ? rental.id.includes(rentalId)
+      : true;
+    
+    // Filter by date range
+    const rentalStartDate = new Date(rental.startDate);
+    const rentalEndDate = new Date(rental.endDate);
+    
+    const dateMatch = (startDate && endDate)
+      ? (rentalStartDate >= startDate && rentalStartDate <= endDate) ||
+        (rentalEndDate >= startDate && rentalEndDate <= endDate) ||
+        (rentalStartDate <= startDate && rentalEndDate >= endDate)
+      : startDate
+        ? rentalStartDate >= startDate || rentalEndDate >= startDate
+        : endDate
+          ? rentalStartDate <= endDate || rentalEndDate <= endDate
+          : true;
+    
+    // Filter by tab/status
+    const statusMatch = activeTab === 'all' 
       ? true 
       : rental.status === activeTab;
     
-    return matchesSearch && matchesTab;
+    return nameMatch && idMatch && dateMatch && statusMatch;
   });
   
   // Count rentals by status
@@ -132,51 +158,54 @@ const RentalsManagement = () => {
     // In a real app, we might call an API endpoint here
   };
   
+  const handleDateSelect = (date: Date) => {
+    console.log('Selected date:', date);
+    // Implement logic to filter rentals for the selected date
+  };
+  
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-display font-semibold">Rentals Management</h1>
-        <p className="text-muted-foreground">Track and manage all your equipment rentals.</p>
+        <h1 className="text-2xl font-display font-semibold">Gestión de Alquileres</h1>
+        <p className="text-muted-foreground">Seguimiento y gestión de todos los alquileres de equipos.</p>
       </div>
       
       {/* Search and filter */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <form onSubmit={handleSearch} className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search rentals..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </form>
-        <Button variant="outline" className="gap-2 sm:w-auto w-full">
-          <Filter size={16} />
-          Filters
-        </Button>
-        <Button className="gap-2 sm:w-auto w-full">
-          <Calendar size={16} />
-          Calendar View
-        </Button>
-      </div>
+      <RentalFilters 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        rentalId={rentalId}
+        onRentalIdChange={setRentalId}
+        onSearch={handleSearch}
+      />
+      
+      {/* Calendar view */}
+      <RentalCalendar 
+        rentals={MOCK_RENTALS}
+        onDateSelect={handleDateSelect}
+      />
       
       {/* Tabs */}
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="all">
-            All
+            Todos
             <Badge variant="secondary" className="ml-2">{rentalCounts.all}</Badge>
           </TabsTrigger>
           <TabsTrigger value="active">
-            Active
+            Activos
             <Badge variant="secondary" className="ml-2">{rentalCounts.active}</Badge>
           </TabsTrigger>
           <TabsTrigger value="upcoming">
-            Upcoming
+            Próximos
             <Badge variant="secondary" className="ml-2">{rentalCounts.upcoming}</Badge>
           </TabsTrigger>
           <TabsTrigger value="completed">
-            Completed
+            Completados
             <Badge variant="secondary" className="ml-2">{rentalCounts.completed}</Badge>
           </TabsTrigger>
         </TabsList>
@@ -210,8 +239,8 @@ const RentalsList = ({ rentals }: RentalsListProps) => {
     return (
       <div className="text-center py-10">
         <Truck size={40} className="mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium mb-1">No rentals found</h3>
-        <p className="text-muted-foreground">Try adjusting your search or filters.</p>
+        <h3 className="text-lg font-medium mb-1">No se encontraron alquileres</h3>
+        <p className="text-muted-foreground">Prueba ajustando tu búsqueda o filtros.</p>
       </div>
     );
   }
@@ -223,7 +252,7 @@ const RentalsList = ({ rentals }: RentalsListProps) => {
           <CardHeader className="flex flex-row items-start justify-between py-5">
             <div>
               <CardTitle className="text-base font-medium">{rental.product}</CardTitle>
-              <p className="text-sm text-muted-foreground">Rental #{rental.id}</p>
+              <p className="text-sm text-muted-foreground">Alquiler #{rental.id}</p>
             </div>
             <Badge
               className={`${
@@ -235,40 +264,40 @@ const RentalsList = ({ rentals }: RentalsListProps) => {
               }`}
             >
               {rental.status === 'active' 
-                ? 'Active' 
+                ? 'Activo' 
                 : rental.status === 'upcoming' 
-                  ? 'Upcoming' 
-                  : 'Completed'
+                  ? 'Próximo' 
+                  : 'Completado'
               }
             </Badge>
           </CardHeader>
           <CardContent className="pt-0 pb-5 px-6">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Customer</p>
+                <p className="text-xs text-muted-foreground mb-1">Cliente</p>
                 <p className="font-medium">{rental.customer.name}</p>
                 <p className="text-sm text-muted-foreground">{rental.customer.email}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Rental Period</p>
-                <p className="font-medium">{rental.startDate} to {rental.endDate}</p>
+                <p className="text-xs text-muted-foreground mb-1">Período de alquiler</p>
+                <p className="font-medium">{rental.startDate} a {rental.endDate}</p>
                 <p className="text-sm text-muted-foreground">
-                  {Math.ceil((new Date(rental.endDate).getTime() - new Date(rental.startDate).getTime()) / (1000 * 60 * 60 * 24))} days
+                  {Math.ceil((new Date(rental.endDate).getTime() - new Date(rental.startDate).getTime()) / (1000 * 60 * 60 * 24))} días
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Amount</p>
+                <p className="text-xs text-muted-foreground mb-1">Importe</p>
                 <p className="font-medium">${rental.totalAmount.toFixed(2)}</p>
                 <p className="text-sm text-muted-foreground">
-                  {rental.returned ? 'Returned' : 'Not returned'}
+                  {rental.returned ? 'Devuelto' : 'No devuelto'}
                 </p>
               </div>
             </div>
             
             <div className="flex gap-2 mt-4 justify-end">
-              <Button variant="outline" size="sm">View Details</Button>
+              <Button variant="outline" size="sm">Ver detalles</Button>
               {rental.status === 'active' && (
-                <Button size="sm">Mark as Returned</Button>
+                <Button size="sm">Marcar como devuelto</Button>
               )}
             </div>
           </CardContent>

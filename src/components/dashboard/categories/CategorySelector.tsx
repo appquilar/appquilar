@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Check, ChevronsUpDown, Search } from 'lucide-react';
+import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +35,7 @@ export function CategorySelector({
 }: CategorySelectorProps) {
   const [open, setOpen] = useState(false);
   const [displayValue, setDisplayValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (selectedCategoryId) {
@@ -57,8 +58,16 @@ export function CategorySelector({
     return acc;
   }, {} as Record<string, Category[]>);
 
+  // Filter categories based on search query
+  const filteredCategories = searchQuery.trim() !== ''
+    ? categories.filter(cat => 
+        cat.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : categories;
+
   const renderCategoryItems = (cats: Category[], level = 0) => {
-    return cats.map(category => (
+    return cats.filter(cat => 
+      filteredCategories.some(fc => fc.id === cat.id)
+    ).map(category => (
       <React.Fragment key={category.id}>
         <CommandItem
           value={category.id}
@@ -99,10 +108,11 @@ export function CategorySelector({
       </PopoverTrigger>
       <PopoverContent className="p-0 w-full min-w-[250px]" align="start">
         <Command>
-          <div className="flex items-center border-b px-3">
-            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-            <CommandInput placeholder="Buscar categoría..." />
-          </div>
+          <CommandInput 
+            placeholder="Buscar categoría..." 
+            onValueChange={setSearchQuery}
+            className="border-none"
+          />
           <CommandList className="max-h-[300px]">
             <CommandEmpty>No se encontraron categorías</CommandEmpty>
             <CommandGroup>

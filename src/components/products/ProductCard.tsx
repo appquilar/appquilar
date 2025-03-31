@@ -11,6 +11,7 @@ export interface ProductPrice {
   daily: number;
   weekly?: number;
   monthly?: number;
+  deposit?: number; // New deposit field
 }
 
 // Product company information
@@ -84,6 +85,7 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
       <CardContent className="py-2">
         <p className="text-xs text-muted-foreground mb-2">
           {product.category.name} • {product.price.daily}€/día
+          {product.price.deposit && ` • ${product.price.deposit}€ fianza`}
         </p>
         <p className="text-sm line-clamp-2">{product.description}</p>
       </CardContent>
