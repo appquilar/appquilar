@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search, Filter } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
@@ -91,9 +91,9 @@ const RentalFilters = ({
           className="w-32 h-10"
         />
         
-        <Button variant="outline" className="gap-2 h-10">
-          <Filter size={16} />
-          Filtros
+        <Button type="submit" onClick={(e) => onSearch(e)} className="gap-2 h-10">
+          <Search size={16} />
+          Buscar
         </Button>
       </div>
     </div>

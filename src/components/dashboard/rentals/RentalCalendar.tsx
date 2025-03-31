@@ -114,6 +114,8 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
             className="p-3 pointer-events-auto"
             components={{
               DayContent: ({ date }) => renderDay(date),
+              IconLeft: () => null,
+              IconRight: () => null,
             }}
           />
         </div>
@@ -129,6 +131,8 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
               className="p-3 pointer-events-auto"
               components={{
                 DayContent: ({ date }) => renderDay(date),
+                IconLeft: () => null,
+                IconRight: () => null,
               }}
             />
           </div>
