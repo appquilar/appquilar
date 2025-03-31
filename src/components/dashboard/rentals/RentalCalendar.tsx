@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addMonths, subMonths, isSameDay, startOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { type DayPickerCaptionProps } from 'react-day-picker';
+import type { CaptionProps } from 'react-day-picker';
 
 interface RentalCalendarProps {
   rentals: any[]; // Replace with proper rental type
@@ -79,16 +79,19 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
         hasRental && "font-medium",
         isToday && "text-primary"
       )}>
-        {day.getDate()}
-        {hasRental && (
-          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full bg-primary"></div>
+        {hasRental ? (
+          <div className="w-7 h-7 absolute bg-gray-200 rounded-full flex items-center justify-center">
+            {day.getDate()}
+          </div>
+        ) : (
+          day.getDate()
         )}
       </div>
     );
   };
 
   // Custom caption component for month and year display
-  const CustomCaption = (props: DayPickerCaptionProps) => {
+  const CustomCaption = (props: CaptionProps) => {
     return (
       <div className="text-center py-1 font-medium">
         {format(props.displayMonth, 'MMMM yyyy', { locale: es })}

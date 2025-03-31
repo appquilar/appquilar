@@ -1,10 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProductsManagement from './ProductsManagement';
 import ProductFormPage from './products/ProductFormPage';
-import RentalsManagement from './RentalsManagement';
+import RentalsManagement from './rentals/RentalsManagement';
 import MessagesDashboard from './MessagesDashboard';
 import UserManagement from './UserManagement';
 import CompanyStats from './CompanyStats';
+import UserConfigPage from './config/UserConfigPage';
 
 // Category pages
 import CategoryManagement from './categories/CategoryManagement';
@@ -47,6 +48,9 @@ const DashboardRoutes = () => {
       <Route path="sites" element={<SiteManagement />} />
       <Route path="sites/new" element={<SiteFormPage />} />
       <Route path="sites/edit/:siteId" element={<SiteFormPage />} />
+      
+      {/* Configuration routes */}
+      <Route path="config" element={<UserConfigPage />} />
       
       {/* Other existing routes */}
       <Route path="rentals" element={<RentalsManagement />} />

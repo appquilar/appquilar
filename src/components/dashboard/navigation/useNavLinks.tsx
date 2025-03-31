@@ -1,92 +1,73 @@
 
 import { ReactNode } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { 
-  LayoutDashboard, 
-  Package, 
-  Calendar, 
-  Users, 
-  Settings,
-  MessageCircle,
-  BarChart,
-  Tags,
-  Building,
-  Globe
-} from 'lucide-react';
-import { NavLink } from './types';
+import { BarChart, Package, Calendar, MessageCircle, Users, Home, Settings } from 'lucide-react';
 
-/**
- * Hook personalizado para obtener los enlaces de navegación según el rol del usuario
- */
+export interface NavLink {
+  href: string;
+  label: string;
+  icon: ReactNode;
+  exact?: boolean;
+}
+
 export const useNavLinks = () => {
   const { user } = useAuth();
   const isCompanyUser = user?.role === 'company_admin' || user?.role === 'company_user';
-
-  // Enlaces de navegación básicos
+  const isAdmin = user?.role === 'company_admin';
+  
+  // Enlaces básicos para todos los usuarios
   const navLinks: NavLink[] = [
     {
-      title: 'Panel',
       href: '/dashboard',
-      icon: <BarChart size={18} />,
-      exact: true,
+      label: 'Resumen',
+      icon: <Home size={20} />,
+      exact: true
     },
     {
-      title: 'Mensajes',
-      href: '/dashboard/messages',
-      icon: <MessageCircle size={18} />,
-      badge: '2',
+      href: '/dashboard/rentals',
+      label: 'Alquileres',
+      icon: <Calendar size={20} />
     },
+    {
+      href: '/dashboard/messages',
+      label: 'Mensajes',
+      icon: <MessageCircle size={20} />
+    },
+    {
+      href: '/dashboard/config',
+      label: 'Configuración',
+      icon: <Settings size={20} />
+    }
   ];
-
-  // Enlaces adicionales para usuarios de tipo empresa
+  
+  // Enlaces para usuarios de empresa
   const companyLinks: NavLink[] = [
     {
-      title: 'Productos',
       href: '/dashboard/products',
-      icon: <Package size={18} />,
+      label: 'Productos',
+      icon: <Package size={20} />
     },
     {
-      title: 'Alquileres',
-      href: '/dashboard/rentals',
-      icon: <Calendar size={18} />,
-      badge: '5',
-    },
+      href: '/dashboard/stats',
+      label: 'Estadísticas',
+      icon: <BarChart size={20} />
+    }
   ];
-
-  // Enlaces adicionales para administradores de empresa
+  
+  // Enlaces para administradores de empresa
   const adminLinks: NavLink[] = [
     {
-      title: 'Usuarios',
       href: '/dashboard/users',
-      icon: <Users size={18} />,
-    },
-    {
-      title: 'Categorías',
-      href: '/dashboard/categories',
-      icon: <Tags size={18} />,
-    },
-    {
-      title: 'Empresas',
-      href: '/dashboard/companies',
-      icon: <Building size={18} />,
-    },
-    {
-      title: 'Sitios',
-      href: '/dashboard/sites',
-      icon: <Globe size={18} />,
-    },
-    {
-      title: 'Configuración',
-      href: '/dashboard/settings',
-      icon: <Settings size={18} />,
-    },
+      label: 'Usuarios',
+      icon: <Users size={20} />
+    }
   ];
-
+  
   return {
     navLinks,
     companyLinks,
     adminLinks,
     isCompanyUser,
-    isAdmin: user?.role === 'company_admin'
+    isAdmin
   };
 };
