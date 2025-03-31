@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addMonths, subMonths, isSameDay, startOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { type DayPickerCaptionProps } from 'react-day-picker';
 
 interface RentalCalendarProps {
   rentals: any[]; // Replace with proper rental type
@@ -86,6 +87,15 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
     );
   };
 
+  // Custom caption component for month and year display
+  const CustomCaption = (props: DayPickerCaptionProps) => {
+    return (
+      <div className="text-center py-1 font-medium">
+        {format(props.displayMonth, 'MMMM yyyy', { locale: es })}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -116,11 +126,7 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
               DayContent: ({ date }) => renderDay(date),
               IconLeft: () => null,
               IconRight: () => null,
-              Caption: ({ displayMonth, displayYear }) => (
-                <div className="text-center py-1 font-medium">
-                  {format(new Date(displayYear, displayMonth), 'MMMM yyyy', { locale: es })}
-                </div>
-              )
+              Caption: CustomCaption
             }}
           />
         </div>
@@ -138,11 +144,7 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
                 DayContent: ({ date }) => renderDay(date),
                 IconLeft: () => null,
                 IconRight: () => null,
-                Caption: ({ displayMonth, displayYear }) => (
-                  <div className="text-center py-1 font-medium">
-                    {format(new Date(displayYear, displayMonth), 'MMMM yyyy', { locale: es })}
-                  </div>
-                )
+                Caption: CustomCaption
               }}
             />
           </div>
