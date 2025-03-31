@@ -18,16 +18,21 @@ const DashboardLayout = ({ sidebar, content }: DashboardLayoutProps) => {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
-      {/* Mobile menu toggle */}
+      {/* Mobile menu toggle and header */}
       {isMobile && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="fixed top-4 left-4 z-50"
-          onClick={() => setShowSidebar(!showSidebar)}
-        >
-          <Menu size={20} />
-        </Button>
+        <div className="fixed top-0 left-0 right-0 z-50 flex items-center bg-background border-b border-border h-14 px-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowSidebar(!showSidebar)}
+          >
+            <Menu size={20} />
+          </Button>
+          <div className="mx-auto text-xl font-display font-semibold tracking-tight text-primary">
+            appquilar
+          </div>
+          <div className="w-9"></div> {/* Spacer for balance */}
+        </div>
       )}
 
       {/* Sidebar navigation */}
@@ -53,7 +58,7 @@ const DashboardLayout = ({ sidebar, content }: DashboardLayoutProps) => {
 
       {/* Main content */}
       <div className="flex-grow overflow-y-auto">
-        <div className={`${isMobile ? 'pt-14' : ''} h-full p-6`}>
+        <div className={`${isMobile ? 'pt-16' : ''} h-full p-6`}>
           {content}
         </div>
       </div>

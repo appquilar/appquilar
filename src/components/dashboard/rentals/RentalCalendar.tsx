@@ -116,6 +116,11 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
               DayContent: ({ date }) => renderDay(date),
               IconLeft: () => null,
               IconRight: () => null,
+              Caption: ({ displayMonth, displayYear }) => (
+                <div className="text-center py-1 font-medium">
+                  {format(new Date(displayYear, displayMonth), 'MMMM yyyy', { locale: es })}
+                </div>
+              )
             }}
           />
         </div>
@@ -133,6 +138,11 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
                 DayContent: ({ date }) => renderDay(date),
                 IconLeft: () => null,
                 IconRight: () => null,
+                Caption: ({ displayMonth, displayYear }) => (
+                  <div className="text-center py-1 font-medium">
+                    {format(new Date(displayYear, displayMonth), 'MMMM yyyy', { locale: es })}
+                  </div>
+                )
               }}
             />
           </div>
