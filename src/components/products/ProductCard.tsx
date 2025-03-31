@@ -11,7 +11,7 @@ export interface ProductPrice {
   daily: number;
   weekly?: number;
   monthly?: number;
-  deposit?: number; // New deposit field
+  deposit?: number; // Deposit field
 }
 
 // Product company information

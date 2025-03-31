@@ -17,6 +17,7 @@ export const productFormSchema = z.object({
     daily: z.number().min(1, { message: 'El precio diario es obligatorio.' }),
     weekly: z.number().optional(),
     monthly: z.number().optional(),
+    deposit: z.number().optional(),
   }),
   category: z.object({
     id: z.string(),
@@ -52,6 +53,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
       daily: product.price.daily,
       weekly: product.price.weekly || undefined,
       monthly: product.price.monthly || undefined,
+      deposit: product.price.deposit || undefined,
     },
     category: product.category,
     imageUrl: product.imageUrl,
@@ -91,6 +93,7 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
       daily: values.price.daily,
       weekly: values.price.weekly,
       monthly: values.price.monthly,
+      deposit: values.price.deposit,
     },
     imageUrl: primaryImageUrl,
     thumbnailUrl: primaryImageUrl, // Usando la misma URL para la miniatura

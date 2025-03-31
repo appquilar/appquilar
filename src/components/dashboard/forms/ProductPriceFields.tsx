@@ -3,10 +3,10 @@ import React from 'react';
 import { Control } from 'react-hook-form';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Product } from '@/components/products/ProductCard';
+import { ProductFormValues } from './productFormSchema';
 
 interface ProductPriceFieldsProps {
-  control: Control<Partial<Product>>;
+  control: Control<ProductFormValues>;
 }
 
 const ProductPriceFields = ({ control }: ProductPriceFieldsProps) => {
