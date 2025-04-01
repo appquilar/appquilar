@@ -1,7 +1,7 @@
 
 import { ReactNode } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { BarChart, Package, Calendar, MessageCircle, Users, Home, Settings } from 'lucide-react';
+import { BarChart, Package, Calendar, MessageCircle, Users, Home, Settings, Building, Globe } from 'lucide-react';
 
 export interface NavLink {
   href: string;
@@ -20,24 +20,19 @@ export const useNavLinks = () => {
   const navLinks: NavLink[] = [
     {
       href: '/dashboard',
-      title: 'Resumen', // Changed from label to title
+      title: 'Resumen',
       icon: <Home size={20} />,
       exact: true
     },
     {
       href: '/dashboard/rentals',
-      title: 'Alquileres', // Changed from label to title
+      title: 'Alquileres',
       icon: <Calendar size={20} />
     },
     {
       href: '/dashboard/messages',
-      title: 'Mensajes', // Changed from label to title
+      title: 'Mensajes',
       icon: <MessageCircle size={20} />
-    },
-    {
-      href: '/dashboard/config',
-      title: 'Configuración', // Changed from label to title
-      icon: <Settings size={20} />
     }
   ];
   
@@ -45,13 +40,18 @@ export const useNavLinks = () => {
   const companyLinks: NavLink[] = [
     {
       href: '/dashboard/products',
-      title: 'Productos', // Changed from label to title
+      title: 'Productos',
       icon: <Package size={20} />
     },
     {
       href: '/dashboard/stats',
-      title: 'Estadísticas', // Changed from label to title
+      title: 'Estadísticas',
       icon: <BarChart size={20} />
+    },
+    {
+      href: '/dashboard/categories',
+      title: 'Categorías',
+      icon: <Package size={20} />
     }
   ];
   
@@ -59,8 +59,23 @@ export const useNavLinks = () => {
   const adminLinks: NavLink[] = [
     {
       href: '/dashboard/users',
-      title: 'Usuarios', // Changed from label to title
+      title: 'Usuarios',
       icon: <Users size={20} />
+    },
+    {
+      href: '/dashboard/companies',
+      title: 'Empresas',
+      icon: <Building size={20} />
+    },
+    {
+      href: '/dashboard/sites',
+      title: 'Sitios',
+      icon: <Globe size={20} />
+    },
+    {
+      href: '/dashboard/config',
+      title: 'Configuración',
+      icon: <Settings size={20} />
     }
   ];
   
