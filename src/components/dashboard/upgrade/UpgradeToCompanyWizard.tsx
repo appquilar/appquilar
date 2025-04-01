@@ -121,6 +121,7 @@ const UpgradeToCompanyWizard = ({ open, onOpenChange }: UpgradeToCompanyWizardPr
             formData={formData} 
             onUpdateFormData={handleUpdateFormData} 
             onNext={handleNext} 
+            onBack={handleClose} 
           />
         );
       case 'contact-info':
