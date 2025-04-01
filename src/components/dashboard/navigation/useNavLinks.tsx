@@ -5,8 +5,9 @@ import { BarChart, Package, Calendar, MessageCircle, Users, Home, Settings } fro
 
 export interface NavLink {
   href: string;
-  label: string;
+  title: string; // Changed from label to title
   icon: ReactNode;
+  badge?: string; // Added to match the types.ts interface
   exact?: boolean;
 }
 
@@ -19,23 +20,23 @@ export const useNavLinks = () => {
   const navLinks: NavLink[] = [
     {
       href: '/dashboard',
-      label: 'Resumen',
+      title: 'Resumen', // Changed from label to title
       icon: <Home size={20} />,
       exact: true
     },
     {
       href: '/dashboard/rentals',
-      label: 'Alquileres',
+      title: 'Alquileres', // Changed from label to title
       icon: <Calendar size={20} />
     },
     {
       href: '/dashboard/messages',
-      label: 'Mensajes',
+      title: 'Mensajes', // Changed from label to title
       icon: <MessageCircle size={20} />
     },
     {
       href: '/dashboard/config',
-      label: 'Configuración',
+      title: 'Configuración', // Changed from label to title
       icon: <Settings size={20} />
     }
   ];
@@ -44,12 +45,12 @@ export const useNavLinks = () => {
   const companyLinks: NavLink[] = [
     {
       href: '/dashboard/products',
-      label: 'Productos',
+      title: 'Productos', // Changed from label to title
       icon: <Package size={20} />
     },
     {
       href: '/dashboard/stats',
-      label: 'Estadísticas',
+      title: 'Estadísticas', // Changed from label to title
       icon: <BarChart size={20} />
     }
   ];
@@ -58,7 +59,7 @@ export const useNavLinks = () => {
   const adminLinks: NavLink[] = [
     {
       href: '/dashboard/users',
-      label: 'Usuarios',
+      title: 'Usuarios', // Changed from label to title
       icon: <Users size={20} />
     }
   ];
