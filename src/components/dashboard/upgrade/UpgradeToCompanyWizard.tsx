@@ -1,4 +1,11 @@
 
+/**
+ * @deprecated Use UpgradePage component instead. This component is kept for reference.
+ * 
+ * This component has been replaced by a page-based wizard implementation in UpgradePage.tsx
+ * Keeping this file as reference but it should no longer be used in the application.
+ */
+
 import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';

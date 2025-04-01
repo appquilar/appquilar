@@ -3,24 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 
 /**
- * Props para el enlace de actualización a cuenta de empresa
- */
-interface UpgradeLinkProps {
-  onClick?: () => void;
-}
-
-/**
  * Componente para el enlace de actualización a cuenta de empresa
  */
-const UpgradeLink = ({ onClick }: UpgradeLinkProps) => {
+const UpgradeLink = () => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    if (onClick) {
-      onClick();
-    } else {
-      navigate('/dashboard/upgrade');
-    }
+    navigate('/dashboard/upgrade');
   };
 
   return (

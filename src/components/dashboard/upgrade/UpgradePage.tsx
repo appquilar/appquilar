@@ -8,6 +8,7 @@ import { z } from 'zod';
 import CompanyInfoStep from './steps/CompanyInfoStep';
 import ContactInfoStep from './steps/ContactInfoStep';
 import SelectPlanStep from './steps/SelectPlanStep';
+import SuccessStep from './steps/SuccessStep';
 
 // Form schema
 const companyFormSchema = z.object({
@@ -23,7 +24,7 @@ const companyFormSchema = z.object({
 
 export type CompanyFormData = z.infer<typeof companyFormSchema>;
 
-type Step = 'info' | 'contact' | 'plan';
+type Step = 'info' | 'contact' | 'plan' | 'success';
 
 const UpgradePage = () => {
   const navigate = useNavigate();
@@ -52,9 +53,8 @@ const UpgradePage = () => {
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
-      // This would integrate with the complete wizard in a real app
       await upgradeToCompany(formData.name);
-      navigate('/dashboard');
+      setCurrentStep('success');
     } catch (error) {
       console.error('Error upgrading to company:', error);
     } finally {
@@ -67,9 +67,16 @@ const UpgradePage = () => {
       setCurrentStep('info');
     } else if (currentStep === 'plan') {
       setCurrentStep('contact');
+    } else if (currentStep === 'success') {
+      // If on success page, go to dashboard
+      navigate('/dashboard');
     } else {
       navigate('/dashboard');
     }
+  };
+
+  const handleClose = () => {
+    navigate('/dashboard');
   };
 
   return (
@@ -82,32 +89,34 @@ const UpgradePage = () => {
           </p>
         </div>
 
-        {/* Progress bar */}
-        <div className="w-full">
-          <div className="flex justify-between mb-2">
-            <div className={`text-sm font-medium ${currentStep === 'info' ? 'text-primary' : ''}`}>
-              Información de Empresa
+        {/* Progress bar (only show if not on success step) */}
+        {currentStep !== 'success' && (
+          <div className="w-full">
+            <div className="flex justify-between mb-2">
+              <div className={`text-sm font-medium ${currentStep === 'info' ? 'text-primary' : ''}`}>
+                Información de Empresa
+              </div>
+              <div className={`text-sm font-medium ${currentStep === 'contact' ? 'text-primary' : ''}`}>
+                Contacto
+              </div>
+              <div className={`text-sm font-medium ${currentStep === 'plan' ? 'text-primary' : ''}`}>
+                Plan
+              </div>
             </div>
-            <div className={`text-sm font-medium ${currentStep === 'contact' ? 'text-primary' : ''}`}>
-              Contacto
-            </div>
-            <div className={`text-sm font-medium ${currentStep === 'plan' ? 'text-primary' : ''}`}>
-              Plan
+            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+              <div 
+                className="bg-primary h-full transition-all" 
+                style={{ 
+                  width: currentStep === 'info' 
+                    ? '33.3%' 
+                    : currentStep === 'contact' 
+                      ? '66.6%' 
+                      : '100%' 
+                }}
+              />
             </div>
           </div>
-          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-            <div 
-              className="bg-primary h-full transition-all" 
-              style={{ 
-                width: currentStep === 'info' 
-                  ? '33.3%' 
-                  : currentStep === 'contact' 
-                    ? '66.6%' 
-                    : '100%' 
-              }}
-            />
-          </div>
-        </div>
+        )}
 
         {currentStep === 'info' && (
           <CompanyInfoStep 
@@ -134,6 +143,19 @@ const UpgradePage = () => {
             onComplete={handleComplete}
             onBack={handleBack}
             isSubmitting={isSubmitting}
+          />
+        )}
+
+        {currentStep === 'success' && (
+          <SuccessStep 
+            planName={formData.selectedPlan === 'basic' 
+              ? 'Básico' 
+              : formData.selectedPlan === 'professional' 
+                ? 'Profesional' 
+                : 'Premium'
+            } 
+            companyName={formData.name} 
+            onClose={handleClose} 
           />
         )}
       </div>
