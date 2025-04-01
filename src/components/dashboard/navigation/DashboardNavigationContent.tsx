@@ -7,6 +7,8 @@ import UserProfile from './UserProfile';
 import NavItem from './NavItem';
 import CompanyNavSection from './CompanyNavSection';
 import UpgradeLink from './UpgradeLink';
+import { useState } from 'react';
+import UpgradeToCompanyWizard from '../upgrade/UpgradeToCompanyWizard';
 
 /**
  * Contenido principal de la navegación del panel de control
@@ -15,6 +17,7 @@ const DashboardNavigationContent = ({ activeTab, onTabChange, onNavigate }: Dash
   const location = useLocation();
   const { navLinks, companyLinks, adminLinks, isCompanyUser, isAdmin } = useNavLinks();
   const isMobile = useIsMobile();
+  const [upgradeWizardOpen, setUpgradeWizardOpen] = useState(false);
 
   // Función para verificar si un enlace está activo
   const isActive = (href: string, exact = false) => {
@@ -30,6 +33,10 @@ const DashboardNavigationContent = ({ activeTab, onTabChange, onNavigate }: Dash
     const tabName = href === '/dashboard' ? 'overview' : href.split('/').pop() || 'overview';
     if (onTabChange) onTabChange(tabName);
     if (onNavigate) onNavigate();
+  };
+
+  const openUpgradeWizard = () => {
+    setUpgradeWizardOpen(true);
   };
 
   return (
@@ -67,15 +74,35 @@ const DashboardNavigationContent = ({ activeTab, onTabChange, onNavigate }: Dash
             />
           )}
 
-          {/* Enlace para actualizar a cuenta de empresa */}
-          {!isCompanyUser && <UpgradeLink />}
+          {/* Mostrar enlace a productos para usuarios normales */}
+          {!isCompanyUser && (
+            <NavItem
+              link={{
+                href: '/dashboard/products',
+                title: 'Mis Productos',
+                icon: navLinks[0].icon // Using the same icon style
+              }}
+              isActive={isActive('/dashboard/products')}
+              onClick={handleTabChange}
+            />
+          )}
         </ul>
       </nav>
+      
+      {/* Enlace para actualizar a cuenta de empresa (justo antes del perfil) */}
+      {!isCompanyUser && (
+        <div className="px-2 mb-2">
+          <UpgradeLink onClick={openUpgradeWizard} />
+        </div>
+      )}
       
       {/* Información del usuario/empresa en la parte inferior */}
       <div className="mt-auto">
         <UserProfile />
       </div>
+
+      {/* Modal del asistente de actualización a empresa */}
+      <UpgradeToCompanyWizard open={upgradeWizardOpen} onOpenChange={setUpgradeWizardOpen} />
     </div>
   );
 };

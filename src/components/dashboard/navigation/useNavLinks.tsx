@@ -5,9 +5,9 @@ import { BarChart, Package, Calendar, MessageCircle, Users, Home, Settings, Buil
 
 export interface NavLink {
   href: string;
-  title: string; // Changed from label to title
+  title: string;
   icon: ReactNode;
-  badge?: string; // Added to match the types.ts interface
+  badge?: string;
   exact?: boolean;
 }
 

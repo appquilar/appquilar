@@ -1,21 +1,25 @@
 
-import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+
+/**
+ * Props para el enlace de actualización a cuenta de empresa
+ */
+interface UpgradeLinkProps {
+  onClick?: () => void;
+}
 
 /**
  * Componente para el enlace de actualización a cuenta de empresa
  */
-const UpgradeLink = () => {
+const UpgradeLink = ({ onClick }: UpgradeLinkProps) => {
   return (
-    <li className="mt-6">
-      <Link
-        to="/dashboard/upgrade"
-        className="flex items-center justify-between px-3 py-3 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-      >
-        <span className="text-sm font-medium">Actualizar a Empresa</span>
-        <ChevronRight size={16} />
-      </Link>
-    </li>
+    <button
+      onClick={onClick}
+      className="flex items-center justify-between w-full px-3 py-3 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+    >
+      <span className="text-sm font-medium">Actualizar a Empresa</span>
+      <ChevronRight size={16} />
+    </button>
   );
 };
 

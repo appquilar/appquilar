@@ -1,3 +1,4 @@
+
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProductsManagement from './ProductsManagement';
 import ProductFormPage from './products/ProductFormPage';
@@ -6,6 +7,7 @@ import MessagesDashboard from './MessagesDashboard';
 import UserManagement from './UserManagement';
 import CompanyStats from './CompanyStats';
 import UserConfigPage from './config/UserConfigPage';
+import UpgradePage from './upgrade/UpgradePage';
 
 // Category pages
 import CategoryManagement from './categories/CategoryManagement';
@@ -26,6 +28,9 @@ const DashboardRoutes = () => {
     <Routes>
       <Route path="/" element={<CompanyStats />} />
       <Route path="stats" element={<CompanyStats />} />
+      
+      {/* Upgrade route */}
+      <Route path="upgrade" element={<UpgradePage />} />
       
       {/* Products routes */}
       <Route path="products" element={<ProductsManagement />} />
