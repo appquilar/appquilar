@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
-import { CompanyUpgradeFormData } from '../UpgradeToCompanyWizard';
+import { CompanyFormData } from '../UpgradePage';
 import { cn } from '@/lib/utils';
 
 interface PlanOption {
@@ -17,8 +17,8 @@ interface PlanOption {
 }
 
 interface SelectPlanStepProps {
-  formData: CompanyUpgradeFormData;
-  onUpdateFormData: (data: Partial<CompanyUpgradeFormData>) => void;
+  formData: CompanyFormData;
+  onUpdateFormData: (data: Partial<CompanyFormData>) => void;
   onComplete: () => void;
   onBack: () => void;
   isSubmitting: boolean;
@@ -88,10 +88,6 @@ const SelectPlanStep = ({
     onUpdateFormData({ selectedPlan: planId });
   };
 
-  const handleSubmit = () => {
-    onComplete();
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -155,7 +151,7 @@ const SelectPlanStep = ({
         <Button type="button" variant="outline" onClick={onBack}>
           Volver
         </Button>
-        <Button onClick={handleSubmit} disabled={isSubmitting}>
+        <Button onClick={onComplete} disabled={isSubmitting}>
           {isSubmitting ? 'Procesando...' : 'Completar Registro'}
         </Button>
       </div>

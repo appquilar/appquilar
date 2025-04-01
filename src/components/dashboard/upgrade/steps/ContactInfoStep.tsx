@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { CompanyUpgradeFormData } from '../UpgradeToCompanyWizard';
+import { CompanyFormData } from '../UpgradePage';
 
 // Validation schema for contact info
 const contactInfoSchema = z.object({
@@ -15,8 +15,8 @@ const contactInfoSchema = z.object({
 });
 
 interface ContactInfoStepProps {
-  formData: CompanyUpgradeFormData;
-  onUpdateFormData: (data: Partial<CompanyUpgradeFormData>) => void;
+  formData: CompanyFormData;
+  onUpdateFormData: (data: Partial<CompanyFormData>) => void;
   onNext: () => void;
   onBack: () => void;
 }

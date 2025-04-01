@@ -1,11 +1,12 @@
 
+import { useEffect } from 'react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { CompanyUpgradeFormData } from '../UpgradeToCompanyWizard';
+import { CompanyFormData } from '../UpgradePage';
 import { Textarea } from '@/components/ui/textarea';
 
 // Validation schema for company info
@@ -18,12 +19,13 @@ const companyInfoSchema = z.object({
 });
 
 interface CompanyInfoStepProps {
-  formData: CompanyUpgradeFormData;
-  onUpdateFormData: (data: Partial<CompanyUpgradeFormData>) => void;
+  formData: CompanyFormData;
+  onUpdateFormData: (data: Partial<CompanyFormData>) => void;
   onNext: () => void;
+  onBack: () => void;
 }
 
-const CompanyInfoStep = ({ formData, onUpdateFormData, onNext }: CompanyInfoStepProps) => {
+const CompanyInfoStep = ({ formData, onUpdateFormData, onNext, onBack }: CompanyInfoStepProps) => {
   const form = useForm<z.infer<typeof companyInfoSchema>>({
     resolver: zodResolver(companyInfoSchema),
     defaultValues: {
@@ -33,6 +35,29 @@ const CompanyInfoStep = ({ formData, onUpdateFormData, onNext }: CompanyInfoStep
       slug: formData.slug
     }
   });
+
+  // Auto-generate slug from company name
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'name') {
+        const nameValue = value.name as string;
+        if (nameValue) {
+          // Generate slug: lowercase, replace spaces with hyphens, remove special chars
+          const generatedSlug = nameValue
+            .toLowerCase()
+            .normalize('NFD') // Normalize accented characters
+            .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+            .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+            .replace(/\s+/g, '-') // Replace spaces with hyphens
+            .replace(/-+/g, '-'); // Replace multiple hyphens with a single one
+            
+          form.setValue('slug', generatedSlug, { shouldValidate: true });
+        }
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const handleSubmit = (values: z.infer<typeof companyInfoSchema>) => {
     onUpdateFormData(values);
@@ -105,12 +130,16 @@ const CompanyInfoStep = ({ formData, onUpdateFormData, onNext }: CompanyInfoStep
                     <Input placeholder="mi-empresa" {...field} />
                   </FormControl>
                   <FormMessage />
+                  <p className="text-xs text-muted-foreground">Se genera automáticamente a partir del nombre</p>
                 </FormItem>
               )}
             />
           </div>
 
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-between pt-4">
+            <Button type="button" variant="outline" onClick={onBack}>
+              Cancelar
+            </Button>
             <Button type="submit">Continuar</Button>
           </div>
         </form>

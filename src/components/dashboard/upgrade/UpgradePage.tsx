@@ -2,25 +2,58 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { z } from 'zod';
+
+// Import steps
+import CompanyInfoStep from './steps/CompanyInfoStep';
+import ContactInfoStep from './steps/ContactInfoStep';
 import SelectPlanStep from './steps/SelectPlanStep';
+
+// Form schema
+const companyFormSchema = z.object({
+  name: z.string().min(2),
+  description: z.string().min(10),
+  fiscalId: z.string().min(5),
+  slug: z.string().min(3),
+  address: z.string().min(5),
+  contactEmail: z.string().email(),
+  contactPhone: z.string().min(9),
+  selectedPlan: z.enum(['basic', 'professional', 'premium'])
+});
+
+export type CompanyFormData = z.infer<typeof companyFormSchema>;
+
+type Step = 'info' | 'contact' | 'plan';
 
 const UpgradePage = () => {
   const navigate = useNavigate();
   const { upgradeToCompany } = useAuth();
+  const [currentStep, setCurrentStep] = useState<Step>('info');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    selectedPlan: 'basic' as 'basic' | 'professional' | 'premium'
+  const [formData, setFormData] = useState<CompanyFormData>({
+    name: '',
+    description: '',
+    fiscalId: '',
+    slug: '',
+    address: '',
+    contactEmail: '',
+    contactPhone: '',
+    selectedPlan: 'basic'
   });
 
-  const handleUpdateFormData = (data: Partial<typeof formData>) => {
+  const handleUpdateFormData = (data: Partial<CompanyFormData>) => {
     setFormData(prev => ({ ...prev, ...data }));
+  };
+
+  const handleNext = (step: Step) => {
+    setCurrentStep(step);
   };
 
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
       // This would integrate with the complete wizard in a real app
-      await upgradeToCompany("Mi Empresa");
+      await upgradeToCompany(formData.name);
       navigate('/dashboard');
     } catch (error) {
       console.error('Error upgrading to company:', error);
@@ -30,7 +63,13 @@ const UpgradePage = () => {
   };
 
   const handleBack = () => {
-    navigate('/dashboard');
+    if (currentStep === 'contact') {
+      setCurrentStep('info');
+    } else if (currentStep === 'plan') {
+      setCurrentStep('contact');
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   return (
@@ -39,17 +78,64 @@ const UpgradePage = () => {
         <div>
           <h1 className="text-2xl font-bold">Actualizar a Cuenta de Empresa</h1>
           <p className="text-muted-foreground">
-            Selecciona el plan que mejor se adapte a tus necesidades para empezar a alquilar tus productos.
+            Completa la información necesaria para convertir tu cuenta en una cuenta de empresa.
           </p>
         </div>
 
-        <SelectPlanStep
-          formData={{ ...formData, name: '', description: '', fiscalId: '', slug: '', address: '', contactEmail: '', contactPhone: '' }}
-          onUpdateFormData={handleUpdateFormData}
-          onComplete={handleComplete}
-          onBack={handleBack}
-          isSubmitting={isSubmitting}
-        />
+        {/* Progress bar */}
+        <div className="w-full">
+          <div className="flex justify-between mb-2">
+            <div className={`text-sm font-medium ${currentStep === 'info' ? 'text-primary' : ''}`}>
+              Información de Empresa
+            </div>
+            <div className={`text-sm font-medium ${currentStep === 'contact' ? 'text-primary' : ''}`}>
+              Contacto
+            </div>
+            <div className={`text-sm font-medium ${currentStep === 'plan' ? 'text-primary' : ''}`}>
+              Plan
+            </div>
+          </div>
+          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+            <div 
+              className="bg-primary h-full transition-all" 
+              style={{ 
+                width: currentStep === 'info' 
+                  ? '33.3%' 
+                  : currentStep === 'contact' 
+                    ? '66.6%' 
+                    : '100%' 
+              }}
+            />
+          </div>
+        </div>
+
+        {currentStep === 'info' && (
+          <CompanyInfoStep 
+            formData={formData} 
+            onUpdateFormData={handleUpdateFormData} 
+            onNext={() => handleNext('contact')}
+            onBack={handleBack}
+          />
+        )}
+
+        {currentStep === 'contact' && (
+          <ContactInfoStep 
+            formData={formData} 
+            onUpdateFormData={handleUpdateFormData} 
+            onNext={() => handleNext('plan')}
+            onBack={handleBack}
+          />
+        )}
+
+        {currentStep === 'plan' && (
+          <SelectPlanStep 
+            formData={formData} 
+            onUpdateFormData={handleUpdateFormData} 
+            onComplete={handleComplete}
+            onBack={handleBack}
+            isSubmitting={isSubmitting}
+          />
+        )}
       </div>
     </div>
   );
