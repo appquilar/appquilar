@@ -1,11 +1,11 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { UserRole, isUserRole } from '@/domain/models/UserRole';
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'user' | 'company_admin' | 'company_user';
+  role: string;
   companyId?: string;
   companyName?: string;
 }
@@ -35,7 +35,7 @@ const MOCK_USER: User = {
   id: 'user-1',
   name: 'John Smith',
   email: 'john@example.com',
-  role: 'user'
+  role: UserRole.USER
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -103,7 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (user && companyName) {
       const updatedUser: User = {
         ...user,
-        role: 'company_admin',
+        role: UserRole.COMPANY_ADMIN,
         companyId: 'company-1',
         companyName
       };
