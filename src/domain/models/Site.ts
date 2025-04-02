@@ -10,6 +10,8 @@ export interface Site {
   title: string;
   description: string;
   categoryIds: string[];
+  menuCategoryIds: string[];
+  featuredCategoryIds: string[];
   primaryColor: string;
   createdAt: string;
   updatedAt: string;
@@ -25,5 +27,7 @@ export interface SiteFormData {
   title: string;
   description: string;
   categoryIds: string[];
+  menuCategoryIds: string[];
+  featuredCategoryIds: string[];
   primaryColor: string;
 }

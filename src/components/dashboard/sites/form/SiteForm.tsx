@@ -10,7 +10,7 @@ import { MOCK_CATEGORIES } from '../../categories/data/mockCategories';
 import SiteBasicInfoFields from './SiteBasicInfoFields';
 import SiteContentFields from './SiteContentFields';
 import SiteStyleFields from './SiteStyleFields';
-import SiteCategoryField from './SiteCategoryField';
+import SiteCategoriesFields from './SiteCategoriesFields';
 
 interface SiteFormProps {
   form: UseFormReturn<SiteFormData>;
@@ -45,7 +45,7 @@ const SiteForm = ({ form, isAddMode }: SiteFormProps) => {
           </div>
         </div>
         
-        <SiteCategoryField form={form} categories={MOCK_CATEGORIES} />
+        <SiteCategoriesFields form={form} categories={MOCK_CATEGORIES} />
         
         <FormActions 
           isSubmitting={form.formState.isSubmitting} 

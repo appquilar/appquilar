@@ -4,6 +4,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { SiteFormData } from '@/domain/models/Site';
+import SiteLogoUpload from './SiteLogoUpload';
 
 interface SiteBasicInfoFieldsProps {
   form: UseFormReturn<SiteFormData>;
@@ -42,20 +43,8 @@ const SiteBasicInfoFields = ({ form }: SiteBasicInfoFieldsProps) => {
         )}
       />
       
-      {/* Logo URL */}
-      <FormField
-        control={form.control}
-        name="logo"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>URL del Logo</FormLabel>
-            <FormControl>
-              <Input placeholder="https://ejemplo.com/logo.png" {...field} value={field.value || ''} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {/* Logo Upload */}
+      <SiteLogoUpload form={form} />
     </div>
   );
 };

@@ -20,6 +20,8 @@ export const useSiteForm = ({ siteId }: UseSiteFormProps) => {
       title: '',
       description: '',
       categoryIds: [],
+      menuCategoryIds: [],
+      featuredCategoryIds: [],
       primaryColor: '#4F46E5'
     }
   });
@@ -39,6 +41,8 @@ export const useSiteForm = ({ siteId }: UseSiteFormProps) => {
             title: site.title,
             description: site.description,
             categoryIds: site.categoryIds,
+            menuCategoryIds: site.menuCategoryIds || [],
+            featuredCategoryIds: site.featuredCategoryIds || [],
             primaryColor: site.primaryColor
           });
         }
