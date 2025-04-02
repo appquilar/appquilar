@@ -3,16 +3,39 @@ import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { SiteFormData } from '@/domain/models/Site';
-import { Category } from '@/domain/models/Category';
 import CategoryMultiSelector from '../../categories/CategoryMultiSelector';
 import { SITE_CONFIG } from '@/domain/config/siteConfig';
+import { useCategories } from '../../categories/hooks/useCategories';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface SiteCategoriesFieldsProps {
   form: UseFormReturn<SiteFormData>;
-  categories: Category[];
 }
 
-const SiteCategoriesFields = ({ form, categories }: SiteCategoriesFieldsProps) => {
+const SiteCategoriesFields = ({ form }: SiteCategoriesFieldsProps) => {
+  const { categories, isLoading, error } = useCategories();
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-full mb-2" />
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-10 w-full mb-2" />
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-10 w-full mb-2" />
+        <Skeleton className="h-20 w-full" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 rounded-md bg-destructive/10 text-destructive">
+        {error}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* All Categories */}

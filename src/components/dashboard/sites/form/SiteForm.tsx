@@ -1,35 +1,28 @@
 
-import { useNavigate } from 'react-router-dom';
 import { UseFormReturn } from 'react-hook-form';
-import { toast } from 'sonner';
-
-import { Form } from '@/components/ui/form';
+import { useNavigate } from 'react-router-dom';
 import { SiteFormData } from '@/domain/models/Site';
+import { Form } from '@/components/ui/form';
 import FormActions from '../../common/FormActions';
 import { MOCK_CATEGORIES } from '../../categories/data/mockCategories';
 import SiteBasicInfoFields from './SiteBasicInfoFields';
 import SiteContentFields from './SiteContentFields';
 import SiteStyleFields from './SiteStyleFields';
 import SiteCategoriesFields from './SiteCategoriesFields';
+import { useSiteOperations } from '../hooks/useSiteOperations';
 
 interface SiteFormProps {
   form: UseFormReturn<SiteFormData>;
   isAddMode: boolean;
+  siteId?: string;
 }
 
-const SiteForm = ({ form, isAddMode }: SiteFormProps) => {
+const SiteForm = ({ form, isAddMode, siteId }: SiteFormProps) => {
   const navigate = useNavigate();
+  const { saveSite, isSubmitting } = useSiteOperations(siteId);
 
-  const onSubmit = (data: SiteFormData) => {
-    // In a real app, this would save the site via API call
-    console.log('Saving site:', data);
-    
-    toast.success(isAddMode 
-      ? 'Sitio creado correctamente' 
-      : 'Sitio actualizado correctamente'
-    );
-    
-    navigate('/dashboard/sites');
+  const onSubmit = async (data: SiteFormData) => {
+    await saveSite(data);
   };
 
   return (
@@ -48,7 +41,7 @@ const SiteForm = ({ form, isAddMode }: SiteFormProps) => {
         <SiteCategoriesFields form={form} categories={MOCK_CATEGORIES} />
         
         <FormActions 
-          isSubmitting={form.formState.isSubmitting} 
+          isSubmitting={isSubmitting} 
           onCancel={() => navigate('/dashboard/sites')} 
         />
       </form>

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Edit, Trash } from 'lucide-react';
 import { toast } from 'sonner';
@@ -7,27 +7,53 @@ import { toast } from 'sonner';
 import TableHeader from '../common/TableHeader';
 import DataTable from '../common/DataTable';
 import { Site } from '@/domain/models/Site';
-import { MOCK_SITES } from './data/mockSites';
+import { SiteService } from '@/application/services/SiteService';
+import LoadingSpinner from '../common/LoadingSpinner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 const SiteManagement = () => {
   const navigate = useNavigate();
-  const [sites, setSites] = useState<Site[]>(MOCK_SITES);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredSites, setFilteredSites] = useState<Site[]>(sites);
+  const [filteredSites, setFilteredSites] = useState<Site[]>([]);
+  const siteService = SiteService.getInstance();
+
+  useEffect(() => {
+    loadSites();
+  }, []);
+
+  const loadSites = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const allSites = await siteService.getAllSites();
+      setSites(allSites);
+      filterSites(allSites, searchQuery);
+    } catch (err) {
+      console.error('Error loading sites:', err);
+      setError('Error al cargar los sitios');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    filterSites();
+    filterSites(sites, searchQuery);
   };
 
-  const filterSites = () => {
-    if (!searchQuery.trim()) {
-      setFilteredSites(sites);
+  const filterSites = (sitesToFilter: Site[], query: string) => {
+    if (!query.trim()) {
+      setFilteredSites(sitesToFilter);
       return;
     }
 
-    const filtered = sites.filter(site => 
-      site.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const filtered = sitesToFilter.filter(site => 
+      site.name.toLowerCase().includes(query.toLowerCase())
     );
     setFilteredSites(filtered);
   };
@@ -40,14 +66,21 @@ const SiteManagement = () => {
     navigate(`/dashboard/sites/edit/${siteId}`);
   };
 
-  const handleDeleteSite = (siteId: string) => {
-    // In a real app, this would delete the site via API call
-    const updatedSites = sites.filter(site => site.id !== siteId);
-    setSites(updatedSites);
-    setFilteredSites(updatedSites.filter(site => 
-      site.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ));
-    toast.success('Sitio eliminado correctamente');
+  const handleDeleteSite = async (siteId: string) => {
+    try {
+      const success = await siteService.deleteSite(siteId);
+      if (success) {
+        const updatedSites = sites.filter(site => site.id !== siteId);
+        setSites(updatedSites);
+        filterSites(updatedSites, searchQuery);
+        toast.success('Sitio eliminado correctamente');
+      } else {
+        toast.error('No se pudo eliminar el sitio');
+      }
+    } catch (err) {
+      console.error('Error deleting site:', err);
+      toast.error('Error al eliminar el sitio');
+    }
   };
 
   const columns = [
@@ -93,6 +126,10 @@ const SiteManagement = () => {
     }
   ];
 
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
   return (
     <div className="space-y-6 p-6">
       <TableHeader
@@ -102,6 +139,13 @@ const SiteManagement = () => {
         onAddNew={handleAddSite}
         onSearch={handleSearch}
       />
+      
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       <DataTable
         data={filteredSites}
