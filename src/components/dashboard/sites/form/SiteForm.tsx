@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { SiteFormData } from '@/domain/models/Site';
 import { Form } from '@/components/ui/form';
 import FormActions from '../../common/FormActions';
-import { MOCK_CATEGORIES } from '../../categories/data/mockCategories';
 import SiteBasicInfoFields from './SiteBasicInfoFields';
 import SiteContentFields from './SiteContentFields';
 import SiteStyleFields from './SiteStyleFields';
@@ -38,7 +37,7 @@ const SiteForm = ({ form, isAddMode, siteId }: SiteFormProps) => {
           </div>
         </div>
         
-        <SiteCategoriesFields form={form} categories={MOCK_CATEGORIES} />
+        <SiteCategoriesFields form={form} />
         
         <FormActions 
           isSubmitting={isSubmitting} 
