@@ -6,18 +6,18 @@
 
 import { Conversation } from '../../../core/domain/Message';
 import { ConversationService as AppConversationService } from '../../../core/application/ConversationService';
-import { SupabaseConversationRepository } from '../repositories/SupabaseConversationRepository';
+import { MockMessageRepository } from '../MockMessageRepository';
 
 /**
  * Servicio para operaciones relacionadas con conversaciones
- * Adaptador que utiliza el servicio de aplicación y el repositorio de Supabase
+ * Adaptador que utiliza el servicio de aplicación y el repositorio Mock para desarrollo
  */
 export class ConversationService {
   private appService: AppConversationService;
   
   constructor() {
-    // Inyectar la implementación de Supabase del repositorio
-    const repository = new SupabaseConversationRepository();
+    // Inyectar la implementación Mock del repositorio para desarrollo
+    const repository = new MockMessageRepository();
     this.appService = new AppConversationService(repository);
   }
 

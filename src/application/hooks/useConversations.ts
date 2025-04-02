@@ -16,7 +16,7 @@ export const useConversations = () => {
       
       try {
         // Assuming the logged-in user ID would come from auth context in a real app
-        const userId = 'current-user';
+        const userId = 'user-1'; // Using a specific ID that matches our mock data
         const userConversations = await conversationService.getUserConversations(userId);
         setConversations(userConversations);
       } catch (err) {

@@ -1,12 +1,149 @@
 
 {
-  "users": [],
-  "products": [],
-  "categories": [],
-  "rentals": [],
-  "companies": [],
-  "messages": [],
-  "conversations": [],
+  "users": [
+    {
+      "id": "user-1",
+      "name": "Juan Pérez",
+      "email": "juan@example.com",
+      "role": "user"
+    },
+    {
+      "id": "user-2",
+      "name": "María García",
+      "email": "maria@example.com",
+      "role": "company_admin"
+    }
+  ],
+  "products": [
+    {
+      "id": "product-1",
+      "name": "Taladro Profesional 20V",
+      "description": "Taladro profesional con batería de larga duración",
+      "price": 35,
+      "priceUnit": "day",
+      "companyId": "company-1",
+      "categoryId": "category-1",
+      "images": ["https://images.unsplash.com/photo-1618160702438-9b02ab6515c9"]
+    },
+    {
+      "id": "product-2",
+      "name": "Sierra Circular 1500W",
+      "description": "Sierra circular de alta potencia para trabajos profesionales",
+      "price": 40,
+      "priceUnit": "day",
+      "companyId": "company-2",
+      "categoryId": "category-2",
+      "images": ["https://images.unsplash.com/photo-1487252665478-49b61b47f302"]
+    }
+  ],
+  "categories": [
+    {
+      "id": "category-1",
+      "name": "Herramientas Eléctricas",
+      "slug": "herramientas-electricas",
+      "icon": "Wrench"
+    },
+    {
+      "id": "category-2",
+      "name": "Equipos de Construcción",
+      "slug": "equipos-construccion",
+      "icon": "HardHat"
+    }
+  ],
+  "rentals": [
+    {
+      "id": "rental-1",
+      "productId": "product-1",
+      "userId": "user-1",
+      "companyId": "company-1",
+      "startDate": "2023-07-10",
+      "endDate": "2023-07-15",
+      "totalPrice": 175,
+      "status": "completed"
+    },
+    {
+      "id": "rental-2",
+      "productId": "product-2",
+      "userId": "user-1",
+      "companyId": "company-2",
+      "startDate": "2023-07-20",
+      "endDate": "2023-07-25",
+      "totalPrice": 200,
+      "status": "active"
+    }
+  ],
+  "companies": [
+    {
+      "id": "company-1",
+      "name": "Pro Tools Inc.",
+      "description": "Empresa especializada en alquiler de herramientas profesionales",
+      "email": "info@protools.com",
+      "phone": "600123456",
+      "address": "Calle Industria 23, Barcelona",
+      "logo": "https://example.com/logo1.png"
+    },
+    {
+      "id": "company-2",
+      "name": "Herramientas Express",
+      "description": "Alquiler de todo tipo de herramientas y maquinaria",
+      "email": "info@herramientasexpress.com",
+      "phone": "600789456",
+      "address": "Avenida Industrial 45, Madrid",
+      "logo": "https://example.com/logo2.png"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-1",
+      "conversationId": "conv-1",
+      "senderId": "user-1",
+      "senderType": "user",
+      "content": "¡Hola! Estoy interesado en alquilar este taladro. ¿Está disponible para este fin de semana?",
+      "timestamp": "2023-07-20T14:30:00Z",
+      "read": true
+    },
+    {
+      "id": "msg-2",
+      "conversationId": "conv-1",
+      "senderId": "company-1",
+      "senderType": "company",
+      "content": "¡Hola! Sí, el taladro está disponible este fin de semana. ¿Para qué días exactamente lo necesitas?",
+      "timestamp": "2023-07-20T14:45:00Z",
+      "read": true
+    },
+    {
+      "id": "msg-3",
+      "conversationId": "conv-1",
+      "senderId": "user-1",
+      "senderType": "user",
+      "content": "Me gustaría alquilarlo desde el viernes por la tarde hasta el domingo por la noche.",
+      "timestamp": "2023-07-20T15:00:00Z",
+      "read": true
+    },
+    {
+      "id": "msg-4",
+      "conversationId": "conv-1",
+      "senderId": "company-1",
+      "senderType": "company",
+      "content": "Perfecto. Te puedo ofrecer una tarifa especial de fin de semana por 45€. ¿Te parece bien?",
+      "timestamp": "2023-07-20T15:15:00Z",
+      "read": false
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv-1",
+      "productId": "product-1",
+      "userId": "user-1",
+      "companyId": "company-1",
+      "lastMessageAt": "2023-07-20T15:15:00Z",
+      "productName": "Taladro Profesional 20V",
+      "productImage": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "companyName": "Pro Tools Inc.",
+      "userName": "Juan Pérez",
+      "unreadCount": 1
+    }
+  ],
   "seo": {
     "home": {
       "title": "appquilar - La plataforma de alquiler de herramientas",
