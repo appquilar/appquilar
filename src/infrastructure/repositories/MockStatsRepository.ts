@@ -1,5 +1,5 @@
 
-import { CompanyStats, StatsRepository } from '@/domain/repositories/StatsRepository';
+import { CompanyStats, StatsRepository, DataPoint } from '@/domain/repositories/StatsRepository';
 import { MOCK_STATS } from '@/components/dashboard/stats/statsData';
 
 /**
@@ -9,12 +9,12 @@ export class MockStatsRepository implements StatsRepository {
   async getCompanyStats(companyId: string): Promise<CompanyStats> {
     // For now, we return the same mock data regardless of company ID
     return Promise.resolve({
-      totalViews: MOCK_STATS.totalViews,
+      totalViews: 3458, // Using productViews from MOCK_STATS
       totalRentals: MOCK_STATS.totalRentals,
-      totalRevenue: MOCK_STATS.totalRevenue,
-      averageRating: MOCK_STATS.averageRating,
-      monthlyViews: MOCK_STATS.monthlyViews,
-      monthlyRentals: MOCK_STATS.monthlyRentals,
+      totalRevenue: 12500, // Adding a mock revenue
+      averageRating: 4.2, // Adding a mock average rating
+      monthlyViews: MOCK_STATS.monthlyViews as DataPoint[],
+      monthlyRentals: MOCK_STATS.monthlyRentals as DataPoint[],
       popularProducts: MOCK_STATS.popularProducts,
       recentRentals: MOCK_STATS.recentRentals
     });
@@ -26,19 +26,24 @@ export class MockStatsRepository implements StatsRepository {
     const end = endDate.getTime();
     
     const filteredViews = MOCK_STATS.monthlyViews.filter(entry => {
-      const entryDate = new Date(entry.date).getTime();
+      const entryDate = new Date(`2023-07-${entry.day}`).getTime();
       return entryDate >= start && entryDate <= end;
     });
     
     const filteredRentals = MOCK_STATS.monthlyRentals.filter(entry => {
-      const entryDate = new Date(entry.date).getTime();
+      const entryDate = new Date(`2023-07-${entry.day}`).getTime();
       return entryDate >= start && entryDate <= end;
     });
     
     return Promise.resolve({
-      ...MOCK_STATS,
-      monthlyViews: filteredViews,
-      monthlyRentals: filteredRentals
+      totalViews: 3458,
+      totalRentals: MOCK_STATS.totalRentals,
+      totalRevenue: 12500,
+      averageRating: 4.2,
+      monthlyViews: filteredViews as DataPoint[],
+      monthlyRentals: filteredRentals as DataPoint[],
+      popularProducts: MOCK_STATS.popularProducts,
+      recentRentals: MOCK_STATS.recentRentals
     });
   }
 }

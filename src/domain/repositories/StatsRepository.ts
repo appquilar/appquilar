@@ -8,6 +8,12 @@ export interface StatsPeriod {
   date: string;
 }
 
+export interface DataPoint {
+  day: string;
+  views?: number;
+  rentals?: number;
+}
+
 export interface PopularProduct {
   id: string;
   name: string;
@@ -29,8 +35,8 @@ export interface CompanyStats {
   totalRentals: number;
   totalRevenue: number;
   averageRating: number;
-  monthlyViews: StatsPeriod[];
-  monthlyRentals: StatsPeriod[];
+  monthlyViews: DataPoint[];
+  monthlyRentals: DataPoint[];
   popularProducts: PopularProduct[];
   recentRentals: RecentRental[];
 }

@@ -7,6 +7,7 @@ import UserSearchForm from './user-management/UserSearchForm';
 import UserTable from './user-management/UserTable';
 import ResultsCount from './user-management/ResultsCount';
 import AccessRestricted from './user-management/AccessRestricted';
+import { CompanyUser } from '@/domain/models/CompanyUser';
 
 const UserManagement = () => {
   const { user } = useAuth();
@@ -36,6 +37,25 @@ const UserManagement = () => {
     e.preventDefault();
     // This is handled by the filter above, no need for API call
   };
+
+  const onInviteUser = () => {
+    // This would open a modal in a real app
+    const newUserData: Partial<CompanyUser> = {
+      email: 'newuser@example.com',
+      role: 'company_user',
+      status: 'invited',
+      companyId: '1'
+    };
+    handleInviteUser(newUserData);
+  };
+
+  const onEditUser = (userId: string) => {
+    // This would open a modal in a real app with the user's data
+    const userData: Partial<CompanyUser> = {
+      name: `Updated Name ${Date.now()}`
+    };
+    handleEditUser(userId, userData);
+  };
   
   if (isLoading) {
     return (
@@ -55,7 +75,7 @@ const UserManagement = () => {
   
   return (
     <div className="space-y-6 max-w-full">
-      <UserManagementHeader onInvite={handleInviteUser} />
+      <UserManagementHeader onInvite={onInviteUser} />
       
       <UserSearchForm 
         searchQuery={searchQuery}
@@ -65,7 +85,7 @@ const UserManagement = () => {
       
       <UserTable 
         users={filteredUsers}
-        onEdit={handleEditUser}
+        onEdit={onEditUser}
         onDelete={handleDeleteUser}
       />
       

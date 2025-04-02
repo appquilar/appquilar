@@ -1,13 +1,13 @@
 
 import { CompanyUser } from '@/domain/models/CompanyUser';
 import { UserRepository } from '@/domain/repositories/UserRepository';
-import { mockCompanyUsers } from '@/infrastructure/services/mockData/companyUserMockData';
+import { MOCK_USERS } from '@/infrastructure/services/mockData/companyUserMockData';
 
 /**
  * Mock implementation of the UserRepository interface
  */
 export class MockUserRepository implements UserRepository {
-  private users: CompanyUser[] = [...mockCompanyUsers];
+  private users: CompanyUser[] = [...MOCK_USERS];
 
   async getAllUsers(): Promise<CompanyUser[]> {
     return Promise.resolve([...this.users]);

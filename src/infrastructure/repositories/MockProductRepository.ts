@@ -1,13 +1,66 @@
 
 import { Product, ProductFormData } from '@/domain/models/Product';
 import { ProductRepository } from '@/domain/repositories/ProductRepository';
-import { MOCK_PRODUCTS } from '@/components/dashboard/products/hooks/data/mockProducts';
 
 /**
  * Mock implementation of the ProductRepository interface
  */
 export class MockProductRepository implements ProductRepository {
-  private products: Product[] = [...MOCK_PRODUCTS];
+  // We'll initialize with a minimal set of mock products that match our Product interface
+  private products: Product[] = [
+    {
+      id: "1",
+      internalId: "PRD001",
+      name: "Taladro Percutor 20V",
+      slug: "taladro-percutor-20v",
+      description: "Taladro percutor de 20V con batería de litio de larga duración",
+      imageUrl: "/images/products/taladro-1.jpg",
+      thumbnailUrl: "/images/products/taladro-1-thumb.jpg",
+      price: {
+        daily: 12.99,
+        weekly: 60.99,
+        monthly: 180.99
+      },
+      company: {
+        id: "1",
+        name: "Herramientas Pro",
+        slug: "herramientas-pro"
+      },
+      category: {
+        id: "1",
+        name: "Herramientas Eléctricas",
+        slug: "herramientas-electricas"
+      },
+      rating: 4.7,
+      reviewCount: 124
+    },
+    {
+      id: "2",
+      internalId: "PRD002",
+      name: "Sierra de Mesa con Soporte",
+      slug: "sierra-mesa-soporte",
+      description: "Sierra de mesa profesional con soporte plegable",
+      imageUrl: "/images/products/sierra-1.jpg",
+      thumbnailUrl: "/images/products/sierra-1-thumb.jpg",
+      price: {
+        daily: 25.99,
+        weekly: 120.99,
+        monthly: 350.99
+      },
+      company: {
+        id: "1",
+        name: "Herramientas Pro",
+        slug: "herramientas-pro"
+      },
+      category: {
+        id: "1",
+        name: "Herramientas Eléctricas",
+        slug: "herramientas-electricas"
+      },
+      rating: 4.5,
+      reviewCount: 89
+    }
+  ];
 
   async getAllProducts(): Promise<Product[]> {
     return Promise.resolve([...this.products]);
@@ -29,7 +82,6 @@ export class MockProductRepository implements ProductRepository {
   }
 
   async createProduct(productData: ProductFormData): Promise<Product> {
-    // In a real implementation, we would get the company and category objects from their respective repositories
     const newProduct: Product = {
       id: `product-${Date.now()}`,
       internalId: `PRD${(this.products.length + 1).toString().padStart(3, '0')}`,
@@ -41,13 +93,13 @@ export class MockProductRepository implements ProductRepository {
       price: productData.price,
       company: {
         id: productData.companyId,
-        name: 'Mock Company', // This would come from the company repository
-        slug: 'mock-company'
+        name: 'Empresa Demo', 
+        slug: 'empresa-demo'
       },
       category: {
         id: productData.categoryId,
-        name: 'Mock Category', // This would come from the category repository
-        slug: 'mock-category'
+        name: 'Categoría Demo', 
+        slug: 'categoria-demo'
       },
       rating: 0,
       reviewCount: 0,
@@ -73,16 +125,16 @@ export class MockProductRepository implements ProductRepository {
       ? this.products[index].company
       : {
           id: productData.companyId,
-          name: 'Mock Company', // This would come from the company repository
-          slug: 'mock-company'
+          name: 'Empresa Demo', 
+          slug: 'empresa-demo'
         };
         
     const category = productData.categoryId === existingCategoryId
       ? this.products[index].category
       : {
           id: productData.categoryId,
-          name: 'Mock Category', // This would come from the category repository
-          slug: 'mock-category'
+          name: 'Categoría Demo', 
+          slug: 'categoria-demo'
         };
     
     const updatedProduct: Product = {
