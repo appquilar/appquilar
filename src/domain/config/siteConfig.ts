@@ -6,10 +6,10 @@ export const SITE_CONFIG = {
   /**
    * Maximum number of categories that can be selected for the menu
    */
-  MAX_MENU_CATEGORIES: 3,
+  MAX_MENU_CATEGORIES: 5,
   
   /**
    * Maximum number of categories that can be selected as featured
    */
-  MAX_FEATURED_CATEGORIES: 4
+  MAX_FEATURED_CATEGORIES: 6
 };
