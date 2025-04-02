@@ -1,6 +1,7 @@
 
 import { ReactNode } from 'react';
 import { UserRole } from '@/domain/models/UserRole';
+import { LucideIcon } from 'lucide-react';
 
 /**
  * Individual navigation item in the sidebar
@@ -9,7 +10,7 @@ export interface NavItem {
   id: string;
   href: string;
   title: string;
-  icon: ReactNode;
+  icon: LucideIcon;
   badge?: string;
   exact?: boolean;
 }
@@ -23,3 +24,4 @@ export interface NavSection {
   requiredRole: UserRole;
   items: NavItem[];
 }
+

@@ -1,9 +1,9 @@
 
 import { Link } from 'react-router-dom';
-import { NavLink } from './types';
+import { NavItem as NavItemType } from '@/domain/services/navigation/types';
 
 interface NavItemProps {
-  link: NavLink;
+  link: NavItemType;
   isActive: boolean;
   onClick: (href: string) => void;
 }
@@ -12,6 +12,8 @@ interface NavItemProps {
  * Componente para cada elemento de navegación
  */
 const NavItem = ({ link, isActive, onClick }: NavItemProps) => {
+  const Icon = link.icon;
+  
   return (
     <li key={link.href}>
       <Link
@@ -24,7 +26,9 @@ const NavItem = ({ link, isActive, onClick }: NavItemProps) => {
         onClick={() => onClick(link.href)}
       >
         <div className="flex items-center">
-          <span className="mr-3">{link.icon}</span>
+          <span className="mr-3">
+            <Icon size={20} />
+          </span>
           <span>{link.title}</span>
         </div>
         {link.badge && (

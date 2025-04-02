@@ -24,20 +24,20 @@ export class NavigationConfig {
           id: 'overview',
           href: '/dashboard',
           title: 'Resumen',
-          icon: <Home size={20} />,
+          icon: Home,
           exact: true
         },
         {
           id: 'rentals',
           href: '/dashboard/rentals',
           title: 'Alquileres',
-          icon: <Calendar size={20} />
+          icon: Calendar
         },
         {
           id: 'messages',
           href: '/dashboard/messages',
           title: 'Mensajes',
-          icon: <MessageCircle size={20} />
+          icon: MessageCircle
         }
       ]
     });
@@ -53,7 +53,7 @@ export class NavigationConfig {
             id: 'products',
             href: '/dashboard/products',
             title: 'Mis Productos',
-            icon: <Package size={20} />
+            icon: Package
           }
         ]
       });
@@ -70,19 +70,19 @@ export class NavigationConfig {
             id: 'products',
             href: '/dashboard/products',
             title: 'Productos',
-            icon: <Package size={20} />
+            icon: Package
           },
           {
             id: 'stats',
             href: '/dashboard/stats',
             title: 'Estadísticas',
-            icon: <BarChart size={20} />
+            icon: BarChart
           },
           {
             id: 'categories',
             href: '/dashboard/categories',
             title: 'Categorías',
-            icon: <Package size={20} />
+            icon: Package
           }
         ]
       });
@@ -99,25 +99,25 @@ export class NavigationConfig {
             id: 'users',
             href: '/dashboard/users',
             title: 'Usuarios',
-            icon: <Users size={20} />
+            icon: Users
           },
           {
             id: 'companies',
             href: '/dashboard/companies',
             title: 'Empresas',
-            icon: <Building size={20} />
+            icon: Building
           },
           {
             id: 'sites',
             href: '/dashboard/sites',
             title: 'Sitios',
-            icon: <Globe size={20} />
+            icon: Globe
           },
           {
             id: 'config',
             href: '/dashboard/config',
             title: 'Configuración',
-            icon: <Settings size={20} />
+            icon: Settings
           }
         ]
       });
