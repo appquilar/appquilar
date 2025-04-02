@@ -1,8 +1,5 @@
 
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
-
-// Import refactored components
 import ProductGrid from './products/ProductGrid';
 import SearchToolbar from './products/SearchToolbar';
 import ProductsHeader from './products/ProductsHeader';
@@ -17,6 +14,8 @@ const ProductsManagement = () => {
     filteredProducts,
     currentPage,
     totalPages,
+    isLoading,
+    error,
     handlePageChange,
     handleSearch,
     handleDeleteProduct
@@ -29,6 +28,22 @@ const ProductsManagement = () => {
   const handleEditProduct = (productId: string) => {
     navigate(`/dashboard/products/edit/${productId}`);
   };
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 rounded-md bg-destructive/10 text-destructive">
+        {error}
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6 p-6">

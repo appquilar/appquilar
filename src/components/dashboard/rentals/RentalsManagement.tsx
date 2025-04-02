@@ -1,15 +1,16 @@
 
-import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import RentalFilters from './RentalFilters';
 import RentalCalendar from './RentalCalendar';
-import RentalsList from './RentalsList';
-import { useRentalsFilter } from '@/application/hooks/useRentalsFilter';
-import { MOCK_RENTALS } from '@/infrastructure/adapters/mockData/rentals/mockRentalsData';
+import RentalContent from './RentalContent';
+import { useRentalsData } from './hooks/useRentalsData';
 
 const RentalsManagement = () => {
   const {
+    rentals,
+    isLoading,
+    error,
     searchQuery,
     setSearchQuery,
     startDate,
@@ -24,7 +25,23 @@ const RentalsManagement = () => {
     rentalCounts,
     handleSearch,
     handleDateSelect
-  } = useRentalsFilter(MOCK_RENTALS);
+  } = useRentalsData();
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 rounded-md bg-destructive/10 text-destructive">
+        {error}
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">
@@ -48,7 +65,7 @@ const RentalsManagement = () => {
       
       {/* Calendar view */}
       <RentalCalendar 
-        rentals={MOCK_RENTALS}
+        rentals={rentals}
         onDateSelect={handleDateSelect}
       />
       
@@ -74,19 +91,19 @@ const RentalsManagement = () => {
         </TabsList>
         
         <TabsContent value="all" className="mt-6">
-          <RentalsList rentals={filteredRentals} />
+          <RentalContent rentals={filteredRentals} />
         </TabsContent>
         
         <TabsContent value="active" className="mt-6">
-          <RentalsList rentals={filteredRentals} />
+          <RentalContent rentals={filteredRentals} />
         </TabsContent>
         
         <TabsContent value="upcoming" className="mt-6">
-          <RentalsList rentals={filteredRentals} />
+          <RentalContent rentals={filteredRentals} />
         </TabsContent>
         
         <TabsContent value="completed" className="mt-6">
-          <RentalsList rentals={filteredRentals} />
+          <RentalContent rentals={filteredRentals} />
         </TabsContent>
       </Tabs>
     </div>

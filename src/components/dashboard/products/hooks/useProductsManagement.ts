@@ -1,55 +1,57 @@
 
-import { useProductOperations } from './useProductOperations';
-import { useProductSearch } from './useProductSearch';
-import { useProductsPagination } from './useProductsPagination';
-import { MOCK_PRODUCTS } from './data/mockProducts';
+import { useState } from 'react';
+import { useProducts } from '@/application/hooks/useProducts';
+import { toast } from 'sonner';
 
-export function useProductsManagement() {
-  // Product operations (delete)
-  const {
-    products,
-    handleDeleteProduct
-  } = useProductOperations(MOCK_PRODUCTS);
+export const useProductsManagement = () => {
+  const { products, isLoading, error, deleteProduct } = useProducts();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
   
-  // Search functionality
-  const {
-    searchQuery,
-    setSearchQuery,
-    filteredProducts,
-    handleSearch
-  } = useProductSearch(products);
+  // Filter products based on search query
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.company.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   
-  // Pagination
-  const {
-    currentPage,
-    totalPages,
-    currentProducts,
-    handlePageChange,
-    resetPagination
-  } = useProductsPagination({ 
-    filteredProducts,
-    productsPerPage: 8 // 2 rows of 4 products
-  });
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const currentProducts = filteredProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
   
-  // Override handleSearch to reset pagination when searching
-  const handleProductSearch = (e: React.FormEvent) => {
-    handleSearch(e);
-    resetPagination();
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
   };
-
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(1); // Reset to first page when searching
+  };
+  
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      await deleteProduct(productId);
+      toast.success('Producto eliminado correctamente');
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Error al eliminar el producto');
+    }
+  };
+  
   return {
-    // Search
     searchQuery,
     setSearchQuery,
-    filteredProducts: currentProducts,
-    handleSearch: handleProductSearch,
-    
-    // Pagination
     currentPage,
     totalPages,
+    filteredProducts: currentProducts,
+    isLoading,
+    error,
     handlePageChange,
-    
-    // Product operations
+    handleSearch,
     handleDeleteProduct
   };
-}
+};

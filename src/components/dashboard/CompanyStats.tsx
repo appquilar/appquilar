@@ -2,16 +2,34 @@
 import { useAuth } from '@/context/AuthContext';
 import StatsOverview from './stats/StatsOverview';
 import MonthlyStatsChart from './stats/MonthlyStatsChart';
-import { MOCK_STATS, chartConfig } from './stats/statsData';
+import { chartConfig } from './stats/statsData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Truck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useCompanyStats } from '@/application/hooks/useCompanyStats';
 
 const CompanyStats = () => {
   const { user } = useAuth();
+  const { stats, isLoading, error } = useCompanyStats();
   
   if (!user || (user.role !== 'company_admin' && user.role !== 'company_user')) {
     return null;
+  }
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error || !stats) {
+    return (
+      <div className="p-4 rounded-md bg-destructive/10 text-destructive">
+        {error || 'No se pudieron cargar las estadísticas'}
+      </div>
+    );
   }
   
   return (
@@ -35,7 +53,7 @@ const CompanyStats = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {MOCK_STATS.popularProducts.map((product) => (
+              {stats.popularProducts.map((product) => (
                 <div key={product.id} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">{product.name}</p>
@@ -60,7 +78,7 @@ const CompanyStats = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {MOCK_STATS.recentRentals.map((rental) => (
+              {stats.recentRentals.map((rental) => (
                 <Link 
                   key={rental.id} 
                   to={`/dashboard/rentals/${rental.id}`}
@@ -94,7 +112,7 @@ const CompanyStats = () => {
         <MonthlyStatsChart 
           title="Vistas de Productos"
           description="Tendencia diaria de vistas de tus productos"
-          data={MOCK_STATS.monthlyViews}
+          data={stats.monthlyViews}
           dataKey="views"
           chartColor="var(--color-views)"
           label="Vistas"
@@ -105,7 +123,7 @@ const CompanyStats = () => {
         <MonthlyStatsChart 
           title="Alquileres"
           description="Transacciones diarias de alquiler"
-          data={MOCK_STATS.monthlyRentals}
+          data={stats.monthlyRentals}
           dataKey="rentals"
           chartColor="var(--color-rentals)"
           label="Alquileres"
