@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { SiteFormData } from '@/domain/models/Site';
 import { MOCK_SITES } from '../data/mockSites';
+import { SITE_CONFIG } from '@/domain/config/siteConfig';
 
 interface UseSiteFormProps {
   siteId?: string;
@@ -34,6 +35,10 @@ export const useSiteForm = ({ siteId }: UseSiteFormProps) => {
       if (!isAddMode) {
         const site = MOCK_SITES.find(s => s.id === siteId);
         if (site) {
+          // Enforce the limits when loading existing sites
+          const menuCategoryIds = site.menuCategoryIds.slice(0, SITE_CONFIG.MAX_MENU_CATEGORIES);
+          const featuredCategoryIds = site.featuredCategoryIds.slice(0, SITE_CONFIG.MAX_FEATURED_CATEGORIES);
+
           form.reset({
             name: site.name,
             domain: site.domain,
@@ -41,8 +46,8 @@ export const useSiteForm = ({ siteId }: UseSiteFormProps) => {
             title: site.title,
             description: site.description,
             categoryIds: site.categoryIds,
-            menuCategoryIds: site.menuCategoryIds || [],
-            featuredCategoryIds: site.featuredCategoryIds || [],
+            menuCategoryIds,
+            featuredCategoryIds,
             primaryColor: site.primaryColor
           });
         }
