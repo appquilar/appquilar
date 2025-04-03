@@ -8,9 +8,10 @@ import { CompanyUser } from '@/domain/models/CompanyUser';
 interface UserTableProps {
   users: CompanyUser[];
   onEdit: (userId: string) => void;
+  onDelete?: (userId: string) => Promise<boolean>; // Added onDelete as optional prop
 }
 
-const UserTable = ({ users, onEdit }: UserTableProps) => {
+const UserTable = ({ users, onEdit, onDelete }: UserTableProps) => {
   // Status badge renderer
   const renderStatusBadge = (status: CompanyUser['status']) => {
     return (
