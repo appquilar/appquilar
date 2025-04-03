@@ -1,9 +1,15 @@
 
 import React from 'react';
-import { Calendar, MessageCircle, Package, Users } from 'lucide-react';
+import { Calendar, MessageCircle, Package, Users, Eye } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import StatsOverview from '../stats/StatsOverview';
+import MonthlyStatsChart from '../stats/MonthlyStatsChart';
+import { chartConfig, MOCK_STATS } from '../stats/statsData';
+import { useCompanyStats } from '@/application/hooks/useCompanyStats';
 
 const DashboardOverview = () => {
+  const { stats, isLoading } = useCompanyStats();
+  
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -17,7 +23,7 @@ const DashboardOverview = () => {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold">{isLoading ? "..." : stats?.totalRentals || 12}</div>
             <p className="text-xs text-muted-foreground">
               3 agregados esta semana
             </p>
@@ -29,7 +35,7 @@ const DashboardOverview = () => {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
+            <div className="text-2xl font-bold">{isLoading ? "..." : stats?.totalRentals || 8}</div>
             <p className="text-xs text-muted-foreground">
               2 pendientes de aprobación
             </p>
@@ -49,16 +55,39 @@ const DashboardOverview = () => {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Usuarios</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Visitas</CardTitle>
+            <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-2xl font-bold">{isLoading ? "..." : stats?.totalViews || MOCK_STATS.productViews}</div>
             <p className="text-xs text-muted-foreground">
-              1 activo ahora
+              +12% respecto a ayer
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Statistics Charts */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <MonthlyStatsChart
+          title="Vistas Mensuales"
+          description="Historial de vistas por día"
+          data={isLoading ? [] : (stats?.monthlyViews || MOCK_STATS.monthlyViews)}
+          dataKey="views"
+          chartColor="var(--color-views)"
+          label="Vistas"
+          config={chartConfig}
+        />
+        
+        <MonthlyStatsChart
+          title="Alquileres Mensuales"
+          description="Historial de alquileres por día"
+          data={isLoading ? [] : (stats?.monthlyRentals || MOCK_STATS.monthlyRentals)}
+          dataKey="rentals"
+          chartColor="var(--color-rentals)"
+          label="Alquileres"
+          config={chartConfig}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
