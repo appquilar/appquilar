@@ -106,7 +106,7 @@ const MonthlyStatsChart = ({
   };
   
   return (
-    <Card className="w-full">
+    <Card className="w-full h-full">
       <CardHeader className={isMobile ? "flex flex-col space-y-3" : "flex flex-row items-start justify-between"}>
         <div>
           <CardTitle>{title}</CardTitle>
@@ -150,7 +150,7 @@ const MonthlyStatsChart = ({
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="h-80 w-full">
+      <CardContent className="h-[400px] w-full p-0">
         <ChartContainer 
           config={config} 
           className="h-full w-full"
@@ -158,7 +158,7 @@ const MonthlyStatsChart = ({
           <ResponsiveContainer width="100%" height="100%">
             <LineChart 
               data={chartData}
-              margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
             >
               <XAxis 
                 dataKey="day" 
