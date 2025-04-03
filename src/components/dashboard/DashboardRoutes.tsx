@@ -6,6 +6,7 @@ import MessagesDashboard from './MessagesDashboard';
 import UserManagement from './UserManagement';
 import UserConfigPage from './config/UserConfigPage';
 import UpgradePage from './upgrade/UpgradePage';
+import DashboardOverview from './overview/DashboardOverview';
 
 // Category pages
 import CategoryManagement from './categories/CategoryManagement';
@@ -24,7 +25,7 @@ import SiteFormPage from './sites/SiteFormPage';
 const DashboardRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard/products" replace />} />
+      <Route path="/" element={<DashboardOverview />} />
       
       {/* Upgrade route */}
       <Route path="upgrade" element={<UpgradePage />} />

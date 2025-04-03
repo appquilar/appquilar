@@ -1,34 +1,50 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit, Trash } from 'lucide-react';
+import { Edit } from 'lucide-react';
 import { toast } from 'sonner';
 
 import TableHeader from '../common/TableHeader';
 import DataTable from '../common/DataTable';
 import { Category } from '@/domain/models/Category';
 import { MOCK_CATEGORIES } from './data/mockCategories';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 const CategoryManagement = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCategories, setFilteredCategories] = useState<Category[]>(categories);
+  const [parentCategoryFilter, setParentCategoryFilter] = useState<string | null>(null);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
     filterCategories();
-  };
+  }, [searchQuery, parentCategoryFilter, categories]);
 
   const filterCategories = () => {
-    if (!searchQuery.trim()) {
-      setFilteredCategories(categories);
-      return;
+    let filtered = categories;
+    
+    // Filter by search query if present
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(category => 
+        category.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
-
-    const filtered = categories.filter(category => 
-      category.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    
+    // Filter by parent category if selected
+    if (parentCategoryFilter) {
+      filtered = filtered.filter(category => 
+        category.parentId === parentCategoryFilter
+      );
+    }
+    
     setFilteredCategories(filtered);
   };
 
@@ -40,14 +56,8 @@ const CategoryManagement = () => {
     navigate(`/dashboard/categories/edit/${categoryId}`);
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
-    // In a real app, this would delete the category via API call
-    const updatedCategories = categories.filter(category => category.id !== categoryId);
-    setCategories(updatedCategories);
-    setFilteredCategories(updatedCategories.filter(category => 
-      category.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ));
-    toast.success('Categoría eliminada correctamente');
+  const handleParentFilterChange = (value: string) => {
+    setParentCategoryFilter(value === 'all' ? null : value);
   };
 
   // Find parent category name for display
@@ -56,6 +66,9 @@ const CategoryManagement = () => {
     const parent = categories.find(cat => cat.id === parentId);
     return parent ? parent.name : 'Desconocido';
   };
+
+  // Get all parent categories for the filter
+  const parentCategories = categories.filter(cat => !cat.parentId);
 
   const columns = [
     { key: 'name', header: 'Nombre' },
@@ -83,11 +96,6 @@ const CategoryManagement = () => {
       label: 'Editar',
       icon: <Edit size={16} />,
       onClick: (category: Category) => handleEditCategory(category.id)
-    },
-    {
-      label: 'Eliminar',
-      icon: <Trash size={16} />,
-      onClick: (category: Category) => handleDeleteCategory(category.id)
     }
   ];
 
@@ -98,8 +106,33 @@ const CategoryManagement = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onAddNew={handleAddCategory}
-        onSearch={handleSearch}
+        onSearch={(e) => {
+          e.preventDefault();
+          filterCategories();
+        }}
       />
+      
+      <div className="flex items-center gap-4 mb-4">
+        <div className="grid w-full max-w-sm items-center gap-1.5">
+          <Label htmlFor="parent-category-filter">Filtrar por categoría padre</Label>
+          <Select 
+            value={parentCategoryFilter || 'all'}
+            onValueChange={handleParentFilterChange}
+          >
+            <SelectTrigger id="parent-category-filter" className="w-full">
+              <SelectValue placeholder="Todas las categorías" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las categorías</SelectItem>
+              {parentCategories.map(category => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       
       <DataTable
         data={filteredCategories}
