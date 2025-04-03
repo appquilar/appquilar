@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit, Trash } from 'lucide-react';
+import { Edit } from 'lucide-react';
 import { toast } from 'sonner';
 
 import TableHeader from '../common/TableHeader';
@@ -66,23 +66,6 @@ const SiteManagement = () => {
     navigate(`/dashboard/sites/edit/${siteId}`);
   };
 
-  const handleDeleteSite = async (siteId: string) => {
-    try {
-      const success = await siteService.deleteSite(siteId);
-      if (success) {
-        const updatedSites = sites.filter(site => site.id !== siteId);
-        setSites(updatedSites);
-        filterSites(updatedSites, searchQuery);
-        toast.success('Sitio eliminado correctamente');
-      } else {
-        toast.error('No se pudo eliminar el sitio');
-      }
-    } catch (err) {
-      console.error('Error deleting site:', err);
-      toast.error('Error al eliminar el sitio');
-    }
-  };
-
   const columns = [
     { key: 'name', header: 'Nombre' },
     { key: 'domain', header: 'Dominio' },
@@ -118,11 +101,6 @@ const SiteManagement = () => {
       label: 'Editar',
       icon: <Edit size={16} />,
       onClick: (site: Site) => handleEditSite(site.id)
-    },
-    {
-      label: 'Eliminar',
-      icon: <Trash size={16} />,
-      onClick: (site: Site) => handleDeleteSite(site.id)
     }
   ];
 

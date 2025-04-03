@@ -41,13 +41,56 @@
       "id": "category-1",
       "name": "Herramientas Eléctricas",
       "slug": "herramientas-electricas",
-      "icon": "Wrench"
+      "iconUrl": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "headerImageUrl": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "featuredImageUrl": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "parentId": null,
+      "createdAt": "2023-01-01T00:00:00Z",
+      "updatedAt": "2023-01-01T00:00:00Z"
     },
     {
       "id": "category-2",
       "name": "Equipos de Construcción",
       "slug": "equipos-construccion",
-      "icon": "HardHat"
+      "iconUrl": "https://images.unsplash.com/photo-1487252665478-49b61b47f302",
+      "headerImageUrl": "https://images.unsplash.com/photo-1487252665478-49b61b47f302",
+      "featuredImageUrl": "https://images.unsplash.com/photo-1487252665478-49b61b47f302",
+      "parentId": null,
+      "createdAt": "2023-01-01T00:00:00Z",
+      "updatedAt": "2023-01-01T00:00:00Z"
+    },
+    {
+      "id": "category-3",
+      "name": "Equipo de Jardinería",
+      "slug": "equipo-jardineria",
+      "iconUrl": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "headerImageUrl": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "featuredImageUrl": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "parentId": null,
+      "createdAt": "2023-01-01T00:00:00Z",
+      "updatedAt": "2023-01-01T00:00:00Z"
+    },
+    {
+      "id": "category-4",
+      "name": "Taladros",
+      "slug": "taladros",
+      "iconUrl": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "headerImageUrl": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "featuredImageUrl": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "parentId": "category-1",
+      "createdAt": "2023-01-01T00:00:00Z",
+      "updatedAt": "2023-01-01T00:00:00Z"
+    },
+    {
+      "id": "category-5",
+      "name": "Sierras",
+      "slug": "sierras",
+      "iconUrl": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "headerImageUrl": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "featuredImageUrl": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "parentId": "category-1",
+      "createdAt": "2023-01-01T00:00:00Z",
+      "updatedAt": "2023-01-01T00:00:00Z"
     }
   ],
   "rentals": [
@@ -80,7 +123,14 @@
       "email": "info@protools.com",
       "phone": "600123456",
       "address": "Calle Industria 23, Barcelona",
-      "logo": "https://example.com/logo1.png"
+      "logo": "https://example.com/logo1.png",
+      "slug": "pro-tools-inc",
+      "fiscalId": "B12345678",
+      "contactEmail": "info@protools.com",
+      "contactPhone": "+34 911 234 567",
+      "categoryIds": ["category-1", "category-2"],
+      "createdAt": "2023-01-01T00:00:00Z",
+      "updatedAt": "2023-01-01T00:00:00Z"
     },
     {
       "id": "company-2",
@@ -89,7 +139,30 @@
       "email": "info@herramientasexpress.com",
       "phone": "600789456",
       "address": "Avenida Industrial 45, Madrid",
-      "logo": "https://example.com/logo2.png"
+      "logo": "https://example.com/logo2.png",
+      "slug": "herramientas-express",
+      "fiscalId": "B87654321",
+      "contactEmail": "info@herramientasexpress.com",
+      "contactPhone": "+34 911 789 456",
+      "categoryIds": ["category-2", "category-3"],
+      "createdAt": "2023-01-01T00:00:00Z",
+      "updatedAt": "2023-01-01T00:00:00Z"
+    },
+    {
+      "id": "company-3",
+      "name": "Garden Rentals",
+      "description": "Todo el equipamiento para jardín que necesitas",
+      "email": "info@gardenrentals.com",
+      "phone": "600456789",
+      "address": "Paseo del Jardín 12, Valencia",
+      "logo": "https://example.com/logo3.png",
+      "slug": "garden-rentals",
+      "fiscalId": "B98765432",
+      "contactEmail": "info@gardenrentals.com",
+      "contactPhone": "+34 911 456 789",
+      "categoryIds": ["category-3"],
+      "createdAt": "2023-01-01T00:00:00Z",
+      "updatedAt": "2023-01-01T00:00:00Z"
     }
   ],
   "messages": [
@@ -142,6 +215,50 @@
       "companyName": "Pro Tools Inc.",
       "userName": "Juan Pérez",
       "unreadCount": 1
+    }
+  ],
+  "sites": [
+    {
+      "id": "site-1",
+      "name": "Appquilar Principal",
+      "domain": "appquilar.com",
+      "logo": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "title": "Appquilar - La plataforma de alquiler más grande",
+      "description": "Encuentra todo lo que necesitas para alquilar en un solo lugar.",
+      "categoryIds": ["category-1", "category-2", "category-3"],
+      "menuCategoryIds": ["category-1", "category-2"],
+      "featuredCategoryIds": ["category-3"],
+      "primaryColor": "#4F46E5",
+      "createdAt": "2023-01-01T00:00:00Z",
+      "updatedAt": "2023-01-01T00:00:00Z"
+    },
+    {
+      "id": "site-2",
+      "name": "Herramientas Pro",
+      "domain": "herramientas-pro.es",
+      "logo": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "title": "Herramientas Pro - Especialistas en alquiler de herramientas",
+      "description": "La mejor selección de herramientas profesionales para alquilar.",
+      "categoryIds": ["category-1", "category-2"],
+      "menuCategoryIds": ["category-1"],
+      "featuredCategoryIds": ["category-2"],
+      "primaryColor": "#F59E0B",
+      "createdAt": "2023-01-01T00:00:00Z",
+      "updatedAt": "2023-01-01T00:00:00Z"
+    },
+    {
+      "id": "site-3",
+      "name": "Jardín Express",
+      "domain": "jardin-express.com",
+      "logo": "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      "title": "Jardín Express - Equipamiento para jardín",
+      "description": "Alquila todo lo que necesitas para tu jardín.",
+      "categoryIds": ["category-3"],
+      "menuCategoryIds": [],
+      "featuredCategoryIds": ["category-3"],
+      "primaryColor": "#10B981",
+      "createdAt": "2023-01-01T00:00:00Z",
+      "updatedAt": "2023-01-01T00:00:00Z"
     }
   ],
   "seo": {

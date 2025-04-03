@@ -1,8 +1,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit, Trash, Users, Package } from 'lucide-react';
-import { toast } from 'sonner';
+import { Edit, Users, Package } from 'lucide-react';
 
 import TableHeader from '../common/TableHeader';
 import DataTable from '../common/DataTable';
@@ -39,16 +38,6 @@ const CompanyManagement = () => {
 
   const handleEditCompany = (companyId: string) => {
     navigate(`/dashboard/companies/edit/${companyId}`);
-  };
-
-  const handleDeleteCompany = (companyId: string) => {
-    // In a real app, this would delete the company via API call
-    const updatedCompanies = companies.filter(company => company.id !== companyId);
-    setCompanies(updatedCompanies);
-    setFilteredCompanies(updatedCompanies.filter(company => 
-      company.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ));
-    toast.success('Empresa eliminada correctamente');
   };
 
   const handleManageUsers = (companyId: string) => {
@@ -97,11 +86,6 @@ const CompanyManagement = () => {
       label: 'Editar',
       icon: <Edit size={16} />,
       onClick: (company: Company) => handleEditCompany(company.id)
-    },
-    {
-      label: 'Eliminar',
-      icon: <Trash size={16} />,
-      onClick: (company: Company) => handleDeleteCompany(company.id)
     }
   ];
 

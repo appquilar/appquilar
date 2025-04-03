@@ -1,7 +1,7 @@
 
 import { UserRole } from "@/domain/models/UserRole";
 import { NavSection } from "./types";
-import { Home, Package, Calendar, MessageCircle, BarChart, Globe, Users, Building, Settings } from 'lucide-react';
+import { Home, Package, Calendar, MessageCircle, Globe, Users, Building, Settings } from 'lucide-react';
 
 /**
  * Navigation configuration factory - centralizes all navigation definitions
@@ -71,12 +71,6 @@ export class NavigationConfig {
             href: '/dashboard/products',
             title: 'Productos',
             icon: Package
-          },
-          {
-            id: 'stats',
-            href: '/dashboard/stats',
-            title: 'Estadísticas',
-            icon: BarChart
           },
           {
             id: 'categories',

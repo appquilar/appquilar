@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Edit, Trash, Mail, Check, X } from 'lucide-react';
+import { Edit, Mail, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -91,11 +91,6 @@ const CompanyUsersPage = () => {
     toast.success('Invitación enviada correctamente');
   };
 
-  const handleRemoveUser = (userId: string) => {
-    setUsers(users.filter(user => user.id !== userId));
-    toast.success('Usuario eliminado correctamente');
-  };
-
   if (isLoading) {
     return (
       <div className="p-6 flex justify-center">
@@ -181,11 +176,10 @@ const CompanyUsersPage = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 w-8 p-0 text-red-500"
-                        onClick={() => handleRemoveUser(user.id)}
+                        className="h-8 w-8 p-0"
                       >
-                        <Trash size={16} />
-                        <span className="sr-only">Eliminar</span>
+                        <Edit size={16} />
+                        <span className="sr-only">Editar</span>
                       </Button>
                     </div>
                   </TableCell>

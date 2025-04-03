@@ -1,11 +1,9 @@
-
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProductsManagement from './ProductsManagement';
 import ProductFormPage from './products/ProductFormPage';
 import RentalsManagement from './rentals/RentalsManagement';
 import MessagesDashboard from './MessagesDashboard';
 import UserManagement from './UserManagement';
-import CompanyStats from './CompanyStats';
 import UserConfigPage from './config/UserConfigPage';
 import UpgradePage from './upgrade/UpgradePage';
 
@@ -26,8 +24,7 @@ import SiteFormPage from './sites/SiteFormPage';
 const DashboardRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<CompanyStats />} />
-      <Route path="stats" element={<CompanyStats />} />
+      <Route path="/" element={<Navigate to="/dashboard/products" replace />} />
       
       {/* Upgrade route */}
       <Route path="upgrade" element={<UpgradePage />} />

@@ -1,5 +1,5 @@
 
-import { Edit, Trash } from 'lucide-react';
+import { Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -8,10 +8,9 @@ import { CompanyUser } from '@/domain/models/CompanyUser';
 interface UserTableProps {
   users: CompanyUser[];
   onEdit: (userId: string) => void;
-  onDelete: (userId: string) => void;
 }
 
-const UserTable = ({ users, onEdit, onDelete }: UserTableProps) => {
+const UserTable = ({ users, onEdit }: UserTableProps) => {
   // Status badge renderer
   const renderStatusBadge = (status: CompanyUser['status']) => {
     return (
@@ -70,16 +69,6 @@ const UserTable = ({ users, onEdit, onDelete }: UserTableProps) => {
                     >
                       <Edit size={16} />
                       <span className="sr-only">Editar</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => onDelete(user.id)}
-                      disabled={user.id === '1'} // Can't delete the owner
-                    >
-                      <Trash size={16} />
-                      <span className="sr-only">Eliminar</span>
                     </Button>
                   </div>
                 </TableCell>
