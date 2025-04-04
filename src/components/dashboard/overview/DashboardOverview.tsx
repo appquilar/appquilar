@@ -109,27 +109,31 @@ const DashboardOverview = () => {
         </Card>
       </div>
 
-      {/* Statistics Charts */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <MonthlyStatsChart
-          title="Vistas Mensuales"
-          description="Historial de vistas por día"
-          data={isLoading ? [] : (stats?.monthlyViews || MOCK_STATS.monthlyViews)}
-          dataKey="views"
-          chartColor="var(--color-views)"
-          label="Vistas"
-          config={chartConfig}
-        />
+      {/* Statistics Charts - Full width, one per row */}
+      <div className="space-y-6">
+        <div className="w-full h-[450px]">
+          <MonthlyStatsChart
+            title="Vistas Mensuales"
+            description="Historial de vistas por día"
+            data={isLoading ? [] : (stats?.monthlyViews || MOCK_STATS.monthlyViews)}
+            dataKey="views"
+            chartColor="var(--color-views)"
+            label="Vistas"
+            config={chartConfig}
+          />
+        </div>
         
-        <MonthlyStatsChart
-          title="Alquileres Mensuales"
-          description="Historial de alquileres por día"
-          data={isLoading ? [] : (stats?.monthlyRentals || MOCK_STATS.monthlyRentals)}
-          dataKey="rentals"
-          chartColor="var(--color-rentals)"
-          label="Alquileres"
-          config={chartConfig}
-        />
+        <div className="w-full h-[450px]">
+          <MonthlyStatsChart
+            title="Alquileres Mensuales"
+            description="Historial de alquileres por día"
+            data={isLoading ? [] : (stats?.monthlyRentals || MOCK_STATS.monthlyRentals)}
+            dataKey="rentals"
+            chartColor="var(--color-rentals)"
+            label="Alquileres"
+            config={chartConfig}
+          />
+        </div>
       </div>
     </div>
   );
