@@ -1,5 +1,5 @@
 
-import { CompanyStats, StatsRepository, DataPoint } from '@/domain/repositories/StatsRepository';
+import { CompanyStats, StatsRepository, DataPoint, StatsRepositoryFactory } from '@/domain/repositories/StatsRepository';
 import { MOCK_STATS } from '@/components/dashboard/stats/statsData';
 
 /**
@@ -9,14 +9,21 @@ export class MockStatsRepository implements StatsRepository {
   async getCompanyStats(companyId: string): Promise<CompanyStats> {
     // For now, we return the same mock data regardless of company ID
     return Promise.resolve({
-      totalViews: 3458, // Using productViews from MOCK_STATS
+      totalViews: 3458,
       totalRentals: MOCK_STATS.totalRentals,
-      totalRevenue: 12500, // Adding a mock revenue
-      averageRating: 4.2, // Adding a mock average rating
+      totalRevenue: 12500,
+      averageRating: 4.2,
       monthlyViews: MOCK_STATS.monthlyViews as DataPoint[],
       monthlyRentals: MOCK_STATS.monthlyRentals as DataPoint[],
       popularProducts: MOCK_STATS.popularProducts,
-      recentRentals: MOCK_STATS.recentRentals
+      recentRentals: MOCK_STATS.recentRentals,
+      // Dashboard metrics
+      activeRentals: MOCK_STATS.activeRentals,
+      totalProducts: MOCK_STATS.totalProducts,
+      productViews: MOCK_STATS.productViews,
+      // Trend changes (mock values)
+      weeklyViewsChange: -3,
+      weeklyRentalsChange: 12
     });
   }
   
@@ -43,7 +50,23 @@ export class MockStatsRepository implements StatsRepository {
       monthlyViews: filteredViews as DataPoint[],
       monthlyRentals: filteredRentals as DataPoint[],
       popularProducts: MOCK_STATS.popularProducts,
-      recentRentals: MOCK_STATS.recentRentals
+      recentRentals: MOCK_STATS.recentRentals,
+      // Dashboard metrics
+      activeRentals: MOCK_STATS.activeRentals,
+      totalProducts: MOCK_STATS.totalProducts,
+      productViews: MOCK_STATS.productViews,
+      // Trend changes (mock values)
+      weeklyViewsChange: -3,
+      weeklyRentalsChange: 12
     });
+  }
+}
+
+/**
+ * Factory for creating MockStatsRepository instances
+ */
+export class MockStatsRepositoryFactory implements StatsRepositoryFactory {
+  createRepository(): StatsRepository {
+    return new MockStatsRepository();
   }
 }

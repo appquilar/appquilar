@@ -1,6 +1,6 @@
 
-import { CompanyStats, StatsRepository } from '@/domain/repositories/StatsRepository';
-import { MockStatsRepository } from '@/infrastructure/repositories/MockStatsRepository';
+import { CompanyStats, StatsRepository, StatsRepositoryFactory } from '@/domain/repositories/StatsRepository';
+import { MockStatsRepositoryFactory } from '@/infrastructure/repositories/MockStatsRepository';
 
 /**
  * Service for accessing company statistics
@@ -8,6 +8,7 @@ import { MockStatsRepository } from '@/infrastructure/repositories/MockStatsRepo
 export class StatsService {
   private static instance: StatsService;
   private repository: StatsRepository;
+  private static repositoryFactory: StatsRepositoryFactory = new MockStatsRepositoryFactory();
 
   private constructor(repository: StatsRepository) {
     this.repository = repository;
@@ -18,21 +19,19 @@ export class StatsService {
    */
   public static getInstance(): StatsService {
     if (!StatsService.instance) {
-      // Using the mock repository for now
-      const repository = new MockStatsRepository();
+      const repository = this.repositoryFactory.createRepository();
       StatsService.instance = new StatsService(repository);
     }
     return StatsService.instance;
   }
 
   /**
-   * Set a custom repository implementation
+   * Set a custom repository factory implementation
    */
-  public static setRepository(repository: StatsRepository): void {
+  public static setRepositoryFactory(factory: StatsRepositoryFactory): void {
+    this.repositoryFactory = factory;
     if (StatsService.instance) {
-      StatsService.instance.repository = repository;
-    } else {
-      StatsService.instance = new StatsService(repository);
+      StatsService.instance.repository = factory.createRepository();
     }
   }
 

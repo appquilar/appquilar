@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { MOCK_STATS } from './statsData';
 
 interface DataPoint {
   day: string;
@@ -61,6 +62,14 @@ const filterDataForMonth = (data: DataPoint[], date: Date): DataPoint[] => {
   });
 };
 
+// Ensures data is never undefined or empty
+const ensureValidData = (data: DataPoint[] | undefined): DataPoint[] => {
+  if (!data || data.length === 0) {
+    return dataKey === 'views' ? MOCK_STATS.monthlyViews : MOCK_STATS.monthlyRentals;
+  }
+  return data;
+};
+
 const MonthlyStatsChart = ({ 
   title, 
   description, 
@@ -71,7 +80,7 @@ const MonthlyStatsChart = ({
   config
 }: MonthlyStatsChartProps) => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [chartData, setChartData] = useState<DataPoint[]>(data);
+  const [chartData, setChartData] = useState<DataPoint[]>(ensureValidData(data));
   const [calendarOpen, setCalendarOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -85,21 +94,21 @@ const MonthlyStatsChart = ({
   const goToPreviousMonth = () => {
     const prevMonth = subMonths(currentDate, 1);
     setCurrentDate(prevMonth);
-    setChartData(filterDataForMonth(data, prevMonth));
+    setChartData(filterDataForMonth(ensureValidData(data), prevMonth));
   };
   
   // Navigate to next month
   const goToNextMonth = () => {
     const nextMonth = addMonths(currentDate, 1);
     setCurrentDate(nextMonth);
-    setChartData(filterDataForMonth(data, nextMonth));
+    setChartData(filterDataForMonth(ensureValidData(data), nextMonth));
   };
   
   // Handle month selection from calendar
   const handleSelectMonth = (date: Date | undefined) => {
     if (date) {
       setCurrentDate(date);
-      setChartData(filterDataForMonth(data, date));
+      setChartData(filterDataForMonth(ensureValidData(data), date));
       setCalendarOpen(false);
     }
   };

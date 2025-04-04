@@ -12,6 +12,7 @@ export interface DataPoint {
   day: string;
   views?: number;
   rentals?: number;
+  [key: string]: any; // Support for additional metrics
 }
 
 export interface PopularProduct {
@@ -39,6 +40,13 @@ export interface CompanyStats {
   monthlyRentals: DataPoint[];
   popularProducts: PopularProduct[];
   recentRentals: RecentRental[];
+  // New additions for dashboard metrics
+  activeRentals?: number;
+  totalProducts?: number;
+  productViews?: number;
+  // Weekly changes for trends
+  weeklyViewsChange?: number;
+  weeklyRentalsChange?: number;
 }
 
 /**
@@ -54,4 +62,11 @@ export interface StatsRepository {
    * Get stats for a specific time period
    */
   getStatsByPeriod(companyId: string, startDate: Date, endDate: Date): Promise<CompanyStats>;
+}
+
+/**
+ * Factory to create StatsRepository implementations
+ */
+export interface StatsRepositoryFactory {
+  createRepository(): StatsRepository;
 }
