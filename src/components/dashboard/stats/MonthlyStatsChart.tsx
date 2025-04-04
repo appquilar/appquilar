@@ -63,9 +63,9 @@ const filterDataForMonth = (data: DataPoint[], date: Date): DataPoint[] => {
 };
 
 // Ensures data is never undefined or empty
-const ensureValidData = (data: DataPoint[] | undefined): DataPoint[] => {
+const ensureValidData = (data: DataPoint[] | undefined, currentDataKey: string): DataPoint[] => {
   if (!data || data.length === 0) {
-    return dataKey === 'views' ? MOCK_STATS.monthlyViews : MOCK_STATS.monthlyRentals;
+    return currentDataKey === 'views' ? MOCK_STATS.monthlyViews : MOCK_STATS.monthlyRentals;
   }
   return data;
 };
@@ -80,7 +80,7 @@ const MonthlyStatsChart = ({
   config
 }: MonthlyStatsChartProps) => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [chartData, setChartData] = useState<DataPoint[]>(ensureValidData(data));
+  const [chartData, setChartData] = useState<DataPoint[]>(ensureValidData(data, dataKey));
   const [calendarOpen, setCalendarOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -94,21 +94,21 @@ const MonthlyStatsChart = ({
   const goToPreviousMonth = () => {
     const prevMonth = subMonths(currentDate, 1);
     setCurrentDate(prevMonth);
-    setChartData(filterDataForMonth(ensureValidData(data), prevMonth));
+    setChartData(filterDataForMonth(ensureValidData(data, dataKey), prevMonth));
   };
   
   // Navigate to next month
   const goToNextMonth = () => {
     const nextMonth = addMonths(currentDate, 1);
     setCurrentDate(nextMonth);
-    setChartData(filterDataForMonth(ensureValidData(data), nextMonth));
+    setChartData(filterDataForMonth(ensureValidData(data, dataKey), nextMonth));
   };
   
   // Handle month selection from calendar
   const handleSelectMonth = (date: Date | undefined) => {
     if (date) {
       setCurrentDate(date);
-      setChartData(filterDataForMonth(ensureValidData(data), date));
+      setChartData(filterDataForMonth(ensureValidData(data, dataKey), date));
       setCalendarOpen(false);
     }
   };
