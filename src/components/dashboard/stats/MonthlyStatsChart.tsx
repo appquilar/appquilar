@@ -195,16 +195,16 @@ const MonthlyStatsChart = ({
           <LineChart 
             data={chartData}
             margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
-            className="px-4" // Add horizontal padding
+            className="mx-4" // Changed from px-4 to mx-4 for left-right margin only
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
             <XAxis 
               dataKey="day" 
               tickLine={false} 
               axisLine={false} 
-              padding={{ left: 20, right: 20 }}
+              padding={{ left: 25, right: 25 }} // Increased padding to provide more space
               tick={{ fontSize: 12 }}
-              interval={isMobile ? 2 : 1} // On mobile, show every third day to avoid crowding
+              interval={isMobile ? 2 : 1} // On mobile, show fewer days to avoid crowding
             />
             <YAxis 
               tickLine={false} 
