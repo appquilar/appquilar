@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { CardContent, CardDescription, CardHeader, CardTitle, Card } from '@/components/ui/card';
 import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis, ResponsiveContainer } from 'recharts';
-import { ChartContainer } from '@/components/ui/chart';
 import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -106,11 +105,11 @@ const MonthlyStatsChart = ({
   };
   
   return (
-    <Card className="w-full h-full">
-      <CardHeader className={isMobile ? "flex flex-col space-y-3" : "flex flex-row items-start justify-between"}>
+    <div className="w-full h-full">
+      <div className={isMobile ? "flex flex-col space-y-3" : "flex flex-row items-start justify-between"}>
         <div>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
+          <h3 className="text-lg font-semibold">{title}</h3>
+          <p className="text-sm text-muted-foreground">{description}</p>
         </div>
         <div className={`flex items-center ${isMobile ? "self-start" : "space-x-2"} gap-2`}>
           <Button 
@@ -149,46 +148,41 @@ const MonthlyStatsChart = ({
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-      </CardHeader>
-      <CardContent className="h-[400px] w-full p-0">
-        <ChartContainer 
-          config={config} 
-          className="h-full w-full"
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart 
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-            >
-              <XAxis 
-                dataKey="day" 
-                tickLine={false} 
-                axisLine={false} 
-                tickFormatter={(value) => `${value}`}
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis 
-                tickLine={false} 
-                axisLine={false}
-                width={30}
-                tick={{ fontSize: 12 }}
-              />
-              <CartesianGrid stroke="#f5f5f5" strokeDasharray="3 3" vertical={false} />
-              <Tooltip content={<CustomTooltip />} />
-              <Line 
-                type="monotone" 
-                dataKey={dataKey} 
-                name={dataKey}
-                stroke={`var(--color-${dataKey})`} 
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 6, strokeWidth: 0 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartContainer>
-      </CardContent>
-    </Card>
+      </div>
+      <div className="h-[350px] w-full mt-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart 
+            data={chartData}
+            margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+            <XAxis 
+              dataKey="day" 
+              tickLine={false} 
+              axisLine={false} 
+              padding={{ left: 10, right: 10 }}
+              tick={{ fontSize: 12 }}
+            />
+            <YAxis 
+              tickLine={false} 
+              axisLine={false}
+              tick={{ fontSize: 12 }}
+              width={30}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Line 
+              type="monotone" 
+              dataKey={dataKey} 
+              name={dataKey}
+              stroke={chartColor} 
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 6, strokeWidth: 0, fill: chartColor }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   );
 };
 

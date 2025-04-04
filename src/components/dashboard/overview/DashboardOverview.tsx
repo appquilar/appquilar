@@ -10,6 +10,10 @@ import { useCompanyStats } from '@/application/hooks/useCompanyStats';
 const DashboardOverview = () => {
   const { stats, isLoading } = useCompanyStats();
   
+  // Ensure we always have data to display even if loading
+  const viewsData = !isLoading && stats?.monthlyViews ? stats.monthlyViews : MOCK_STATS.monthlyViews;
+  const rentalsData = !isLoading && stats?.monthlyRentals ? stats.monthlyRentals : MOCK_STATS.monthlyRentals;
+  
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -67,7 +71,7 @@ const DashboardOverview = () => {
         </Card>
       </div>
 
-      {/* Recent Activity and Upcoming Events */}
+      {/* Recent Activity and Upcoming Events - Moved above charts */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="col-span-1">
           <CardHeader>
@@ -111,29 +115,41 @@ const DashboardOverview = () => {
 
       {/* Statistics Charts - Full width, one per row */}
       <div className="space-y-6">
-        <div className="w-full h-[450px]">
-          <MonthlyStatsChart
-            title="Vistas Mensuales"
-            description="Historial de vistas por día"
-            data={isLoading ? [] : (stats?.monthlyViews || MOCK_STATS.monthlyViews)}
-            dataKey="views"
-            chartColor="var(--color-views)"
-            label="Vistas"
-            config={chartConfig}
-          />
-        </div>
+        <Card className="w-full overflow-hidden">
+          <CardHeader>
+            <CardTitle>Vistas Mensuales</CardTitle>
+            <p className="text-sm text-muted-foreground">Historial de vistas por día</p>
+          </CardHeader>
+          <CardContent className="p-0 h-[400px]">
+            <MonthlyStatsChart
+              title="Vistas Mensuales"
+              description="Historial de vistas por día"
+              data={viewsData}
+              dataKey="views"
+              chartColor="#0ea5e9"
+              label="Vistas"
+              config={chartConfig}
+            />
+          </CardContent>
+        </Card>
         
-        <div className="w-full h-[450px]">
-          <MonthlyStatsChart
-            title="Alquileres Mensuales"
-            description="Historial de alquileres por día"
-            data={isLoading ? [] : (stats?.monthlyRentals || MOCK_STATS.monthlyRentals)}
-            dataKey="rentals"
-            chartColor="var(--color-rentals)"
-            label="Alquileres"
-            config={chartConfig}
-          />
-        </div>
+        <Card className="w-full overflow-hidden">
+          <CardHeader>
+            <CardTitle>Alquileres Mensuales</CardTitle>
+            <p className="text-sm text-muted-foreground">Historial de alquileres por día</p>
+          </CardHeader>
+          <CardContent className="p-0 h-[400px]">
+            <MonthlyStatsChart
+              title="Alquileres Mensuales"
+              description="Historial de alquileres por día"
+              data={rentalsData}
+              dataKey="rentals"
+              chartColor="#10b981"
+              label="Alquileres"
+              config={chartConfig}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
