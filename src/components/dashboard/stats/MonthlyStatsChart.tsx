@@ -47,12 +47,34 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+// Function to generate data for all days in the month
+const generateCompleteMonthData = (date: Date, dataKey: string, baseData: DataPoint[]): DataPoint[] => {
+  const daysInMonth = eachDayOfInterval({
+    start: startOfMonth(date),
+    end: endOfMonth(date)
+  });
+  
+  // Create an array with entries for all days in the month
+  return daysInMonth.map(day => {
+    const dayStr = format(day, 'dd');
+    // Find existing data for this day or create new entry with zero value
+    const existingData = baseData.find(item => item.day === dayStr);
+    if (existingData) {
+      return existingData;
+    } else {
+      const newPoint: DataPoint = { day: dayStr };
+      newPoint[dataKey] = 0;
+      return newPoint;
+    }
+  });
+};
+
 // Function to filter data for the selected month
-const filterDataForMonth = (data: DataPoint[], date: Date): DataPoint[] => {
+const filterDataForMonth = (data: DataPoint[], date: Date, dataKey: string): DataPoint[] => {
   const monthStr = format(date, 'MM');
   // In a real app, this would filter data from an API call based on the month
   // For mock data, we'll simulate it by shifting values randomly
-  return data.map(item => {
+  const transformedData = data.map(item => {
     const randomFactor = 0.7 + Math.random() * 0.6; // between 0.7 and 1.3
     const value = Number(item[Object.keys(item).find(key => key !== 'day') as string]);
     return {
@@ -60,6 +82,9 @@ const filterDataForMonth = (data: DataPoint[], date: Date): DataPoint[] => {
       [Object.keys(item).find(key => key !== 'day') as string]: Math.round(value * randomFactor)
     };
   });
+  
+  // Ensure we have data for all days in the month
+  return generateCompleteMonthData(date, dataKey, transformedData);
 };
 
 // Ensures data is never undefined or empty
@@ -80,7 +105,14 @@ const MonthlyStatsChart = ({
   config
 }: MonthlyStatsChartProps) => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [chartData, setChartData] = useState<DataPoint[]>(ensureValidData(data, dataKey));
+  // Initialize with complete month data
+  const [chartData, setChartData] = useState<DataPoint[]>(
+    generateCompleteMonthData(
+      currentDate, 
+      dataKey, 
+      ensureValidData(data, dataKey)
+    )
+  );
   const [calendarOpen, setCalendarOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -94,21 +126,21 @@ const MonthlyStatsChart = ({
   const goToPreviousMonth = () => {
     const prevMonth = subMonths(currentDate, 1);
     setCurrentDate(prevMonth);
-    setChartData(filterDataForMonth(ensureValidData(data, dataKey), prevMonth));
+    setChartData(filterDataForMonth(ensureValidData(data, dataKey), prevMonth, dataKey));
   };
   
   // Navigate to next month
   const goToNextMonth = () => {
     const nextMonth = addMonths(currentDate, 1);
     setCurrentDate(nextMonth);
-    setChartData(filterDataForMonth(ensureValidData(data, dataKey), nextMonth));
+    setChartData(filterDataForMonth(ensureValidData(data, dataKey), nextMonth, dataKey));
   };
   
   // Handle month selection from calendar
   const handleSelectMonth = (date: Date | undefined) => {
     if (date) {
       setCurrentDate(date);
-      setChartData(filterDataForMonth(ensureValidData(data, dataKey), date));
+      setChartData(filterDataForMonth(ensureValidData(data, dataKey), date, dataKey));
       setCalendarOpen(false);
     }
   };
@@ -162,21 +194,24 @@ const MonthlyStatsChart = ({
         <ResponsiveContainer width="100%" height="100%">
           <LineChart 
             data={chartData}
-            margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
+            margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+            className="px-4" // Add horizontal padding
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
             <XAxis 
               dataKey="day" 
               tickLine={false} 
               axisLine={false} 
-              padding={{ left: 10, right: 10 }}
+              padding={{ left: 20, right: 20 }}
               tick={{ fontSize: 12 }}
+              interval={isMobile ? 2 : 1} // On mobile, show every third day to avoid crowding
             />
             <YAxis 
               tickLine={false} 
               axisLine={false}
               tick={{ fontSize: 12 }}
               width={30}
+              padding={{ top: 10, bottom: 10 }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Line 
