@@ -1,20 +1,15 @@
-import { useState } from 'react';
-import { CardContent, CardDescription, CardHeader, CardTitle, Card } from '@/components/ui/card';
-import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis, ResponsiveContainer } from 'recharts';
-import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { MOCK_STATS } from './statsData';
 
-interface DataPoint {
-  day: string;
-  [key: string]: any;
-}
+import { useState } from 'react';
+import { subMonths, addMonths } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
+import LineChartDisplay from './LineChartDisplay';
+import ChartDateControls from './ChartDateControls';
+import { 
+  ensureValidData, 
+  filterDataForMonth, 
+  generateCompleteMonthData, 
+  DataPoint 
+} from './ChartDateUtils';
 
 interface MonthlyStatsChartProps {
   title: string;
@@ -25,74 +20,6 @@ interface MonthlyStatsChartProps {
   label: string;
   config: Record<string, any>;
 }
-
-// Custom tooltip component for the charts
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    const value = payload[0].value;
-    const name = payload[0].name;
-    
-    return (
-      <div className="bg-background border border-border rounded-md shadow-md p-2 text-xs">
-        <p className="font-medium">Día {data.day}</p>
-        <p className="text-foreground">
-          {name === 'views' ? 'Vistas' : 'Alquileres'}: <span className="font-medium">{value}</span>
-        </p>
-      </div>
-    );
-  }
-
-  return null;
-};
-
-// Function to generate data for all days in the month
-const generateCompleteMonthData = (date: Date, dataKey: string, baseData: DataPoint[]): DataPoint[] => {
-  const daysInMonth = eachDayOfInterval({
-    start: startOfMonth(date),
-    end: endOfMonth(date)
-  });
-  
-  // Create an array with entries for all days in the month
-  return daysInMonth.map(day => {
-    const dayStr = format(day, 'dd');
-    // Find existing data for this day or create new entry with zero value
-    const existingData = baseData.find(item => item.day === dayStr);
-    if (existingData) {
-      return existingData;
-    } else {
-      const newPoint: DataPoint = { day: dayStr };
-      newPoint[dataKey] = 0;
-      return newPoint;
-    }
-  });
-};
-
-// Function to filter data for the selected month
-const filterDataForMonth = (data: DataPoint[], date: Date, dataKey: string): DataPoint[] => {
-  const monthStr = format(date, 'MM');
-  // In a real app, this would filter data from an API call based on the month
-  // For mock data, we'll simulate it by shifting values randomly
-  const transformedData = data.map(item => {
-    const randomFactor = 0.7 + Math.random() * 0.6; // between 0.7 and 1.3
-    const value = Number(item[Object.keys(item).find(key => key !== 'day') as string]);
-    return {
-      ...item,
-      [Object.keys(item).find(key => key !== 'day') as string]: Math.round(value * randomFactor)
-    };
-  });
-  
-  // Ensure we have data for all days in the month
-  return generateCompleteMonthData(date, dataKey, transformedData);
-};
-
-// Ensures data is never undefined or empty
-const ensureValidData = (data: DataPoint[] | undefined, currentDataKey: string): DataPoint[] => {
-  if (!data || data.length === 0) {
-    return currentDataKey === 'views' ? MOCK_STATS.monthlyViews : MOCK_STATS.monthlyRentals;
-  }
-  return data;
-};
 
 const MonthlyStatsChart = ({ 
   title, 
@@ -115,12 +42,6 @@ const MonthlyStatsChart = ({
   const [calendarOpen, setCalendarOpen] = useState(false);
   const isMobile = useIsMobile();
 
-  // Generate days in current month for display
-  const daysInMonth = eachDayOfInterval({
-    start: startOfMonth(currentDate),
-    end: endOfMonth(currentDate)
-  });
-  
   // Navigate to previous month
   const goToPreviousMonth = () => {
     const prevMonth = subMonths(currentDate, 1);
@@ -150,80 +71,22 @@ const MonthlyStatsChart = ({
         <div className="invisible" aria-hidden="true">
           {/* Hidden placeholder to maintain layout */}
         </div>
-        <div className={`flex items-center ${isMobile ? "self-start" : "space-x-2"} gap-2`}>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={goToPreviousMonth}
-            aria-label="Mes anterior"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          
-          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                <span>{format(currentDate, 'MMMM yyyy', { locale: es })}</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="center">
-              <Calendar
-                selected={currentDate}
-                onSelect={handleSelectMonth}
-                initialFocus
-                locale={es}
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-          
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={goToNextMonth}
-            aria-label="Mes siguiente"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <ChartDateControls
+          currentDate={currentDate}
+          onPrevMonth={goToPreviousMonth}
+          onNextMonth={goToNextMonth}
+          onSelectMonth={handleSelectMonth}
+          calendarOpen={calendarOpen}
+          setCalendarOpen={setCalendarOpen}
+          isMobile={isMobile}
+        />
       </div>
-      <div className="h-[350px] w-full mt-4">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart 
-            data={chartData}
-            margin={{ top: 10, right: 40, left: 20, bottom: 10 }}
-            className="px-6" // Increased horizontal padding to prevent touching edges
-          >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-            <XAxis 
-              dataKey="day" 
-              tickLine={false} 
-              axisLine={false} 
-              padding={{ left: 30, right: 30 }} // Increased padding for more space
-              tick={{ fontSize: 12 }}
-              interval={isMobile ? 2 : 1} // On mobile, show fewer days to avoid crowding
-            />
-            <YAxis 
-              tickLine={false} 
-              axisLine={false}
-              tick={{ fontSize: 12 }}
-              width={40} // Increased width for Y-axis
-              padding={{ top: 10, bottom: 10 }}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Line 
-              type="monotone" 
-              dataKey={dataKey} 
-              name={dataKey}
-              stroke={chartColor} 
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 6, strokeWidth: 0, fill: chartColor }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <LineChartDisplay
+        data={chartData}
+        dataKey={dataKey}
+        chartColor={chartColor}
+        isMobile={isMobile}
+      />
     </div>
   );
 };
