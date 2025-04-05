@@ -12,9 +12,17 @@ interface StatsCardProps {
     label: string;
   };
   description?: string;
+  descriptionColor?: 'positive' | 'negative' | 'neutral';
 }
 
-const StatsCard = ({ title, value, icon: Icon, trend, description }: StatsCardProps) => {
+const StatsCard = ({ 
+  title, 
+  value, 
+  icon: Icon, 
+  trend, 
+  description,
+  descriptionColor = 'neutral'
+}: StatsCardProps) => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -34,7 +42,15 @@ const StatsCard = ({ title, value, icon: Icon, trend, description }: StatsCardPr
             {trend.label}
           </p>
         ) : (
-          description && <p className="text-xs text-muted-foreground mt-1">{description}</p>
+          description && (
+            <p className={`text-xs mt-1 ${
+              descriptionColor === 'positive' ? 'text-emerald-600' : 
+              descriptionColor === 'negative' ? 'text-red-600' : 
+              'text-muted-foreground'
+            }`}>
+              {description}
+            </p>
+          )
         )}
       </CardContent>
     </Card>

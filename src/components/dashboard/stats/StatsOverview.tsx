@@ -32,18 +32,16 @@ const StatsOverview = () => {
         title="Total Productos"
         value={MOCK_STATS.totalProducts}
         icon={Package}
-        description="En tu inventario"
+        description="3 agregados esta semana"
+        descriptionColor="positive"
       />
       
       <StatsCard
         title="Vistas de Productos"
         value={MOCK_STATS.productViews}
         icon={Eye}
-        trend={{
-          value: "-3%",
-          positive: false,
-          label: "respecto a la semana pasada"
-        }}
+        description="5 menos que ayer"
+        descriptionColor="negative"
       />
     </div>
   );

@@ -7,6 +7,7 @@ import MonthlyStatsChart from '../stats/MonthlyStatsChart';
 import { chartConfig } from '@/presentation/config/chartConfig';
 import { MOCK_STATS } from '@/infrastructure/repositories/mock-data/statsMockData';
 import { useCompanyStats } from '@/application/hooks/useCompanyStats';
+import { Link } from 'react-router-dom';
 
 const DashboardOverview = () => {
   const { stats, isLoading } = useCompanyStats();
@@ -29,7 +30,7 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? "..." : stats?.totalRentals || 12}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-emerald-600">
               3 agregados esta semana
             </p>
           </CardContent>
@@ -41,7 +42,7 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? "..." : stats?.totalRentals || 8}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-emerald-600">
               2 pendientes de aprobación
             </p>
           </CardContent>
@@ -53,7 +54,7 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">5</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-red-600">
               2 sin leer
             </p>
           </CardContent>
@@ -65,7 +66,7 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? "..." : stats?.totalViews || MOCK_STATS.productViews}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-emerald-600">
               +12% respecto a ayer
             </p>
           </CardContent>
@@ -79,18 +80,24 @@ const DashboardOverview = () => {
             <CardTitle>Actividad Reciente</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Nuevo alquiler recibido</p>
-              <p className="text-xs text-muted-foreground">Hace 2 horas</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Mensaje de cliente</p>
-              <p className="text-xs text-muted-foreground">Hace 5 horas</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Producto actualizado</p>
-              <p className="text-xs text-muted-foreground">Ayer</p>
-            </div>
+            <Link to="/dashboard/rentals/new-rental" className="block hover:bg-muted transition-colors rounded-md p-2 -mx-2">
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Nuevo alquiler recibido</p>
+                <p className="text-xs text-muted-foreground">Hace 2 horas</p>
+              </div>
+            </Link>
+            <Link to="/dashboard/messages" className="block hover:bg-muted transition-colors rounded-md p-2 -mx-2">
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Mensaje de cliente</p>
+                <p className="text-xs text-muted-foreground">Hace 5 horas</p>
+              </div>
+            </Link>
+            <Link to="/dashboard/products" className="block hover:bg-muted transition-colors rounded-md p-2 -mx-2">
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Producto actualizado</p>
+                <p className="text-xs text-muted-foreground">Ayer</p>
+              </div>
+            </Link>
           </CardContent>
         </Card>
         <Card className="col-span-1">
