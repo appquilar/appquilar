@@ -4,7 +4,8 @@ import { Calendar, MessageCircle, Package, Users, Eye } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatsOverview from '../stats/StatsOverview';
 import MonthlyStatsChart from '../stats/MonthlyStatsChart';
-import { chartConfig, MOCK_STATS } from '../stats/statsData';
+import { chartConfig } from '@/presentation/config/chartConfig';
+import { MOCK_STATS } from '@/infrastructure/repositories/mock-data/statsMockData';
 import { useCompanyStats } from '@/application/hooks/useCompanyStats';
 
 const DashboardOverview = () => {

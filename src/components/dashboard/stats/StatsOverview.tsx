@@ -1,7 +1,7 @@
 
 import { Eye, Package, Truck } from 'lucide-react';
 import StatsCard from './StatsCard';
-import { MOCK_STATS } from './statsData';
+import { MOCK_STATS } from '@/infrastructure/repositories/mock-data/statsMockData';
 
 const StatsOverview = () => {
   return (

@@ -1,12 +1,10 @@
 
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { MOCK_STATS } from './statsData';
+import { MOCK_STATS } from '@/infrastructure/repositories/mock-data/statsMockData';
+import { StatsDataPoint } from '@/domain/models/Stats';
 
-export interface DataPoint {
-  day: string;
-  [key: string]: any;
-}
+export type DataPoint = StatsDataPoint;
 
 // Function to generate data for all days in the month
 export const generateCompleteMonthData = (date: Date, dataKey: string, baseData: DataPoint[]): DataPoint[] => {

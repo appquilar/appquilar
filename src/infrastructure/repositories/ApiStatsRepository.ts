@@ -1,6 +1,6 @@
 
 import { CompanyStats, StatsRepository, DataPoint, StatsRepositoryFactory } from '@/domain/repositories/StatsRepository';
-import { MOCK_STATS } from '@/components/dashboard/stats/statsData';
+import { MOCK_STATS } from '@/infrastructure/repositories/mock-data/statsMockData';
 
 /**
  * API implementation of the StatsRepository interface

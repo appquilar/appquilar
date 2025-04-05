@@ -2,7 +2,7 @@
 import { useAuth } from '@/context/AuthContext';
 import StatsOverview from './stats/StatsOverview';
 import MonthlyStatsChart from './stats/MonthlyStatsChart';
-import { chartConfig } from './stats/statsData';
+import { chartConfig } from '@/presentation/config/chartConfig';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Truck } from 'lucide-react';
 import { Link } from 'react-router-dom';

@@ -1,6 +1,10 @@
 
-// Mock stats data - would come from backend API in production
-export const MOCK_STATS = {
+import { CompanyDashboardStats, PopularProduct, RecentRental, StatsDataPoint } from '@/domain/models/Stats';
+
+/**
+ * Mock statistics data - would come from backend API in production
+ */
+export const MOCK_STATS: CompanyDashboardStats = {
   totalRentals: 156,
   activeRentals: 24,
   totalProducts: 42,
@@ -81,22 +85,4 @@ export const MOCK_STATS = {
     { day: '29', rentals: 11 },
     { day: '30', rentals: 13 },
   ]
-};
-
-// Chart configuration
-export const chartConfig = {
-  views: {
-    label: 'Vistas',
-    theme: {
-      light: '#0ea5e9',
-      dark: '#0ea5e9',
-    },
-  },
-  rentals: {
-    label: 'Alquileres',
-    theme: {
-      light: '#10b981',
-      dark: '#10b981',
-    },
-  },
 };
