@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { CardContent, CardDescription, CardHeader, CardTitle, Card } from '@/components/ui/card';
 import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis, ResponsiveContainer } from 'recharts';
@@ -148,9 +147,8 @@ const MonthlyStatsChart = ({
   return (
     <div className="w-full h-full">
       <div className={isMobile ? "flex flex-col space-y-3" : "flex flex-row items-start justify-between"}>
-        <div>
-          <h3 className="text-lg font-semibold">{title}</h3>
-          <p className="text-sm text-muted-foreground">{description}</p>
+        <div className="invisible" aria-hidden="true">
+          {/* Hidden placeholder to maintain layout */}
         </div>
         <div className={`flex items-center ${isMobile ? "self-start" : "space-x-2"} gap-2`}>
           <Button 

@@ -122,8 +122,8 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent className="p-0 h-[400px]">
             <MonthlyStatsChart
-              title="Vistas Mensuales"
-              description="Historial de vistas por día"
+              title="" 
+              description=""
               data={viewsData}
               dataKey="views"
               chartColor="#0ea5e9"
@@ -140,8 +140,8 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent className="p-0 h-[400px]">
             <MonthlyStatsChart
-              title="Alquileres Mensuales"
-              description="Historial de alquileres por día"
+              title=""
+              description=""
               data={rentalsData}
               dataKey="rentals"
               chartColor="#10b981"

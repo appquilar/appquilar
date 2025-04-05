@@ -109,26 +109,42 @@ const CompanyStats = () => {
       {/* Monthly Charts - Each chart takes full width */}
       <div className="space-y-6">
         {/* Views Chart - Full Width */}
-        <MonthlyStatsChart 
-          title="Vistas de Productos"
-          description="Tendencia diaria de vistas de tus productos"
-          data={stats.monthlyViews}
-          dataKey="views"
-          chartColor="var(--color-views)"
-          label="Vistas"
-          config={chartConfig}
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle>Vistas de Productos</CardTitle>
+            <p className="text-sm text-muted-foreground">Tendencia diaria de vistas de tus productos</p>
+          </CardHeader>
+          <CardContent className="p-0 h-[400px]">
+            <MonthlyStatsChart 
+              title=""
+              description=""
+              data={stats.monthlyViews}
+              dataKey="views"
+              chartColor="var(--color-views)"
+              label="Vistas"
+              config={chartConfig}
+            />
+          </CardContent>
+        </Card>
         
         {/* Rentals Chart - Full Width */}
-        <MonthlyStatsChart 
-          title="Alquileres"
-          description="Transacciones diarias de alquiler"
-          data={stats.monthlyRentals}
-          dataKey="rentals"
-          chartColor="var(--color-rentals)"
-          label="Alquileres"
-          config={chartConfig}
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle>Alquileres</CardTitle>
+            <p className="text-sm text-muted-foreground">Transacciones diarias de alquiler</p>
+          </CardHeader>
+          <CardContent className="p-0 h-[400px]">
+            <MonthlyStatsChart 
+              title=""
+              description=""
+              data={stats.monthlyRentals}
+              dataKey="rentals"
+              chartColor="var(--color-rentals)"
+              label="Alquileres"
+              config={chartConfig}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
