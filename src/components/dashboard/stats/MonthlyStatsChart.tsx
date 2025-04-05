@@ -194,15 +194,15 @@ const MonthlyStatsChart = ({
         <ResponsiveContainer width="100%" height="100%">
           <LineChart 
             data={chartData}
-            margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
-            className="mx-4" // Changed from px-4 to mx-4 for left-right margin only
+            margin={{ top: 10, right: 40, left: 20, bottom: 10 }}
+            className="px-6" // Increased horizontal padding to prevent touching edges
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
             <XAxis 
               dataKey="day" 
               tickLine={false} 
               axisLine={false} 
-              padding={{ left: 25, right: 25 }} // Increased padding to provide more space
+              padding={{ left: 30, right: 30 }} // Increased padding for more space
               tick={{ fontSize: 12 }}
               interval={isMobile ? 2 : 1} // On mobile, show fewer days to avoid crowding
             />
@@ -210,7 +210,7 @@ const MonthlyStatsChart = ({
               tickLine={false} 
               axisLine={false}
               tick={{ fontSize: 12 }}
-              width={30}
+              width={40} // Increased width for Y-axis
               padding={{ top: 10, bottom: 10 }}
             />
             <Tooltip content={<CustomTooltip />} />
