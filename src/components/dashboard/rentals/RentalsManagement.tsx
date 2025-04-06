@@ -65,62 +65,59 @@ const RentalsManagement = () => {
         onSearch={handleSearch}
       />
       
-      {/* Calendar view and tabs in a more compact layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar on the left (2/3 width on large screens) */}
-        <div className="lg:col-span-2">
-          <RentalCalendar 
-            rentals={rentals}
-            onDateSelect={handleDateSelect}
-          />
-        </div>
-        
-        {/* Create rental button on the right (1/3 width on large screens) */}
-        <div className="flex items-start justify-center lg:justify-end">
-          <Button className="flex items-center gap-2 w-full lg:w-auto">
-            <Plus className="h-4 w-4" />
-            <span>Crear alquiler</span>
-          </Button>
-        </div>
-      </div>
+      {/* Calendar view */}
+      <RentalCalendar 
+        rentals={rentals}
+        onDateSelect={handleDateSelect}
+      />
       
-      {/* Tabs */}
-      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList>
-          <TabsTrigger value="all">
-            Todos
-            <Badge variant="secondary" className="ml-2">{rentalCounts.all}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="active">
-            Activos
-            <Badge variant="secondary" className="ml-2">{rentalCounts.active}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="upcoming">
-            Próximos
-            <Badge variant="secondary" className="ml-2">{rentalCounts.upcoming}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="completed">
-            Completados
-            <Badge variant="secondary" className="ml-2">{rentalCounts.completed}</Badge>
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all" className="mt-6">
-          <RentalContent rentals={filteredRentals} />
-        </TabsContent>
-        
-        <TabsContent value="active" className="mt-6">
-          <RentalContent rentals={filteredRentals} />
-        </TabsContent>
-        
-        <TabsContent value="upcoming" className="mt-6">
-          <RentalContent rentals={filteredRentals} />
-        </TabsContent>
-        
-        <TabsContent value="completed" className="mt-6">
-          <RentalContent rentals={filteredRentals} />
-        </TabsContent>
-      </Tabs>
+      {/* Tabs and button in the same row */}
+      <div className="flex justify-between items-center">
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="flex justify-between items-center">
+            <TabsList>
+              <TabsTrigger value="all">
+                Todos
+                <Badge variant="secondary" className="ml-2">{rentalCounts.all}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="active">
+                Activos
+                <Badge variant="secondary" className="ml-2">{rentalCounts.active}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="upcoming">
+                Próximos
+                <Badge variant="secondary" className="ml-2">{rentalCounts.upcoming}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="completed">
+                Completados
+                <Badge variant="secondary" className="ml-2">{rentalCounts.completed}</Badge>
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* Create rental button next to tabs */}
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              <span>Crear alquiler</span>
+            </Button>
+          </div>
+          
+          <TabsContent value="all" className="mt-6">
+            <RentalContent rentals={filteredRentals} />
+          </TabsContent>
+          
+          <TabsContent value="active" className="mt-6">
+            <RentalContent rentals={filteredRentals} />
+          </TabsContent>
+          
+          <TabsContent value="upcoming" className="mt-6">
+            <RentalContent rentals={filteredRentals} />
+          </TabsContent>
+          
+          <TabsContent value="completed" className="mt-6">
+            <RentalContent rentals={filteredRentals} />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
