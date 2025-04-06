@@ -7,9 +7,10 @@ import { format, addMonths, subMonths, isSameDay, startOfMonth } from 'date-fns'
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import type { CaptionProps } from 'react-day-picker';
+import { Rental } from '@/domain/models/Rental';
 
 interface RentalCalendarProps {
-  rentals: any[]; // Replace with proper rental type
+  rentals: Rental[]; 
   onDateSelect?: (date: Date) => void;
 }
 
@@ -79,12 +80,9 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
         hasRental && "font-medium",
         isToday && "text-primary"
       )}>
-        {hasRental ? (
-          <div className="w-7 h-7 absolute bg-gray-200 rounded-full flex items-center justify-center">
-            {day.getDate()}
-          </div>
-        ) : (
-          day.getDate()
+        {day.getDate()}
+        {hasRental && (
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4 h-1 bg-gray-300 rounded-full" />
         )}
       </div>
     );

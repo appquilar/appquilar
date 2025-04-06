@@ -1,7 +1,6 @@
 
 import { Rental } from '@/domain/models/Rental';
 
-// Mock rental data - would come from backend API in production
 export const MOCK_RENTALS: Rental[] = [
   {
     id: '1',
@@ -12,8 +11,8 @@ export const MOCK_RENTALS: Rental[] = [
       email: 'john@example.com',
       phone: '123-456-7890'
     },
-    startDate: '2023-07-15',
-    endDate: '2023-07-18',
+    startDate: '2025-04-03',
+    endDate: '2025-04-08',
     status: 'active',
     totalAmount: 75.00,
     returned: false
@@ -27,8 +26,8 @@ export const MOCK_RENTALS: Rental[] = [
       email: 'sarah@example.com',
       phone: '234-567-8901'
     },
-    startDate: '2023-07-12',
-    endDate: '2023-07-19',
+    startDate: '2025-04-01',
+    endDate: '2025-04-09',
     status: 'active',
     totalAmount: 245.00,
     returned: false
@@ -42,8 +41,8 @@ export const MOCK_RENTALS: Rental[] = [
       email: 'michael@example.com',
       phone: '345-678-9012'
     },
-    startDate: '2023-07-10',
-    endDate: '2023-07-12',
+    startDate: '2025-03-30',
+    endDate: '2025-04-02',
     status: 'completed',
     totalAmount: 40.00,
     returned: true
@@ -57,8 +56,8 @@ export const MOCK_RENTALS: Rental[] = [
       email: 'emily@example.com',
       phone: '456-789-0123'
     },
-    startDate: '2023-07-18',
-    endDate: '2023-07-20',
+    startDate: '2025-04-10',
+    endDate: '2025-04-15',
     status: 'upcoming',
     totalAmount: 56.00,
     returned: false
@@ -72,8 +71,8 @@ export const MOCK_RENTALS: Rental[] = [
       email: 'david@example.com',
       phone: '567-890-1234'
     },
-    startDate: '2023-07-16',
-    endDate: '2023-07-18',
+    startDate: '2025-04-04',
+    endDate: '2025-04-07',
     status: 'active',
     totalAmount: 80.00,
     returned: false
@@ -87,10 +86,40 @@ export const MOCK_RENTALS: Rental[] = [
       email: 'lisa@example.com',
       phone: '678-901-2345'
     },
-    startDate: '2023-07-05',
-    endDate: '2023-07-10',
+    startDate: '2025-03-25',
+    endDate: '2025-03-30',
     status: 'completed',
     totalAmount: 225.00,
     returned: true
   },
+  {
+    id: '7',
+    product: 'Electric Chainsaw',
+    customer: {
+      id: 'c7',
+      name: 'Robert Garcia',
+      email: 'robert@example.com',
+      phone: '789-012-3456'
+    },
+    startDate: '2025-04-15',
+    endDate: '2025-04-18',
+    status: 'upcoming',
+    totalAmount: 65.00,
+    returned: false
+  },
+  {
+    id: '8',
+    product: 'Portable Generator',
+    customer: {
+      id: 'c8',
+      name: 'Jennifer Lee',
+      email: 'jennifer@example.com',
+      phone: '890-123-4567'
+    },
+    startDate: '2025-04-06',
+    endDate: '2025-04-12',
+    status: 'active',
+    totalAmount: 120.00,
+    returned: false
+  }
 ];

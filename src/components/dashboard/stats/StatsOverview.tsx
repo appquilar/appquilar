@@ -22,8 +22,8 @@ const StatsOverview = () => {
         value={MOCK_STATS.activeRentals}
         icon={Truck}
         trend={{
-          value: "+4%",
-          positive: true,
+          value: "-4%",
+          positive: false,
           label: "respecto a la semana pasada"
         }}
       />

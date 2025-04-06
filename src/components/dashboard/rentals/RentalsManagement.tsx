@@ -1,6 +1,8 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import RentalFilters from './RentalFilters';
 import RentalCalendar from './RentalCalendar';
 import RentalContent from './RentalContent';
@@ -45,9 +47,15 @@ const RentalsManagement = () => {
   
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-display font-semibold">Gestión de Alquileres</h1>
-        <p className="text-muted-foreground">Seguimiento y gestión de todos los alquileres de equipos.</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-display font-semibold">Gestión de Alquileres</h1>
+          <p className="text-muted-foreground">Seguimiento y gestión de todos los alquileres de equipos.</p>
+        </div>
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          <span>Crear alquiler</span>
+        </Button>
       </div>
       
       {/* Search and filter */}
@@ -70,42 +78,44 @@ const RentalsManagement = () => {
       />
       
       {/* Tabs */}
-      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="all">
-            Todos
-            <Badge variant="secondary" className="ml-2">{rentalCounts.all}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="active">
-            Activos
-            <Badge variant="secondary" className="ml-2">{rentalCounts.active}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="upcoming">
-            Próximos
-            <Badge variant="secondary" className="ml-2">{rentalCounts.upcoming}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="completed">
-            Completados
-            <Badge variant="secondary" className="ml-2">{rentalCounts.completed}</Badge>
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all" className="mt-6">
-          <RentalContent rentals={filteredRentals} />
-        </TabsContent>
-        
-        <TabsContent value="active" className="mt-6">
-          <RentalContent rentals={filteredRentals} />
-        </TabsContent>
-        
-        <TabsContent value="upcoming" className="mt-6">
-          <RentalContent rentals={filteredRentals} />
-        </TabsContent>
-        
-        <TabsContent value="completed" className="mt-6">
-          <RentalContent rentals={filteredRentals} />
-        </TabsContent>
-      </Tabs>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList>
+            <TabsTrigger value="all">
+              Todos
+              <Badge variant="secondary" className="ml-2">{rentalCounts.all}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="active">
+              Activos
+              <Badge variant="secondary" className="ml-2">{rentalCounts.active}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="upcoming">
+              Próximos
+              <Badge variant="secondary" className="ml-2">{rentalCounts.upcoming}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="completed">
+              Completados
+              <Badge variant="secondary" className="ml-2">{rentalCounts.completed}</Badge>
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="all" className="mt-6">
+            <RentalContent rentals={filteredRentals} />
+          </TabsContent>
+          
+          <TabsContent value="active" className="mt-6">
+            <RentalContent rentals={filteredRentals} />
+          </TabsContent>
+          
+          <TabsContent value="upcoming" className="mt-6">
+            <RentalContent rentals={filteredRentals} />
+          </TabsContent>
+          
+          <TabsContent value="completed" className="mt-6">
+            <RentalContent rentals={filteredRentals} />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };

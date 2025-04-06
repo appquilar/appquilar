@@ -28,7 +28,7 @@ const ChartDateControls: React.FC<ChartDateControlsProps> = ({
   isMobile
 }) => {
   return (
-    <div className={`flex items-center ${isMobile ? "self-start" : "space-x-2"} gap-2 mr-4`}>
+    <div className={`flex items-center ${isMobile ? "self-start" : "space-x-2"} gap-2 mr-8`}>
       <Button 
         variant="outline" 
         size="icon" 
