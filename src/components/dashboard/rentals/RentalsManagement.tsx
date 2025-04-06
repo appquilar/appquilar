@@ -47,15 +47,9 @@ const RentalsManagement = () => {
   
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-display font-semibold">Gestión de Alquileres</h1>
-          <p className="text-muted-foreground">Seguimiento y gestión de todos los alquileres de equipos.</p>
-        </div>
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          <span>Crear alquiler</span>
-        </Button>
+      <div>
+        <h1 className="text-2xl font-display font-semibold">Gestión de Alquileres</h1>
+        <p className="text-muted-foreground">Seguimiento y gestión de todos los alquileres de equipos.</p>
       </div>
       
       {/* Search and filter */}
@@ -76,6 +70,14 @@ const RentalsManagement = () => {
         rentals={rentals}
         onDateSelect={handleDateSelect}
       />
+      
+      {/* Create rental button below calendar */}
+      <div className="flex justify-end">
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          <span>Crear alquiler</span>
+        </Button>
+      </div>
       
       {/* Tabs */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
