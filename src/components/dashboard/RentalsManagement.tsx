@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import RentalFilters from './rentals/RentalFilters';
 import RentalCalendar from './rentals/RentalCalendar';
+import { Rental, RentalStatus } from '@/domain/models/Rental'; 
 
 // Mock rental data - would come from backend API in production
-const MOCK_RENTALS = [
+const MOCK_RENTALS: Rental[] = [
   {
     id: '1',
     product: 'Hammer Drill 20V',
@@ -21,7 +22,7 @@ const MOCK_RENTALS = [
     },
     startDate: '2023-07-15',
     endDate: '2023-07-18',
-    status: 'active',
+    status: 'active' as RentalStatus,
     totalAmount: 75.00,
     returned: false
   },
@@ -36,7 +37,7 @@ const MOCK_RENTALS = [
     },
     startDate: '2023-07-12',
     endDate: '2023-07-19',
-    status: 'active',
+    status: 'active' as RentalStatus,
     totalAmount: 245.00,
     returned: false
   },
@@ -51,7 +52,7 @@ const MOCK_RENTALS = [
     },
     startDate: '2023-07-10',
     endDate: '2023-07-12',
-    status: 'completed',
+    status: 'completed' as RentalStatus,
     totalAmount: 40.00,
     returned: true
   },
@@ -66,7 +67,7 @@ const MOCK_RENTALS = [
     },
     startDate: '2023-07-18',
     endDate: '2023-07-20',
-    status: 'upcoming',
+    status: 'upcoming' as RentalStatus,
     totalAmount: 56.00,
     returned: false
   },
@@ -81,7 +82,7 @@ const MOCK_RENTALS = [
     },
     startDate: '2023-07-16',
     endDate: '2023-07-18',
-    status: 'active',
+    status: 'active' as RentalStatus,
     totalAmount: 80.00,
     returned: false
   },
@@ -96,7 +97,7 @@ const MOCK_RENTALS = [
     },
     startDate: '2023-07-05',
     endDate: '2023-07-10',
-    status: 'completed',
+    status: 'completed' as RentalStatus,
     totalAmount: 225.00,
     returned: true
   },
@@ -231,7 +232,7 @@ const RentalsManagement = () => {
 };
 
 interface RentalsListProps {
-  rentals: typeof MOCK_RENTALS;
+  rentals: Rental[];
 }
 
 const RentalsList = ({ rentals }: RentalsListProps) => {
