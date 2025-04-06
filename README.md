@@ -1,69 +1,177 @@
-# Welcome to your Lovable project
 
-## Project info
+# Appquilar Dashboard
 
-**URL**: https://lovable.dev/projects/0aef52d0-776d-401b-a6c2-b25ca3659ce5
+Sistema de gestión para plataforma de alquiler de productos, con arquitectura hexagonal y DDD.
 
-## How can I edit this code?
+## Índice
 
-There are several ways of editing your application.
+- [Entorno de Desarrollo](#entorno-de-desarrollo)
+- [Entorno de Producción](#entorno-de-producción)
+- [Configuración del Origen de Datos](#configuración-del-origen-de-datos)
+  - [Implementaciones Mock](#implementaciones-mock)
+  - [Implementaciones API](#implementaciones-api)
+  - [Transición Gradual](#transición-gradual)
+- [Estructura del Proyecto](#estructura-del-proyecto)
 
-**Use Lovable**
+## Entorno de Desarrollo
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/0aef52d0-776d-401b-a6c2-b25ca3659ce5) and start prompting.
+Para ejecutar el proyecto en modo desarrollo:
 
-Changes made via Lovable will be committed automatically to this repo.
+```bash
+# Instalar dependencias
+npm install
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Iniciar servidor de desarrollo
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+El servidor de desarrollo se iniciará en `http://localhost:8080` con recarga automática al realizar cambios en el código.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Para ejecutar tests:
 
-**Use GitHub Codespaces**
+```bash
+npm run test
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Entorno de Producción
 
-## What technologies are used for this project?
+Para desplegar el proyecto en producción:
 
-This project is built with .
+### Método 1: Compilación estática
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+# Compilar el proyecto para producción
+npm run build
 
-## How can I deploy this project?
+# Opcionalmente, previsualizar la compilación
+npm run preview
+```
 
-Simply open [Lovable](https://lovable.dev/projects/0aef52d0-776d-401b-a6c2-b25ca3659ce5) and click on Share -> Publish.
+Los archivos estáticos generados estarán en la carpeta `dist/` y pueden ser desplegados en cualquier servidor web estático.
 
-## I want to use a custom domain - is that possible?
+### Método 2: Contenedor Docker
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+El proyecto incluye configuración para despliegue con Docker:
+
+```bash
+# Construir la imagen
+docker build -t appquilar-dashboard .
+
+# Ejecutar el contenedor
+docker run -p 8080:80 appquilar-dashboard
+```
+
+También puede utilizarse docker-compose:
+
+```bash
+# Ejecutar con docker-compose (incluye mock API)
+docker-compose up -d
+```
+
+## Configuración del Origen de Datos
+
+El sistema utiliza el patrón de repositorio para abstraer las fuentes de datos, lo que facilita el intercambio entre datos mock y API real.
+
+### Implementaciones Mock
+
+Por defecto, el sistema utiliza implementaciones Mock para desarrollo. Los datos mock se encuentran en:
+
+```
+src/infrastructure/repositories/mock-data/
+```
+
+### Implementaciones API
+
+Para cambiar a implementaciones de API real:
+
+#### 1. Desde componentes específicos
+
+```typescript
+import { useCompanyStats } from '@/application/hooks/useCompanyStats';
+
+const Dashboard = () => {
+  const { switchToApiImplementation } = useCompanyStats();
+  
+  // Al inicio del componente o en un efecto
+  useEffect(() => {
+    switchToApiImplementation('https://tu-api.com');
+  }, []);
+  
+  // ... resto del componente
+}
+```
+
+#### 2. Configuración global
+
+Para configurar globalmente los orígenes de datos, puedes crear un componente de configuración:
+
+```typescript
+import { useEffect } from 'react';
+import { useStatsConfig } from '@/application/hooks/useStatsConfig';
+
+export const ApiConfigProvider = ({ children }) => {
+  const { useApiRepository } = useStatsConfig();
+  
+  useEffect(() => {
+    // Cambiar a implementación API
+    useApiRepository('https://tu-api.com');
+  }, []);
+  
+  return children;
+}
+
+// En tu App.tsx
+<ApiConfigProvider>
+  <App />
+</ApiConfigProvider>
+```
+
+#### 3. Variables de entorno
+
+Puedes configurar el origen de datos a través de variables de entorno:
+
+```typescript
+// src/config.ts
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+export const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+```
+
+Luego crea un archivo `.env.local` (no incluido en control de versiones):
+
+```
+VITE_API_BASE_URL=https://tu-api.com
+VITE_USE_MOCK_DATA=false
+```
+
+### Transición Gradual
+
+Para una transición gradual de mock a API real:
+
+1. Implementa la API real siguiendo el contrato definido en las interfaces del dominio
+2. Configura servicios específicos para usar la API mientras otros siguen usando mock
+3. Implementa manejo de errores y fallbacks en el repositorio API para mayor robustez
+
+Ejemplo de configuración para transición gradual:
+
+```typescript
+// En tu componente de configuración
+useEffect(() => {
+  // Stats con API real
+  StatsService.setRepositoryFactory(new ApiStatsRepositoryFactory());
+  
+  // Otros servicios siguen con mock
+  // ProductService, UserService, etc.
+}, []);
+```
+
+## Estructura del Proyecto
+
+El proyecto sigue una arquitectura hexagonal con DDD:
+
+- `src/domain`: Modelos, repositorios (interfaces) y reglas de negocio
+- `src/application`: Casos de uso y servicios de aplicación
+- `src/infrastructure`: Implementaciones concretas de repositorios
+- `src/presentation`: Componentes UI y configuración visual
+- `src/components`: Componentes React reutilizables
+
+Esta estructura facilita el cambio entre implementaciones mock y API sin afectar la lógica de negocio.
