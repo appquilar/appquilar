@@ -71,35 +71,35 @@ const RentalsManagement = () => {
         onDateSelect={handleDateSelect}
       />
       
-      {/* Create rental button below calendar */}
-      <div className="flex justify-end">
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          <span>Crear alquiler</span>
-        </Button>
-      </div>
-      
-      {/* Tabs */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+      {/* Tabs and button in the same row */}
+      <div className="flex justify-between items-center">
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList>
-            <TabsTrigger value="all">
-              Todos
-              <Badge variant="secondary" className="ml-2">{rentalCounts.all}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="active">
-              Activos
-              <Badge variant="secondary" className="ml-2">{rentalCounts.active}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="upcoming">
-              Próximos
-              <Badge variant="secondary" className="ml-2">{rentalCounts.upcoming}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="completed">
-              Completados
-              <Badge variant="secondary" className="ml-2">{rentalCounts.completed}</Badge>
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex justify-between items-center">
+            <TabsList>
+              <TabsTrigger value="all">
+                Todos
+                <Badge variant="secondary" className="ml-2">{rentalCounts.all}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="active">
+                Activos
+                <Badge variant="secondary" className="ml-2">{rentalCounts.active}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="upcoming">
+                Próximos
+                <Badge variant="secondary" className="ml-2">{rentalCounts.upcoming}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="completed">
+                Completados
+                <Badge variant="secondary" className="ml-2">{rentalCounts.completed}</Badge>
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* Create rental button next to tabs */}
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              <span>Crear alquiler</span>
+            </Button>
+          </div>
           
           <TabsContent value="all" className="mt-6">
             <RentalContent rentals={filteredRentals} />
