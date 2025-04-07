@@ -46,7 +46,7 @@ const RentalsManagement = () => {
   }
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div>
         <h1 className="text-2xl font-display font-semibold">Gestión de Alquileres</h1>
         <p className="text-muted-foreground">Seguimiento y gestión de todos los alquileres de equipos.</p>
@@ -65,18 +65,15 @@ const RentalsManagement = () => {
         onSearch={handleSearch}
       />
 
-      {/* Calendar header and navigation in one row */}
-      <div className="flex justify-between items-center pt-2">
+      <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Calendario de alquileres</h3>
         <div className="flex items-center gap-2">
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          <Button variant="outline" size="sm">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="sm">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
           <Button className="flex items-center gap-2 ml-2">
             <Plus className="h-4 w-4" />
             <span>Crear alquiler</span>
@@ -84,7 +81,7 @@ const RentalsManagement = () => {
         </div>
       </div>
       
-      {/* Tabs - placed before calendar for better visual flow */}
+      {/* Tabs */}
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           <TabsTrigger value="all">
@@ -105,27 +102,27 @@ const RentalsManagement = () => {
           </TabsTrigger>
         </TabsList>
         
-        {/* Calendar component - now placed after tabs */}
-        <div className="border rounded-lg p-4 my-4">
+        {/* Calendar component with reduced padding and margin */}
+        <div className="border rounded-lg p-3 my-3 max-w-[100%] overflow-x-auto">
           <RentalCalendar 
             rentals={rentals}
             onDateSelect={handleDateSelect}
           />
         </div>
         
-        <TabsContent value="all" className="pt-4">
+        <TabsContent value="all" className="pt-2">
           <RentalContent rentals={filteredRentals} />
         </TabsContent>
         
-        <TabsContent value="active" className="pt-4">
+        <TabsContent value="active" className="pt-2">
           <RentalContent rentals={filteredRentals} />
         </TabsContent>
         
-        <TabsContent value="upcoming" className="pt-4">
+        <TabsContent value="upcoming" className="pt-2">
           <RentalContent rentals={filteredRentals} />
         </TabsContent>
         
-        <TabsContent value="completed" className="pt-4">
+        <TabsContent value="completed" className="pt-2">
           <RentalContent rentals={filteredRentals} />
         </TabsContent>
       </Tabs>

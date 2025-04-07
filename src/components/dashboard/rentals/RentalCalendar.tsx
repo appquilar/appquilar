@@ -88,17 +88,17 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
   return (
     <div className="w-full">
       <div className={cn(
-        "grid gap-6",
+        "grid gap-2",
         isMobile ? "grid-cols-1" : "grid-cols-2"
       )}>
-        <div>
+        <div className="calendar-container">
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={handleSelect}
             month={currentMonthDate}
             locale={es}
-            className="p-3 pointer-events-auto"
+            className="p-0 pointer-events-auto rounded-md"
             components={{
               DayContent: ({ date }) => renderDay(date),
               IconLeft: () => null,
@@ -109,14 +109,14 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
         </div>
         
         {!isMobile && (
-          <div>
+          <div className="calendar-container">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={handleSelect}
               month={new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() + 1)}
               locale={es}
-              className="p-3 pointer-events-auto"
+              className="p-0 pointer-events-auto rounded-md"
               components={{
                 DayContent: ({ date }) => renderDay(date),
                 IconLeft: () => null,
