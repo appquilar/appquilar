@@ -1,21 +1,8 @@
 
 import { useState, useMemo } from 'react';
 import { Rental } from '@/domain/models/Rental';
-
-export interface RentalFilters {
-  searchQuery: string;
-  startDate: Date | undefined;
-  endDate: Date | undefined;
-  rentalId: string;
-  activeTab: string;
-}
-
-export interface RentalCounts {
-  all: number;
-  active: number;
-  upcoming: number;
-  completed: number;
-}
+import { RentalCounts, RentalFilters } from '@/domain/models/RentalFilters';
+import { RentalService } from '@/domain/services/RentalService';
 
 export interface UseRentalsFilterReturn {
   searchQuery: string;
@@ -41,51 +28,24 @@ export const useRentalsFilter = (rentals: Rental[]): UseRentalsFilterReturn => {
   const [rentalId, setRentalId] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   
-  // Calculate counts of rentals by status
-  const rentalCounts = useMemo(() => ({
-    all: rentals.length,
-    active: rentals.filter(r => r.status === 'active').length,
-    upcoming: rentals.filter(r => r.status === 'upcoming').length,
-    completed: rentals.filter(r => r.status === 'completed').length,
-  }), [rentals]);
+  // Calculate counts of rentals by status using the domain service
+  const rentalCounts = useMemo(() => 
+    RentalService.calculateRentalCounts(rentals), 
+    [rentals]
+  );
   
-  // Filter rentals based on all criteria
-  const filteredRentals = useMemo(() => {
-    return rentals.filter(rental => {
-      // Filter by search query (name or email)
-      const nameMatch = searchQuery 
-        ? rental.product.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          rental.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          rental.customer.email.toLowerCase().includes(searchQuery.toLowerCase())
-        : true;
-      
-      // Filter by rental ID
-      const idMatch = rentalId 
-        ? rental.id.includes(rentalId)
-        : true;
-      
-      // Filter by date range
-      const rentalStartDate = new Date(rental.startDate);
-      const rentalEndDate = new Date(rental.endDate);
-      
-      const dateMatch = (startDate && endDate)
-        ? (rentalStartDate >= startDate && rentalStartDate <= endDate) ||
-          (rentalEndDate >= startDate && rentalEndDate <= endDate) ||
-          (rentalStartDate <= startDate && rentalEndDate >= endDate)
-        : startDate
-          ? rentalStartDate >= startDate || rentalEndDate >= startDate
-          : endDate
-            ? rentalStartDate <= endDate || rentalEndDate <= endDate
-            : true;
-      
-      // Filter by tab/status
-      const statusMatch = activeTab === 'all' 
-        ? true 
-        : rental.status === activeTab;
-      
-      return nameMatch && idMatch && dateMatch && statusMatch;
-    });
-  }, [rentals, searchQuery, rentalId, startDate, endDate, activeTab]);
+  // Filter rentals based on all criteria using the domain service
+  const filteredRentals = useMemo(() => 
+    RentalService.filterRentals(
+      rentals,
+      searchQuery,
+      rentalId,
+      startDate,
+      endDate,
+      activeTab
+    ), 
+    [rentals, searchQuery, rentalId, startDate, endDate, activeTab]
+  );
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
