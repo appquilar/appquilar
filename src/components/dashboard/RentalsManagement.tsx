@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Calendar, Truck } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -109,6 +108,7 @@ const RentalsManagement = () => {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [rentalId, setRentalId] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   
   // Filter rentals based on search query, dates, rental ID and active tab
   const filteredRentals = MOCK_RENTALS.filter(rental => {
@@ -164,6 +164,10 @@ const RentalsManagement = () => {
     // Implement logic to filter rentals for the selected date
   };
   
+  const handleMonthChange = (date: Date) => {
+    setCurrentMonth(date);
+  };
+  
   return (
     <div className="space-y-6">
       <div>
@@ -188,6 +192,8 @@ const RentalsManagement = () => {
       <RentalCalendar 
         rentals={MOCK_RENTALS}
         onDateSelect={handleDateSelect}
+        currentMonth={currentMonth}
+        onMonthChange={handleMonthChange}
       />
       
       {/* Tabs */}
