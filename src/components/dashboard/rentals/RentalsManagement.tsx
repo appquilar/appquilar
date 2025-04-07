@@ -71,8 +71,8 @@ const RentalsManagement = () => {
         onDateSelect={handleDateSelect}
       />
       
-      {/* Tabs and button in the same row */}
-      <div className="flex justify-between items-center">
+      {/* Tabs and "Create rental" button in the same row */}
+      <div className="flex justify-between items-center border-b">
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex justify-between items-center">
             <TabsList>
