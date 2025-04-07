@@ -2,7 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import RentalFilters from './RentalFilters';
 import RentalCalendar from './RentalCalendar';
 import RentalContent from './RentalContent';
@@ -46,7 +46,7 @@ const RentalsManagement = () => {
   }
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-display font-semibold">Gestión de Alquileres</h1>
         <p className="text-muted-foreground">Seguimiento y gestión de todos los alquileres de equipos.</p>
@@ -64,60 +64,71 @@ const RentalsManagement = () => {
         onRentalIdChange={setRentalId}
         onSearch={handleSearch}
       />
-      
-      {/* Calendar view */}
-      <RentalCalendar 
-        rentals={rentals}
-        onDateSelect={handleDateSelect}
-      />
-      
-      {/* Tabs and "Create rental" button in the same row */}
-      <div className="flex justify-between items-center border-b">
-        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="flex justify-between items-center">
-            <TabsList>
-              <TabsTrigger value="all">
-                Todos
-                <Badge variant="secondary" className="ml-2">{rentalCounts.all}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="active">
-                Activos
-                <Badge variant="secondary" className="ml-2">{rentalCounts.active}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="upcoming">
-                Próximos
-                <Badge variant="secondary" className="ml-2">{rentalCounts.upcoming}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="completed">
-                Completados
-                <Badge variant="secondary" className="ml-2">{rentalCounts.completed}</Badge>
-              </TabsTrigger>
-            </TabsList>
-            
-            {/* Create rental button next to tabs */}
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              <span>Crear alquiler</span>
+
+      {/* Calendar header and navigation in one row */}
+      <div className="flex justify-between items-center pt-2">
+        <h3 className="text-lg font-medium">Calendario de alquileres</h3>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm">
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          
-          <TabsContent value="all" className="mt-6">
-            <RentalContent rentals={filteredRentals} />
-          </TabsContent>
-          
-          <TabsContent value="active" className="mt-6">
-            <RentalContent rentals={filteredRentals} />
-          </TabsContent>
-          
-          <TabsContent value="upcoming" className="mt-6">
-            <RentalContent rentals={filteredRentals} />
-          </TabsContent>
-          
-          <TabsContent value="completed" className="mt-6">
-            <RentalContent rentals={filteredRentals} />
-          </TabsContent>
-        </Tabs>
+          <Button className="flex items-center gap-2 ml-2">
+            <Plus className="h-4 w-4" />
+            <span>Crear alquiler</span>
+          </Button>
+        </div>
       </div>
+      
+      {/* Tabs - placed before calendar for better visual flow */}
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList>
+          <TabsTrigger value="all">
+            Todos
+            <Badge variant="secondary" className="ml-2">{rentalCounts.all}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="active">
+            Activos
+            <Badge variant="secondary" className="ml-2">{rentalCounts.active}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="upcoming">
+            Próximos
+            <Badge variant="secondary" className="ml-2">{rentalCounts.upcoming}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="completed">
+            Completados
+            <Badge variant="secondary" className="ml-2">{rentalCounts.completed}</Badge>
+          </TabsTrigger>
+        </TabsList>
+        
+        {/* Calendar component - now placed after tabs */}
+        <div className="border rounded-lg p-4 my-4">
+          <RentalCalendar 
+            rentals={rentals}
+            onDateSelect={handleDateSelect}
+          />
+        </div>
+        
+        <TabsContent value="all" className="pt-4">
+          <RentalContent rentals={filteredRentals} />
+        </TabsContent>
+        
+        <TabsContent value="active" className="pt-4">
+          <RentalContent rentals={filteredRentals} />
+        </TabsContent>
+        
+        <TabsContent value="upcoming" className="pt-4">
+          <RentalContent rentals={filteredRentals} />
+        </TabsContent>
+        
+        <TabsContent value="completed" className="pt-4">
+          <RentalContent rentals={filteredRentals} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

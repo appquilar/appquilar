@@ -1,9 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, addMonths, subMonths, isSameDay, startOfMonth } from 'date-fns';
+import { format, isSameDay, startOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import type { CaptionProps } from 'react-day-picker';
@@ -51,16 +49,6 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Navigate to previous months
-  const goToPreviousMonths = () => {
-    setCurrentMonthDate(prevDate => subMonths(prevDate, isMobile ? 1 : 2));
-  };
-
-  // Navigate to next months
-  const goToNextMonths = () => {
-    setCurrentMonthDate(prevDate => addMonths(prevDate, isMobile ? 1 : 2));
-  };
-
   // Handle date selection
   const handleSelect = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -98,21 +86,9 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Calendario de alquileres</h3>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={goToPreviousMonths}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={goToNextMonths}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-      
+    <div className="w-full">
       <div className={cn(
-        "grid gap-6 border rounded-lg p-4",
+        "grid gap-6",
         isMobile ? "grid-cols-1" : "grid-cols-2"
       )}>
         <div>
@@ -138,7 +114,7 @@ const RentalCalendar = ({ rentals, onDateSelect }: RentalCalendarProps) => {
               mode="single"
               selected={selectedDate}
               onSelect={handleSelect}
-              month={addMonths(currentMonthDate, 1)}
+              month={new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() + 1)}
               locale={es}
               className="p-3 pointer-events-auto"
               components={{
