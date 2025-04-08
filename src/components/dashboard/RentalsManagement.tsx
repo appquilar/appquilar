@@ -1,12 +1,9 @@
 
 import { useNavigate } from 'react-router-dom';
 import RentalFilters from './rentals/RentalFilters';
-import RentalCalendar from './rentals/RentalCalendar';
-import RentalCalendarControls from './rentals/RentalCalendarControls';
 import RentalTabs from './rentals/RentalTabs';
 import { useRentals } from '@/application/hooks/useRentals';
 import { useRentalsFilter } from '@/application/hooks/useRentalsFilter';
-import { useRentalCalendar } from '@/application/hooks/useRentalCalendar';
 
 const RentalsManagement = () => {
   const navigate = useNavigate();
@@ -30,15 +27,6 @@ const RentalsManagement = () => {
     rentalCounts,
     handleSearch
   } = useRentalsFilter(rentals);
-  
-  // Calendar functionality
-  const {
-    currentMonth,
-    handleDateSelect,
-    handleMonthChange,
-    goToPreviousMonth,
-    goToNextMonth
-  } = useRentalCalendar();
 
   // Navigation handlers
   const handleCreateRental = () => {
@@ -66,51 +54,44 @@ const RentalsManagement = () => {
   }
   
   return (
-    <div className="space-y-4">
-      <div>
+    <div className="space-y-4 max-w-full">
+      {/* Header */}
+      <div className="mb-2">
         <h1 className="text-2xl font-display font-semibold">Gestión de Alquileres</h1>
         <p className="text-muted-foreground">Seguimiento y gestión de todos los alquileres de equipos.</p>
       </div>
       
-      {/* Search and filter - more compact */}
-      <RentalFilters 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        startDate={startDate}
-        endDate={endDate}
-        onStartDateChange={setStartDate}
-        onEndDateChange={setEndDate}
-        rentalId={rentalId}
-        onRentalIdChange={setRentalId}
-        onSearch={handleSearch}
-      />
-      
-      {/* Calendar section */}
-      <div className="mt-6">
-        <RentalCalendarControls 
-          onPreviousMonth={goToPreviousMonth}
-          onNextMonth={goToNextMonth}
-          onCreateRental={handleCreateRental}
+      {/* Enhanced Filters */}
+      <div className="flex justify-between items-center">
+        <RentalFilters 
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          rentalId={rentalId}
+          onRentalIdChange={setRentalId}
+          onSearch={handleSearch}
         />
         
-        <RentalCalendar 
-          rentals={rentals}
-          onDateSelect={handleDateSelect}
-          currentMonth={currentMonth}
-          onMonthChange={handleMonthChange}
-        />
+        <button 
+          onClick={handleCreateRental}
+          className="bg-primary text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-primary/90"
+        >
+          <span className="hidden sm:inline">Crear alquiler</span>
+          <span className="sm:hidden">+</span>
+        </button>
       </div>
       
       {/* Tabs for filtering rentals */}
-      <div className="mt-6">
-        <RentalTabs 
-          rentals={filteredRentals}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          rentalCounts={rentalCounts}
-          onViewDetails={handleViewDetails}
-        />
-      </div>
+      <RentalTabs 
+        rentals={filteredRentals}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        rentalCounts={rentalCounts}
+        onViewDetails={handleViewDetails}
+      />
     </div>
   );
 };

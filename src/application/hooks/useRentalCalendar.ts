@@ -1,31 +1,18 @@
 
 import { useState } from 'react';
 
+// This hook is simplified since we no longer use the calendar view
 export const useRentalCalendar = () => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   
   const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
     console.log('Selected date:', date);
-    // Implement logic to filter rentals for the selected date
-  };
-  
-  const handleMonthChange = (date: Date) => {
-    setCurrentMonth(date);
-  };
-
-  const goToPreviousMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
-  };
-  
-  const goToNextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+    // The filtering is now handled in the useRentalsFilter hook
   };
   
   return {
-    currentMonth,
+    selectedDate,
     handleDateSelect,
-    handleMonthChange,
-    goToPreviousMonth,
-    goToNextMonth
   };
 };
