@@ -54,7 +54,9 @@ export const useRentalsFilter = (rentals: Rental[]): UseRentalsFilterReturn => {
   
   const handleDateSelect = (date: Date) => {
     console.log('Selected date:', date);
-    // Implement logic to filter rentals for the selected date
+    // Set the selected date as both start and end for single-day filtering
+    setStartDate(date);
+    setEndDate(date);
   };
 
   return {

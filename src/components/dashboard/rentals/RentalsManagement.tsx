@@ -1,12 +1,10 @@
 
 import { useNavigate } from 'react-router-dom';
 import RentalFilters from './RentalFilters';
-import RentalCalendar from './RentalCalendar';
 import RentalCalendarControls from './RentalCalendarControls';
 import RentalTabs from './RentalTabs';
 import { useRentals } from '@/application/hooks/useRentals';
 import { useRentalsFilter } from '@/application/hooks/useRentalsFilter';
-import { useRentalCalendar } from '@/application/hooks/useRentalCalendar';
 
 const RentalsManagement = () => {
   const navigate = useNavigate();
@@ -28,17 +26,9 @@ const RentalsManagement = () => {
     setActiveTab,
     filteredRentals,
     rentalCounts,
-    handleSearch
+    handleSearch,
+    handleDateSelect
   } = useRentalsFilter(rentals);
-  
-  // Calendar functionality
-  const {
-    currentMonth,
-    handleDateSelect,
-    handleMonthChange,
-    goToPreviousMonth,
-    goToNextMonth
-  } = useRentalCalendar();
 
   // Navigation handlers
   const handleCreateRental = () => {
@@ -67,45 +57,35 @@ const RentalsManagement = () => {
   
   return (
     <div className="space-y-4 max-w-full">
-      {/* Header - Reduced vertical padding */}
+      {/* Header */}
       <div className="mb-2">
         <h1 className="text-2xl font-display font-semibold">Gestión de Alquileres</h1>
         <p className="text-muted-foreground">Seguimiento y gestión de todos los alquileres de equipos.</p>
       </div>
       
-      {/* Filters - Compact design with reduced vertical space */}
-      <RentalFilters 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        startDate={startDate}
-        endDate={endDate}
-        onStartDateChange={setStartDate}
-        onEndDateChange={setEndDate}
-        rentalId={rentalId}
-        onRentalIdChange={setRentalId}
-        onSearch={handleSearch}
-      />
-
-      {/* Calendar section with tighter spacing */}
-      <div className="flex flex-col space-y-2">
-        <RentalCalendarControls 
-          onPreviousMonth={goToPreviousMonth}
-          onNextMonth={goToNextMonth}
-          onCreateRental={handleCreateRental}
+      {/* Enhanced Filters */}
+      <div className="flex justify-between items-center">
+        <RentalFilters 
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          rentalId={rentalId}
+          onRentalIdChange={setRentalId}
+          onSearch={handleSearch}
         />
-        
-        {/* Calendar with reduced padding */}
-        <div className="border rounded-lg overflow-x-auto">
-          <RentalCalendar 
-            rentals={rentals}
-            onDateSelect={handleDateSelect}
-            currentMonth={currentMonth}
-            onMonthChange={handleMonthChange}
-          />
-        </div>
       </div>
       
-      {/* Tabs for filtering rentals - Reduced vertical margins */}
+      {/* Calendar controls section */}
+      <div className="flex flex-col space-y-2">
+        <RentalCalendarControls 
+          onCreateRental={handleCreateRental}
+        />
+      </div>
+      
+      {/* Tabs for filtering rentals */}
       <RentalTabs 
         rentals={filteredRentals}
         activeTab={activeTab}
