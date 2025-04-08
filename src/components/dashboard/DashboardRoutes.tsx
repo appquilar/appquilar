@@ -1,9 +1,9 @@
 
 import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardOverview from './overview/DashboardOverview';
-import ProductsManagement from './products/ProductsManagement';
+import ProductsManagement from '@/components/dashboard/ProductsManagement';
 import ProductFormPage from './products/ProductFormPage';
-import UserManagement from './user-management/UserManagement';
+import UserManagement from '@/components/dashboard/UserManagement';
 import MessagesDashboard from './MessagesDashboard';
 import RentalsManagement from './rentals/RentalsManagement';
 import CompanyManagement from './companies/CompanyManagement';
