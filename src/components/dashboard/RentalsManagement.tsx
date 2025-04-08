@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import RentalFilters from './rentals/RentalFilters';
 import RentalCalendar from './rentals/RentalCalendar';
 import RentalCalendarControls from './rentals/RentalCalendarControls';
@@ -9,6 +9,8 @@ import { useRentalsFilter } from '@/application/hooks/useRentalsFilter';
 import { useRentalCalendar } from '@/application/hooks/useRentalCalendar';
 
 const RentalsManagement = () => {
+  const navigate = useNavigate();
+  
   // Fetch rentals data
   const { rentals, isLoading, error } = useRentals();
   
@@ -37,6 +39,15 @@ const RentalsManagement = () => {
     goToPreviousMonth,
     goToNextMonth
   } = useRentalCalendar();
+
+  // Navigation handlers
+  const handleCreateRental = () => {
+    navigate('/dashboard/rentals/new');
+  };
+
+  const handleViewDetails = (rentalId: string) => {
+    navigate(`/dashboard/rentals/${rentalId}`);
+  };
   
   if (isLoading) {
     return (
@@ -79,6 +90,7 @@ const RentalsManagement = () => {
         <RentalCalendarControls 
           onPreviousMonth={goToPreviousMonth}
           onNextMonth={goToNextMonth}
+          onCreateRental={handleCreateRental}
         />
         
         <div className="border rounded-lg p-2 mb-4 overflow-x-auto">
@@ -97,6 +109,7 @@ const RentalsManagement = () => {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         rentalCounts={rentalCounts}
+        onViewDetails={handleViewDetails}
       />
     </div>
   );
