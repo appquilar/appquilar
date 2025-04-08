@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -134,13 +133,13 @@ const CreateRental = () => {
             <h2 className="text-xl font-medium">Información del Producto</h2>
             <div>
               <div className="relative mb-6">
-                <div className="flex items-center border rounded-md focus-within:ring-1 focus-within:ring-ring">
+                <div className="flex items-center border rounded-md focus-within:ring-1 focus-within:ring-ring focus-within:border-input">
                   <Search className="ml-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar producto..."
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
-                    className="border-0 focus-visible:ring-0"
+                    className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
                 
