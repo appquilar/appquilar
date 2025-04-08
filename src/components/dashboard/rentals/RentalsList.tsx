@@ -8,12 +8,13 @@ import { Rental } from '@/domain/models/Rental';
 
 interface RentalsListProps {
   rentals: Rental[];
+  onViewDetails: (rentalId: string) => void;
 }
 
-const RentalsList = ({ rentals }: RentalsListProps) => {
+const RentalsList = ({ rentals, onViewDetails }: RentalsListProps) => {
   if (rentals.length === 0) {
     return (
-      <div className="text-center py-10">
+      <div className="text-center py-6">
         <Truck size={40} className="mx-auto text-muted-foreground mb-4" />
         <h3 className="text-lg font-medium mb-1">No se encontraron alquileres</h3>
         <p className="text-muted-foreground">Prueba ajustando tu búsqueda o filtros.</p>
@@ -22,10 +23,10 @@ const RentalsList = ({ rentals }: RentalsListProps) => {
   }
   
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       {rentals.map((rental) => (
         <Card key={rental.id} className="hover:shadow-sm transition-shadow">
-          <CardHeader className="flex flex-row items-start justify-between py-5">
+          <CardHeader className="flex flex-row items-start justify-between py-3 px-4">
             <div>
               <CardTitle className="text-base font-medium">{rental.product}</CardTitle>
               <p className="text-sm text-muted-foreground">Alquiler #{rental.id}</p>
@@ -47,34 +48,32 @@ const RentalsList = ({ rentals }: RentalsListProps) => {
               }
             </Badge>
           </CardHeader>
-          <CardContent className="pt-0 pb-5 px-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <CardContent className="pt-0 pb-3 px-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Cliente</p>
-                <p className="font-medium">{rental.customer.name}</p>
-                <p className="text-sm text-muted-foreground">{rental.customer.email}</p>
+                <p className="text-xs text-muted-foreground">Cliente</p>
+                <p className="font-medium truncate">{rental.customer.name}</p>
+                <p className="text-sm text-muted-foreground truncate">{rental.customer.email}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Período de alquiler</p>
-                <p className="font-medium">{rental.startDate} a {rental.endDate}</p>
+                <p className="text-xs text-muted-foreground">Período</p>
+                <p className="font-medium text-sm">{new Date(rental.startDate).toLocaleDateString()} - {new Date(rental.endDate).toLocaleDateString()}</p>
                 <p className="text-sm text-muted-foreground">
                   {Math.ceil((new Date(rental.endDate).getTime() - new Date(rental.startDate).getTime()) / (1000 * 60 * 60 * 24))} días
                 </p>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Importe</p>
-                <p className="font-medium">${rental.totalAmount.toFixed(2)}</p>
-                <p className="text-sm text-muted-foreground">
-                  {rental.returned ? 'Devuelto' : 'No devuelto'}
-                </p>
-              </div>
             </div>
             
-            <div className="flex gap-2 mt-4 justify-end">
-              <Button variant="outline" size="sm">Ver detalles</Button>
-              {rental.status === 'active' && (
-                <Button size="sm">Marcar como devuelto</Button>
-              )}
+            <div className="mt-3 flex justify-between items-center">
+              <p className="font-medium">${rental.totalAmount.toFixed(2)}</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => onViewDetails(rental.id)}
+                className="text-xs"
+              >
+                Ver detalles
+              </Button>
             </div>
           </CardContent>
         </Card>

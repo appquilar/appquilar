@@ -1,64 +1,69 @@
+
 import { Routes, Route, Navigate } from 'react-router-dom';
-import ProductsManagement from './ProductsManagement';
-import ProductFormPage from './products/ProductFormPage';
-import RentalsManagement from './rentals/RentalsManagement';
-import MessagesDashboard from './MessagesDashboard';
-import UserManagement from './UserManagement';
-import UserConfigPage from './config/UserConfigPage';
-import UpgradePage from './upgrade/UpgradePage';
 import DashboardOverview from './overview/DashboardOverview';
-
-// Category pages
-import CategoryManagement from './categories/CategoryManagement';
-import CategoryFormPage from './categories/CategoryFormPage';
-
-// Company pages
+import ProductsManagement from './products/ProductsManagement';
+import ProductFormPage from './products/ProductFormPage';
+import UserManagement from './user-management/UserManagement';
+import MessagesDashboard from './MessagesDashboard';
+import RentalsManagement from './rentals/RentalsManagement';
 import CompanyManagement from './companies/CompanyManagement';
 import CompanyFormPage from './companies/CompanyFormPage';
-import CompanyUsersPage from './companies/CompanyUsersPage';
 import CompanyProductsPage from './companies/CompanyProductsPage';
-
-// Site pages
+import CompanyUsersPage from './companies/CompanyUsersPage';
+import CategoryManagement from './categories/CategoryManagement';
+import CategoryFormPage from './categories/CategoryFormPage';
 import SiteManagement from './sites/SiteManagement';
 import SiteFormPage from './sites/SiteFormPage';
+import UserConfigPage from './config/UserConfigPage';
+import UpgradePage from './upgrade/UpgradePage';
+import CreateRental from '@/pages/dashboard/rentals/CreateRental';
+import RentalDetails from '@/pages/dashboard/rentals/RentalDetails';
 
 const DashboardRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<DashboardOverview />} />
+      <Route index element={<DashboardOverview />} />
       
-      {/* Upgrade route */}
-      <Route path="upgrade" element={<UpgradePage />} />
-      
-      {/* Products routes */}
+      {/* Products */}
       <Route path="products" element={<ProductsManagement />} />
       <Route path="products/new" element={<ProductFormPage />} />
-      <Route path="products/edit/:productId" element={<ProductFormPage />} />
+      <Route path="products/:id" element={<ProductFormPage />} />
       
-      {/* Categories routes */}
-      <Route path="categories" element={<CategoryManagement />} />
-      <Route path="categories/new" element={<CategoryFormPage />} />
-      <Route path="categories/edit/:categoryId" element={<CategoryFormPage />} />
+      {/* Rentals */}
+      <Route path="rentals" element={<RentalsManagement />} />
+      <Route path="rentals/new" element={<CreateRental />} />
+      <Route path="rentals/:id" element={<RentalDetails />} />
       
-      {/* Companies routes */}
+      {/* Companies */}
       <Route path="companies" element={<CompanyManagement />} />
       <Route path="companies/new" element={<CompanyFormPage />} />
-      <Route path="companies/edit/:companyId" element={<CompanyFormPage />} />
-      <Route path="companies/:companyId/users" element={<CompanyUsersPage />} />
-      <Route path="companies/:companyId/products" element={<CompanyProductsPage />} />
+      <Route path="companies/:id" element={<CompanyFormPage />} />
+      <Route path="companies/:id/products" element={<CompanyProductsPage />} />
+      <Route path="companies/:id/users" element={<CompanyUsersPage />} />
       
-      {/* Sites routes */}
+      {/* Categories */}
+      <Route path="categories" element={<CategoryManagement />} />
+      <Route path="categories/new" element={<CategoryFormPage />} />
+      <Route path="categories/:id" element={<CategoryFormPage />} />
+      
+      {/* Sites */}
       <Route path="sites" element={<SiteManagement />} />
       <Route path="sites/new" element={<SiteFormPage />} />
-      <Route path="sites/edit/:siteId" element={<SiteFormPage />} />
+      <Route path="sites/:id" element={<SiteFormPage />} />
       
-      {/* Configuration routes */}
+      {/* Users */}
+      <Route path="users" element={<UserManagement />} />
+      
+      {/* Messages */}
+      <Route path="messages" element={<MessagesDashboard />} />
+      
+      {/* User Configuration */}
       <Route path="config" element={<UserConfigPage />} />
       
-      {/* Other existing routes */}
-      <Route path="rentals" element={<RentalsManagement />} />
-      <Route path="messages" element={<MessagesDashboard />} />
-      <Route path="users" element={<UserManagement />} />
+      {/* Upgrade */}
+      <Route path="upgrade" element={<UpgradePage />} />
+      
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

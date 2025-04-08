@@ -1,19 +1,22 @@
 
 import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import RentalFilters from './RentalFilters';
 import RentalCalendar from './RentalCalendar';
-import RentalContent from './RentalContent';
-import { useRentalsData } from './hooks/useRentalsData';
+import RentalCalendarControls from './RentalCalendarControls';
+import RentalTabs from './RentalTabs';
+import { useRentals } from '@/application/hooks/useRentals';
+import { useRentalsFilter } from '@/application/hooks/useRentalsFilter';
+import { useRentalCalendar } from '@/application/hooks/useRentalCalendar';
 
 const RentalsManagement = () => {
+  const navigate = useNavigate();
+  
+  // Fetch rentals data
+  const { rentals, isLoading, error } = useRentals();
+  
+  // Filter and search functionality
   const {
-    rentals,
-    isLoading,
-    error,
     searchQuery,
     setSearchQuery,
     startDate,
@@ -26,21 +29,25 @@ const RentalsManagement = () => {
     setActiveTab,
     filteredRentals,
     rentalCounts,
-    handleSearch,
-    handleDateSelect
-  } = useRentalsData();
+    handleSearch
+  } = useRentalsFilter(rentals);
   
-  // State for calendar current month
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  
-  // Navigate to previous month
-  const goToPreviousMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+  // Calendar functionality
+  const {
+    currentMonth,
+    handleDateSelect,
+    handleMonthChange,
+    goToPreviousMonth,
+    goToNextMonth
+  } = useRentalCalendar();
+
+  // Navigation handlers
+  const handleCreateRental = () => {
+    navigate('/dashboard/rentals/new');
   };
-  
-  // Navigate to next month
-  const goToNextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+
+  const handleViewDetails = (rentalId: string) => {
+    navigate(`/dashboard/rentals/${rentalId}`);
   };
   
   if (isLoading) {
@@ -61,13 +68,13 @@ const RentalsManagement = () => {
   
   return (
     <div className="space-y-4 max-w-full">
-      {/* Header */}
-      <div>
+      {/* Header - Reduced vertical padding */}
+      <div className="mb-2">
         <h1 className="text-2xl font-display font-semibold">Gestión de Alquileres</h1>
         <p className="text-muted-foreground">Seguimiento y gestión de todos los alquileres de equipos.</p>
       </div>
       
-      {/* Filters */}
+      {/* Filters - Compact design with reduced vertical space */}
       <RentalFilters 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -80,74 +87,33 @@ const RentalsManagement = () => {
         onSearch={handleSearch}
       />
 
-      {/* Tabs and Controls */}
-      <div className="flex flex-col space-y-4">
-        {/* Header with Navigation and Create Button */}
-        <div className="flex flex-wrap justify-between items-center gap-2">
-          <h3 className="text-lg font-medium">Calendario de alquileres</h3>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={goToPreviousMonth}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={goToNextMonth}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              <span>Crear alquiler</span>
-            </Button>
-          </div>
-        </div>
+      {/* Calendar section with tighter spacing */}
+      <div className="flex flex-col space-y-2">
+        <RentalCalendarControls 
+          onPreviousMonth={goToPreviousMonth}
+          onNextMonth={goToNextMonth}
+          onCreateRental={handleCreateRental}
+        />
         
-        {/* Tabs and Calendar */}
-        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-2">
-            <TabsTrigger value="all">
-              Todos
-              <Badge variant="secondary" className="ml-2">{rentalCounts.all}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="active">
-              Activos
-              <Badge variant="secondary" className="ml-2">{rentalCounts.active}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="upcoming">
-              Próximos
-              <Badge variant="secondary" className="ml-2">{rentalCounts.upcoming}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="completed">
-              Completados
-              <Badge variant="secondary" className="ml-2">{rentalCounts.completed}</Badge>
-            </TabsTrigger>
-          </TabsList>
-          
-          {/* Calendar - wrapped in a border with minimal padding */}
-          <div className="border rounded-lg p-2 mb-4 overflow-x-auto">
-            <RentalCalendar 
-              rentals={rentals}
-              onDateSelect={handleDateSelect}
-              currentMonth={currentMonth}
-              onMonthChange={setCurrentMonth}
-            />
-          </div>
-          
-          {/* Rental Content based on selected tab */}
-          <TabsContent value="all">
-            <RentalContent rentals={filteredRentals} />
-          </TabsContent>
-          
-          <TabsContent value="active">
-            <RentalContent rentals={filteredRentals} />
-          </TabsContent>
-          
-          <TabsContent value="upcoming">
-            <RentalContent rentals={filteredRentals} />
-          </TabsContent>
-          
-          <TabsContent value="completed">
-            <RentalContent rentals={filteredRentals} />
-          </TabsContent>
-        </Tabs>
+        {/* Calendar with reduced padding */}
+        <div className="border rounded-lg overflow-x-auto">
+          <RentalCalendar 
+            rentals={rentals}
+            onDateSelect={handleDateSelect}
+            currentMonth={currentMonth}
+            onMonthChange={handleMonthChange}
+          />
+        </div>
       </div>
+      
+      {/* Tabs for filtering rentals - Reduced vertical margins */}
+      <RentalTabs 
+        rentals={filteredRentals}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        rentalCounts={rentalCounts}
+        onViewDetails={handleViewDetails}
+      />
     </div>
   );
 };

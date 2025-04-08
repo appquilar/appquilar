@@ -11,6 +11,7 @@ interface RentalTabsProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   rentalCounts: RentalCounts;
+  onViewDetails: (rentalId: string) => void;
 }
 
 const RentalTabs: React.FC<RentalTabsProps> = ({
@@ -18,10 +19,11 @@ const RentalTabs: React.FC<RentalTabsProps> = ({
   activeTab,
   onTabChange,
   rentalCounts,
+  onViewDetails
 }) => {
   return (
-    <Tabs defaultValue="all" value={activeTab} onValueChange={onTabChange}>
-      <TabsList>
+    <Tabs defaultValue="all" value={activeTab} onValueChange={onTabChange} className="w-full">
+      <TabsList className="mb-2 flex flex-wrap">
         <TabsTrigger value="all">
           Todos
           <Badge variant="secondary" className="ml-2">{rentalCounts.all}</Badge>
@@ -40,20 +42,20 @@ const RentalTabs: React.FC<RentalTabsProps> = ({
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="all" className="mt-6">
-        <RentalsList rentals={rentals} />
+      <TabsContent value="all" className="mt-2">
+        <RentalsList rentals={rentals} onViewDetails={onViewDetails} />
       </TabsContent>
       
-      <TabsContent value="active" className="mt-6">
-        <RentalsList rentals={rentals} />
+      <TabsContent value="active" className="mt-2">
+        <RentalsList rentals={rentals} onViewDetails={onViewDetails} />
       </TabsContent>
       
-      <TabsContent value="upcoming" className="mt-6">
-        <RentalsList rentals={rentals} />
+      <TabsContent value="upcoming" className="mt-2">
+        <RentalsList rentals={rentals} onViewDetails={onViewDetails} />
       </TabsContent>
       
-      <TabsContent value="completed" className="mt-6">
-        <RentalsList rentals={rentals} />
+      <TabsContent value="completed" className="mt-2">
+        <RentalsList rentals={rentals} onViewDetails={onViewDetails} />
       </TabsContent>
     </Tabs>
   );
