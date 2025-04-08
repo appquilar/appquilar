@@ -20,9 +20,11 @@ import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Search } from 'lucide-react';
 import { RentalService } from '@/application/services/RentalService';
 import { toast } from '@/components/ui/use-toast';
+import { useProducts } from '@/application/hooks/useProducts';
+import { Product } from '@/domain/models/Product';
 
 // Validation schema
 const rentalFormSchema = z.object({
@@ -41,7 +43,15 @@ type RentalFormValues = z.infer<typeof rentalFormSchema>;
 const CreateRental = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const rentalService = RentalService.getInstance();
+  const { products, isLoading: productsLoading } = useProducts();
+
+  // Filter products based on search input
+  const filteredProducts = products.filter(product => 
+    product.name.toLowerCase().includes(productSearch.toLowerCase())
+  );
 
   // Default form values
   const defaultValues: Partial<RentalFormValues> = {
@@ -55,6 +65,15 @@ const CreateRental = () => {
     resolver: zodResolver(rentalFormSchema),
     defaultValues,
   });
+
+  // Handle product selection
+  const handleProductSelect = (product: Product) => {
+    setSelectedProduct(product);
+    form.setValue('product', product.name);
+    // Calculate default rental price (7 days)
+    form.setValue('totalAmount', product.price.weekly);
+    setProductSearch('');
+  };
 
   // Handle form submission
   const onSubmit = async (data: RentalFormValues) => {
@@ -113,7 +132,53 @@ const CreateRental = () => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <h2 className="text-xl font-medium">Información del Producto</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <div className="relative mb-6">
+                <div className="flex items-center border rounded-md focus-within:ring-1 focus-within:ring-ring">
+                  <Search className="ml-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar producto..."
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    className="border-0 focus-visible:ring-0"
+                  />
+                </div>
+                
+                {productSearch && (
+                  <div className="absolute z-10 mt-1 w-full border rounded-md bg-background shadow-lg">
+                    {filteredProducts.length === 0 ? (
+                      <div className="p-2 text-sm text-muted-foreground">No se encontraron productos</div>
+                    ) : (
+                      <ul>
+                        {filteredProducts.map((product) => (
+                          <li 
+                            key={product.id}
+                            className="p-2 hover:bg-accent cursor-pointer text-sm"
+                            onClick={() => handleProductSelect(product)}
+                          >
+                            <div className="font-medium">{product.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {product.price.daily}€ diario | {product.price.weekly}€ semanal
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {selectedProduct && (
+                <div className="bg-accent/10 p-4 rounded-md mb-4">
+                  <h3 className="font-medium">{selectedProduct.name}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedProduct.description}</p>
+                  <div className="mt-2 text-sm">
+                    <span className="font-medium">Precios: </span>
+                    <span>{selectedProduct.price.daily}€ diario | {selectedProduct.price.weekly}€ semanal | {selectedProduct.price.monthly}€ mensual</span>
+                  </div>
+                </div>
+              )}
+              
               <FormField
                 control={form.control}
                 name="product"
@@ -121,7 +186,7 @@ const CreateRental = () => {
                   <FormItem>
                     <FormLabel>Producto</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nombre del producto" {...field} />
+                      <Input placeholder="Nombre del producto" {...field} readOnly={!!selectedProduct} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -275,12 +340,16 @@ const CreateRental = () => {
                   <FormItem>
                     <FormLabel>Importe Total</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="0.00" 
-                        {...field}
-                        onChange={e => field.onChange(parseFloat(e.target.value))}
-                      />
+                      <div className="relative">
+                        <Input 
+                          type="number" 
+                          placeholder="0.00" 
+                          {...field}
+                          onChange={e => field.onChange(parseFloat(e.target.value))}
+                          className="pl-7"
+                        />
+                        <span className="absolute left-3 top-2.5">€</span>
+                      </div>
                     </FormControl>
                     <FormDescription>
                       Importe total del alquiler en euros

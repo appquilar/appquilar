@@ -5,21 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RentalService } from '@/application/services/RentalService';
 import { Rental } from '@/domain/models/Rental';
 import { toast } from '@/components/ui/use-toast';
 import {
   Calendar,
   Clock,
-  MapPin,
-  Mail,
-  Phone,
   Tag,
   User,
   AlertTriangle,
   Check,
   ChevronLeft,
-  Edit
+  Mail,
+  Phone
 } from 'lucide-react';
 
 const RentalDetails = () => {
@@ -28,7 +27,7 @@ const RentalDetails = () => {
   const [rental, setRental] = useState<Rental | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isMarkingAsReturned, setIsMarkingAsReturned] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const rentalService = RentalService.getInstance();
 
   useEffect(() => {
@@ -57,21 +56,26 @@ const RentalDetails = () => {
     loadRental();
   }, [id]);
 
-  const handleMarkAsReturned = async () => {
+  const handleStatusChange = async (newStatus: 'active' | 'upcoming' | 'completed') => {
     if (!rental) return;
     
-    setIsMarkingAsReturned(true);
+    setIsUpdatingStatus(true);
     try {
+      // For "completed" status, mark as returned
+      const returned = newStatus === 'completed';
       const updatedRental = await rentalService.updateRental(rental.id, { 
         ...rental, 
-        returned: true,
-        status: 'completed' as const
+        status: newStatus,
+        returned: returned || rental.returned // Keep returned true if it was already true
       });
       
       setRental(updatedRental);
       toast({
         title: "Estado actualizado",
-        description: "El alquiler ha sido marcado como devuelto",
+        description: `El alquiler ha sido marcado como ${
+          newStatus === 'active' ? 'activo' : 
+          newStatus === 'upcoming' ? 'próximo' : 'completado'
+        }`,
       });
     } catch (err) {
       console.error('Error updating rental:', err);
@@ -81,7 +85,7 @@ const RentalDetails = () => {
         variant: "destructive"
       });
     } finally {
-      setIsMarkingAsReturned(false);
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -150,25 +154,20 @@ const RentalDetails = () => {
         </div>
 
         <div className="flex items-center space-x-2">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate(`/dashboard/rentals/edit/${rental.id}`)}
-            className="flex items-center gap-1"
+          <Select 
+            value={rental.status} 
+            disabled={isUpdatingStatus}
+            onValueChange={(value) => handleStatusChange(value as 'active' | 'upcoming' | 'completed')}
           >
-            <Edit className="h-4 w-4 mr-1" />
-            Editar
-          </Button>
-          
-          {rental.status === 'active' && !rental.returned && (
-            <Button 
-              onClick={handleMarkAsReturned}
-              disabled={isMarkingAsReturned}
-              className="flex items-center gap-1"
-            >
-              <Check className="h-4 w-4 mr-1" />
-              {isMarkingAsReturned ? "Procesando..." : "Marcar como devuelto"}
-            </Button>
-          )}
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Cambiar estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Activo</SelectItem>
+              <SelectItem value="upcoming">Próximo</SelectItem>
+              <SelectItem value="completed">Completado</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -231,7 +230,7 @@ const RentalDetails = () => {
                     <Tag className="h-4 w-4 mt-0.5 mr-2 text-muted-foreground" />
                     <div>
                       <p className="text-sm font-medium">Importe total</p>
-                      <p className="text-sm text-muted-foreground">${rental.totalAmount.toFixed(2)}</p>
+                      <p className="text-sm text-muted-foreground">{rental.totalAmount.toFixed(2)}€</p>
                     </div>
                   </li>
                 </ul>
