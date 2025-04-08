@@ -66,13 +66,13 @@ const RentalsManagement = () => {
   }
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-display font-semibold">Gestión de Alquileres</h1>
         <p className="text-muted-foreground">Seguimiento y gestión de todos los alquileres de equipos.</p>
       </div>
       
-      {/* Search and filter */}
+      {/* Search and filter - more compact */}
       <RentalFilters 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -85,32 +85,32 @@ const RentalsManagement = () => {
         onSearch={handleSearch}
       />
       
-      {/* Calendar controls and calendar */}
-      <div className="flex flex-col space-y-4">
+      {/* Calendar section */}
+      <div className="mt-6">
         <RentalCalendarControls 
           onPreviousMonth={goToPreviousMonth}
           onNextMonth={goToNextMonth}
           onCreateRental={handleCreateRental}
         />
         
-        <div className="border rounded-lg p-2 mb-4 overflow-x-auto">
-          <RentalCalendar 
-            rentals={rentals}
-            onDateSelect={handleDateSelect}
-            currentMonth={currentMonth}
-            onMonthChange={handleMonthChange}
-          />
-        </div>
+        <RentalCalendar 
+          rentals={rentals}
+          onDateSelect={handleDateSelect}
+          currentMonth={currentMonth}
+          onMonthChange={handleMonthChange}
+        />
       </div>
       
       {/* Tabs for filtering rentals */}
-      <RentalTabs 
-        rentals={filteredRentals}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        rentalCounts={rentalCounts}
-        onViewDetails={handleViewDetails}
-      />
+      <div className="mt-6">
+        <RentalTabs 
+          rentals={filteredRentals}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          rentalCounts={rentalCounts}
+          onViewDetails={handleViewDetails}
+        />
+      </div>
     </div>
   );
 };

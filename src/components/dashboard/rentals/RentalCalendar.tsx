@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
-import { Calendar } from '@/components/ui/calendar';
-import { format, isSameDay, startOfMonth } from 'date-fns';
+import React, { useState } from 'react';
+import { format, addMonths, isSameDay, isSameMonth, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import type { CaptionProps } from 'react-day-picker';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Rental } from '@/domain/models/Rental';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -15,15 +15,18 @@ interface RentalCalendarProps {
   onMonthChange?: (date: Date) => void;
 }
 
+const WEEKDAYS = ['lu', 'ma', 'mi', 'ju', 'vi', 'sa', 'do'];
+
 const RentalCalendar = ({ 
   rentals, 
   onDateSelect, 
-  currentMonth, 
+  currentMonth,
   onMonthChange 
 }: RentalCalendarProps) => {
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const isMobile = useIsMobile();
+  const nextMonth = addMonths(currentMonth, 1);
 
   // Get dates that have rentals
   const rentalDates = rentals.flatMap(rental => {
@@ -47,93 +50,94 @@ const RentalCalendar = ({
   };
 
   // Handle date selection
-  const handleSelect = (date: Date | undefined) => {
+  const handleSelect = (date: Date) => {
     setSelectedDate(date);
-    if (date && onDateSelect) {
+    if (onDateSelect) {
       onDateSelect(date);
     }
   };
 
-  // Custom day render to show rentals
-  const renderDay = (day: Date) => {
-    const hasRental = hasRentals(day);
-    const isToday = isSameDay(day, today);
-    
-    return (
-      <div className={cn(
-        "relative flex items-center justify-center",
-        hasRental && "font-medium",
-        isToday && "text-primary"
-      )}>
-        {day.getDate()}
-        {hasRental && (
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4 h-1 bg-gray-300 rounded-full" />
-        )}
-      </div>
-    );
-  };
+  // Generate calendar days for a given month
+  const generateCalendarDays = (month: Date) => {
+    const monthStart = startOfMonth(month);
+    const monthEnd = endOfMonth(month);
+    const startDate = startOfWeek(monthStart, { locale: es });
+    const endDate = endOfWeek(monthEnd, { locale: es });
 
-  // Custom caption component for month and year display
-  const CustomCaption = (props: CaptionProps) => {
+    const rows = [];
+    let days = [];
+    let day = startDate;
+
+    // Generate header with weekday names
+    const weekdayHeader = WEEKDAYS.map((weekday, i) => (
+      <div key={`header-${weekday}-${i}`} className="text-center text-xs font-medium text-muted-foreground w-10 h-6 flex items-center justify-center">
+        {weekday}
+      </div>
+    ));
+    rows.push(weekdayHeader);
+
+    // Generate calendar grid
+    while (day <= endDate) {
+      for (let i = 0; i < 7; i++) {
+        const currentDay = day;
+        const isToday = isSameDay(day, today);
+        const isCurrentMonth = isSameMonth(day, month);
+        const hasRental = hasRentals(day);
+        
+        days.push(
+          <button
+            key={`day-${day.toISOString()}`}
+            onClick={() => handleSelect(currentDay)}
+            className={cn(
+              "w-10 h-10 flex flex-col items-center justify-center rounded-full text-sm relative",
+              isCurrentMonth ? "text-foreground" : "text-muted-foreground opacity-50",
+              isToday && "bg-primary/10 font-medium",
+              selectedDate && isSameDay(day, selectedDate) && "bg-primary text-primary-foreground",
+              hasRental && !selectedDate && !isToday && "font-medium",
+              "hover:bg-accent/80"
+            )}
+          >
+            {day.getDate()}
+            {hasRental && (
+              <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-primary rounded-full" />
+            )}
+          </button>
+        );
+        
+        day = addDays(day, 1);
+      }
+      
+      rows.push(
+        <div key={`row-${day.toISOString()}`} className="grid grid-cols-7 gap-0">
+          {days}
+        </div>
+      );
+      
+      days = [];
+    }
+
     return (
-      <div className="text-center py-1 font-medium">
-        {format(props.displayMonth, 'MMMM yyyy', { locale: es })}
+      <div className="calendar-month">
+        <div className="text-center py-2 font-medium">
+          {format(month, 'MMMM yyyy', { locale: es })}
+        </div>
+        <div className="grid gap-y-2">
+          {rows}
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="w-full h-full">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-        <div>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={handleSelect}
-            month={currentMonth}
-            onMonthChange={onMonthChange}
-            locale={es}
-            className="w-full max-w-full p-0 border-0"
-            classNames={{
-              month: "space-y-2",
-              table: "w-full border-collapse",
-              head_row: "flex",
-              head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem] md:w-10",
-              row: "flex w-full mt-1",
-              cell: "h-8 w-8 md:h-9 md:w-9 text-center text-sm p-0 relative",
-              day: "h-8 w-8 md:h-9 md:w-9 p-0 font-normal aria-selected:opacity-100"
-            }}
-            components={{
-              DayContent: ({ date }) => renderDay(date),
-              Caption: CustomCaption
-            }}
-          />
+    <div className="w-full overflow-x-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-w-[640px]">
+        <div className="border rounded-md p-2 bg-white">
+          {generateCalendarDays(currentMonth)}
         </div>
         
         {!isMobile && (
-          <div>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={handleSelect}
-              month={new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1)}
-              onMonthChange={onMonthChange}
-              locale={es}
-              className="w-full max-w-full p-0 border-0"
-              classNames={{
-                month: "space-y-2",
-                table: "w-full border-collapse",
-                head_row: "flex",
-                head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem] md:w-10",
-                row: "flex w-full mt-1",
-                cell: "h-8 w-8 md:h-9 md:w-9 text-center text-sm p-0 relative",
-                day: "h-8 w-8 md:h-9 md:w-9 p-0 font-normal aria-selected:opacity-100"
-              }}
-              components={{
-                DayContent: ({ date }) => renderDay(date),
-                Caption: CustomCaption
-              }}
-            />
+          <div className="border rounded-md p-2 bg-white">
+            {generateCalendarDays(nextMonth)}
           </div>
         )}
       </div>

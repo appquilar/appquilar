@@ -36,16 +36,16 @@ const RentalFilters = ({
   onSearch
 }: RentalFiltersProps) => {
   return (
-    <div className="flex flex-col sm:flex-row gap-4">
-      <form onSubmit={onSearch} className="relative flex-1">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Buscar por nombre o email..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-9"
+          className="pl-9 h-10"
         />
-      </form>
+      </div>
       
       <div className="flex flex-wrap gap-2">
         <Popover>
@@ -91,9 +91,9 @@ const RentalFilters = ({
           className="w-32 h-10"
         />
         
-        <Button type="submit" onClick={(e) => onSearch(e)} className="gap-2 h-10">
-          <Search size={16} />
-          Buscar
+        <Button onClick={(e) => onSearch(e)} className="h-10 gap-1">
+          <Search className="h-4 w-4" />
+          <span>Buscar</span>
         </Button>
       </div>
     </div>
