@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface RentalFiltersProps {
   searchQuery: string;
@@ -35,6 +36,31 @@ const RentalFilters = ({
   onRentalIdChange,
   onSearch
 }: RentalFiltersProps) => {
+  // State to track which date we're selecting (start or end)
+  const [selectingDate, setSelectingDate] = React.useState<'start' | 'end'>('start');
+  
+  // Handle date selection - alternate between start and end dates
+  const handleDateSelect = (date: Date | undefined) => {
+    if (selectingDate === 'start') {
+      onStartDateChange(date);
+      setSelectingDate('end');
+    } else {
+      onEndDateChange(date);
+      setSelectingDate('start');
+    }
+  };
+
+  // Format date range for display
+  const getDateRangeLabel = () => {
+    if (startDate && endDate) {
+      return `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`;
+    }
+    if (startDate) {
+      return `${format(startDate, 'dd/MM/yyyy')} - Seleccionar`;
+    }
+    return 'Rango de fechas';
+  };
+
   return (
     <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4">
       <div className="flex flex-wrap gap-2">
@@ -52,37 +78,52 @@ const RentalFilters = ({
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="h-10">
               <Calendar className="h-4 w-4 mr-2" />
-              {startDate ? format(startDate, 'dd/MM/yyyy') : 'Fecha inicio'}
+              {getDateRangeLabel()}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
-            <CalendarComponent
-              mode="single"
-              selected={startDate}
-              onSelect={onStartDateChange}
-              initialFocus
-              locale={es}
-              className="p-3"
-            />
-          </PopoverContent>
-        </Popover>
-        
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-10">
-              <Calendar className="h-4 w-4 mr-2" />
-              {endDate ? format(endDate, 'dd/MM/yyyy') : 'Fecha fin'}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
-            <CalendarComponent
-              mode="single"
-              selected={endDate}
-              onSelect={onEndDateChange}
-              initialFocus
-              locale={es}
-              className="p-3"
-            />
+            <div className="p-3">
+              <div className="mb-2 text-sm font-medium">
+                {selectingDate === 'start' ? 'Seleccionar fecha inicio' : 'Seleccionar fecha fin'}
+              </div>
+              <CalendarComponent
+                mode="single"
+                selected={selectingDate === 'start' ? startDate : endDate}
+                onSelect={handleDateSelect}
+                initialFocus
+                locale={es}
+                className="p-3"
+                disabled={(date) => {
+                  // When selecting end date, disable dates before start date
+                  if (selectingDate === 'end' && startDate) {
+                    return date < startDate;
+                  }
+                  return false;
+                }}
+              />
+              <div className="flex justify-between pt-2 border-t mt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    onStartDateChange(undefined);
+                    onEndDateChange(undefined);
+                    setSelectingDate('start');
+                  }}
+                >
+                  Limpiar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    // Toggle which date we're selecting
+                    setSelectingDate(selectingDate === 'start' ? 'end' : 'start');
+                  }}
+                >
+                  {selectingDate === 'start' ? 'Siguiente' : 'Anterior'}
+                </Button>
+              </div>
+            </div>
           </PopoverContent>
         </Popover>
         
