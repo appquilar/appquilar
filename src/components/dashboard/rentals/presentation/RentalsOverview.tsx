@@ -1,13 +1,16 @@
 
 import React from 'react';
-import RentalsHeader from './RentalsHeader';
-import RentalFilters from './RentalFilters';
-import RentalCalendarControls from './RentalCalendarControls';
-import RentalTabs from './RentalTabs';
-import RentalsContainer from './RentalsContainer';
-import { useRentalsManagement } from './hooks/useRentalsManagement';
+import RentalsHeader from '../RentalsHeader';
+import RentalFilters from '../RentalFilters';
+import RentalCalendarControls from '../RentalCalendarControls';
+import RentalTabs from '../RentalTabs';
+import RentalsContainer from '../RentalsContainer';
+import { useRentalsManagement } from '../hooks/useRentalsManagement';
 
-const RentalsManagement = () => {
+/**
+ * Main rentals overview component that serves as the page container
+ */
+const RentalsOverview = () => {
   const {
     isLoading,
     error,
@@ -26,7 +29,6 @@ const RentalsManagement = () => {
     handleSearch,
     handleCreateRental,
     handleViewDetails,
-    handleDateSelect
   } = useRentalsManagement();
   
   return (
@@ -70,4 +72,4 @@ const RentalsManagement = () => {
   );
 };
 
-export default RentalsManagement;
+export default RentalsOverview;

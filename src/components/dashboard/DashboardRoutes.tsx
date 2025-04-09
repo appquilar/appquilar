@@ -5,7 +5,7 @@ import ProductsManagement from '@/components/dashboard/ProductsManagement';
 import ProductFormPage from './products/ProductFormPage';
 import UserManagement from '@/components/dashboard/UserManagement';
 import MessagesDashboard from './MessagesDashboard';
-import RentalsManagement from './rentals/RentalsManagement';
+import RentalsPage from '@/pages/dashboard/rentals/RentalsPage';
 import CompanyManagement from './companies/CompanyManagement';
 import CompanyFormPage from './companies/CompanyFormPage';
 import CompanyProductsPage from './companies/CompanyProductsPage';
@@ -30,7 +30,7 @@ const DashboardRoutes = () => {
       <Route path="products/:id" element={<ProductFormPage />} />
       
       {/* Rentals */}
-      <Route path="rentals" element={<RentalsManagement />} />
+      <Route path="rentals" element={<RentalsPage />} />
       <Route path="rentals/new" element={<CreateRental />} />
       <Route path="rentals/:id" element={<RentalDetails />} />
       
