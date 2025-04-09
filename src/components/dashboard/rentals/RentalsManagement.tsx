@@ -1,19 +1,16 @@
 
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import RentalsHeader from './RentalsHeader';
 import RentalFilters from './RentalFilters';
 import RentalCalendarControls from './RentalCalendarControls';
 import RentalTabs from './RentalTabs';
-import { useRentals } from '@/application/hooks/useRentals';
-import { useRentalsFilter } from '@/application/hooks/useRentalsFilter';
+import RentalsContainer from './RentalsContainer';
+import { useRentalsManagement } from './hooks/useRentalsManagement';
 
 const RentalsManagement = () => {
-  const navigate = useNavigate();
-  
-  // Fetch rentals data
-  const { rentals, isLoading, error } = useRentals();
-  
-  // Filter and search functionality
   const {
+    isLoading,
+    error,
     searchQuery,
     setSearchQuery,
     startDate,
@@ -27,41 +24,15 @@ const RentalsManagement = () => {
     filteredRentals,
     rentalCounts,
     handleSearch,
+    handleCreateRental,
+    handleViewDetails,
     handleDateSelect
-  } = useRentalsFilter(rentals);
-
-  // Navigation handlers
-  const handleCreateRental = () => {
-    navigate('/dashboard/rentals/new');
-  };
-
-  const handleViewDetails = (rentalId: string) => {
-    navigate(`/dashboard/rentals/${rentalId}`);
-  };
-  
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4 rounded-md bg-destructive/10 text-destructive">
-        {error}
-      </div>
-    );
-  }
+  } = useRentalsManagement();
   
   return (
     <div className="space-y-4 max-w-full">
       {/* Header */}
-      <div className="mb-2">
-        <h1 className="text-2xl font-display font-semibold">Gestión de Alquileres</h1>
-        <p className="text-muted-foreground">Seguimiento y gestión de todos los alquileres de equipos.</p>
-      </div>
+      <RentalsHeader onCreateRental={handleCreateRental} />
       
       {/* Enhanced Filters */}
       <div className="flex justify-between items-center">
@@ -85,14 +56,16 @@ const RentalsManagement = () => {
         />
       </div>
       
-      {/* Tabs for filtering rentals */}
-      <RentalTabs 
-        rentals={filteredRentals}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        rentalCounts={rentalCounts}
-        onViewDetails={handleViewDetails}
-      />
+      {/* Rental listing with loading and error handling */}
+      <RentalsContainer isLoading={isLoading} error={error}>
+        <RentalTabs 
+          rentals={filteredRentals}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          rentalCounts={rentalCounts}
+          onViewDetails={handleViewDetails}
+        />
+      </RentalsContainer>
     </div>
   );
 };

@@ -7,7 +7,7 @@ interface ErrorDisplayProps {
   errorMessage: string | null;
 }
 
-const ErrorDisplay = ({ errorMessage }: ErrorDisplayProps) => {
+export const ErrorDisplay = ({ errorMessage }: ErrorDisplayProps) => {
   const navigate = useNavigate();
   
   return (
