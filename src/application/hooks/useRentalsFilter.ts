@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react';
 import { Rental } from '@/domain/models/Rental';
 import { RentalCounts, RentalFilters } from '@/domain/models/RentalFilters';
-import { RentalService } from '@/domain/services/RentalService';
+import { RentalFilterService } from '@/domain/services/RentalFilterService';
 
 export interface UseRentalsFilterReturn {
   searchQuery: string;
@@ -22,29 +22,32 @@ export interface UseRentalsFilterReturn {
 }
 
 export const useRentalsFilter = (rentals: Rental[]): UseRentalsFilterReturn => {
+  // State for filter criteria
   const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [rentalId, setRentalId] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   
+  // Filter state object for the domain service
+  const filters: RentalFilters = useMemo(() => ({
+    searchQuery,
+    startDate,
+    endDate,
+    rentalId,
+    activeTab
+  }), [searchQuery, startDate, endDate, rentalId, activeTab]);
+  
   // Calculate counts of rentals by status using the domain service
   const rentalCounts = useMemo(() => 
-    RentalService.calculateRentalCounts(rentals), 
+    RentalFilterService.calculateRentalCounts(rentals), 
     [rentals]
   );
   
   // Filter rentals based on all criteria using the domain service
   const filteredRentals = useMemo(() => 
-    RentalService.filterRentals(
-      rentals,
-      searchQuery,
-      rentalId,
-      startDate,
-      endDate,
-      activeTab
-    ), 
-    [rentals, searchQuery, rentalId, startDate, endDate, activeTab]
+    RentalFilterService.filterRentals(rentals, filters), 
+    [rentals, filters]
   );
   
   const handleSearch = (e: React.FormEvent) => {
