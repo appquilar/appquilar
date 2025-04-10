@@ -9,7 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { format, addYears } from 'date-fns';
+import { format, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import {
@@ -64,9 +64,9 @@ const RentalFilters = ({
     return date ? format(date, 'dd/MM/yyyy', { locale: es }) : '';
   };
 
-  // Navigation for years
-  const navigateYear = (direction: 'prev' | 'next') => {
-    setViewDate(current => addYears(current, direction === 'prev' ? -1 : 1));
+  // Navigation for months instead of years
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setViewDate(current => addMonths(current, direction === 'prev' ? -1 : 1));
   };
 
   // Generate array of years for selection (10 years before and after current year)
@@ -141,11 +141,11 @@ const RentalFilters = ({
               </div>
               
               {/* Year and Month selector */}
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-4">
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => navigateYear('prev')} 
+                  onClick={() => navigateMonth('prev')} 
                   className="h-7 w-7 p-0"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -196,7 +196,7 @@ const RentalFilters = ({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => navigateYear('next')} 
+                  onClick={() => navigateMonth('next')} 
                   className="h-7 w-7 p-0"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -232,6 +232,9 @@ const RentalFilters = ({
                 month={viewDate}
                 onMonthChange={setViewDate}
                 className={cn("p-3 pointer-events-auto")}
+                classNames={{
+                  caption: "hidden" // Hide the caption that contains the month/year header
+                }}
               />
               
               <div className="flex justify-between pt-2 border-t">
