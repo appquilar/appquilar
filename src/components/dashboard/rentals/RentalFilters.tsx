@@ -9,7 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { format, addYears } from 'date-fns';
+import { format, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import {
@@ -52,9 +52,9 @@ const RentalFilters = ({
     return date ? format(date, 'dd/MM/yyyy', { locale: es }) : '';
   };
 
-  // Navigation for years
-  const navigateYear = (direction: 'prev' | 'next') => {
-    setViewDate(current => addYears(current, direction === 'prev' ? -1 : 1));
+  // Navigation for months
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setViewDate(current => addMonths(current, direction === 'prev' ? -1 : 1));
   };
 
   // Generate array of years for selection (10 years before and after current year)
@@ -100,46 +100,29 @@ const RentalFilters = ({
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0 min-w-[320px]">
             <div className="p-3 space-y-3">
-              {/* Display selected dates */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Fecha inicio</p>
-                  <Input 
-                    value={formatDisplayDate(startDate)} 
-                    readOnly 
-                    onClick={() => setSelectingDate('start')}
-                    className={cn(
-                      "cursor-pointer",
-                      selectingDate === 'start' && "ring-2 ring-primary"
-                    )}
-                  />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Fecha fin</p>
-                  <Input 
-                    value={formatDisplayDate(endDate)} 
-                    readOnly 
-                    onClick={() => setSelectingDate('end')}
-                    className={cn(
-                      "cursor-pointer",
-                      selectingDate === 'end' && "ring-2 ring-primary"
-                    )}
-                  />
-                </div>
+              {/* Display selected date */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Fecha inicio</p>
+                <Input 
+                  value={formatDisplayDate(startDate)} 
+                  readOnly 
+                  className="cursor-pointer"
+                />
               </div>
               
-              {/* Year and Month selector */}
+              {/* Centered Year and Month selector with month navigation */}
               <div className="flex items-center justify-between mb-2">
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => navigateYear('prev')} 
+                  onClick={() => navigateMonth('prev')} 
                   className="h-7 w-7 p-0"
+                  aria-label="Mes anterior"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 
-                <div className="flex gap-2">
+                <div className="flex gap-2 justify-center flex-1">
                   <Select 
                     value={viewDate.getFullYear().toString()} 
                     onValueChange={(value) => {
@@ -184,8 +167,9 @@ const RentalFilters = ({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => navigateYear('next')} 
+                  onClick={() => navigateMonth('next')} 
                   className="h-7 w-7 p-0"
+                  aria-label="Mes siguiente"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -220,6 +204,8 @@ const RentalFilters = ({
                 month={viewDate}
                 onMonthChange={setViewDate}
                 className={cn("p-3 pointer-events-auto")}
+                showOutsideDays={true}
+                fixedWeeks={true}
               />
               
               <div className="flex justify-between pt-2 border-t">
