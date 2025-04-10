@@ -45,20 +45,8 @@ const RentalFilters = ({
 }: RentalFiltersProps) => {
   // State to track which date we're selecting (start or end)
   const [selectingDate, setSelectingDate] = useState<'start' | 'end'>('start');
-  const [calendarView, setCalendarView] = useState<'days' | 'months' | 'years'>('days');
   const [viewDate, setViewDate] = useState<Date>(new Date());
   
-  // Handle date selection - alternate between start and end dates
-  const handleDateSelect = (date: Date | undefined) => {
-    if (selectingDate === 'start') {
-      onStartDateChange(date);
-      setSelectingDate('end');
-    } else {
-      onEndDateChange(date);
-      setSelectingDate('start');
-    }
-  };
-
   // Format date for display
   const formatDisplayDate = (date: Date | undefined) => {
     return date ? format(date, 'dd/MM/yyyy', { locale: es }) : '';
