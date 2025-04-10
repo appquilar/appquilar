@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { Rental } from '@/domain/models/Rental';
 import { RentalCounts, RentalFilters } from '@/domain/models/RentalFilters';
@@ -56,10 +55,22 @@ export const useRentalsFilter = (rentals: Rental[]): UseRentalsFilterReturn => {
   };
   
   const handleDateSelect = (date: Date) => {
-    console.log('Selected date:', date);
-    // Set the selected date as both start and end for single-day filtering
-    setStartDate(date);
-    setEndDate(date);
+    // If we have no start date, or we have both start and end dates, set as start date
+    if (!startDate || (startDate && endDate)) {
+      setStartDate(date);
+      setEndDate(undefined);
+    } 
+    // If we have start date but no end date
+    else if (startDate && !endDate) {
+      // If selected date is before start date, make it the start and the old start the end
+      if (date < startDate) {
+        setEndDate(startDate);
+        setStartDate(date);
+      } else {
+        // Otherwise set it as end date
+        setEndDate(date);
+      }
+    }
   };
 
   return {

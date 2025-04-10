@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Search, Filter, Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Filter, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -9,9 +9,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { format } from 'date-fns';
+import { format, addYears } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface RentalFiltersProps {
   searchQuery: string;
@@ -37,7 +44,9 @@ const RentalFilters = ({
   onSearch
 }: RentalFiltersProps) => {
   // State to track which date we're selecting (start or end)
-  const [selectingDate, setSelectingDate] = React.useState<'start' | 'end'>('start');
+  const [selectingDate, setSelectingDate] = useState<'start' | 'end'>('start');
+  const [calendarView, setCalendarView] = useState<'days' | 'months' | 'years'>('days');
+  const [viewDate, setViewDate] = useState<Date>(new Date());
   
   // Handle date selection - alternate between start and end dates
   const handleDateSelect = (date: Date | undefined) => {
@@ -50,15 +59,35 @@ const RentalFilters = ({
     }
   };
 
-  // Format date range for display
-  const getDateRangeLabel = () => {
-    if (startDate && endDate) {
-      return `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`;
+  // Format date for display
+  const formatDisplayDate = (date: Date | undefined) => {
+    return date ? format(date, 'dd/MM/yyyy', { locale: es }) : '';
+  };
+
+  // Navigation for years
+  const navigateYear = (direction: 'prev' | 'next') => {
+    setViewDate(current => addYears(current, direction === 'prev' ? -1 : 1));
+  };
+
+  // Generate array of years for selection (10 years before and after current year)
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = currentYear - 10; i <= currentYear + 10; i++) {
+      years.push(i);
     }
-    if (startDate) {
-      return `${format(startDate, 'dd/MM/yyyy')} - Seleccionar`;
-    }
-    return 'Rango de fechas';
+    return years;
+  };
+
+  // Generate array of months for selection
+  const generateMonthOptions = () => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const date = new Date(2021, i, 1);
+      return {
+        value: i.toString(),
+        label: format(date, 'MMMM', { locale: es })
+      };
+    });
   };
 
   return (
@@ -78,30 +107,134 @@ const RentalFilters = ({
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="h-10">
               <Calendar className="h-4 w-4 mr-2" />
-              {getDateRangeLabel()}
+              <span>Rango de fechas</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
-            <div className="p-3">
-              <div className="mb-2 text-sm font-medium">
-                {selectingDate === 'start' ? 'Seleccionar fecha inicio' : 'Seleccionar fecha fin'}
+          <PopoverContent className="w-auto p-0 min-w-[320px]">
+            <div className="p-3 space-y-3">
+              {/* Display selected dates */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Fecha inicio</p>
+                  <Input 
+                    value={formatDisplayDate(startDate)} 
+                    readOnly 
+                    onClick={() => setSelectingDate('start')}
+                    className={cn(
+                      "cursor-pointer",
+                      selectingDate === 'start' && "ring-2 ring-primary"
+                    )}
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Fecha fin</p>
+                  <Input 
+                    value={formatDisplayDate(endDate)} 
+                    readOnly 
+                    onClick={() => setSelectingDate('end')}
+                    className={cn(
+                      "cursor-pointer",
+                      selectingDate === 'end' && "ring-2 ring-primary"
+                    )}
+                  />
+                </div>
               </div>
+              
+              {/* Year and Month selector */}
+              <div className="flex items-center justify-between mb-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigateYear('prev')} 
+                  className="h-7 w-7 p-0"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <div className="flex gap-2">
+                  <Select 
+                    value={viewDate.getFullYear().toString()} 
+                    onValueChange={(value) => {
+                      const newDate = new Date(viewDate);
+                      newDate.setFullYear(parseInt(value));
+                      setViewDate(newDate);
+                    }}
+                  >
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue placeholder="Año" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateYearOptions().map(year => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select 
+                    value={viewDate.getMonth().toString()} 
+                    onValueChange={(value) => {
+                      const newDate = new Date(viewDate);
+                      newDate.setMonth(parseInt(value));
+                      setViewDate(newDate);
+                    }}
+                  >
+                    <SelectTrigger className="w-[130px]">
+                      <SelectValue placeholder="Mes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateMonthOptions().map(month => (
+                        <SelectItem key={month.value} value={month.value}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigateYear('next')} 
+                  className="h-7 w-7 p-0"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Calendar */}
               <CalendarComponent
-                mode="single"
-                selected={selectingDate === 'start' ? startDate : endDate}
-                onSelect={handleDateSelect}
+                mode="range"
+                selected={{
+                  from: startDate,
+                  to: endDate,
+                }}
+                onSelect={(range) => {
+                  if (range?.from) {
+                    onStartDateChange(range.from);
+                  } else {
+                    onStartDateChange(undefined);
+                  }
+                  if (range?.to) {
+                    onEndDateChange(range.to);
+                  } else {
+                    onEndDateChange(undefined);
+                  }
+                  if (range?.from && !range?.to) {
+                    setSelectingDate('end');
+                  } else {
+                    setSelectingDate('start');
+                  }
+                }}
                 initialFocus
                 locale={es}
-                className="p-3"
-                disabled={(date) => {
-                  // When selecting end date, disable dates before start date
-                  if (selectingDate === 'end' && startDate) {
-                    return date < startDate;
-                  }
-                  return false;
-                }}
+                month={viewDate}
+                onMonthChange={setViewDate}
+                className={cn("p-3 pointer-events-auto")}
               />
-              <div className="flex justify-between pt-2 border-t mt-2">
+              
+              <div className="flex justify-between pt-2 border-t">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -113,14 +246,15 @@ const RentalFilters = ({
                 >
                   Limpiar
                 </Button>
+                
                 <Button
                   size="sm"
                   onClick={() => {
-                    // Toggle which date we're selecting
-                    setSelectingDate(selectingDate === 'start' ? 'end' : 'start');
+                    // Close the popover by clicking outside
+                    document.body.click();
                   }}
                 >
-                  {selectingDate === 'start' ? 'Siguiente' : 'Anterior'}
+                  Aplicar
                 </Button>
               </div>
             </div>

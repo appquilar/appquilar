@@ -62,4 +62,22 @@ export class RentalFilterService {
       completed: rentals.filter(r => r.status === 'completed').length,
     };
   }
+  
+  /**
+   * Verifica si hay alquileres en una fecha específica
+   */
+  static hasRentalsOnDate(rentals: Rental[], date: Date): boolean {
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+    
+    return rentals.some(rental => {
+      const startDate = new Date(rental.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      
+      const endDate = new Date(rental.endDate);
+      endDate.setHours(0, 0, 0, 0);
+      
+      return (targetDate >= startDate && targetDate <= endDate);
+    });
+  }
 }

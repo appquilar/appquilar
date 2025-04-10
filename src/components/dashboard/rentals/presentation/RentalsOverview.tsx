@@ -29,6 +29,7 @@ const RentalsOverview = () => {
     handleSearch,
     handleCreateRental,
     handleViewDetails,
+    handleDateSelect
   } = useRentalsManagement();
   
   return (
@@ -55,6 +56,8 @@ const RentalsOverview = () => {
       <div className="flex flex-col space-y-2">
         <RentalCalendarControls 
           onCreateRental={handleCreateRental}
+          startDate={startDate}
+          endDate={endDate}
         />
       </div>
       

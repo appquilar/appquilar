@@ -13,6 +13,8 @@ interface RentalCalendarProps {
   onDateSelect?: (date: Date) => void;
   currentMonth: Date;
   onMonthChange?: (date: Date) => void;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 const WEEKDAYS = ['lu', 'ma', 'mi', 'ju', 'vi', 'sa', 'do'];
@@ -21,7 +23,9 @@ const RentalCalendar = ({
   rentals, 
   onDateSelect, 
   currentMonth,
-  onMonthChange 
+  onMonthChange,
+  startDate,
+  endDate
 }: RentalCalendarProps) => {
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -30,13 +34,13 @@ const RentalCalendar = ({
 
   // Get dates that have rentals
   const rentalDates = rentals.flatMap(rental => {
-    const startDate = new Date(rental.startDate);
-    const endDate = new Date(rental.endDate);
+    const rentalStartDate = new Date(rental.startDate);
+    const rentalEndDate = new Date(rental.endDate);
     const dates = [];
     
     // Add all dates between start and end date
-    let currentDate = new Date(startDate);
-    while (currentDate <= endDate) {
+    let currentDate = new Date(rentalStartDate);
+    while (currentDate <= rentalEndDate) {
       dates.push(new Date(currentDate));
       currentDate.setDate(currentDate.getDate() + 1);
     }
@@ -47,6 +51,12 @@ const RentalCalendar = ({
   // Check if a date has rentals
   const hasRentals = (date: Date) => {
     return rentalDates.some(rentalDate => isSameDay(rentalDate, date));
+  };
+
+  // Check if date is in selected range
+  const isInRange = (date: Date) => {
+    if (!startDate || !endDate) return false;
+    return date >= startDate && date <= endDate;
   };
 
   // Handle date selection
@@ -83,17 +93,28 @@ const RentalCalendar = ({
         const isToday = isSameDay(day, today);
         const isCurrentMonth = isSameMonth(day, month);
         const hasRental = hasRentals(day);
+        const inSelectedRange = isInRange(day);
+        const isRangeStart = startDate && isSameDay(day, startDate);
+        const isRangeEnd = endDate && isSameDay(day, endDate);
         
         days.push(
           <button
             key={`day-${day.toISOString()}`}
             onClick={() => handleSelect(currentDay)}
             className={cn(
-              "w-10 h-10 flex flex-col items-center justify-center rounded-full text-sm relative",
+              "w-10 h-10 flex flex-col items-center justify-center text-sm relative",
               isCurrentMonth ? "text-foreground" : "text-muted-foreground opacity-50",
               isToday && "bg-primary/10 font-medium",
-              selectedDate && isSameDay(day, selectedDate) && "bg-primary text-primary-foreground",
-              hasRental && !selectedDate && !isToday && "font-medium",
+              
+              // Range styling
+              inSelectedRange && "bg-primary/20",
+              isRangeStart && "bg-primary text-primary-foreground rounded-l-full",
+              isRangeEnd && "bg-primary text-primary-foreground rounded-r-full",
+              
+              // Single day selection
+              selectedDate && isSameDay(day, selectedDate) && !inSelectedRange && "bg-primary text-primary-foreground rounded-full",
+              
+              hasRental && !inSelectedRange && !isToday && "font-medium",
               "hover:bg-accent/80"
             )}
           >
