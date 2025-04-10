@@ -9,7 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { format, addMonths, subMonths } from 'date-fns';
+import { format, addYears } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import {
@@ -45,18 +45,28 @@ const RentalFilters = ({
 }: RentalFiltersProps) => {
   // State to track which date we're selecting (start or end)
   const [selectingDate, setSelectingDate] = useState<'start' | 'end'>('start');
+  const [calendarView, setCalendarView] = useState<'days' | 'months' | 'years'>('days');
   const [viewDate, setViewDate] = useState<Date>(new Date());
   
+  // Handle date selection - alternate between start and end dates
+  const handleDateSelect = (date: Date | undefined) => {
+    if (selectingDate === 'start') {
+      onStartDateChange(date);
+      setSelectingDate('end');
+    } else {
+      onEndDateChange(date);
+      setSelectingDate('start');
+    }
+  };
+
   // Format date for display
   const formatDisplayDate = (date: Date | undefined) => {
     return date ? format(date, 'dd/MM/yyyy', { locale: es }) : '';
   };
 
-  // Navigation for months
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    setViewDate(current => 
-      direction === 'prev' ? subMonths(current, 1) : addMonths(current, 1)
-    );
+  // Navigation for years
+  const navigateYear = (direction: 'prev' | 'next') => {
+    setViewDate(current => addYears(current, direction === 'prev' ? -1 : 1));
   };
 
   // Generate array of years for selection (10 years before and after current year)
@@ -67,6 +77,17 @@ const RentalFilters = ({
       years.push(i);
     }
     return years;
+  };
+
+  // Generate array of months for selection
+  const generateMonthOptions = () => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const date = new Date(2021, i, 1);
+      return {
+        value: i.toString(),
+        label: format(date, 'MMMM', { locale: es })
+      };
+    });
   };
 
   return (
@@ -119,12 +140,12 @@ const RentalFilters = ({
                 </div>
               </div>
               
-              {/* Year selector with month navigation */}
+              {/* Year and Month selector */}
               <div className="flex items-center justify-between mb-2">
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => navigateMonth('prev')} 
+                  onClick={() => navigateYear('prev')} 
                   className="h-7 w-7 p-0"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -150,20 +171,36 @@ const RentalFilters = ({
                       ))}
                     </SelectContent>
                   </Select>
+                  
+                  <Select 
+                    value={viewDate.getMonth().toString()} 
+                    onValueChange={(value) => {
+                      const newDate = new Date(viewDate);
+                      newDate.setMonth(parseInt(value));
+                      setViewDate(newDate);
+                    }}
+                  >
+                    <SelectTrigger className="w-[130px]">
+                      <SelectValue placeholder="Mes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateMonthOptions().map(month => (
+                        <SelectItem key={month.value} value={month.value}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => navigateMonth('next')} 
+                  onClick={() => navigateYear('next')} 
                   className="h-7 w-7 p-0"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
-              </div>
-              
-              <div className="text-center text-sm font-medium mb-1">
-                {format(viewDate, 'MMMM yyyy', { locale: es })}
               </div>
               
               {/* Calendar */}
