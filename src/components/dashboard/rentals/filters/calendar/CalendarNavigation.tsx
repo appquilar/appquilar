@@ -47,22 +47,22 @@ const CalendarNavigation = ({
   };
 
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center justify-between mb-2">
       <Button 
         variant="ghost" 
         size="sm" 
         onClick={() => onNavigateMonth('prev')} 
-        className="h-7 w-7 p-0"
+        className="h-7 w-7 p-0 flex-shrink-0"
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
       
-      <div className="flex gap-2">
+      <div className="flex gap-2 justify-center flex-grow">
         <Select 
           value={viewDate.getFullYear().toString()} 
           onValueChange={(value) => onYearChange(parseInt(value))}
         >
-          <SelectTrigger className="w-[100px]">
+          <SelectTrigger className="w-[90px]">
             <SelectValue placeholder="Año" />
           </SelectTrigger>
           <SelectContent>
@@ -78,7 +78,7 @@ const CalendarNavigation = ({
           value={viewDate.getMonth().toString()} 
           onValueChange={(value) => onMonthChange(parseInt(value))}
         >
-          <SelectTrigger className="w-[130px]">
+          <SelectTrigger className="w-[110px]">
             <SelectValue placeholder="Mes" />
           </SelectTrigger>
           <SelectContent>
@@ -95,7 +95,7 @@ const CalendarNavigation = ({
         variant="ghost" 
         size="sm" 
         onClick={() => onNavigateMonth('next')} 
-        className="h-7 w-7 p-0"
+        className="h-7 w-7 p-0 flex-shrink-0"
       >
         <ChevronRight className="h-4 w-4" />
       </Button>

@@ -9,11 +9,12 @@ interface DateRangeActionsProps {
 
 const DateRangeActions = ({ onClear, onApply }: DateRangeActionsProps) => {
   return (
-    <div className="flex justify-between pt-2 border-t">
+    <div className="flex justify-between pt-3 border-t mt-2">
       <Button 
         variant="outline" 
         size="sm" 
         onClick={onClear}
+        className="w-[120px]"
       >
         Limpiar
       </Button>
@@ -21,6 +22,7 @@ const DateRangeActions = ({ onClear, onApply }: DateRangeActionsProps) => {
       <Button
         size="sm"
         onClick={onApply}
+        className="w-[120px]"
       >
         Aplicar
       </Button>

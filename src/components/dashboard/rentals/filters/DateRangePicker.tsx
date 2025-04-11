@@ -8,6 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { useIsMobile } from '@/hooks/use-mobile';
 import CalendarNavigation from './calendar/CalendarNavigation';
 import CalendarDisplay from './calendar/CalendarDisplay';
 import DateRangeInputs from './calendar/DateRangeInputs';
@@ -28,6 +29,8 @@ const DateRangePicker = ({
 }: DateRangePickerProps) => {
   const [selectingDate, setSelectingDate] = useState<'start' | 'end'>('start');
   const [viewDate, setViewDate] = useState<Date>(new Date());
+  const [open, setOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   // Navigation for months
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -76,19 +79,23 @@ const DateRangePicker = ({
 
   // Handle apply (close popover)
   const handleApply = () => {
-    // Close the popover by clicking outside
-    document.body.click();
+    setOpen(false);
   };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="h-10">
           <CalendarIcon className="h-4 w-4 mr-2" />
           <span>Rango de fechas</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 min-w-[320px]">
+      <PopoverContent 
+        className={`${isMobile ? 'w-[calc(100vw-24px)] max-w-none left-0 right-0 mx-auto' : 'min-w-[320px] w-auto'} p-0`} 
+        align={isMobile ? "center" : "start"}
+        side={isMobile ? "bottom" : undefined}
+        sideOffset={isMobile ? 5 : 10}
+      >
         <div className="p-3 space-y-3">
           {/* Date inputs for start and end date */}
           <DateRangeInputs 
