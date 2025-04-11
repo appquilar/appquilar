@@ -2,7 +2,6 @@
 import React from 'react';
 import RentalsHeader from '../RentalsHeader';
 import RentalFilters from '../RentalFilters';
-import RentalCalendarControls from '../RentalCalendarControls';
 import RentalTabs from '../RentalTabs';
 import RentalsContainer from '../RentalsContainer';
 import { useRentalsManagement } from '../hooks/useRentalsManagement';
@@ -49,15 +48,6 @@ const RentalsOverview = () => {
           rentalId={rentalId}
           onRentalIdChange={setRentalId}
           onSearch={handleSearch}
-        />
-      </div>
-      
-      {/* Calendar controls section */}
-      <div className="flex flex-col space-y-2">
-        <RentalCalendarControls 
-          onCreateRental={handleCreateRental}
-          startDate={startDate}
-          endDate={endDate}
         />
       </div>
       
