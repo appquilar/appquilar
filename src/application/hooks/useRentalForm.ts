@@ -34,6 +34,7 @@ export const useRentalForm = () => {
         startDate: data.startDate.toISOString(),
         endDate: data.endDate.toISOString(),
         totalAmount: data.totalAmount,
+        depositAmount: data.depositAmount || 0,
         status: 'upcoming' as const,
         returned: false,
       };

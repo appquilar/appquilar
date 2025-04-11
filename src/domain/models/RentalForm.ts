@@ -13,6 +13,7 @@ export const rentalFormSchema = z.object({
   startDate: z.date({ required_error: 'Fecha de inicio requerida' }),
   endDate: z.date({ required_error: 'Fecha de fin requerida' }),
   totalAmount: z.number().min(0, { message: 'El monto debe ser mayor a 0' }),
+  depositAmount: z.number().min(0, { message: 'La fianza debe ser mayor o igual a 0' }).optional(),
 });
 
 /**
@@ -27,4 +28,5 @@ export const defaultRentalFormValues: Partial<RentalFormValues> = {
   startDate: new Date(),
   endDate: new Date(new Date().setDate(new Date().getDate() + 7)),
   totalAmount: 0,
+  depositAmount: 0,
 };
