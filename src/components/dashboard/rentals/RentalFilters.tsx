@@ -31,27 +31,29 @@ const RentalFilters = ({
 }: RentalFiltersProps) => {
   return (
     <div className="w-full">
-      <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+      <div className="flex flex-col gap-2">
         <SearchField 
           value={searchQuery} 
           onChange={onSearchChange} 
-          className="w-full sm:w-auto"
+          className="w-full"
         />
         
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
           <DateRangePicker
             startDate={startDate}
             endDate={endDate}
             onStartDateChange={onStartDateChange}
             onEndDateChange={onEndDateChange}
+            className="w-full sm:w-auto"
           />
           
           <RentalIdField 
             value={rentalId}
             onChange={onRentalIdChange}
+            className="w-full sm:w-auto"
           />
           
-          <Button onClick={(e) => onSearch(e)} className="h-10">
+          <Button onClick={(e) => onSearch(e)} className="h-10 w-full sm:w-auto">
             <Filter className="h-4 w-4 mr-2" />
             <span>Filtrar</span>
           </Button>

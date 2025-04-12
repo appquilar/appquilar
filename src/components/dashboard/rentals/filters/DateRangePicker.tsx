@@ -19,6 +19,7 @@ interface DateRangePickerProps {
   endDate: Date | undefined;
   onStartDateChange: (date: Date | undefined) => void;
   onEndDateChange: (date: Date | undefined) => void;
+  className?: string;
 }
 
 const DateRangePicker = ({
@@ -26,6 +27,7 @@ const DateRangePicker = ({
   endDate,
   onStartDateChange,
   onEndDateChange,
+  className = '',
 }: DateRangePickerProps) => {
   const [selectingDate, setSelectingDate] = useState<'start' | 'end'>('start');
   const [viewDate, setViewDate] = useState<Date>(new Date());
@@ -85,7 +87,7 @@ const DateRangePicker = ({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-10">
+        <Button variant="outline" size="sm" className={`h-10 w-full ${className}`}>
           <CalendarIcon className="h-4 w-4 mr-2" />
           <span>Rango de fechas</span>
         </Button>

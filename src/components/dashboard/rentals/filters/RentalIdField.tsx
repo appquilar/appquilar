@@ -5,16 +5,17 @@ import { Input } from '@/components/ui/input';
 interface RentalIdFieldProps {
   value: string;
   onChange: (value: string) => void;
+  className?: string;
 }
 
-const RentalIdField = ({ value, onChange }: RentalIdFieldProps) => {
+const RentalIdField = ({ value, onChange, className = '' }: RentalIdFieldProps) => {
   return (
-    <div className="relative">
+    <div className={`relative ${className}`}>
       <Input
         placeholder="ID de alquiler"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-32 h-10"
+        className="h-10 w-full"
       />
     </div>
   );
