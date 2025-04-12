@@ -36,9 +36,17 @@ const CompanyForm = ({ form, isAddMode, categories }: CompanyFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <CompanyBasicInfoFields form={form} />
-        <CompanyContactFields form={form} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <CompanyBasicInfoFields form={form} />
+          </div>
+          <div className="space-y-6">
+            <CompanyContactFields form={form} />
+          </div>
+        </div>
+        
         <CompanyCategoryField form={form} categories={categories} />
+        
         <FormActions isSubmitting={form.formState.isSubmitting} onCancel={() => navigate('/dashboard/companies')} />
       </form>
     </Form>

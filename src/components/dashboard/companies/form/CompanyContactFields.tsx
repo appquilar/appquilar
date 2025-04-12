@@ -12,6 +12,7 @@ interface CompanyContactFieldsProps {
 const CompanyContactFields = ({ form }: CompanyContactFieldsProps) => {
   return (
     <>
+      <h3 className="text-lg font-medium mb-4">Información de Contacto</h3>
       {/* ID Fiscal */}
       <FormField
         control={form.control}

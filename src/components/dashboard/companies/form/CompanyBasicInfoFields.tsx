@@ -36,6 +36,7 @@ const CompanyBasicInfoFields = ({ form }: CompanyBasicInfoFieldsProps) => {
 
   return (
     <>
+      <h3 className="text-lg font-medium mb-4">Información Básica</h3>
       {/* Nombre */}
       <FormField
         control={form.control}
@@ -59,7 +60,7 @@ const CompanyBasicInfoFields = ({ form }: CompanyBasicInfoFieldsProps) => {
           <FormItem>
             <FormLabel>Descripción</FormLabel>
             <FormControl>
-              <Textarea placeholder="Descripción de la empresa" {...field} />
+              <Textarea placeholder="Descripción de la empresa" className="min-h-[100px]" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

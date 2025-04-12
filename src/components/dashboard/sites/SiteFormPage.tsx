@@ -16,24 +16,26 @@ const SiteFormPage = () => {
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto">
       <FormHeader
         title={isAddMode ? 'Crear Sitio' : 'Editar Sitio'}
         backUrl="/dashboard/sites"
       />
       
       {error && (
-        <Alert variant="destructive" className="mb-6">
+        <Alert variant="destructive" className="mb-4 sm:mb-6">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
       
-      <SiteForm 
-        form={form} 
-        isAddMode={isAddMode} 
-        siteId={siteId}
-      />
+      <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
+        <SiteForm 
+          form={form} 
+          isAddMode={isAddMode} 
+          siteId={siteId}
+        />
+      </div>
     </div>
   );
 };

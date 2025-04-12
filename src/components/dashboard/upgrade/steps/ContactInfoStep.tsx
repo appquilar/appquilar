@@ -37,10 +37,10 @@ const ContactInfoStep = ({ formData, onUpdateFormData, onNext, onBack }: Contact
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-semibold">Información de Contacto</h2>
-        <p className="text-muted-foreground">¿Cómo pueden contactar contigo los clientes potenciales?</p>
+        <h2 className="text-lg sm:text-xl font-semibold">Información de Contacto</h2>
+        <p className="text-sm text-muted-foreground">¿Cómo pueden contactar contigo los clientes potenciales?</p>
       </div>
 
       <Form {...form}>
@@ -67,7 +67,7 @@ const ContactInfoStep = ({ formData, onUpdateFormData, onNext, onBack }: Contact
                 <FormItem>
                   <FormLabel>Email de Contacto</FormLabel>
                   <FormControl>
-                    <Input placeholder="contacto@miempresa.com" {...field} />
+                    <Input placeholder="contacto@miempresa.com" type="email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

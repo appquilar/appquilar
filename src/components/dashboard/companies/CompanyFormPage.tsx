@@ -15,17 +15,19 @@ const CompanyFormPage = () => {
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto">
       <FormHeader
         title={isAddMode ? 'Crear Empresa' : 'Editar Empresa'}
         backUrl="/dashboard/companies"
       />
       
-      <CompanyForm 
-        form={form} 
-        isAddMode={isAddMode} 
-        categories={MOCK_CATEGORIES}
-      />
+      <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
+        <CompanyForm 
+          form={form} 
+          isAddMode={isAddMode} 
+          categories={MOCK_CATEGORIES}
+        />
+      </div>
     </div>
   );
 };

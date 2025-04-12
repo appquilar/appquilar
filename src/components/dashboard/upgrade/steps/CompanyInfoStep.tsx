@@ -65,10 +65,10 @@ const CompanyInfoStep = ({ formData, onUpdateFormData, onNext, onBack }: Company
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-semibold">Información de la Empresa</h2>
-        <p className="text-muted-foreground">Proporciona la información básica sobre tu empresa.</p>
+        <h2 className="text-lg sm:text-xl font-semibold">Información de la Empresa</h2>
+        <p className="text-sm text-muted-foreground">Proporciona la información básica sobre tu empresa.</p>
       </div>
 
       <Form {...form}>
@@ -96,7 +96,7 @@ const CompanyInfoStep = ({ formData, onUpdateFormData, onNext, onBack }: Company
                 <FormControl>
                   <Textarea 
                     placeholder="Una breve descripción de tu empresa y sus servicios de alquiler" 
-                    className="resize-none min-h-[100px]"
+                    className="resize-none min-h-[80px] sm:min-h-[100px]"
                     {...field} 
                   />
                 </FormControl>

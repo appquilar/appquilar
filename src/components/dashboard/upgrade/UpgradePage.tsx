@@ -80,10 +80,10 @@ const UpgradePage = () => {
   };
 
   return (
-    <div className="container max-w-5xl py-8">
-      <div className="space-y-8">
+    <div className="container max-w-5xl py-4 sm:py-8 px-4 sm:px-6">
+      <div className="space-y-6 sm:space-y-8">
         <div>
-          <h1 className="text-2xl font-bold">Actualizar a Cuenta de Empresa</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Actualizar a Cuenta de Empresa</h1>
           <p className="text-muted-foreground">
             Completa la información necesaria para convertir tu cuenta en una cuenta de empresa.
           </p>
@@ -92,14 +92,14 @@ const UpgradePage = () => {
         {/* Progress bar (only show if not on success step) */}
         {currentStep !== 'success' && (
           <div className="w-full">
-            <div className="flex justify-between mb-2">
-              <div className={`text-sm font-medium ${currentStep === 'info' ? 'text-primary' : ''}`}>
-                Información de Empresa
+            <div className="flex justify-between mb-2 px-1 text-xs sm:text-sm">
+              <div className={`font-medium ${currentStep === 'info' ? 'text-primary' : ''}`}>
+                Información
               </div>
-              <div className={`text-sm font-medium ${currentStep === 'contact' ? 'text-primary' : ''}`}>
+              <div className={`font-medium ${currentStep === 'contact' ? 'text-primary' : ''}`}>
                 Contacto
               </div>
-              <div className={`text-sm font-medium ${currentStep === 'plan' ? 'text-primary' : ''}`}>
+              <div className={`font-medium ${currentStep === 'plan' ? 'text-primary' : ''}`}>
                 Plan
               </div>
             </div>
@@ -118,46 +118,48 @@ const UpgradePage = () => {
           </div>
         )}
 
-        {currentStep === 'info' && (
-          <CompanyInfoStep 
-            formData={formData} 
-            onUpdateFormData={handleUpdateFormData} 
-            onNext={() => handleNext('contact')}
-            onBack={handleBack}
-          />
-        )}
+        <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
+          {currentStep === 'info' && (
+            <CompanyInfoStep 
+              formData={formData} 
+              onUpdateFormData={handleUpdateFormData} 
+              onNext={() => handleNext('contact')}
+              onBack={handleBack}
+            />
+          )}
 
-        {currentStep === 'contact' && (
-          <ContactInfoStep 
-            formData={formData} 
-            onUpdateFormData={handleUpdateFormData} 
-            onNext={() => handleNext('plan')}
-            onBack={handleBack}
-          />
-        )}
+          {currentStep === 'contact' && (
+            <ContactInfoStep 
+              formData={formData} 
+              onUpdateFormData={handleUpdateFormData} 
+              onNext={() => handleNext('plan')}
+              onBack={handleBack}
+            />
+          )}
 
-        {currentStep === 'plan' && (
-          <SelectPlanStep 
-            formData={formData} 
-            onUpdateFormData={handleUpdateFormData} 
-            onComplete={handleComplete}
-            onBack={handleBack}
-            isSubmitting={isSubmitting}
-          />
-        )}
+          {currentStep === 'plan' && (
+            <SelectPlanStep 
+              formData={formData} 
+              onUpdateFormData={handleUpdateFormData} 
+              onComplete={handleComplete}
+              onBack={handleBack}
+              isSubmitting={isSubmitting}
+            />
+          )}
 
-        {currentStep === 'success' && (
-          <SuccessStep 
-            planName={formData.selectedPlan === 'basic' 
-              ? 'Básico' 
-              : formData.selectedPlan === 'professional' 
-                ? 'Profesional' 
-                : 'Premium'
-            } 
-            companyName={formData.name} 
-            onClose={handleClose} 
-          />
-        )}
+          {currentStep === 'success' && (
+            <SuccessStep 
+              planName={formData.selectedPlan === 'basic' 
+                ? 'Básico' 
+                : formData.selectedPlan === 'professional' 
+                  ? 'Profesional' 
+                  : 'Premium'
+              } 
+              companyName={formData.name} 
+              onClose={handleClose} 
+            />
+          )}
+        </div>
       </div>
     </div>
   );
