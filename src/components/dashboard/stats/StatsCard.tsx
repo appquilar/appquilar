@@ -24,17 +24,17 @@ const StatsCard = ({
   descriptionColor = 'neutral'
 }: StatsCardProps) => {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
+    <Card className="h-full">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3">
+        <CardTitle className="text-xs sm:text-sm font-medium">
           {title}
         </CardTitle>
         <Icon size={16} className="text-muted-foreground" />
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+      <CardContent className="pb-3 pt-0">
+        <div className="text-xl sm:text-2xl font-bold">{value}</div>
         {trend ? (
-          <p className="text-xs text-muted-foreground flex items-center mt-1">
+          <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center mt-1">
             <span className={`${trend.positive ? 'text-emerald-600' : 'text-red-600'} flex items-center mr-1`}>
               {trend.positive ? '↑' : '↓'}
               {trend.value}
@@ -43,7 +43,7 @@ const StatsCard = ({
           </p>
         ) : (
           description && (
-            <p className={`text-xs mt-1 ${
+            <p className={`text-[10px] sm:text-xs mt-1 ${
               descriptionColor === 'positive' ? 'text-emerald-600' : 
               descriptionColor === 'negative' ? 'text-red-600' : 
               'text-muted-foreground'

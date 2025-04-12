@@ -20,7 +20,7 @@ const DashboardLayout = ({ sidebar, content }: DashboardLayoutProps) => {
     <div className="flex h-screen w-screen overflow-hidden">
       {/* Mobile menu toggle and header */}
       {isMobile && (
-        <div className="fixed top-0 left-0 right-0 z-50 flex items-center bg-background border-b border-border h-14 px-4">
+        <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-background border-b border-border h-14 px-4">
           <Button
             variant="ghost"
             size="icon"
@@ -28,10 +28,10 @@ const DashboardLayout = ({ sidebar, content }: DashboardLayoutProps) => {
           >
             <Menu size={20} />
           </Button>
-          <div className="mx-auto text-xl font-display font-semibold tracking-tight text-primary">
+          <div className="text-xl font-display font-semibold tracking-tight text-primary">
             appquilar
           </div>
-          <div className="w-9"></div> {/* Spacer for balance */}
+          <div className="w-9 opacity-0"></div> {/* Spacer for balance */}
         </div>
       )}
 
@@ -57,8 +57,8 @@ const DashboardLayout = ({ sidebar, content }: DashboardLayoutProps) => {
       )}
 
       {/* Main content */}
-      <div className="flex-grow overflow-y-auto">
-        <div className={`${isMobile ? 'pt-16' : ''} h-full p-6`}>
+      <div className="flex-grow overflow-y-auto w-full">
+        <div className={`${isMobile ? 'pt-16' : ''} h-full p-4 sm:p-6`}>
           {content}
         </div>
       </div>

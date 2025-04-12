@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, MessageCircle, Package, Users, Eye } from 'lucide-react';
+import { Calendar, MessageCircle, Package, Eye } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatsOverview from '../stats/StatsOverview';
 import MonthlyStatsChart from '../stats/MonthlyStatsChart';
@@ -17,12 +17,12 @@ const DashboardOverview = () => {
   const rentalsData = !isLoading && stats?.monthlyRentals ? stats.monthlyRentals : MOCK_STATS.monthlyRentals;
   
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Resumen</h1>
+        <h1 className="text-xl sm:text-2xl font-bold">Resumen</h1>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Productos</CardTitle>
@@ -73,27 +73,27 @@ const DashboardOverview = () => {
         </Card>
       </div>
 
-      {/* Recent Activity and Upcoming Events - Moved above charts */}
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Recent Activity and Upcoming Events - Responsive grid */}
+      <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
         <Card className="col-span-1">
           <CardHeader>
             <CardTitle>Actividad Reciente</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Link to="/dashboard/rentals/new-rental" className="block hover:bg-muted transition-colors rounded-md p-2 -mx-2">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <p className="text-sm font-medium">Nuevo alquiler recibido</p>
                 <p className="text-xs text-muted-foreground">Hace 2 horas</p>
               </div>
             </Link>
             <Link to="/dashboard/messages" className="block hover:bg-muted transition-colors rounded-md p-2 -mx-2">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <p className="text-sm font-medium">Mensaje de cliente</p>
                 <p className="text-xs text-muted-foreground">Hace 5 horas</p>
               </div>
             </Link>
             <Link to="/dashboard/products" className="block hover:bg-muted transition-colors rounded-md p-2 -mx-2">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <p className="text-sm font-medium">Producto actualizado</p>
                 <p className="text-xs text-muted-foreground">Ayer</p>
               </div>
@@ -105,15 +105,15 @@ const DashboardOverview = () => {
             <CardTitle>Próximos Eventos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
+            <div className="space-y-1">
               <p className="text-sm font-medium">Entrega de producto</p>
               <p className="text-xs text-muted-foreground">Mañana a las 10:00</p>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               <p className="text-sm font-medium">Recogida de producto</p>
               <p className="text-xs text-muted-foreground">Miércoles a las 15:00</p>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               <p className="text-sm font-medium">Llamada con cliente</p>
               <p className="text-xs text-muted-foreground">Viernes a las 12:00</p>
             </div>
@@ -128,7 +128,7 @@ const DashboardOverview = () => {
             <CardTitle>Vistas Mensuales</CardTitle>
             <p className="text-sm text-muted-foreground">Historial de vistas por día</p>
           </CardHeader>
-          <CardContent className="p-0 h-[400px]">
+          <CardContent className="p-0 h-[350px] sm:h-[400px]">
             <MonthlyStatsChart
               title="" 
               description=""
@@ -146,7 +146,7 @@ const DashboardOverview = () => {
             <CardTitle>Alquileres Mensuales</CardTitle>
             <p className="text-sm text-muted-foreground">Historial de alquileres por día</p>
           </CardHeader>
-          <CardContent className="p-0 h-[400px]">
+          <CardContent className="p-0 h-[350px] sm:h-[400px]">
             <MonthlyStatsChart
               title=""
               description=""

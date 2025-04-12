@@ -14,7 +14,7 @@ const DashboardNavigation = (props: DashboardNavigationProps) => {
   return (
     <div className={`${isMobile ? 'w-full' : 'w-64'} h-full flex flex-col bg-background border-r border-border`}>
       {/* Logo en la parte superior */}
-      <div className={`p-4 border-b border-border ${isMobile ? 'pt-16' : ''}`}>
+      <div className={`p-4 border-b border-border flex items-center ${isMobile ? 'h-16' : ''}`}>
         <Link 
           to="/" 
           className="text-2xl font-display font-semibold tracking-tight text-primary transition-all duration-350"
@@ -23,7 +23,9 @@ const DashboardNavigation = (props: DashboardNavigationProps) => {
         </Link>
       </div>
       
-      <DashboardNavigationContent {...props} />
+      <div className="flex-1 overflow-y-auto">
+        <DashboardNavigationContent {...props} />
+      </div>
     </div>
   );
 };
