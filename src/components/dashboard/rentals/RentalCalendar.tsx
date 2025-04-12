@@ -80,7 +80,7 @@ const RentalCalendar = ({
 
     // Generate header with weekday names
     const weekdayHeader = WEEKDAYS.map((weekday, i) => (
-      <div key={`header-${weekday}-${i}`} className="text-center text-xs font-medium text-muted-foreground w-10 h-6 flex items-center justify-center">
+      <div key={`header-${weekday}-${i}`} className="text-center text-xs font-medium text-muted-foreground w-9 sm:w-10 h-6 flex items-center justify-center">
         {weekday}
       </div>
     ));
@@ -102,7 +102,7 @@ const RentalCalendar = ({
             key={`day-${day.toISOString()}`}
             onClick={() => handleSelect(currentDay)}
             className={cn(
-              "w-10 h-10 flex flex-col items-center justify-center text-sm relative",
+              "w-9 sm:w-10 h-9 sm:h-10 flex flex-col items-center justify-center text-sm relative",
               isCurrentMonth ? "text-foreground" : "text-muted-foreground opacity-50",
               isToday && "bg-primary/10 font-medium",
               
@@ -150,14 +150,14 @@ const RentalCalendar = ({
   };
 
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-w-[640px]">
-        <div className="border rounded-md p-2 bg-white">
+    <div className="w-full overflow-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 min-w-[290px] sm:min-w-[640px]">
+        <div className="border rounded-md p-1 sm:p-2 bg-white">
           {generateCalendarDays(currentMonth)}
         </div>
         
         {!isMobile && (
-          <div className="border rounded-md p-2 bg-white">
+          <div className="border rounded-md p-1 sm:p-2 bg-white">
             {generateCalendarDays(nextMonth)}
           </div>
         )}

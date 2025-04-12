@@ -32,12 +32,12 @@ const RentalsOverview = () => {
   } = useRentalsManagement();
   
   return (
-    <div className="space-y-4 max-w-full">
-      {/* Header */}
+    <div className="space-y-4 max-w-full px-2 sm:px-0">
+      {/* Header with create button */}
       <RentalsHeader onCreateRental={handleCreateRental} />
       
-      {/* Enhanced Filters */}
-      <div className="flex justify-between items-center">
+      {/* Enhanced Filters - more mobile friendly */}
+      <div className="flex flex-col space-y-4">
         <RentalFilters 
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}

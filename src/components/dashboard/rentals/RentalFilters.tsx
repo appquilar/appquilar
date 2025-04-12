@@ -30,29 +30,32 @@ const RentalFilters = ({
   onSearch
 }: RentalFiltersProps) => {
   return (
-    <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4">
-      <div className="flex flex-wrap gap-2">
+    <div className="w-full">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-2">
         <SearchField 
           value={searchQuery} 
           onChange={onSearchChange} 
+          className="w-full sm:w-auto"
         />
         
-        <DateRangePicker
-          startDate={startDate}
-          endDate={endDate}
-          onStartDateChange={onStartDateChange}
-          onEndDateChange={onEndDateChange}
-        />
-        
-        <RentalIdField 
-          value={rentalId}
-          onChange={onRentalIdChange}
-        />
-        
-        <Button onClick={(e) => onSearch(e)} className="h-10">
-          <Filter className="h-4 w-4 mr-2" />
-          <span>Filtrar</span>
-        </Button>
+        <div className="flex gap-2 flex-wrap">
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={onStartDateChange}
+            onEndDateChange={onEndDateChange}
+          />
+          
+          <RentalIdField 
+            value={rentalId}
+            onChange={onRentalIdChange}
+          />
+          
+          <Button onClick={(e) => onSearch(e)} className="h-10">
+            <Filter className="h-4 w-4 mr-2" />
+            <span>Filtrar</span>
+          </Button>
+        </div>
       </div>
     </div>
   );

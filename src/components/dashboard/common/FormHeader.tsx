@@ -12,7 +12,7 @@ const FormHeader = ({ title, backUrl }: FormHeaderProps) => {
   const navigate = useNavigate();
 
   return (
-    <div className="mb-4 sm:mb-6 flex items-center gap-3 sm:gap-4">
+    <div className="mb-3 sm:mb-6 flex items-center gap-2 sm:gap-4">
       <Button
         variant="outline"
         size="icon"

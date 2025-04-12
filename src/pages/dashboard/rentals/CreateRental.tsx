@@ -23,10 +23,10 @@ const CreateRental = () => {
   } = useProductSelection(form);
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
       <CreateRentalHeader />
 
-      <div className="bg-card rounded-lg border p-6">
+      <div className="bg-card rounded-lg border p-3 sm:p-6">
         <Form {...form}>
           <form onSubmit={onSubmit} className="space-y-6">
             <ProductInfoFields
@@ -39,11 +39,11 @@ const CreateRental = () => {
               handleProductSelect={handleProductSelect}
             />
 
-            <Separator className="my-6" />
+            <Separator className="my-4 sm:my-6" />
             
             <CustomerInfoFields form={form} />
 
-            <Separator className="my-6" />
+            <Separator className="my-4 sm:my-6" />
 
             <RentalDetailsFields form={form} />
 

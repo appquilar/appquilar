@@ -91,7 +91,7 @@ const DateRangePicker = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className={`${isMobile ? 'w-[calc(100vw-24px)] max-w-none left-0 right-0 mx-auto' : 'min-w-[320px] w-auto'} p-0`} 
+        className={`${isMobile ? 'w-[calc(100vw-16px)] max-h-[80vh] overflow-y-auto max-w-none left-0 right-0 mx-auto' : 'min-w-[320px] w-auto'} p-0`} 
         align={isMobile ? "center" : "start"}
         side={isMobile ? "bottom" : undefined}
         sideOffset={isMobile ? 5 : 10}

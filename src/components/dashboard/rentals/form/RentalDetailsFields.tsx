@@ -10,12 +10,15 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { UseFormReturn } from 'react-hook-form';
 import { RentalFormValues } from '@/domain/models/RentalForm';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RentalDetailsFieldsProps {
   form: UseFormReturn<RentalFormValues>;
 }
 
 const RentalDetailsFields = ({ form }: RentalDetailsFieldsProps) => {
+  const isMobile = useIsMobile();
+  
   // Helper functions for formatting and handling date-time
   const formatDate = (date: Date): string => {
     return format(date, "PPP", { locale: es });
@@ -42,8 +45,8 @@ const RentalDetailsFields = ({ form }: RentalDetailsFieldsProps) => {
 
   return (
     <>
-      <h2 className="text-xl font-medium">Detalles del Alquiler</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <h2 className="text-lg sm:text-xl font-medium">Detalles del Alquiler</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Fecha de Inicio con hora */}
         <FormField
           control={form.control}
@@ -68,7 +71,10 @@ const RentalDetailsFields = ({ form }: RentalDetailsFieldsProps) => {
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent 
+                    className={isMobile ? "w-[calc(100vw-32px)] left-0 right-0 p-0" : "w-auto p-0"} 
+                    align="start"
+                  >
                     <Calendar
                       locale={es}
                       mode="single"
@@ -76,6 +82,7 @@ const RentalDetailsFields = ({ form }: RentalDetailsFieldsProps) => {
                       onSelect={field.onChange}
                       disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                       initialFocus
+                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
@@ -96,7 +103,10 @@ const RentalDetailsFields = ({ form }: RentalDetailsFieldsProps) => {
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[220px] p-0" align="start">
+                  <PopoverContent 
+                    className={isMobile ? "w-[calc(100vw-32px)] left-0 right-0 p-0" : "w-[220px] p-0"} 
+                    align="start"
+                  >
                     <div className="h-[300px] overflow-y-auto">
                       {timeOptions.map((time) => (
                         <Button
@@ -141,7 +151,10 @@ const RentalDetailsFields = ({ form }: RentalDetailsFieldsProps) => {
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent 
+                    className={isMobile ? "w-[calc(100vw-32px)] left-0 right-0 p-0" : "w-auto p-0"} 
+                    align="start"
+                  >
                     <Calendar
                       locale={es}
                       mode="single"
@@ -152,6 +165,7 @@ const RentalDetailsFields = ({ form }: RentalDetailsFieldsProps) => {
                         return date < startDate || date < new Date(new Date().setHours(0, 0, 0, 0));
                       }}
                       initialFocus
+                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
@@ -172,7 +186,10 @@ const RentalDetailsFields = ({ form }: RentalDetailsFieldsProps) => {
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[220px] p-0" align="start">
+                  <PopoverContent 
+                    className={isMobile ? "w-[calc(100vw-32px)] left-0 right-0 p-0" : "w-[220px] p-0"} 
+                    align="start"
+                  >
                     <div className="h-[300px] overflow-y-auto">
                       {timeOptions.map((time) => (
                         <Button
