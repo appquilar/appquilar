@@ -8,6 +8,7 @@ import { CalendarIcon, Clock } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { formatDate, formatTime, generateTimeOptions, handleHourChange } from '../utils/dateTimeUtils';
 import { RentalFormValues } from '@/domain/models/RentalForm';
+import { es } from 'date-fns/locale';
 
 interface DateTimeFieldProps {
   form: UseFormReturn<RentalFormValues>;
