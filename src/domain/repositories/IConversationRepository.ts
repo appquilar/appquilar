@@ -34,4 +34,14 @@ export interface IConversationRepository {
    * Get unread message counts for all conversations of a user
    */
   getUnreadMessageCounts(userId: string): Promise<Array<{conversationId: string, unreadCount: number}>>;
+  
+  /**
+   * Get conversations related to a specific product
+   */
+  getConversationsByProductId(productId: string): Promise<Conversation[]>;
+  
+  /**
+   * Get conversations between a user and a company
+   */
+  getConversationsBetweenUserAndCompany(userId: string, companyId: string): Promise<Conversation[]>;
 }

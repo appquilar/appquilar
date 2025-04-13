@@ -12,6 +12,10 @@ import { toast } from 'sonner';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageForm from './MessageForm';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import RentalFormModal from './RentalFormModal';
 
 interface ConversationViewProps {
   conversation: Conversation;
@@ -30,9 +34,11 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [rentalModalOpen, setRentalModalOpen] = useState(false);
   const { user } = useAuth();
   const messageService = MessageService.getInstance();
   const lastCheckedRef = useRef<Date>(new Date());
+  const isMobile = useIsMobile();
   
   // Cargar mensajes iniciales al abrir la conversación
   useEffect(() => {
@@ -129,6 +135,10 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
       setIsSending(false);
     }
   };
+
+  const handleOpenRentalModal = () => {
+    setRentalModalOpen(true);
+  };
   
   return (
     <div className="flex flex-col h-full">
@@ -137,6 +147,41 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
         <MessageList messages={messages} isLoading={isLoading} userId={user?.id} />
       </div>
       <MessageForm onSendMessage={handleSendMessage} isSending={isSending} />
+
+      {/* Add Alquiler Button - Desktop */}
+      {!isMobile && (
+        <div className="absolute right-6 bottom-20">
+          <Button 
+            onClick={handleOpenRentalModal}
+            className="rounded-full h-12 w-12 p-0 shadow-md" 
+            size="icon"
+          >
+            <PlusCircle className="h-6 w-6" />
+            <span className="sr-only">Añadir Alquiler</span>
+          </Button>
+        </div>
+      )}
+
+      {/* Add Alquiler Button - Mobile */}
+      {isMobile && (
+        <div className="fixed inset-x-0 bottom-20 px-4 pb-2 bg-gradient-to-t from-background to-transparent">
+          <Button 
+            onClick={handleOpenRentalModal}
+            className="w-full shadow-md gap-2" 
+            size="lg"
+          >
+            <PlusCircle className="h-5 w-5" />
+            Añadir Alquiler
+          </Button>
+        </div>
+      )}
+
+      {/* Rental Form Modal */}
+      <RentalFormModal 
+        isOpen={rentalModalOpen}
+        onClose={() => setRentalModalOpen(false)}
+        conversation={conversation}
+      />
     </div>
   );
 };
