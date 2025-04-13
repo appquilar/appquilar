@@ -1,16 +1,16 @@
 
 import { Product, ProductFormData } from '@/domain/models/Product';
-import { ProductRepository } from '@/domain/repositories/ProductRepository';
-import { MockProductRepository } from '@/infrastructure/repositories/MockProductRepository';
+import { IProductRepository } from '@/domain/repositories/IProductRepository';
+import { RepositoryFactory } from '@/infrastructure/repositories/RepositoryFactory';
 
 /**
  * Service for managing product data
  */
 export class ProductService {
   private static instance: ProductService;
-  private repository: ProductRepository;
+  private repository: IProductRepository;
 
-  private constructor(repository: ProductRepository) {
+  private constructor(repository: IProductRepository) {
     this.repository = repository;
   }
 
@@ -19,8 +19,8 @@ export class ProductService {
    */
   public static getInstance(): ProductService {
     if (!ProductService.instance) {
-      // Using the mock repository for now
-      const repository = new MockProductRepository();
+      // Get repository from factory
+      const repository = RepositoryFactory.getProductRepository();
       ProductService.instance = new ProductService(repository);
     }
     return ProductService.instance;
@@ -29,7 +29,10 @@ export class ProductService {
   /**
    * Set a custom repository implementation
    */
-  public static setRepository(repository: ProductRepository): void {
+  public static setRepository(repository: IProductRepository): void {
+    // Update the repository in factory and service
+    RepositoryFactory.setProductRepository(repository);
+    
     if (ProductService.instance) {
       ProductService.instance.repository = repository;
     } else {

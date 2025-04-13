@@ -1,12 +1,12 @@
 
 import { Rental } from '@/domain/models/Rental';
-import { RentalRepository } from '@/domain/repositories/RentalRepository';
+import { IRentalRepository } from '@/domain/repositories/IRentalRepository';
 import { MOCK_RENTALS } from '@/infrastructure/adapters/mockData/rentals/mockRentalsData';
 
 /**
- * Mock implementation of the RentalRepository interface
+ * Mock implementation of the IRentalRepository interface
  */
-export class MockRentalRepository implements RentalRepository {
+export class MockRentalRepository implements IRentalRepository {
   private rentals: Rental[] = MOCK_RENTALS;
 
   async getAllRentals(): Promise<Rental[]> {

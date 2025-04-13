@@ -1,16 +1,16 @@
 
 import { Rental } from '@/domain/models/Rental';
-import { RentalRepository } from '@/domain/repositories/RentalRepository';
-import { MockRentalRepository } from '@/infrastructure/repositories/MockRentalRepository';
+import { IRentalRepository } from '@/domain/repositories/IRentalRepository';
+import { RepositoryFactory } from '@/infrastructure/repositories/RepositoryFactory';
 
 /**
  * Service for managing rental data
  */
 export class RentalService {
   private static instance: RentalService;
-  private repository: RentalRepository;
+  private repository: IRentalRepository;
 
-  private constructor(repository: RentalRepository) {
+  private constructor(repository: IRentalRepository) {
     this.repository = repository;
   }
 
@@ -19,8 +19,8 @@ export class RentalService {
    */
   public static getInstance(): RentalService {
     if (!RentalService.instance) {
-      // Using the mock repository for now
-      const repository = new MockRentalRepository();
+      // Get the repository from the factory
+      const repository = RepositoryFactory.getRentalRepository();
       RentalService.instance = new RentalService(repository);
     }
     return RentalService.instance;
@@ -29,7 +29,10 @@ export class RentalService {
   /**
    * Set a custom repository implementation
    */
-  public static setRepository(repository: RentalRepository): void {
+  public static setRepository(repository: IRentalRepository): void {
+    // Update the repository in the factory and in the service instance
+    RepositoryFactory.setRentalRepository(repository);
+    
     if (RentalService.instance) {
       RentalService.instance.repository = repository;
     } else {
