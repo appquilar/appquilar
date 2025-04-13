@@ -14,7 +14,7 @@ interface DashboardLayoutProps {
  */
 const DashboardLayout = ({ sidebar, content }: DashboardLayoutProps) => {
   const isMobile = useIsMobile();
-  const [showSidebar, setShowSidebar] = React.useState(!isMobile);
+  const [showSidebar, setShowSidebar] = React.useState(false); // Set to false by default for mobile
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
