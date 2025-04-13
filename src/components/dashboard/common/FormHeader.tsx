@@ -2,6 +2,7 @@
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FormHeaderProps {
   title: string;
@@ -10,9 +11,10 @@ interface FormHeaderProps {
 
 const FormHeader = ({ title, backUrl }: FormHeaderProps) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   return (
-    <div className="mb-3 sm:mb-6 flex items-center gap-2 sm:gap-4">
+    <div className={`mb-3 sm:mb-6 flex items-center gap-2 sm:gap-4 ${isMobile ? 'py-2' : ''}`}>
       <Button
         variant="outline"
         size="icon"
@@ -21,7 +23,7 @@ const FormHeader = ({ title, backUrl }: FormHeaderProps) => {
       >
         <ArrowLeft size={18} />
       </Button>
-      <h1 className="text-xl sm:text-2xl font-bold truncate">{title}</h1>
+      <h1 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold truncate`}>{title}</h1>
     </div>
   );
 };

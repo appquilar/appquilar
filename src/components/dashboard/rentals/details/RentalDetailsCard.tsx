@@ -5,6 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { Calendar, Check, Clock, Tag } from 'lucide-react';
 import { Rental } from '@/domain/models/Rental';
 import { RentalStatusService } from '@/domain/services/RentalStatusService';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RentalDetailsCardProps {
   rental: Rental;
@@ -19,15 +20,17 @@ const RentalDetailsCard = ({
   formattedStartDate,
   formattedEndDate
 }: RentalDetailsCardProps) => {
+  const isMobile = useIsMobile();
+
   return (
     <Card className="col-span-1 md:col-span-2">
-      <CardContent className="p-6">
+      <CardContent className={`${isMobile ? 'p-4' : 'p-6'}`}>
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-semibold">{rental.product}</h2>
-            <p className="text-muted-foreground">
+            <h2 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-semibold line-clamp-1`}>{rental.product}</h2>
+            <p className="text-muted-foreground text-sm">
               <span className="inline-flex items-center mr-2">
-                <Tag className="h-4 w-4 mr-1" />
+                <Tag className="h-3 w-3 mr-1" />
                 Alquiler #{rental.id}
               </span>
             </p>
@@ -42,9 +45,9 @@ const RentalDetailsCard = ({
           </Badge>
         </div>
         
-        <Separator className="my-4" />
+        <Separator className="my-3" />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <div>
             <h3 className="text-sm font-semibold text-muted-foreground mb-2">Detalles del Alquiler</h3>
             <ul className="space-y-3">

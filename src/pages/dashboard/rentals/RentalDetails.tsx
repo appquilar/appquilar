@@ -6,9 +6,11 @@ import RentalDetailsCard from '@/components/dashboard/rentals/details/RentalDeta
 import CustomerInfoCard from '@/components/dashboard/rentals/details/CustomerInfoCard';
 import LoadingSpinner from '@/components/dashboard/rentals/details/LoadingSpinner';
 import ErrorDisplay from '@/components/dashboard/rentals/details/ErrorDisplay';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const RentalDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const isMobile = useIsMobile();
   const { 
     rental, 
     isLoading, 
@@ -32,14 +34,14 @@ const RentalDetails = () => {
   const formattedEndDate = formatDate(rental.endDate);
 
   return (
-    <div className="container mx-auto py-6">
+    <div className={`container mx-auto ${isMobile ? 'px-3 py-3' : 'py-6'}`}>
       <RentalDetailsHeader 
         rental={rental} 
         isUpdatingStatus={isUpdatingStatus}
         onStatusChange={handleStatusChange} 
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 md:gap-6">
         <RentalDetailsCard 
           rental={rental}
           durationDays={durationDays}

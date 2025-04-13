@@ -9,9 +9,11 @@ import ProductInfoFields from '@/components/dashboard/rentals/form/ProductInfoFi
 import CustomerInfoFields from '@/components/dashboard/rentals/form/CustomerInfoFields';
 import RentalDetailsFields from '@/components/dashboard/rentals/form/RentalDetailsFields';
 import FormActions from '@/components/dashboard/rentals/form/FormActions';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const CreateRental = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { form, isSubmitting, onSubmit } = useRentalForm();
   const { 
     productSearch, 
@@ -23,12 +25,12 @@ const CreateRental = () => {
   } = useProductSelection(form);
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
+    <div className={`container mx-auto ${isMobile ? 'px-3 pb-20' : 'px-4 py-6'}`}>
       <CreateRentalHeader />
 
       <div className="bg-card rounded-lg border p-3 sm:p-6">
         <Form {...form}>
-          <form onSubmit={onSubmit} className="space-y-6">
+          <form onSubmit={onSubmit} className="space-y-5">
             <ProductInfoFields
               form={form}
               productSearch={productSearch}
@@ -39,11 +41,11 @@ const CreateRental = () => {
               handleProductSelect={handleProductSelect}
             />
 
-            <Separator className="my-4 sm:my-6" />
+            <Separator className="my-4" />
             
             <CustomerInfoFields form={form} />
 
-            <Separator className="my-4 sm:my-6" />
+            <Separator className="my-4" />
 
             <RentalDetailsFields form={form} />
 
