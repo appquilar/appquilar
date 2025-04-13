@@ -1,9 +1,11 @@
 
 import { IRentalRepository } from '@/domain/repositories/IRentalRepository';
 import { IProductRepository } from '@/domain/repositories/IProductRepository';
+import { IConversationRepository } from '@/domain/repositories/IConversationRepository';
 
 import { MockRentalRepository } from './MockRentalRepository';
 import { MockProductRepository } from './MockProductRepository';
+import { MockConversationRepository } from './MockConversationRepository';
 
 /**
  * Factory for creating repositories with proper dependency injection
@@ -11,6 +13,7 @@ import { MockProductRepository } from './MockProductRepository';
 export class RepositoryFactory {
   private static rentalRepository: IRentalRepository;
   private static productRepository: IProductRepository;
+  private static conversationRepository: IConversationRepository;
 
   /**
    * Get the rental repository instance
@@ -46,5 +49,23 @@ export class RepositoryFactory {
    */
   public static setProductRepository(repository: IProductRepository): void {
     this.productRepository = repository;
+  }
+
+  /**
+   * Get the conversation repository instance
+   */
+  public static getConversationRepository(): IConversationRepository {
+    if (!this.conversationRepository) {
+      // Default to mock implementation
+      this.conversationRepository = new MockConversationRepository();
+    }
+    return this.conversationRepository;
+  }
+
+  /**
+   * Set a custom conversation repository implementation
+   */
+  public static setConversationRepository(repository: IConversationRepository): void {
+    this.conversationRepository = repository;
   }
 }

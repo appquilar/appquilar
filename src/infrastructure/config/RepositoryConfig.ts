@@ -1,6 +1,8 @@
 
 import { ApiRentalRepository } from '../repositories/ApiRentalRepository';
 import { MockRentalRepository } from '../repositories/MockRentalRepository';
+import { ApiConversationRepository } from '../repositories/ApiConversationRepository';
+import { MockConversationRepository } from '../repositories/MockConversationRepository'; 
 import { RepositoryFactory } from '../repositories/RepositoryFactory';
 
 /**
@@ -19,11 +21,13 @@ export class RepositoryConfig {
       console.info('Initializing API repositories');
       // Set API repositories
       RepositoryFactory.setRentalRepository(new ApiRentalRepository(`${apiBaseUrl}/rentals`));
+      RepositoryFactory.setConversationRepository(new ApiConversationRepository(apiBaseUrl));
       // Add more API repositories here as needed
     } else {
       console.info('Initializing mock repositories');
       // Set mock repositories
       RepositoryFactory.setRentalRepository(new MockRentalRepository());
+      RepositoryFactory.setConversationRepository(new MockConversationRepository());
       // Repository factory already defaults to mock repositories, but we're explicit here
     }
   }
