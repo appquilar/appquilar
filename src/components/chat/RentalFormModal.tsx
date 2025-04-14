@@ -64,10 +64,10 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
   }, [user, form, conversation, filteredProducts]);
 
   // Create a submit handler using React Hook Form's handleSubmit method
-  const handleFormSubmit = form.handleSubmit(async (data: RentalFormValues) => {
+  const handleFormSubmit = async (data: RentalFormValues) => {
     await onSubmit(data);
     onClose();
-  });
+  };
 
   // Render appropriate modal type based on screen size
   if (isMobile) {
@@ -81,7 +81,7 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
             <RentalFormContent 
               form={form}
               isSubmitting={isSubmitting}
-              onSubmit={handleFormSubmit}
+              onSubmit={form.handleSubmit(handleFormSubmit)}
               onCancel={onClose}
               productSearch={productSearch}
               setProductSearch={setProductSearch}
@@ -105,7 +105,7 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
         <RentalFormContent 
           form={form}
           isSubmitting={isSubmitting}
-          onSubmit={handleFormSubmit}
+          onSubmit={form.handleSubmit(handleFormSubmit)}
           onCancel={onClose}
           productSearch={productSearch}
           setProductSearch={setProductSearch}
@@ -123,7 +123,7 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
 interface RentalFormContentProps {
   form: any;
   isSubmitting: boolean;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void; 
+  onSubmit: () => void; // Changed type to match what form.handleSubmit returns
   onCancel: () => void;
   productSearch: string;
   setProductSearch: (value: string) => void;
