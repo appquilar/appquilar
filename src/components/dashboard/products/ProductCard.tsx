@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash } from 'lucide-react';
+import { Edit, Trash, Tag, Clock } from 'lucide-react';
 import { Product } from '@/domain/models/Product';
 
 interface ProductCardProps {
@@ -28,6 +28,22 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
             {product.internalId}
           </div>
         )}
+        
+        {/* Availability badges */}
+        <div className="absolute bottom-2 left-2 flex gap-1">
+          {product.isRentable && (
+            <div className="bg-primary text-white text-xs px-2 py-1 rounded-full flex items-center">
+              <Clock size={10} className="mr-1" />
+              Alquiler
+            </div>
+          )}
+          {product.isForSale && (
+            <div className="bg-amber-500 text-white text-xs px-2 py-1 rounded-full flex items-center">
+              <Tag size={10} className="mr-1" />
+              Venta
+            </div>
+          )}
+        </div>
       </div>
       <CardHeader className="py-3">
         <CardTitle className="text-base font-medium truncate">
@@ -36,7 +52,9 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
       </CardHeader>
       <CardContent className="py-2">
         <p className="text-xs text-muted-foreground mb-2">
-          {product.category.name} • {product.price.daily}€/día
+          {product.category.name}
+          {product.isRentable && ` • ${product.price.daily}€/día`}
+          {product.isForSale && product.secondHand?.price && ` • ${product.secondHand.price}€`}
         </p>
         <p className="text-sm line-clamp-2">{product.description}</p>
       </CardContent>

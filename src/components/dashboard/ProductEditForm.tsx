@@ -1,5 +1,5 @@
 
-import { Product } from '../products/ProductCard';
+import { Product } from '@/domain/models/Product';
 import ProductForm from './forms/ProductForm';
 
 interface ProductEditFormProps {

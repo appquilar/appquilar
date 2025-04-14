@@ -1,108 +1,95 @@
 
-import { z } from "zod";
-import { Product, AvailabilityPeriod } from "@/components/products/ProductCard";
-import { ImageFile } from "./image-upload/types";
+import { z } from 'zod';
+import { Product, AvailabilityPeriod } from '@/domain/models/Product';
+import { ImageFile } from './image-upload/types';
 
-// Esquema de validación para el formulario de producto
 export const productFormSchema = z.object({
   internalId: z.string().optional(),
-  name: z.string().min(3, { message: 'El nombre del producto debe tener al menos 3 caracteres.' }),
-  slug: z.string().min(3, { message: 'El slug debe tener al menos 3 caracteres.' })
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { 
-      message: 'El slug solo puede contener letras minúsculas, números y guiones (-).' 
-    }),
-  description: z.string().min(10, { message: 'La descripción debe tener al menos 10 caracteres.' }),
+  name: z.string().min(1, 'El nombre es obligatorio'),
+  slug: z.string().min(1, 'El slug es obligatorio'),
+  description: z.string().min(1, 'La descripción es obligatoria'),
+  images: z.array(z.custom<ImageFile>()).optional(),
+  imageUrl: z.string().url('URL de imagen inválida'),
+  thumbnailUrl: z.string().url('URL de miniatura inválida').optional(),
   price: z.object({
-    hourly: z.number().optional(),
-    daily: z.number().min(1, { message: 'El precio diario es obligatorio.' }),
-    weekly: z.number().optional(),
-    monthly: z.number().optional(),
-    deposit: z.number().optional(),
+    daily: z.number().min(0, 'El precio diario debe ser mayor o igual a 0'),
+    weekly: z.number().min(0, 'El precio semanal debe ser mayor o igual a 0').optional(),
+    monthly: z.number().min(0, 'El precio mensual debe ser mayor o igual a 0').optional(),
+    hourly: z.number().min(0, 'El precio por hora debe ser mayor o igual a 0').optional(),
+    deposit: z.number().min(0, 'El depósito debe ser mayor o igual a 0').optional(),
   }),
-  category: z.object({
-    id: z.string(),
-    name: z.string()
-  }),
-  imageUrl: z.string().url({ message: 'Por favor introduce una URL válida.' }),
-  // New field for images
-  images: z.array(z.any()).optional(),
-  // Added isAlwaysAvailable at the product level
-  isAlwaysAvailable: z.boolean().default(false),
-  // Updated field for availability periods
+  secondHand: z.object({
+    price: z.number().min(0, 'El precio de venta debe ser mayor o igual a 0').optional(),
+    negotiable: z.boolean().default(false),
+    additionalInfo: z.string().optional(),
+  }).optional(),
+  isRentable: z.boolean().default(true),
+  isForSale: z.boolean().default(false),
+  companyId: z.string().min(1, 'La empresa es obligatoria'),
+  categoryId: z.string().min(1, 'La categoría es obligatoria'),
   availability: z.array(
     z.object({
       id: z.string(),
       startDate: z.string(),
       endDate: z.string(),
       status: z.enum(['available', 'unavailable']),
-      includeWeekends: z.boolean().optional(),
+      includeWeekends: z.boolean(),
     })
   ).optional(),
+  isAlwaysAvailable: z.boolean().default(true),
+  unavailableDates: z.array(z.string()).optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
 
+/**
+ * Map a Product model to form values
+ */
 export const mapProductToFormValues = (product: Product): ProductFormValues => {
   return {
-    internalId: product.internalId || '',
+    internalId: product.internalId,
     name: product.name,
-    slug: product.slug || '',
+    slug: product.slug,
     description: product.description,
-    price: {
-      hourly: product.price.hourly || undefined,
-      daily: product.price.daily,
-      weekly: product.price.weekly || undefined,
-      monthly: product.price.monthly || undefined,
-      deposit: product.price.deposit || undefined,
-    },
-    category: product.category,
     imageUrl: product.imageUrl,
-    images: [],
-    isAlwaysAvailable: product.isAlwaysAvailable || false,
-    availability: product.availability || [],
+    thumbnailUrl: product.thumbnailUrl,
+    price: {
+      daily: product.price.daily,
+      weekly: product.price.weekly,
+      monthly: product.price.monthly,
+      hourly: product.price.hourly,
+      deposit: product.price.deposit,
+    },
+    secondHand: product.secondHand,
+    isRentable: product.isRentable ?? true,
+    isForSale: product.isForSale ?? false,
+    companyId: product.company.id,
+    categoryId: product.category.id,
+    availability: product.availability,
+    isAlwaysAvailable: product.isAlwaysAvailable ?? true,
+    unavailableDates: product.unavailableDates,
   };
 };
 
+/**
+ * Map form values to a Product model
+ */
 export const mapFormValuesToProduct = (values: ProductFormValues, product: Product): Partial<Product> => {
-  // Find primary image if it exists
-  let primaryImageUrl = values.imageUrl;
-  if (values.images && Array.isArray(values.images) && values.images.length > 0) {
-    const primaryImage = values.images.find((img: ImageFile) => img.isPrimary);
-    if (primaryImage) {
-      primaryImageUrl = primaryImage.url;
-    }
-  }
-
-  // Ensure that the availability periods have all required fields
-  const availability = values.availability?.map(period => ({
-    id: period.id,
-    startDate: period.startDate,
-    endDate: period.endDate,
-    status: period.status,
-    includeWeekends: period.includeWeekends
-  })) as AvailabilityPeriod[] | undefined;
-
-  return {
-    ...product,
-    internalId: values.internalId,
+  const updatedProduct: Partial<Product> = {
+    internalId: values.internalId ?? product.internalId,
     name: values.name,
     slug: values.slug,
     description: values.description,
-    price: {
-      hourly: values.price.hourly,
-      daily: values.price.daily,
-      weekly: values.price.weekly,
-      monthly: values.price.monthly,
-      deposit: values.price.deposit,
-    },
-    imageUrl: primaryImageUrl,
-    thumbnailUrl: primaryImageUrl, // Usando la misma URL para la miniatura
-    category: {
-      id: values.category.id,
-      name: values.category.name,
-      slug: product.category.slug, // Asegurar que se incluye el slug de la categoría
-    },
+    imageUrl: values.imageUrl,
+    thumbnailUrl: values.thumbnailUrl,
+    price: values.price,
+    secondHand: values.secondHand,
+    isRentable: values.isRentable,
+    isForSale: values.isForSale,
+    availability: values.availability,
     isAlwaysAvailable: values.isAlwaysAvailable,
-    availability: availability,
+    unavailableDates: values.unavailableDates,
   };
+  
+  return updatedProduct;
 };

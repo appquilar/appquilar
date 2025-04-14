@@ -1,5 +1,5 @@
 
-import { Product, ProductFormData } from '@/domain/models/Product';
+import { Product, ProductFormData, AvailabilityPeriod } from '@/domain/models/Product';
 import { ProductRepository } from '@/domain/repositories/ProductRepository';
 
 /**
@@ -21,6 +21,8 @@ export class MockProductRepository implements ProductRepository {
         weekly: 60.99,
         monthly: 180.99
       },
+      isRentable: true,
+      isForSale: false,
       company: {
         id: "1",
         name: "Herramientas Pro",
@@ -32,7 +34,17 @@ export class MockProductRepository implements ProductRepository {
         slug: "herramientas-electricas"
       },
       rating: 4.7,
-      reviewCount: 124
+      reviewCount: 124,
+      isAlwaysAvailable: true,
+      availability: [
+        {
+          id: "period-1",
+          startDate: "2024-04-01",
+          endDate: "2024-12-31",
+          status: "available",
+          includeWeekends: true
+        }
+      ]
     },
     {
       id: "2",
@@ -45,8 +57,16 @@ export class MockProductRepository implements ProductRepository {
       price: {
         daily: 25.99,
         weekly: 120.99,
-        monthly: 350.99
+        monthly: 350.99,
+        deposit: 100
       },
+      secondHand: {
+        price: 299.99,
+        negotiable: true,
+        additionalInfo: "Comprada hace 6 meses, en perfecto estado"
+      },
+      isRentable: true,
+      isForSale: true,
       company: {
         id: "1",
         name: "Herramientas Pro",
@@ -58,7 +78,18 @@ export class MockProductRepository implements ProductRepository {
         slug: "herramientas-electricas"
       },
       rating: 4.5,
-      reviewCount: 89
+      reviewCount: 89,
+      isAlwaysAvailable: false,
+      availability: [
+        {
+          id: "period-1",
+          startDate: "2024-04-01",
+          endDate: "2024-06-30",
+          status: "available",
+          includeWeekends: true
+        }
+      ],
+      unavailableDates: ["2024-05-01", "2024-05-02", "2024-05-03"]
     }
   ];
 
@@ -91,6 +122,9 @@ export class MockProductRepository implements ProductRepository {
       imageUrl: productData.imageUrl,
       thumbnailUrl: productData.thumbnailUrl,
       price: productData.price,
+      secondHand: productData.secondHand,
+      isRentable: productData.isRentable,
+      isForSale: productData.isForSale,
       company: {
         id: productData.companyId,
         name: 'Empresa Demo', 
@@ -101,6 +135,9 @@ export class MockProductRepository implements ProductRepository {
         name: 'Categoría Demo', 
         slug: 'categoria-demo'
       },
+      isAlwaysAvailable: productData.isAlwaysAvailable,
+      availability: productData.availability,
+      unavailableDates: productData.unavailableDates,
       rating: 0,
       reviewCount: 0,
       createdAt: new Date().toISOString(),
@@ -145,8 +182,14 @@ export class MockProductRepository implements ProductRepository {
       imageUrl: productData.imageUrl,
       thumbnailUrl: productData.thumbnailUrl,
       price: productData.price,
+      secondHand: productData.secondHand,
+      isRentable: productData.isRentable,
+      isForSale: productData.isForSale,
       company,
       category,
+      isAlwaysAvailable: productData.isAlwaysAvailable,
+      availability: productData.availability,
+      unavailableDates: productData.unavailableDates,
       updatedAt: new Date().toISOString()
     };
     

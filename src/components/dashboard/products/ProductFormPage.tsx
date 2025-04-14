@@ -3,10 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Product } from '@/components/products/ProductCard';
+import { Product } from '@/domain/models/Product';
 import ProductEditForm from '@/components/dashboard/ProductEditForm';
 import { toast } from 'sonner';
-import { MOCK_PRODUCTS } from './hooks/data/mockProducts';
+import { ProductService } from '@/application/services/ProductService';
 
 const ProductFormPage = () => {
   const { productId } = useParams();
@@ -14,60 +14,76 @@ const ProductFormPage = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const isAddMode = !productId || productId === 'new';
+  const productService = ProductService.getInstance();
 
   useEffect(() => {
-    // Simulate API call to fetch product data or create new product template
-    setIsLoading(true);
-    setTimeout(() => {
-      if (isAddMode) {
-        // Create a new empty product template
-        const newProduct: Product = {
-          id: `new-${Date.now()}`,
-          internalId: `PRD${(MOCK_PRODUCTS.length + 1).toString().padStart(3, '0')}`,
-          name: '',
-          slug: '',
-          description: '',
-          imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
-          thumbnailUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
-          price: {
-            daily: 0,
-            weekly: 0,
-            monthly: 0
-          },
-          company: {
-            id: '1',
-            name: 'Pro Tools Inc.',
-            slug: 'pro-tools-inc'
-          },
-          category: {
-            id: '1',
-            name: 'Herramientas Eléctricas',
-            slug: 'power-tools'
-          },
-          rating: 0,
-          reviewCount: 0
-        };
-        setProduct(newProduct);
-      } else {
-        // Find existing product
-        const foundProduct = MOCK_PRODUCTS.find(p => p.id === productId);
-        setProduct(foundProduct || null);
+    const loadProduct = async () => {
+      setIsLoading(true);
+      try {
+        if (isAddMode) {
+          // Create a new empty product template
+          const newProduct: Product = {
+            id: `new-${Date.now()}`,
+            internalId: '',
+            name: '',
+            slug: '',
+            description: '',
+            imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
+            thumbnailUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
+            price: {
+              daily: 0
+            },
+            isRentable: true,
+            isForSale: false,
+            company: {
+              id: '1',
+              name: 'Pro Tools Inc.',
+              slug: 'pro-tools-inc'
+            },
+            category: {
+              id: '1',
+              name: 'Herramientas Eléctricas',
+              slug: 'power-tools'
+            },
+            rating: 0,
+            reviewCount: 0,
+            isAlwaysAvailable: true
+          };
+          setProduct(newProduct);
+        } else {
+          // Find existing product
+          const foundProduct = await productService.getProductById(productId);
+          setProduct(foundProduct || null);
+        }
+      } catch (error) {
+        console.error("Error loading product:", error);
+        toast.error("Error al cargar el producto");
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    }, 300);
-  }, [productId, isAddMode]);
+    };
+    
+    loadProduct();
+  }, [productId, isAddMode, productService]);
 
-  const handleSaveProduct = (updatedProduct: Partial<Product>) => {
-    // In a real app, this would send the updated product to the API
-    console.log('Saving product:', updatedProduct);
-    
-    toast.success(isAddMode 
-      ? 'Producto añadido correctamente' 
-      : 'Producto actualizado correctamente'
-    );
-    
-    // Navigate back to the products list
-    navigate('/dashboard/products');
+  const handleSaveProduct = async (updatedProduct: Partial<Product>) => {
+    try {
+      if (isAddMode) {
+        // Create new product
+        await productService.createProduct(updatedProduct as any);
+        toast.success('Producto añadido correctamente');
+      } else {
+        // Update existing product
+        await productService.updateProduct(productId as string, updatedProduct as any);
+        toast.success('Producto actualizado correctamente');
+      }
+      
+      // Navigate back to the products list
+      navigate('/dashboard/products');
+    } catch (error) {
+      console.error("Error saving product:", error);
+      toast.error(isAddMode ? 'Error al añadir el producto' : 'Error al actualizar el producto');
+    }
   };
 
   const handleCancel = () => {

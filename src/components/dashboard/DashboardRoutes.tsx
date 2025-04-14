@@ -27,7 +27,7 @@ const DashboardRoutes = () => {
       {/* Products */}
       <Route path="products" element={<ProductsManagement />} />
       <Route path="products/new" element={<ProductFormPage />} />
-      <Route path="products/:id" element={<ProductFormPage />} />
+      <Route path="products/:productId" element={<ProductFormPage />} />
       
       {/* Rentals */}
       <Route path="rentals" element={<RentalsPage />} />

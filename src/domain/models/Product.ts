@@ -12,9 +12,18 @@ export interface Product {
   thumbnailUrl: string;
   price: {
     daily: number;
-    weekly: number;
-    monthly: number;
+    weekly?: number;
+    monthly?: number;
+    hourly?: number;
+    deposit?: number;
   };
+  secondHand?: {
+    price: number;
+    negotiable: boolean;
+    additionalInfo?: string;
+  };
+  isRentable: boolean;
+  isForSale: boolean;
   company: {
     id: string;
     name: string;
@@ -27,8 +36,22 @@ export interface Product {
   };
   rating: number;
   reviewCount: number;
+  availability?: AvailabilityPeriod[];
+  isAlwaysAvailable?: boolean;
+  unavailableDates?: string[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+/**
+ * Period of availability for a rental product
+ */
+export interface AvailabilityPeriod {
+  id: string;
+  startDate: string;
+  endDate: string;
+  status: 'available' | 'unavailable';
+  includeWeekends: boolean;
 }
 
 /**
@@ -42,9 +65,22 @@ export interface ProductFormData {
   thumbnailUrl: string;
   price: {
     daily: number;
-    weekly: number;
-    monthly: number;
+    weekly?: number;
+    monthly?: number;
+    hourly?: number;
+    deposit?: number;
   };
+  secondHand?: {
+    price: number;
+    negotiable: boolean;
+    additionalInfo?: string;
+  };
+  isRentable: boolean;
+  isForSale: boolean;
   companyId: string;
   categoryId: string;
+  availability?: AvailabilityPeriod[];
+  isAlwaysAvailable?: boolean;
+  unavailableDates?: string[];
 }
+
