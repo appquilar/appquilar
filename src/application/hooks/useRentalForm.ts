@@ -19,7 +19,7 @@ export const useRentalForm = () => {
   });
 
   // Handle form submission
-  const onSubmit = async (data: RentalFormValues) => {
+  const handleSubmit = async (data: RentalFormValues) => {
     setIsSubmitting(true);
     try {
       // Prepare rental object
@@ -63,6 +63,6 @@ export const useRentalForm = () => {
   return {
     form,
     isSubmitting,
-    onSubmit: form.handleSubmit(onSubmit)
+    onSubmit: handleSubmit
   };
 };

@@ -63,7 +63,7 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
     }
   }, [user, form, conversation, filteredProducts]);
 
-  // Create a submit handler using React Hook Form's handleSubmit method
+  // Handle form submission
   const handleFormSubmit = async (data: RentalFormValues) => {
     await onSubmit(data);
     onClose();
@@ -81,7 +81,7 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
             <RentalFormContent 
               form={form}
               isSubmitting={isSubmitting}
-              onSubmit={form.handleSubmit(handleFormSubmit)}
+              onSubmit={handleFormSubmit}
               onCancel={onClose}
               productSearch={productSearch}
               setProductSearch={setProductSearch}
@@ -105,7 +105,7 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
         <RentalFormContent 
           form={form}
           isSubmitting={isSubmitting}
-          onSubmit={form.handleSubmit(handleFormSubmit)}
+          onSubmit={handleFormSubmit}
           onCancel={onClose}
           productSearch={productSearch}
           setProductSearch={setProductSearch}
@@ -123,7 +123,7 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
 interface RentalFormContentProps {
   form: any;
   isSubmitting: boolean;
-  onSubmit: () => void; // Changed type to match what form.handleSubmit returns
+  onSubmit: (data: RentalFormValues) => Promise<void>;
   onCancel: () => void;
   productSearch: string;
   setProductSearch: (value: string) => void;
@@ -147,7 +147,7 @@ const RentalFormContent: React.FC<RentalFormContentProps> = ({
 }) => {
   return (
     <Form {...form}>
-      <form onSubmit={onSubmit} className="space-y-5">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <ProductInfoFields
           form={form}
           productSearch={productSearch}
