@@ -63,7 +63,7 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
     }
   }, [user, form, conversation, filteredProducts]);
 
-  // Fixed: Changed the handleFormSubmit to properly handle the form submission
+  // Fixed: The key issue was here - using onSubmit directly instead of creating a proper handler
   const handleFormSubmit = async (data: RentalFormValues) => {
     await onSubmit(data);
     onClose();
