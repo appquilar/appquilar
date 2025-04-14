@@ -13,6 +13,8 @@ import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageForm from './MessageForm';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
 import RentalFormModal from './RentalFormModal';
 
 interface ConversationViewProps {
