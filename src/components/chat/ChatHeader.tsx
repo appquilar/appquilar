@@ -6,7 +6,7 @@
 
 import { Conversation } from '@/core/domain/Message';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Info, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Info, MoreVertical, PlusCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DropdownMenu,
@@ -18,12 +18,13 @@ import {
 interface ChatHeaderProps {
   conversation: Conversation;
   onBack: () => void;
+  onCreateRental: () => void;
 }
 
 /**
  * Cabecera de una conversación con información del producto y navegación
  */
-const ChatHeader = ({ conversation, onBack }: ChatHeaderProps) => {
+const ChatHeader = ({ conversation, onBack, onCreateRental }: ChatHeaderProps) => {
   const isMobile = useIsMobile();
   
   return (
@@ -66,6 +67,10 @@ const ChatHeader = ({ conversation, onBack }: ChatHeaderProps) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={onCreateRental}>
+            <PlusCircle size={16} className="mr-2" />
+            Crear alquiler
+          </DropdownMenuItem>
           <DropdownMenuItem>
             <Info size={16} className="mr-2" />
             Ver detalles

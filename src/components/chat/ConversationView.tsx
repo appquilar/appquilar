@@ -12,8 +12,6 @@ import { toast } from 'sonner';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageForm from './MessageForm';
-import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import RentalFormModal from './RentalFormModal';
 
@@ -142,27 +140,17 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
   
   return (
     <div className="flex flex-col h-full">
-      <ChatHeader conversation={conversation} onBack={onBack} />
+      <ChatHeader 
+        conversation={conversation} 
+        onBack={onBack} 
+        onCreateRental={handleOpenRentalModal}
+      />
       <div className="flex-1 overflow-hidden">
         <MessageList messages={messages} isLoading={isLoading} userId={user?.id} />
       </div>
       <MessageForm onSendMessage={handleSendMessage} isSending={isSending} />
 
-      {/* Add Alquiler Button - Desktop */}
-      {!isMobile && (
-        <div className="absolute right-6 bottom-20">
-          <Button 
-            onClick={handleOpenRentalModal}
-            className="rounded-full h-12 w-12 p-0 shadow-md" 
-            size="icon"
-          >
-            <PlusCircle className="h-6 w-6" />
-            <span className="sr-only">Añadir Alquiler</span>
-          </Button>
-        </div>
-      )}
-
-      {/* Add Alquiler Button - Mobile */}
+      {/* Mobile-only bottom button for adding rental */}
       {isMobile && (
         <div className="fixed inset-x-0 bottom-20 px-4 pb-2 bg-gradient-to-t from-background to-transparent">
           <Button 
