@@ -2,12 +2,12 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash } from 'lucide-react';
-import { Product } from '@/components/products/ProductCard';
+import { Product } from '@/domain/models/Product';
 
 interface ProductCardProps {
   product: Product;
-  onEdit: (productId: string) => void;
-  onDelete: (productId: string) => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
 const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
@@ -18,6 +18,10 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
           src={product.thumbnailUrl || product.imageUrl} 
           alt={product.name}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            // Fallback for broken images
+            (e.target as HTMLImageElement).src = '/placeholder.svg';
+          }}
         />
         {product.internalId && (
           <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
@@ -41,7 +45,7 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
           variant="outline" 
           size="sm" 
           className="gap-1 w-full"
-          onClick={() => onEdit(product.id)}
+          onClick={onEdit}
         >
           <Edit size={14} />
           Editar
@@ -50,7 +54,7 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
           variant="outline" 
           size="sm" 
           className="gap-1 w-full text-red-500 hover:text-red-600 hover:bg-red-50"
-          onClick={() => onDelete(product.id)}
+          onClick={onDelete}
         >
           <Trash size={14} />
           Eliminar

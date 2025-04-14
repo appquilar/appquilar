@@ -4,6 +4,7 @@ import ProductGrid from './products/ProductGrid';
 import SearchToolbar from './products/SearchToolbar';
 import ProductsHeader from './products/ProductsHeader';
 import ProductPagination from './products/ProductPagination';
+import DeleteConfirmationModal from './products/DeleteConfirmationModal';
 import { useProductsManagement } from './products/hooks/useProductsManagement';
 
 const ProductsManagement = () => {
@@ -18,7 +19,11 @@ const ProductsManagement = () => {
     error,
     handlePageChange,
     handleSearch,
-    handleDeleteProduct
+    isDeleteModalOpen,
+    productToDelete,
+    openDeleteModal,
+    closeDeleteModal,
+    confirmDeleteProduct
   } = useProductsManagement();
   
   const handleAddProduct = () => {
@@ -61,7 +66,7 @@ const ProductsManagement = () => {
       <ProductGrid 
         products={filteredProducts}
         onEdit={handleEditProduct}
-        onDelete={handleDeleteProduct}
+        onDelete={openDeleteModal}
         onAdd={handleAddProduct}
       />
       
@@ -71,6 +76,16 @@ const ProductsManagement = () => {
         totalPages={totalPages}
         onPageChange={handlePageChange}
       />
+
+      {/* Modal de confirmación de eliminación */}
+      {productToDelete && (
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={closeDeleteModal}
+          onConfirm={confirmDeleteProduct}
+          productName={productToDelete.name}
+        />
+      )}
     </div>
   );
 };

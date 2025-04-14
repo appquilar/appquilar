@@ -1,5 +1,5 @@
 
-import { Product } from '@/components/products/ProductCard';
+import { Product } from '@/domain/models/Product';
 import ProductCard from './ProductCard';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 interface ProductGridProps {
   products: Product[];
   onEdit: (productId: string) => void;
-  onDelete: (productId: string) => void;
+  onDelete: (product: Product) => void;
   onAdd: () => void;
 }
 
@@ -31,8 +31,8 @@ const ProductGrid = ({ products, onEdit, onDelete, onAdd }: ProductGridProps) =>
         <ProductCard 
           key={product.id} 
           product={product} 
-          onEdit={onEdit} 
-          onDelete={onDelete} 
+          onEdit={() => onEdit(product.id)} 
+          onDelete={() => onDelete(product)} 
         />
       ))}
     </div>
