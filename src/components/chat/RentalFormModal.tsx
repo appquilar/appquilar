@@ -63,11 +63,11 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
     }
   }, [user, form, conversation, filteredProducts]);
 
-  // Fixed: The key issue was here - using onSubmit directly instead of creating a proper handler
-  const handleFormSubmit = async (data: RentalFormValues) => {
+  // Here's the fix - we need to use the form's handleSubmit properly
+  const handleFormSubmit = form.handleSubmit(async (data: RentalFormValues) => {
     await onSubmit(data);
     onClose();
-  };
+  });
 
   // Render appropriate modal type based on screen size
   if (isMobile) {
@@ -123,7 +123,7 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
 interface RentalFormContentProps {
   form: any;
   isSubmitting: boolean;
-  onSubmit: (data: RentalFormValues) => Promise<void>;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   onCancel: () => void;
   productSearch: string;
   setProductSearch: (value: string) => void;
@@ -147,7 +147,7 @@ const RentalFormContent: React.FC<RentalFormContentProps> = ({
 }) => {
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      <form onSubmit={onSubmit} className="space-y-5">
         <ProductInfoFields
           form={form}
           productSearch={productSearch}
