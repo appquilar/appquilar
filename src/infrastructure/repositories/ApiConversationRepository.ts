@@ -142,4 +142,46 @@ export class ApiConversationRepository implements IConversationRepository {
       throw error;
     }
   }
+  
+  /**
+   * Get conversations related to a specific product
+   */
+  async getConversationsByProductId(productId: string): Promise<Conversation[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/conversations/product/${productId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch product conversations: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.map((conv: any) => ({
+        ...conv,
+        lastMessageAt: new Date(conv.lastMessageAt)
+      }));
+    } catch (error) {
+      console.error('Error fetching product conversations:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Get conversations between a user and a company
+   */
+  async getConversationsBetweenUserAndCompany(userId: string, companyId: string): Promise<Conversation[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/conversations/user/${userId}/company/${companyId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user-company conversations: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.map((conv: any) => ({
+        ...conv,
+        lastMessageAt: new Date(conv.lastMessageAt)
+      }));
+    } catch (error) {
+      console.error('Error fetching user-company conversations:', error);
+      throw error;
+    }
+  }
 }

@@ -81,4 +81,30 @@ export class MockConversationRepository implements IConversationRepository {
     await new Promise(resolve => setTimeout(resolve, 100));
     return this.dataService.getUnreadMessageCounts(userId);
   }
+  
+  /**
+   * Get conversations related to a specific product
+   */
+  async getConversationsByProductId(productId: string): Promise<Conversation[]> {
+    // Simulate network latency
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Filter conversations by product ID
+    const allConversations = this.dataService.getConversations();
+    return allConversations.filter(conv => conv.productId === productId);
+  }
+  
+  /**
+   * Get conversations between a user and a company
+   */
+  async getConversationsBetweenUserAndCompany(userId: string, companyId: string): Promise<Conversation[]> {
+    // Simulate network latency
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Filter conversations by user ID and company ID
+    const allConversations = this.dataService.getConversations();
+    return allConversations.filter(conv => 
+      conv.userId === userId && conv.companyId === companyId
+    );
+  }
 }
