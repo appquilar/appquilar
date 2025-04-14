@@ -1,11 +1,9 @@
-
 import { useEffect } from 'react';
 import { SeoService } from '@/infrastructure/services/SeoService';
 import ChatInbox from '../chat/ChatInbox';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useConversations } from '@/application/hooks/useConversations';
-import { Button } from '@/components/ui/button';
-import { MessageCircle, RefreshCw } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 /**
@@ -29,15 +27,6 @@ const MessagesDashboard = () => {
     setupSeo();
   }, []);
 
-  const handleRefresh = async () => {
-    await reloadConversations();
-    toast({
-      title: "Actualizado",
-      description: "Los mensajes han sido actualizados",
-      duration: 3000,
-    });
-  };
-
   return (
     <div className="flex flex-col h-full">
       {/* Header section */}
@@ -47,16 +36,6 @@ const MessagesDashboard = () => {
             <MessageCircle className={`${isMobile ? 'mr-2' : 'mr-3'} text-primary`} size={isMobile ? 22 : 24} />
             Mensajes
           </h1>
-          
-          <Button 
-            variant="outline" 
-            size={isMobile ? "sm" : "default"}
-            onClick={handleRefresh}
-            className="gap-2"
-          >
-            <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
-            {!isMobile && "Actualizar"}
-          </Button>
         </div>
         
         <p className="text-muted-foreground">
