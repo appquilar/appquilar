@@ -1,12 +1,7 @@
 
-/**
- * @fileoverview Componente de cabecera para la vista de conversación
- * @module components/chat/ChatHeader
- */
-
 import { Conversation } from '@/core/domain/Message';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Info, MoreVertical, PlusCircle } from 'lucide-react';
+import { ArrowLeft, MoreVertical, PlusCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DropdownMenu,
@@ -70,10 +65,6 @@ const ChatHeader = ({ conversation, onBack, onCreateRental }: ChatHeaderProps) =
           <DropdownMenuItem onClick={onCreateRental}>
             <PlusCircle size={16} className="mr-2" />
             Crear alquiler
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Info size={16} className="mr-2" />
-            Ver detalles
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -1,4 +1,3 @@
-
 /**
  * @fileoverview Componente para visualizar una conversación
  * @module components/chat/ConversationView
@@ -151,20 +150,6 @@ const ConversationView = ({ conversation, onBack }: ConversationViewProps) => {
         <MessageList messages={messages} isLoading={isLoading} userId={user?.id} />
       </div>
       <MessageForm onSendMessage={handleSendMessage} isSending={isSending} />
-
-      {/* Mobile-only bottom button for adding rental */}
-      {isMobile && (
-        <div className="fixed inset-x-0 bottom-20 px-4 pb-2 bg-gradient-to-t from-background to-transparent">
-          <Button 
-            onClick={handleOpenRentalModal}
-            className="w-full shadow-md gap-2" 
-            size="lg"
-          >
-            <PlusCircle className="h-5 w-5" />
-            Añadir Alquiler
-          </Button>
-        </div>
-      )}
 
       {/* Rental Form Modal */}
       <RentalFormModal 
