@@ -123,7 +123,7 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
 interface RentalFormContentProps {
   form: any;
   isSubmitting: boolean;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void; 
   onCancel: () => void;
   productSearch: string;
   setProductSearch: (value: string) => void;
