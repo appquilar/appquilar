@@ -30,7 +30,7 @@ const CreateRental = () => {
 
       <div className="bg-card rounded-lg border p-3 sm:p-6">
         <Form {...form}>
-          <form onSubmit={onSubmit} className="space-y-5">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <ProductInfoFields
               form={form}
               productSearch={productSearch}
