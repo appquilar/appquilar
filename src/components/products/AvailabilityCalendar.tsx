@@ -5,17 +5,19 @@ import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, AlarmCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { AvailabilityPeriod } from './ProductCard';
+import { AvailabilityPeriod } from '@/domain/models/Product';
 
 interface AvailabilityCalendarProps {
   availabilityPeriods: AvailabilityPeriod[];
   isAlwaysAvailable?: boolean;
+  unavailableDates?: string[];
   onSelectDateRange?: (startDate: Date, endDate: Date) => void;
 }
 
 const AvailabilityCalendar = ({ 
   availabilityPeriods, 
   isAlwaysAvailable = false,
+  unavailableDates = [],
   onSelectDateRange 
 }: AvailabilityCalendarProps) => {
   const [month, setMonth] = useState<Date>(new Date());
@@ -47,6 +49,11 @@ const AvailabilityCalendar = ({
       return date >= new Date(new Date().setHours(0, 0, 0, 0));
     }
     
+    // Check if the date is in the unavailable dates list
+    if (unavailableDates.includes(format(date, 'yyyy-MM-dd'))) {
+      return false;
+    }
+    
     return availabilityPeriods.some(period => {
       if (period.status !== 'available') return false;
       
@@ -64,6 +71,11 @@ const AvailabilityCalendar = ({
   const isDateUnavailable = (date: Date) => {
     // If product is marked as always available, no dates are unavailable
     if (isAlwaysAvailable) return false;
+    
+    // Check if the date is in the unavailable dates list
+    if (unavailableDates.includes(format(date, 'yyyy-MM-dd'))) {
+      return true;
+    }
     
     return availabilityPeriods.some(period => {
       if (period.status === 'available') return false;

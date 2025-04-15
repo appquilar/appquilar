@@ -19,7 +19,7 @@ export const productFormSchema = z.object({
     deposit: z.number().min(0, 'El depósito debe ser mayor o igual a 0').optional(),
   }),
   secondHand: z.object({
-    price: z.number().min(0, 'El precio de venta debe ser mayor o igual a 0').optional(),
+    price: z.number().min(0, 'El precio de venta debe ser mayor o igual a 0'),
     negotiable: z.boolean().default(false),
     additionalInfo: z.string().optional(),
   }).optional(),
@@ -75,6 +75,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
  * Map form values to a Product model
  */
 export const mapFormValuesToProduct = (values: ProductFormValues, product: Product): Partial<Product> => {
+  // Ensure the core object structure conforms to the Product type
   const updatedProduct: Partial<Product> = {
     internalId: values.internalId ?? product.internalId,
     name: values.name,
@@ -86,7 +87,9 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
     secondHand: values.secondHand,
     isRentable: values.isRentable,
     isForSale: values.isForSale,
-    availability: values.availability,
+    company: product.company, // Preserve the company structure
+    category: product.category, // Preserve the category structure
+    availability: values.availability as AvailabilityPeriod[], // Type assertion to ensure compatibility
     isAlwaysAvailable: values.isAlwaysAvailable,
     unavailableDates: values.unavailableDates,
   };

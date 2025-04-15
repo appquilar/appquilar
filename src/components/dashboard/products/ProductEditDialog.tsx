@@ -1,5 +1,5 @@
 
-import { Product } from '@/components/products/ProductCard';
+import { Product } from '@/domain/models/Product';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ProductEditForm from '../ProductEditForm';
 
