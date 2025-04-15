@@ -48,17 +48,17 @@ const ProductFormPage = () => {
             rating: 0,
             reviewCount: 0,
             isAlwaysAvailable: true,
-            productType: 'rental'
+            productType: 'rental' as const // Specify the type literal
           };
           setProduct(newProduct);
         } else {
           // Find existing product
           const foundProduct = await productService.getProductById(productId);
           if (foundProduct) {
-            // Add productType to match our UI
+            // Add productType to match our UI with the correct type
             const enhancedProduct = {
               ...foundProduct,
-              productType: foundProduct.isRentable ? 'rental' : 'sale'
+              productType: (foundProduct.isRentable ? 'rental' : 'sale') as 'rental' | 'sale'
             };
             setProduct(enhancedProduct);
           }

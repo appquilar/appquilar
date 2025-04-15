@@ -9,9 +9,8 @@ import ProductFormActions from './ProductFormActions';
 import ProductSecondHandFields from './ProductSecondHandFields';
 import { useProductForm } from './hooks/useProductForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { FormField, FormItem, FormLabel, FormDescription, FormControl } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { FormField, FormItem, FormLabel, FormDescription } from '@/components/ui/form';
 import { Label } from '@/components/ui/label';
 
 interface ProductFormProps {
@@ -92,14 +91,14 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
           
           <TabsContent value="basic" className="space-y-4 pt-4">
             <ProductBasicInfoFields control={form.control} />
+            {/* Moved image upload here */}
             <ProductImagesField control={form.control} />
           </TabsContent>
           
           <TabsContent value="rental" className="space-y-4 pt-4">
             <ProductPriceFields control={form.control} />
-            <div className="max-h-[600px] overflow-y-auto px-1 pb-4">
-              <ProductAvailabilityFields control={form.control} />
-            </div>
+            {/* Fixed scrolling issue by removing the wrapper with max height */}
+            <ProductAvailabilityFields control={form.control} />
           </TabsContent>
           
           <TabsContent value="secondhand" className="space-y-4 pt-4">

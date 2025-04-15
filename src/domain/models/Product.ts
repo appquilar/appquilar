@@ -85,4 +85,3 @@ export interface ProductFormData {
   isAlwaysAvailable?: boolean;
   unavailableDates?: string[];
 }
-
