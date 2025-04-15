@@ -83,8 +83,20 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
     description: values.description,
     imageUrl: values.imageUrl,
     thumbnailUrl: values.thumbnailUrl,
-    price: values.price,
-    secondHand: values.secondHand,
+    price: {
+      // Ensure daily is always present as it's required
+      daily: values.price.daily,
+      weekly: values.price.weekly,
+      monthly: values.price.monthly,
+      hourly: values.price.hourly,
+      deposit: values.price.deposit,
+    },
+    secondHand: values.secondHand ? {
+      // Ensure price and negotiable are always present as required
+      price: values.secondHand.price,
+      negotiable: values.secondHand.negotiable ?? false,
+      additionalInfo: values.secondHand.additionalInfo,
+    } : undefined,
     isRentable: values.isRentable,
     isForSale: values.isForSale,
     company: product.company, // Preserve the company structure
