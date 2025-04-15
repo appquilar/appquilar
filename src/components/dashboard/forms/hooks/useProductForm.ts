@@ -20,15 +20,24 @@ interface UseProductFormProps {
 export const useProductForm = ({ product, onSave, onCancel }: UseProductFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form with existing product values
+  // Initialize form with existing product values and add productType
+  const formValues = mapProductToFormValues(product);
+  
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
-    defaultValues: mapProductToFormValues(product),
+    defaultValues: {
+      ...formValues,
+      productType: product.productType || (product.isRentable ? 'rental' : 'sale')
+    },
   });
 
   const onSubmit = async (values: ProductFormValues) => {
     setIsSubmitting(true);
     try {
+      // Set isRentable and isForSale based on productType
+      values.isRentable = values.productType === 'rental';
+      values.isForSale = values.productType === 'sale';
+      
       // Validation for selected options
       if (values.isForSale && (!values.secondHand || !values.secondHand.price)) {
         form.setError('secondHand.price', { 

@@ -47,13 +47,21 @@ const ProductFormPage = () => {
             },
             rating: 0,
             reviewCount: 0,
-            isAlwaysAvailable: true
+            isAlwaysAvailable: true,
+            productType: 'rental'
           };
           setProduct(newProduct);
         } else {
           // Find existing product
           const foundProduct = await productService.getProductById(productId);
-          setProduct(foundProduct || null);
+          if (foundProduct) {
+            // Add productType to match our UI
+            const enhancedProduct = {
+              ...foundProduct,
+              productType: foundProduct.isRentable ? 'rental' : 'sale'
+            };
+            setProduct(enhancedProduct);
+          }
         }
       } catch (error) {
         console.error("Error loading product:", error);

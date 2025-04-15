@@ -23,6 +23,7 @@ export const productFormSchema = z.object({
     negotiable: z.boolean().default(false),
     additionalInfo: z.string().optional(),
   }).optional(),
+  productType: z.enum(['rental', 'sale']).default('rental'),
   isRentable: z.boolean().default(true),
   isForSale: z.boolean().default(false),
   companyId: z.string().min(1, 'La empresa es obligatoria'),
@@ -61,6 +62,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
       deposit: product.price.deposit,
     },
     secondHand: product.secondHand,
+    productType: product.productType || (product.isRentable ? 'rental' : 'sale'),
     isRentable: product.isRentable ?? true,
     isForSale: product.isForSale ?? false,
     companyId: product.company.id,
@@ -97,6 +99,7 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
       negotiable: values.secondHand.negotiable ?? false,
       additionalInfo: values.secondHand.additionalInfo,
     } : undefined,
+    productType: values.productType,
     isRentable: values.isRentable,
     isForSale: values.isForSale,
     company: product.company, // Preserve the company structure

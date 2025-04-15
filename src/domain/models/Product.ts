@@ -24,6 +24,7 @@ export interface Product {
   };
   isRentable: boolean;
   isForSale: boolean;
+  productType?: 'rental' | 'sale';
   company: {
     id: string;
     name: string;
@@ -77,6 +78,7 @@ export interface ProductFormData {
   };
   isRentable: boolean;
   isForSale: boolean;
+  productType?: 'rental' | 'sale';
   companyId: string;
   categoryId: string;
   availability?: AvailabilityPeriod[];

@@ -8,14 +8,14 @@ import { Calendar } from '@/components/ui/calendar';
 import { AvailabilityPeriod } from '@/domain/models/Product';
 
 interface AvailabilityCalendarProps {
-  availabilityPeriods: AvailabilityPeriod[];
+  availabilityPeriods?: AvailabilityPeriod[];
   isAlwaysAvailable?: boolean;
   unavailableDates?: string[];
   onSelectDateRange?: (startDate: Date, endDate: Date) => void;
 }
 
 const AvailabilityCalendar = ({ 
-  availabilityPeriods, 
+  availabilityPeriods = [], 
   isAlwaysAvailable = false,
   unavailableDates = [],
   onSelectDateRange 
@@ -50,7 +50,7 @@ const AvailabilityCalendar = ({
     }
     
     // Check if the date is in the unavailable dates list
-    if (unavailableDates.includes(format(date, 'yyyy-MM-dd'))) {
+    if (unavailableDates && unavailableDates.includes(format(date, 'yyyy-MM-dd'))) {
       return false;
     }
     
@@ -73,7 +73,7 @@ const AvailabilityCalendar = ({
     if (isAlwaysAvailable) return false;
     
     // Check if the date is in the unavailable dates list
-    if (unavailableDates.includes(format(date, 'yyyy-MM-dd'))) {
+    if (unavailableDates && unavailableDates.includes(format(date, 'yyyy-MM-dd'))) {
       return true;
     }
     

@@ -3,41 +3,45 @@ import React from 'react';
 import { Control, useFieldArray } from 'react-hook-form';
 import { ProductFormValues } from './productFormSchema';
 import { FormLabel, FormDescription, FormField, FormItem, FormControl } from '@/components/ui/form';
-import AvailabilityPeriodItem from './availability/AvailabilityPeriodItem';
-import NewAvailabilityPeriod from './availability/NewAvailabilityPeriod';
-import { formatToISODate } from './availability/dateUtils';
-import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 
 interface ProductAvailabilityFieldsProps {
   control: Control<ProductFormValues>;
 }
 
+const daysOfWeek = [
+  { id: 'monday', label: 'Lunes' },
+  { id: 'tuesday', label: 'Martes' },
+  { id: 'wednesday', label: 'Miércoles' },
+  { id: 'thursday', label: 'Jueves' },
+  { id: 'friday', label: 'Viernes' },
+  { id: 'saturday', label: 'Sábado' },
+  { id: 'sunday', label: 'Domingo' },
+];
+
 const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) => {
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'availability',
+    name: 'unavailableDates',
   });
 
-  // Add a new availability period
-  const handleAddPeriod = (
-    startDate: Date, 
-    endDate: Date, 
-    includeWeekends: boolean
-  ) => {
-    append({
-      id: `period-${Date.now()}`,
-      startDate: formatToISODate(startDate),
-      endDate: formatToISODate(endDate),
-      status: 'available',
-      includeWeekends
-    });
+  // Add a new unavailable date
+  const handleAddDate = () => {
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+    append(formattedDate);
   };
 
   return (
     <div className="space-y-6">
-      <FormLabel className="text-base">Periodos de Disponibilidad</FormLabel>
+      <FormLabel className="text-base">Disponibilidad</FormLabel>
       <FormDescription>
         Establece cuándo este producto está disponible para alquilar.
       </FormDescription>
@@ -68,31 +72,98 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
         </CardContent>
       </Card>
 
-      {/* Current availability periods */}
+      {/* Days of week availability */}
       <FormField
         control={control}
         name="isAlwaysAvailable"
         render={({ field }) => (
-          <div className={`space-y-4 ${field.value ? 'opacity-50 pointer-events-none' : ''}`}>
-            {field.value && (
-              <div className="p-3 bg-primary/10 rounded-lg flex items-center gap-2 text-primary">
-                <CheckCircle size={18} />
-                <span>Este producto está marcado como siempre disponible</span>
-              </div>
-            )}
+          <div className={field.value ? 'opacity-50 pointer-events-none' : ''}>
+            <Card>
+              <CardContent className="p-4 space-y-4">
+                <div>
+                  <FormLabel className="text-base">Días de la semana disponibles</FormLabel>
+                  <FormDescription>
+                    Selecciona los días de la semana en que este producto está disponible
+                  </FormDescription>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {daysOfWeek.map(day => (
+                    <div key={day.id} className="flex items-center space-x-2">
+                      <Checkbox id={day.id} defaultChecked />
+                      <Label htmlFor={day.id}>{day.label}</Label>
+                    </div>
+                  ))}
+                </div>
+                
+                <Separator className="my-4" />
+                
+                <div>
+                  <FormLabel className="text-base">Horario de disponibilidad</FormLabel>
+                  <FormDescription>
+                    Define las horas en que este producto está disponible
+                  </FormDescription>
+                  
+                  <div className="grid grid-cols-2 gap-4 mt-2">
+                    <div>
+                      <Label htmlFor="startTime">Hora de inicio</Label>
+                      <Input 
+                        type="time" 
+                        id="startTime" 
+                        defaultValue="08:00" 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="endTime">Hora de fin</Label>
+                      <Input 
+                        type="time" 
+                        id="endTime" 
+                        defaultValue="18:00" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             
-            {fields.map((field, index) => (
-              <AvailabilityPeriodItem
-                key={field.id}
-                control={control}
-                index={index}
-                field={field}
-                remove={remove}
-              />
-            ))}
-
-            {/* Add new availability period */}
-            <NewAvailabilityPeriod onAddPeriod={handleAddPeriod} />
+            {/* Unavailable dates */}
+            <Card className="mt-6">
+              <CardContent className="p-4 space-y-4">
+                <div>
+                  <FormLabel className="text-base">Fechas no disponibles</FormLabel>
+                  <FormDescription>
+                    Añade fechas específicas en las que este producto no estará disponible
+                  </FormDescription>
+                </div>
+                
+                <div className="space-y-3">
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="flex items-center gap-2">
+                      <Input 
+                        type="date" 
+                        {...control.register(`unavailableDates.${index}` as const)}
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => remove(index)}
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleAddDate}
+                >
+                  Añadir fecha no disponible
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         )}
       />
