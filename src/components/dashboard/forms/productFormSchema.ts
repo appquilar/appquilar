@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import { Product, AvailabilityPeriod } from '@/domain/models/Product';
 import { ImageFile } from './image-upload/types';

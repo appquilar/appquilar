@@ -1,11 +1,10 @@
 
 import React, { useState } from 'react';
-import { format, isWithinInterval, parseISO, isWeekend } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, AlarmCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import { AvailabilityPeriod } from '@/domain/models/Product';
+import CalendarNavigation from './availability/CalendarNavigation';
+import AlwaysAvailableNotice from './availability/AlwaysAvailableNotice';
+import CalendarDisplay from './availability/CalendarDisplay';
+import CalendarLegend from './availability/CalendarLegend';
 
 interface AvailabilityCalendarProps {
   availabilityPeriods?: AvailabilityPeriod[];
@@ -42,158 +41,40 @@ const AvailabilityCalendar = ({
     setMonth(nextMonth);
   };
 
-  // Check if a date is within any of the available periods
-  const isDateAvailable = (date: Date) => {
-    // If product is marked as always available, all future dates are available
-    if (isAlwaysAvailable) {
-      return date >= new Date(new Date().setHours(0, 0, 0, 0));
-    }
-    
-    // Check if the date is in the unavailable dates list
-    if (unavailableDates && unavailableDates.includes(format(date, 'yyyy-MM-dd'))) {
-      return false;
-    }
-    
-    return availabilityPeriods.some(period => {
-      if (period.status !== 'available') return false;
-      
-      const start = parseISO(period.startDate);
-      const end = parseISO(period.endDate);
-      
-      // Check if the date is a weekend and if weekends are excluded
-      if (isWeekend(date) && !period.includeWeekends) return false;
-      
-      return isWithinInterval(date, { start, end });
-    });
-  };
-
-  // Check if a date is within any of the unavailable periods
-  const isDateUnavailable = (date: Date) => {
-    // If product is marked as always available, no dates are unavailable
-    if (isAlwaysAvailable) return false;
-    
-    // Check if the date is in the unavailable dates list
-    if (unavailableDates && unavailableDates.includes(format(date, 'yyyy-MM-dd'))) {
-      return true;
-    }
-    
-    return availabilityPeriods.some(period => {
-      if (period.status === 'available') return false;
-      
-      const start = parseISO(period.startDate);
-      const end = parseISO(period.endDate);
-      
-      return isWithinInterval(date, { start, end });
-    });
-  };
-
   // Handle date selection for range picking
-  const handleSelect = (date: Date | undefined) => {
-    if (!date) return;
+  const handleSelect = (value: any) => {
+    if (!value) return;
     
-    // If the date is not available, don't allow selection
-    if (!isDateAvailable(date)) return;
-    
-    if (!selectedRange.from) {
-      setSelectedRange({ from: date, to: undefined });
-    } else if (!selectedRange.to) {
-      // Make sure the end date is after the start date
-      if (date < selectedRange.from) {
-        setSelectedRange({ from: date, to: selectedRange.from });
-      } else {
-        setSelectedRange({ ...selectedRange, to: date });
-        
-        // Call the callback if provided
-        if (onSelectDateRange) {
-          onSelectDateRange(selectedRange.from, date);
-        }
+    if ('from' in value) {
+      setSelectedRange(value as any);
+      if (value.from && value.to && onSelectDateRange) {
+        onSelectDateRange(value.from, value.to);
       }
-    } else {
-      // Reset selection and start new range
-      setSelectedRange({ from: date, to: undefined });
     }
-  };
-
-  // Apply custom styling to dates based on availability
-  const modifiers = {
-    available: (date: Date) => isDateAvailable(date),
-    unavailable: (date: Date) => isDateUnavailable(date),
-    weekend: (date: Date) => isWeekend(date)
-  };
-
-  // Custom styling for different date types
-  const modifiersClassNames = {
-    available: "bg-green-50 text-green-900 hover:bg-green-100",
-    unavailable: "bg-gray-100 text-gray-400 hover:bg-gray-100 cursor-not-allowed",
-    weekend: ""  // Additional styling can be added here if needed
   };
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium">Disponibilidad</h3>
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handlePreviousMonth}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center px-3 py-1 font-medium">
-            {format(month, 'MMMM yyyy', { locale: es })}
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleNextMonth}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <CalendarNavigation 
+        month={month}
+        onPreviousMonth={handlePreviousMonth}
+        onNextMonth={handleNextMonth}
+      />
       
       {isAlwaysAvailable ? (
-        <div className="bg-green-50 text-green-800 p-4 rounded-lg border border-green-200 flex items-center gap-2 mb-4">
-          <AlarmCheck className="h-5 w-5" />
-          <span>Este producto está siempre disponible para alquilar</span>
-        </div>
+        <AlwaysAvailableNotice />
       ) : (
-        <div className="bg-white p-4 rounded-lg border">
-          <Calendar
-            mode="range"
-            month={month}
-            selected={selectedRange}
-            onSelect={(value) => {
-              if (!value) return;
-              if ('from' in value) {
-                setSelectedRange(value as any);
-                if (value.from && value.to && onSelectDateRange) {
-                  onSelectDateRange(value.from, value.to);
-                }
-              }
-            }}
-            modifiers={modifiers}
-            modifiersClassNames={modifiersClassNames}
-            disabled={(date) => {
-              // Disable dates in the past
-              return date < new Date(new Date().setHours(0, 0, 0, 0));
-            }}
-            className="p-3 pointer-events-auto"
-          />
-        </div>
+        <CalendarDisplay 
+          month={month}
+          selectedRange={selectedRange}
+          onSelect={handleSelect}
+          availabilityPeriods={availabilityPeriods}
+          isAlwaysAvailable={isAlwaysAvailable}
+          unavailableDates={unavailableDates}
+        />
       )}
       
-      <div className="flex flex-wrap gap-3 mt-4 text-sm">
-        <div className="flex items-center">
-          <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-          <span>Disponible</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 rounded-full bg-gray-300 mr-2"></div>
-          <span>No disponible</span>
-        </div>
-      </div>
+      <CalendarLegend />
     </div>
   );
 };
