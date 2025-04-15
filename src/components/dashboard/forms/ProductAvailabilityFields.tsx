@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Control } from 'react-hook-form';
+import React, { useState, useEffect } from 'react';
+import { Control, useWatch } from 'react-hook-form';
 import { ProductFormValues } from './productFormSchema';
 import { FormField, FormLabel, FormDescription } from '@/components/ui/form';
 import AlwaysAvailableToggle from './availability/AlwaysAvailableToggle';
@@ -34,6 +34,35 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
     saturday: false,
     sunday: false,
   });
+
+  const isAlwaysAvailable = useWatch({
+    control,
+    name: "isAlwaysAvailable",
+    defaultValue: true
+  });
+
+  // Update availability schedule in form when timeRanges or selectedDays change
+  useEffect(() => {
+    // Only update when product isn't set to always available
+    if (isAlwaysAvailable) return;
+
+    // Create availability schedule object from selected days and time ranges
+    const schedule: Record<string, Array<{ startTime: string; endTime: string }>> = {};
+
+    Object.entries(selectedDays).forEach(([day, isSelected]) => {
+      if (isSelected) {
+        // Map the TimeRange[] to the format expected by the form schema (without the id field)
+        schedule[day] = timeRanges[day as WeekdayId].map(range => ({
+          startTime: range.startTime,
+          endTime: range.endTime
+        }));
+      }
+    });
+
+    // Update the form value
+    control._formState.dirtyFields.availabilitySchedule = true;
+    control._fields.availabilitySchedule?.onChange(schedule);
+  }, [timeRanges, selectedDays, isAlwaysAvailable, control]);
 
   // Add a new time range for a specific day
   const addTimeRange = (day: WeekdayId) => {
