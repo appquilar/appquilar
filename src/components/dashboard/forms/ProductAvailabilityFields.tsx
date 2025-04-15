@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Control, useFieldArray } from 'react-hook-form';
 import { ProductFormValues } from './productFormSchema';
@@ -58,14 +57,14 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
   // Handle unavailable dates
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "unavailableDates" as any, // Cast to any to bypass TypeScript error
+    name: "unavailableDates"
   });
 
   // Add a new unavailable date
   const handleAddDate = () => {
     const today = new Date();
     const formattedDate = today.toISOString().split('T')[0];
-    append(formattedDate as any); // Cast to any to bypass TypeScript error
+    append(formattedDate);
   };
 
   // Add a new time range for a specific day
