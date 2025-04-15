@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { Product, AvailabilityPeriod } from '@/domain/models/Product';
 import { ImageFile } from './image-upload/types';
@@ -38,6 +39,7 @@ export const productFormSchema = z.object({
   ).optional(),
   isAlwaysAvailable: z.boolean().default(true),
   unavailableDates: z.array(z.string()).optional(),
+  // Change type definition to match the Product model
   availabilitySchedule: z.record(z.array(
     z.object({
       startTime: z.string(),
