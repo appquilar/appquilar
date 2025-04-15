@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Control } from 'react-hook-form';
 import { ProductFormValues } from './productFormSchema';
-import { FormLabel, FormDescription } from '@/components/ui/form';
+import { FormField, FormLabel, FormDescription } from '@/components/ui/form';
 import AlwaysAvailableToggle from './availability/AlwaysAvailableToggle';
 import WeeklySchedule from './availability/WeeklySchedule';
 import UnavailableDates from './availability/UnavailableDates';

@@ -5,8 +5,8 @@
 
 export interface TimeRange {
   id: string;
-  startTime: string;
-  endTime: string;
+  startTime: string;  // Not optional to match Product model
+  endTime: string;    // Not optional to match Product model
 }
 
 export type WeekdayId = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';

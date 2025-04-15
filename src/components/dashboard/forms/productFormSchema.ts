@@ -39,7 +39,7 @@ export const productFormSchema = z.object({
   ).optional(),
   isAlwaysAvailable: z.boolean().default(true),
   unavailableDates: z.array(z.string()).optional(),
-  // Change type definition to match the Product model
+  // Fixed type definition to match the Product model (removed optional properties)
   availabilitySchedule: z.record(z.array(
     z.object({
       startTime: z.string(),
