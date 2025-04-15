@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { FormField, FormItem, FormLabel, FormDescription } from '@/components/ui/form';
 import { Label } from '@/components/ui/label';
+import { useEffect } from 'react';
 
 interface ProductFormProps {
   product: Product;
@@ -25,6 +26,24 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     onSave,
     onCancel
   });
+
+  // Update tabs when product type changes
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'productType') {
+        // Update the isRentable and isForSale flags when productType changes
+        if (value.productType === 'rental') {
+          form.setValue('isRentable', true);
+          form.setValue('isForSale', false);
+        } else if (value.productType === 'sale') {
+          form.setValue('isRentable', false);
+          form.setValue('isForSale', true);
+        }
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   return (
     <Form {...form}>
@@ -41,23 +60,14 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
             name="productType"
             render={({ field }) => (
               <RadioGroup
-                onValueChange={(value) => {
-                  // Update the type and the corresponding flags
-                  field.onChange(value);
-                  if (value === 'rental') {
-                    form.setValue('isRentable', true);
-                    form.setValue('isForSale', false);
-                  } else {
-                    form.setValue('isRentable', false);
-                    form.setValue('isForSale', true);
-                  }
-                }}
+                onValueChange={field.onChange}
+                value={field.value}
                 defaultValue={product.isRentable ? 'rental' : 'sale'}
                 className="grid grid-cols-2 gap-4"
               >
                 <FormItem>
                   <FormLabel asChild>
-                    <div className={`flex flex-col items-center justify-between rounded-lg border p-4 cursor-pointer hover:bg-accent ${form.watch('productType') === 'rental' ? 'border-primary bg-accent' : 'border-input'}`}>
+                    <div className={`flex flex-col items-center justify-between rounded-lg border p-4 cursor-pointer hover:bg-accent ${field.value === 'rental' ? 'border-primary bg-accent' : 'border-input'}`}>
                       <RadioGroupItem value="rental" id="rental" className="sr-only" />
                       <Label htmlFor="rental" className="text-base font-semibold">Alquiler</Label>
                       <FormDescription>
@@ -68,7 +78,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                 </FormItem>
                 <FormItem>
                   <FormLabel asChild>
-                    <div className={`flex flex-col items-center justify-between rounded-lg border p-4 cursor-pointer hover:bg-accent ${form.watch('productType') === 'sale' ? 'border-primary bg-accent' : 'border-input'}`}>
+                    <div className={`flex flex-col items-center justify-between rounded-lg border p-4 cursor-pointer hover:bg-accent ${field.value === 'sale' ? 'border-primary bg-accent' : 'border-input'}`}>
                       <RadioGroupItem value="sale" id="sale" className="sr-only" />
                       <Label htmlFor="sale" className="text-base font-semibold">Venta</Label>
                       <FormDescription>
@@ -85,19 +95,18 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         <Tabs defaultValue="basic" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="basic">Información Básica</TabsTrigger>
-            <TabsTrigger value="rental" disabled={!form.watch('isRentable')}>Alquiler</TabsTrigger>
-            <TabsTrigger value="secondhand" disabled={!form.watch('isForSale')}>Segunda Mano</TabsTrigger>
+            <TabsTrigger value="rental" disabled={form.watch('productType') !== 'rental'}>Alquiler</TabsTrigger>
+            <TabsTrigger value="secondhand" disabled={form.watch('productType') !== 'sale'}>Segunda Mano</TabsTrigger>
           </TabsList>
           
           <TabsContent value="basic" className="space-y-4 pt-4">
             <ProductBasicInfoFields control={form.control} />
-            {/* Moved image upload here */}
+            {/* Image upload form in basic tab */}
             <ProductImagesField control={form.control} />
           </TabsContent>
           
           <TabsContent value="rental" className="space-y-4 pt-4">
             <ProductPriceFields control={form.control} />
-            {/* Fixed scrolling issue by removing the wrapper with max height */}
             <ProductAvailabilityFields control={form.control} />
           </TabsContent>
           

@@ -40,6 +40,7 @@ export interface Product {
   availability?: AvailabilityPeriod[];
   isAlwaysAvailable?: boolean;
   unavailableDates?: string[];
+  availabilitySchedule?: Record<string, Array<{ startTime: string; endTime: string }>>;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -84,4 +85,5 @@ export interface ProductFormData {
   availability?: AvailabilityPeriod[];
   isAlwaysAvailable?: boolean;
   unavailableDates?: string[];
+  availabilitySchedule?: Record<string, Array<{ startTime: string; endTime: string }>>;
 }

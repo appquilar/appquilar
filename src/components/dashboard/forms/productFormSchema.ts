@@ -39,6 +39,12 @@ export const productFormSchema = z.object({
   ).optional(),
   isAlwaysAvailable: z.boolean().default(true),
   unavailableDates: z.array(z.string()).optional(),
+  availabilitySchedule: z.record(z.array(
+    z.object({
+      startTime: z.string(),
+      endTime: z.string()
+    })
+  )).optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -70,6 +76,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
     availability: product.availability,
     isAlwaysAvailable: product.isAlwaysAvailable ?? true,
     unavailableDates: product.unavailableDates,
+    availabilitySchedule: product.availabilitySchedule,
   };
 };
 
@@ -107,6 +114,7 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
     availability: values.availability as AvailabilityPeriod[], // Type assertion to ensure compatibility
     isAlwaysAvailable: values.isAlwaysAvailable,
     unavailableDates: values.unavailableDates,
+    availabilitySchedule: values.availabilitySchedule,
   };
   
   return updatedProduct;

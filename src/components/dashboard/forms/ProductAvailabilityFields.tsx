@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Control, useFieldArray } from 'react-hook-form';
 import { ProductFormValues } from './productFormSchema';
 import { FormLabel, FormDescription, FormField, FormItem, FormControl } from '@/components/ui/form';
@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Plus, Trash2 } from 'lucide-react';
 
 interface ProductAvailabilityFieldsProps {
   control: Control<ProductFormValues>;
@@ -25,8 +26,36 @@ const daysOfWeek = [
   { id: 'sunday', label: 'Domingo' },
 ];
 
+interface TimeRange {
+  id: string;
+  startTime: string;
+  endTime: string;
+}
+
 const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) => {
-  // Update the field name to match what's in the schema
+  // State to track time ranges for each day
+  const [timeRanges, setTimeRanges] = useState<Record<string, TimeRange[]>>({
+    monday: [{ id: 'monday-1', startTime: '08:00', endTime: '18:00' }],
+    tuesday: [{ id: 'tuesday-1', startTime: '08:00', endTime: '18:00' }],
+    wednesday: [{ id: 'wednesday-1', startTime: '08:00', endTime: '18:00' }],
+    thursday: [{ id: 'thursday-1', startTime: '08:00', endTime: '18:00' }],
+    friday: [{ id: 'friday-1', startTime: '08:00', endTime: '18:00' }],
+    saturday: [{ id: 'saturday-1', startTime: '08:00', endTime: '18:00' }],
+    sunday: [{ id: 'sunday-1', startTime: '08:00', endTime: '18:00' }],
+  });
+
+  // State to track which days are selected
+  const [selectedDays, setSelectedDays] = useState<Record<string, boolean>>({
+    monday: true,
+    tuesday: true,
+    wednesday: true,
+    thursday: true,
+    friday: true,
+    saturday: false,
+    sunday: false,
+  });
+
+  // Handle unavailable dates
   const { fields, append, remove } = useFieldArray({
     control,
     name: "unavailableDates" as any, // Cast to any to bypass TypeScript error
@@ -37,6 +66,47 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
     const today = new Date();
     const formattedDate = today.toISOString().split('T')[0];
     append(formattedDate as any); // Cast to any to bypass TypeScript error
+  };
+
+  // Add a new time range for a specific day
+  const addTimeRange = (day: string) => {
+    const newRanges = [...(timeRanges[day] || [])];
+    const newId = `${day}-${newRanges.length + 1}`;
+    newRanges.push({ id: newId, startTime: '08:00', endTime: '18:00' });
+    setTimeRanges({
+      ...timeRanges,
+      [day]: newRanges
+    });
+  };
+
+  // Remove a time range for a specific day
+  const removeTimeRange = (day: string, rangeId: string) => {
+    const newRanges = timeRanges[day].filter(range => range.id !== rangeId);
+    setTimeRanges({
+      ...timeRanges,
+      [day]: newRanges
+    });
+  };
+
+  // Update a time range value
+  const updateTimeRange = (day: string, rangeId: string, field: 'startTime' | 'endTime', value: string) => {
+    const newRanges = timeRanges[day].map(range => 
+      range.id === rangeId 
+        ? { ...range, [field]: value } 
+        : range
+    );
+    setTimeRanges({
+      ...timeRanges,
+      [day]: newRanges
+    });
+  };
+
+  // Toggle day selection
+  const toggleDaySelection = (day: string, checked: boolean) => {
+    setSelectedDays({
+      ...selectedDays,
+      [day]: checked
+    });
   };
 
   return (
@@ -90,7 +160,11 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {daysOfWeek.map(day => (
                     <div key={day.id} className="flex items-center space-x-2">
-                      <Checkbox id={day.id} defaultChecked />
+                      <Checkbox 
+                        id={day.id} 
+                        checked={selectedDays[day.id]} 
+                        onCheckedChange={(checked) => toggleDaySelection(day.id, !!checked)}
+                      />
                       <Label htmlFor={day.id}>{day.label}</Label>
                     </div>
                   ))}
@@ -98,31 +172,62 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
                 
                 <Separator className="my-4" />
                 
-                <div>
-                  <FormLabel className="text-base">Horario de disponibilidad</FormLabel>
-                  <FormDescription>
-                    Define las horas en que este producto está disponible
-                  </FormDescription>
-                  
-                  <div className="grid grid-cols-2 gap-4 mt-2">
-                    <div>
-                      <Label htmlFor="startTime">Hora de inicio</Label>
-                      <Input 
-                        type="time" 
-                        id="startTime" 
-                        defaultValue="08:00" 
-                      />
+                {daysOfWeek.map(day => (
+                  <div 
+                    key={`timeranges-${day.id}`} 
+                    className={!selectedDays[day.id] ? 'hidden' : 'space-y-3'}
+                  >
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-base">{day.label}</FormLabel>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => addTimeRange(day.id)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Añadir horario
+                      </Button>
                     </div>
-                    <div>
-                      <Label htmlFor="endTime">Hora de fin</Label>
-                      <Input 
-                        type="time" 
-                        id="endTime" 
-                        defaultValue="18:00" 
-                      />
-                    </div>
+                    
+                    {timeRanges[day.id]?.map((range, index) => (
+                      <div key={range.id} className="flex items-center space-x-2">
+                        <div className="grid grid-cols-2 gap-2 flex-grow">
+                          <div>
+                            <Label htmlFor={`${range.id}-start`}>Hora inicio</Label>
+                            <Input 
+                              type="time" 
+                              id={`${range.id}-start`}
+                              value={range.startTime}
+                              onChange={(e) => updateTimeRange(day.id, range.id, 'startTime', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`${range.id}-end`}>Hora fin</Label>
+                            <Input 
+                              type="time" 
+                              id={`${range.id}-end`}
+                              value={range.endTime}
+                              onChange={(e) => updateTimeRange(day.id, range.id, 'endTime', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        {timeRanges[day.id].length > 1 && (
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon"
+                            className="mt-5"
+                            onClick={() => removeTimeRange(day.id, range.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    
+                    <Separator className="my-2" />
                   </div>
-                </div>
+                ))}
               </CardContent>
             </Card>
             
