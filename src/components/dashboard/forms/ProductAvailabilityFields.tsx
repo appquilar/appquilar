@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Control, useWatch } from 'react-hook-form';
+import { Control, useWatch, useFormContext } from 'react-hook-form';
 import { ProductFormValues } from './productFormSchema';
 import { FormField, FormLabel, FormDescription } from '@/components/ui/form';
 import AlwaysAvailableToggle from './availability/AlwaysAvailableToggle';
@@ -13,6 +13,9 @@ interface ProductAvailabilityFieldsProps {
 }
 
 const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) => {
+  // Get the setValue method from useFormContext
+  const { setValue } = useFormContext<ProductFormValues>();
+
   // State to track time ranges for each day
   const [timeRanges, setTimeRanges] = useState<DaySchedules>({
     monday: [{ id: 'monday-1', startTime: '08:00', endTime: '18:00' }],
@@ -59,10 +62,12 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
       }
     });
 
-    // Update the form value
-    control._formState.dirtyFields.availabilitySchedule = true;
-    control._fields.availabilitySchedule?.onChange(schedule);
-  }, [timeRanges, selectedDays, isAlwaysAvailable, control]);
+    // Properly update the form value using setValue
+    setValue("availabilitySchedule", schedule, { 
+      shouldDirty: true,
+      shouldValidate: true
+    });
+  }, [timeRanges, selectedDays, isAlwaysAvailable, setValue]);
 
   // Add a new time range for a specific day
   const addTimeRange = (day: WeekdayId) => {
