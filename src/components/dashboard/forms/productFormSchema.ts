@@ -39,13 +39,15 @@ export const productFormSchema = z.object({
   ).optional(),
   isAlwaysAvailable: z.boolean().default(true),
   unavailableDates: z.array(z.string()).optional(),
-  // Fixed type definition to match the Product model (non-optional fields)
-  availabilitySchedule: z.record(z.array(
-    z.object({
-      startTime: z.string(),
-      endTime: z.string()
-    })
-  )).optional(),
+  // Update type definition to ensure startTime and endTime are required
+  availabilitySchedule: z.record(
+    z.array(
+      z.object({
+        startTime: z.string(),
+        endTime: z.string()
+      })
+    )
+  ).optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
