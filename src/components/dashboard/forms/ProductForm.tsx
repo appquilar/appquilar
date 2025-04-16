@@ -1,4 +1,3 @@
-
 import { Form } from '@/components/ui/form';
 import { Product } from '@/domain/models/Product';
 import ProductBasicInfoFields from './ProductBasicInfoFields';
@@ -67,7 +66,10 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
               >
                 <FormItem>
                   <FormLabel asChild>
-                    <div className={`flex flex-col items-center justify-between rounded-lg border p-4 cursor-pointer hover:bg-accent ${field.value === 'rental' ? 'border-primary bg-accent' : 'border-input'}`}>
+                    <div 
+                      className={`flex flex-col items-center justify-between rounded-lg border p-4 cursor-pointer hover:bg-accent ${field.value === 'rental' ? 'border-primary bg-accent' : 'border-input'}`}
+                      onClick={() => field.onChange('rental')}
+                    >
                       <RadioGroupItem value="rental" id="rental" className="sr-only" />
                       <Label htmlFor="rental" className="text-base font-semibold">Alquiler</Label>
                       <FormDescription>
@@ -78,7 +80,10 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                 </FormItem>
                 <FormItem>
                   <FormLabel asChild>
-                    <div className={`flex flex-col items-center justify-between rounded-lg border p-4 cursor-pointer hover:bg-accent ${field.value === 'sale' ? 'border-primary bg-accent' : 'border-input'}`}>
+                    <div 
+                      className={`flex flex-col items-center justify-between rounded-lg border p-4 cursor-pointer hover:bg-accent ${field.value === 'sale' ? 'border-primary bg-accent' : 'border-input'}`}
+                      onClick={() => field.onChange('sale')}
+                    >
                       <RadioGroupItem value="sale" id="sale" className="sr-only" />
                       <Label htmlFor="sale" className="text-base font-semibold">Venta</Label>
                       <FormDescription>
