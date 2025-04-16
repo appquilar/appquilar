@@ -7,17 +7,26 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { Control } from 'react-hook-form';
-import { ProductFormValues } from '../../productFormSchema';
+import { Control, FieldPath, FieldValues } from 'react-hook-form';
 import { formatToISODate } from '../dateUtils';
 
-interface DateInputProps {
-  control: Control<ProductFormValues>;
-  name: string;
+interface DateInputProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+> {
+  control: Control<TFieldValues>;
+  name: TName;
   label: string;
 }
 
-const DateInput: React.FC<DateInputProps> = ({ control, name, label }) => {
+const DateInput = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+>({ 
+  control, 
+  name, 
+  label 
+}: DateInputProps<TFieldValues, TName>) => {
   return (
     <FormField
       control={control}
@@ -35,7 +44,7 @@ const DateInput: React.FC<DateInputProps> = ({ control, name, label }) => {
                   )}
                 >
                   {field.value ? (
-                    format(new Date(field.value), "PPP")
+                    format(new Date(field.value as string), "PPP")
                   ) : (
                     <span>{label}</span>
                   )}
@@ -46,7 +55,7 @@ const DateInput: React.FC<DateInputProps> = ({ control, name, label }) => {
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={field.value ? new Date(field.value) : undefined}
+                selected={field.value ? new Date(field.value as string) : undefined}
                 onSelect={(date) => {
                   if (date) {
                     field.onChange(formatToISODate(date));

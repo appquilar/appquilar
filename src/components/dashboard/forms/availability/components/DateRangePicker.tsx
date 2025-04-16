@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Control } from 'react-hook-form';
+import { Control, FieldPath, FieldValues } from 'react-hook-form';
 import { ProductFormValues } from '../../productFormSchema';
 import DateInput from './DateInput';
 
@@ -12,15 +12,15 @@ interface DateRangePickerProps {
 const DateRangePicker: React.FC<DateRangePickerProps> = ({ control, index }) => {
   return (
     <div className="flex items-center gap-2">
-      <DateInput 
+      <DateInput<ProductFormValues, `availability.${number}.startDate`>
         control={control}
-        name={`availability.${index}.startDate`}
+        name={`availability.${index}.startDate` as const}
         label="Fecha inicio"
       />
       <span>hasta</span>
-      <DateInput
+      <DateInput<ProductFormValues, `availability.${number}.endDate`>
         control={control}
-        name={`availability.${index}.endDate`}
+        name={`availability.${index}.endDate` as const}
         label="Fecha fin"
       />
     </div>
