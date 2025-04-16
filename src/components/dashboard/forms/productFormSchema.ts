@@ -39,11 +39,12 @@ export const productFormSchema = z.object({
   ).optional(),
   isAlwaysAvailable: z.boolean().default(true),
   unavailableDates: z.array(z.string()).optional(),
+  // Fix the type definition for availabilitySchedule to ensure startTime and endTime are required
   availabilitySchedule: z.record(
     z.array(
       z.object({
-        startTime: z.string().min(1),  // Ensure it's required and non-empty
-        endTime: z.string().min(1)     // Ensure it's required and non-empty
+        startTime: z.string().min(1).default('08:00'),  // Ensure it's required and non-empty with default
+        endTime: z.string().min(1).default('18:00')     // Ensure it's required and non-empty with default
       })
     )
   ).optional(),
@@ -78,10 +79,11 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
     availability: product.availability,
     isAlwaysAvailable: product.isAlwaysAvailable ?? true,
     unavailableDates: product.unavailableDates,
+    // Ensure startTime and endTime are never undefined by providing default values
     availabilitySchedule: product.availabilitySchedule ? Object.entries(product.availabilitySchedule).reduce((acc, [day, timeSlots]) => {
       acc[day] = timeSlots.map(slot => ({
-        startTime: slot.startTime || '08:00', // Default value if undefined
-        endTime: slot.endTime || '18:00'      // Default value if undefined
+        startTime: slot.startTime || '08:00', // Use default if undefined
+        endTime: slot.endTime || '18:00'      // Use default if undefined
       }));
       return acc;
     }, {} as Record<string, { startTime: string; endTime: string }[]>) : undefined,

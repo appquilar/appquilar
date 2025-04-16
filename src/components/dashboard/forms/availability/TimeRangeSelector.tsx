@@ -14,7 +14,7 @@ interface TimeRangeSelectorProps {
 }
 
 const TimeRangeSelector = ({ range, showRemoveButton, onUpdate, onRemove }: TimeRangeSelectorProps) => {
-  // Default values are provided if undefined
+  // Default values are provided if empty strings are passed
   const startTime = range.startTime || '08:00';
   const endTime = range.endTime || '18:00';
   
