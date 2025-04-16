@@ -14,6 +14,10 @@ interface TimeRangeSelectorProps {
 }
 
 const TimeRangeSelector = ({ range, showRemoveButton, onUpdate, onRemove }: TimeRangeSelectorProps) => {
+  // Ensure we always have valid values
+  const startTime = range.startTime || '08:00';
+  const endTime = range.endTime || '18:00';
+  
   return (
     <div className="flex items-center space-x-2">
       <div className="grid grid-cols-2 gap-2 flex-grow">
@@ -22,8 +26,8 @@ const TimeRangeSelector = ({ range, showRemoveButton, onUpdate, onRemove }: Time
           <Input 
             type="time" 
             id={`${range.id}-start`}
-            value={range.startTime}
-            onChange={(e) => onUpdate('startTime', e.target.value)}
+            value={startTime}
+            onChange={(e) => onUpdate('startTime', e.target.value || '08:00')}
           />
         </div>
         <div>
@@ -31,8 +35,8 @@ const TimeRangeSelector = ({ range, showRemoveButton, onUpdate, onRemove }: Time
           <Input 
             type="time" 
             id={`${range.id}-end`}
-            value={range.endTime}
-            onChange={(e) => onUpdate('endTime', e.target.value)}
+            value={endTime}
+            onChange={(e) => onUpdate('endTime', e.target.value || '18:00')}
           />
         </div>
       </div>

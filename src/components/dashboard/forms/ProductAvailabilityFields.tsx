@@ -56,8 +56,8 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
       if (isSelected) {
         // Map the TimeRange[] to the format expected by the form schema (without the id field)
         schedule[day] = timeRanges[day as WeekdayId].map(range => ({
-          startTime: range.startTime,
-          endTime: range.endTime
+          startTime: range.startTime || '08:00', // Ensure non-optional values
+          endTime: range.endTime || '18:00'      // Ensure non-optional values
         }));
       }
     });
