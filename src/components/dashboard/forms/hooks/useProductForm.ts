@@ -27,7 +27,8 @@ export const useProductForm = ({ product, onSave, onCancel }: UseProductFormProp
     resolver: zodResolver(productFormSchema),
     defaultValues: {
       ...formValues,
-      productType: product.productType || (product.isRentable ? 'rental' : 'sale')
+      productType: product.productType || (product.isRentable ? 'rental' : 'sale'),
+      currentTab: 'basic', // Default tab for mobile view
     },
     mode: 'onChange', // Enable onChange mode for better reactivity
   });

@@ -1,150 +1,115 @@
 
 import { z } from 'zod';
-import { Product, AvailabilityPeriod } from '@/domain/models/Product';
-import { ImageFile } from './image-upload/types';
+import { Product } from '@/domain/models/Product';
 
 export const productFormSchema = z.object({
   internalId: z.string().optional(),
-  name: z.string().min(1, 'El nombre es obligatorio'),
-  slug: z.string().min(1, 'El slug es obligatorio'),
-  description: z.string().min(1, 'La descripción es obligatoria'),
-  images: z.array(z.custom<ImageFile>()).optional(),
-  imageUrl: z.string().url('URL de imagen inválida'),
-  thumbnailUrl: z.string().url('URL de miniatura inválida').optional(),
+  name: z.string().min(1, { message: 'El nombre es obligatorio' }),
+  slug: z.string().min(1, { message: 'El slug es obligatorio' }),
+  description: z.string().min(1, { message: 'La descripción es obligatoria' }),
+  imageUrl: z.string().optional(),
+  thumbnailUrl: z.string().optional(),
   price: z.object({
-    daily: z.number().min(0, 'El precio diario debe ser mayor o igual a 0'),
-    weekly: z.number().min(0, 'El precio semanal debe ser mayor o igual a 0').optional(),
-    monthly: z.number().min(0, 'El precio mensual debe ser mayor o igual a 0').optional(),
-    hourly: z.number().min(0, 'El precio por hora debe ser mayor o igual a 0').optional(),
-    deposit: z.number().min(0, 'El depósito debe ser mayor o igual a 0').optional(),
+    daily: z.coerce.number().optional(),
+    weekly: z.coerce.number().optional(),
+    monthly: z.coerce.number().optional(),
+    hourly: z.coerce.number().optional(),
+    deposit: z.coerce.number().optional(),
   }),
   secondHand: z.object({
-    price: z.number().min(0, 'El precio de venta debe ser mayor o igual a 0'),
-    negotiable: z.boolean().default(false),
+    price: z.coerce.number().optional(),
+    negotiable: z.boolean().optional(),
     additionalInfo: z.string().optional(),
   }).optional(),
-  productType: z.enum(['rental', 'sale']).default('rental'),
-  isRentable: z.boolean().default(true),
-  isForSale: z.boolean().default(false),
-  companyId: z.string().min(1, 'La empresa es obligatoria'),
-  categoryId: z.string().min(1, 'La categoría es obligatoria'),
-  availability: z.array(
-    z.object({
-      id: z.string(),
-      startDate: z.string(),
-      endDate: z.string(),
-      status: z.enum(['available', 'unavailable']),
-      includeWeekends: z.boolean(),
-    })
-  ).optional(),
-  isAlwaysAvailable: z.boolean().default(true),
+  isRentable: z.boolean().optional(),
+  isForSale: z.boolean().optional(),
+  productType: z.enum(['rental', 'sale']),
+  category: z.object({
+    id: z.string().nullable(),
+    name: z.string().optional(),
+    slug: z.string().optional(),
+  }),
+  availability: z.array(z.object({
+    id: z.string(),
+    startDate: z.string(),
+    endDate: z.string(),
+    status: z.enum(['available', 'unavailable']),
+    includeWeekends: z.boolean(),
+  })).optional(),
+  isAlwaysAvailable: z.boolean().optional(),
   unavailableDates: z.array(z.string()).optional(),
-  // Fix the type definition for availabilitySchedule to ensure startTime and endTime are required
-  availabilitySchedule: z.record(
-    z.array(
-      z.object({
-        startTime: z.string().min(1).default('08:00'),  // Ensure it's required and non-empty with default
-        endTime: z.string().min(1).default('18:00')     // Ensure it's required and non-empty with default
-      })
-    )
-  ).optional(),
+  availabilitySchedule: z.record(z.array(z.object({
+    startTime: z.string(),
+    endTime: z.string(),
+  }))).optional(),
+  // Field to track current tab in mobile view
+  currentTab: z.string().optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
 
-/**
- * Map a Product model to form values
- */
+// Helper function to convert Product to form values
 export const mapProductToFormValues = (product: Product): ProductFormValues => {
-  // Create a properly typed availabilitySchedule with non-optional properties
-  let typedAvailabilitySchedule: Record<string, Array<{ startTime: string; endTime: string }>> | undefined = undefined;
-  
-  if (product.availabilitySchedule) {
-    typedAvailabilitySchedule = {};
-    Object.entries(product.availabilitySchedule).forEach(([day, timeSlots]) => {
-      typedAvailabilitySchedule![day] = timeSlots.map(slot => ({
-        startTime: slot.startTime || '08:00',  // Ensure non-optional with default
-        endTime: slot.endTime || '18:00'       // Ensure non-optional with default
-      }));
-    });
-  }
-  
   return {
-    internalId: product.internalId,
-    name: product.name,
-    slug: product.slug,
-    description: product.description,
-    imageUrl: product.imageUrl,
-    thumbnailUrl: product.thumbnailUrl,
+    internalId: product.internalId || '',
+    name: product.name || '',
+    slug: product.slug || '',
+    description: product.description || '',
+    imageUrl: product.imageUrl || '',
+    thumbnailUrl: product.thumbnailUrl || '',
     price: {
-      daily: product.price.daily,
-      weekly: product.price.weekly,
-      monthly: product.price.monthly,
-      hourly: product.price.hourly,
-      deposit: product.price.deposit,
+      daily: product.price?.daily,
+      weekly: product.price?.weekly,
+      monthly: product.price?.monthly,
+      hourly: product.price?.hourly,
+      deposit: product.price?.deposit,
     },
-    secondHand: product.secondHand,
+    secondHand: product.secondHand || {
+      price: 0,
+      negotiable: false,
+      additionalInfo: '',
+    },
+    isRentable: product.isRentable,
+    isForSale: product.isForSale,
     productType: product.productType || (product.isRentable ? 'rental' : 'sale'),
-    isRentable: product.isRentable ?? true,
-    isForSale: product.isForSale ?? false,
-    companyId: product.company.id,
-    categoryId: product.category.id,
-    availability: product.availability,
-    isAlwaysAvailable: product.isAlwaysAvailable ?? true,
-    unavailableDates: product.unavailableDates,
-    availabilitySchedule: typedAvailabilitySchedule
+    category: {
+      id: product.category?.id || null,
+      name: product.category?.name || '',
+      slug: product.category?.slug || '',
+    },
+    availability: product.availability || [],
+    isAlwaysAvailable: product.isAlwaysAvailable || false,
+    unavailableDates: product.unavailableDates || [],
+    availabilitySchedule: product.availabilitySchedule || {},
   };
 };
 
-/**
- * Map form values to a Product model
- */
-export const mapFormValuesToProduct = (values: ProductFormValues, product: Product): Partial<Product> => {
-  // Ensure the availabilitySchedule has non-optional properties
-  let typedAvailabilitySchedule: Record<string, Array<{ startTime: string; endTime: string }>> | undefined = undefined;
-  
-  if (values.availabilitySchedule) {
-    typedAvailabilitySchedule = {};
-    Object.entries(values.availabilitySchedule).forEach(([day, timeSlots]) => {
-      typedAvailabilitySchedule![day] = timeSlots.map(slot => ({
-        startTime: slot.startTime || '08:00',  // Ensure non-optional with default
-        endTime: slot.endTime || '18:00'       // Ensure non-optional with default
-      }));
-    });
-  }
-  
-  // Ensure the core object structure conforms to the Product type
-  const updatedProduct: Partial<Product> = {
-    internalId: values.internalId ?? product.internalId,
+// Helper function to convert form values back to Product
+export const mapFormValuesToProduct = (values: ProductFormValues, originalProduct: Product): Partial<Product> => {
+  // Get selected category details if a category was selected
+  const category = values.category.id ? {
+    id: values.category.id,
+    name: values.category.name || '',
+    slug: values.category.slug || '',
+  } : originalProduct.category;
+
+  return {
+    ...originalProduct,
+    internalId: values.internalId,
     name: values.name,
     slug: values.slug,
     description: values.description,
     imageUrl: values.imageUrl,
     thumbnailUrl: values.thumbnailUrl,
-    price: {
-      // Ensure daily is always present as it's required
-      daily: values.price.daily,
-      weekly: values.price.weekly,
-      monthly: values.price.monthly,
-      hourly: values.price.hourly,
-      deposit: values.price.deposit,
-    },
-    secondHand: values.secondHand ? {
-      // Ensure price and negotiable are always present as required
-      price: values.secondHand.price,
-      negotiable: values.secondHand.negotiable ?? false,
-      additionalInfo: values.secondHand.additionalInfo,
-    } : undefined,
-    productType: values.productType,
+    price: values.price,
+    secondHand: values.secondHand,
     isRentable: values.isRentable,
     isForSale: values.isForSale,
-    company: product.company, // Preserve the company structure
-    category: product.category, // Preserve the category structure
-    availability: values.availability as AvailabilityPeriod[], // Type assertion to ensure compatibility
+    productType: values.productType,
+    category,
+    availability: values.availability,
     isAlwaysAvailable: values.isAlwaysAvailable,
     unavailableDates: values.unavailableDates,
-    availabilitySchedule: typedAvailabilitySchedule,
+    availabilitySchedule: values.availabilitySchedule,
   };
-  
-  return updatedProduct;
 };

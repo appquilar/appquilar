@@ -10,12 +10,33 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Control } from "react-hook-form";
 import { ProductFormValues } from "./productFormSchema";
+import { CategorySelector } from "@/components/dashboard/categories/CategorySelector";
+import { useEffect, useState } from "react";
+import { Category } from "@/domain/models/Category";
+import { CategoryService } from "@/application/services/CategoryService";
 
 interface ProductBasicInfoFieldsProps {
   control: Control<ProductFormValues>;
 }
 
 const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  
+  // Load categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categoryService = CategoryService.getInstance();
+        const allCategories = await categoryService.getAllCategories();
+        setCategories(allCategories);
+      } catch (error) {
+        console.error("Error loading categories:", error);
+      }
+    };
+    
+    fetchCategories();
+  }, []);
+
   return (
     <>
       {/* Internal ID (now editable) */}
@@ -41,6 +62,26 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
             <FormLabel>Nombre del Producto</FormLabel>
             <FormControl>
               <Input placeholder="Nombre de Herramienta Profesional" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      {/* Category selector */}
+      <FormField
+        control={control}
+        name="category.id"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Categoría</FormLabel>
+            <FormControl>
+              <CategorySelector 
+                categories={categories}
+                selectedCategoryId={field.value}
+                onCategoryChange={(categoryId) => field.onChange(categoryId)}
+                placeholder="Seleccionar categoría del producto"
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
