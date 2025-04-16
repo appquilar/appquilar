@@ -29,6 +29,7 @@ export const useProductForm = ({ product, onSave, onCancel }: UseProductFormProp
       ...formValues,
       productType: product.productType || (product.isRentable ? 'rental' : 'sale')
     },
+    mode: 'onChange', // Enable onChange mode for better reactivity
   });
 
   const onSubmit = async (values: ProductFormValues) => {
