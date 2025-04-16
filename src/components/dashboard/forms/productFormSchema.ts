@@ -80,8 +80,8 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
     unavailableDates: product.unavailableDates,
     availabilitySchedule: product.availabilitySchedule ? Object.entries(product.availabilitySchedule).reduce((acc, [day, timeSlots]) => {
       acc[day] = timeSlots.map(slot => ({
-        startTime: slot.startTime || '08:00', // Ensure required fields have default values
-        endTime: slot.endTime || '18:00'
+        startTime: slot.startTime || '08:00', // Default value if undefined
+        endTime: slot.endTime || '18:00'      // Default value if undefined
       }));
       return acc;
     }, {} as Record<string, { startTime: string; endTime: string }[]>) : undefined,
