@@ -100,6 +100,19 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
  * Map form values to a Product model
  */
 export const mapFormValuesToProduct = (values: ProductFormValues, product: Product): Partial<Product> => {
+  // Ensure the availabilitySchedule has non-optional properties
+  let typedAvailabilitySchedule: Record<string, Array<{ startTime: string; endTime: string }>> | undefined = undefined;
+  
+  if (values.availabilitySchedule) {
+    typedAvailabilitySchedule = {};
+    Object.entries(values.availabilitySchedule).forEach(([day, timeSlots]) => {
+      typedAvailabilitySchedule![day] = timeSlots.map(slot => ({
+        startTime: slot.startTime || '08:00',  // Ensure non-optional with default
+        endTime: slot.endTime || '18:00'       // Ensure non-optional with default
+      }));
+    });
+  }
+  
   // Ensure the core object structure conforms to the Product type
   const updatedProduct: Partial<Product> = {
     internalId: values.internalId ?? product.internalId,
@@ -130,7 +143,7 @@ export const mapFormValuesToProduct = (values: ProductFormValues, product: Produ
     availability: values.availability as AvailabilityPeriod[], // Type assertion to ensure compatibility
     isAlwaysAvailable: values.isAlwaysAvailable,
     unavailableDates: values.unavailableDates,
-    availabilitySchedule: values.availabilitySchedule,
+    availabilitySchedule: typedAvailabilitySchedule,
   };
   
   return updatedProduct;
