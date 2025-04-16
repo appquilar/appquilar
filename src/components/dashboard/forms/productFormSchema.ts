@@ -56,6 +56,19 @@ export type ProductFormValues = z.infer<typeof productFormSchema>;
  * Map a Product model to form values
  */
 export const mapProductToFormValues = (product: Product): ProductFormValues => {
+  // Create a properly typed availabilitySchedule with non-optional properties
+  let typedAvailabilitySchedule: Record<string, Array<{ startTime: string; endTime: string }>> | undefined = undefined;
+  
+  if (product.availabilitySchedule) {
+    typedAvailabilitySchedule = {};
+    Object.entries(product.availabilitySchedule).forEach(([day, timeSlots]) => {
+      typedAvailabilitySchedule![day] = timeSlots.map(slot => ({
+        startTime: slot.startTime || '08:00',  // Ensure non-optional with default
+        endTime: slot.endTime || '18:00'       // Ensure non-optional with default
+      }));
+    });
+  }
+  
   return {
     internalId: product.internalId,
     name: product.name,
@@ -79,14 +92,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
     availability: product.availability,
     isAlwaysAvailable: product.isAlwaysAvailable ?? true,
     unavailableDates: product.unavailableDates,
-    // Ensure startTime and endTime are never undefined by providing default values
-    availabilitySchedule: product.availabilitySchedule ? Object.entries(product.availabilitySchedule).reduce((acc, [day, timeSlots]) => {
-      acc[day] = timeSlots.map(slot => ({
-        startTime: slot.startTime || '08:00', // Use default if undefined
-        endTime: slot.endTime || '18:00'      // Use default if undefined
-      }));
-      return acc;
-    }, {} as Record<string, { startTime: string; endTime: string }[]>) : undefined,
+    availabilitySchedule: typedAvailabilitySchedule
   };
 };
 
