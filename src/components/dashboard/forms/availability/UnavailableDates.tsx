@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useFormContext, useFieldArray, Control } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,30 +19,37 @@ interface UnavailableDatesProps {
 
 const UnavailableDates = ({ control }: UnavailableDatesProps) => {
   const { setValue, watch } = useFormContext();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
   // Use useFieldArray from react-hook-form to handle the array of dates
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "unavailableDates" as any // Type assertion to allow this field name
+    name: "unavailableDates"
   });
   
-  const currentUnavailableDates = watch('unavailableDates') || [];
+  const watchedUnavailableDates = watch('unavailableDates') || [];
   
   // Handle date selection in the calendar
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
+    setSelectedDate(date);
     
-    // Format the date as YYYY-MM-DD
+    // Format the date as YYYY-MM-DD for internal storage
     const formattedDate = format(date, 'yyyy-MM-dd');
     
     // Check if date already exists in the array
-    if (!currentUnavailableDates.includes(formattedDate)) {
+    if (!watchedUnavailableDates.includes(formattedDate)) {
       append(formattedDate);
     }
     
-    // Close the calendar after selection
-    setIsCalendarOpen(false);
+    // Keep the calendar open for multiple selections
+    // setIsCalendarOpen(true);
+  };
+  
+  // Toggle the calendar
+  const toggleCalendar = () => {
+    setIsCalendarOpen(!isCalendarOpen);
   };
   
   // Remove a date
@@ -51,51 +57,46 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
     remove(index);
   };
   
-  // Disable dates that are already in the unavailable dates array or in the past
+  // Disable dates in the past
   const disabledDays = (date: Date) => {
-    // Don't allow dates in the past
-    if (date < new Date(new Date().setHours(0, 0, 0, 0))) {
-      return true;
-    }
-    return false;
+    return date < new Date(new Date().setHours(0, 0, 0, 0));
   };
   
   // Render the selected dates as badges
   const renderSelectedDates = () => {
-    if (fields.length === 0) {
+    if (!fields || fields.length === 0) {
       return <p className="text-sm text-muted-foreground">No hay fechas seleccionadas</p>;
     }
     
     return (
       <div className="flex flex-wrap gap-2 mt-2">
         {fields.map((field, index) => {
-          // Get the date value
           let dateString: string;
           
           if (typeof field === 'string') {
-            // If field is directly a string
             dateString = field;
-          } else if (typeof field === 'object' && field !== null) {
-            // If field is an object (from react-hook-form's useFieldArray)
+          } else if (field && typeof field === 'object' && 'id' in field) {
+            // For react-hook-form fields
             dateString = String(field.id);
           } else {
-            // Fallback
-            dateString = "Fecha inválida";
+            // Invalid data, skip this item
             return null;
           }
           
           // Format the date for display
-          let displayDate = '';
+          let displayDate: string;
+          
           try {
             if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-              // It's a formatted date string like "2023-04-17"
-              displayDate = format(new Date(dateString), 'dd/MM/yyyy', { locale: es });
+              // It's a valid ISO date format (YYYY-MM-DD)
+              const dateObj = new Date(dateString);
+              displayDate = format(dateObj, 'dd/MM/yyyy', { locale: es });
             } else {
-              // Not a valid date format, try to display it anyway
-              displayDate = dateString;
+              // Not a valid date format
+              displayDate = "Fecha inválida";
             }
           } catch (err) {
-            console.error("Error formatting date:", err);
+            console.error("Error formatting date:", err, dateString);
             displayDate = "Fecha inválida";
           }
           
@@ -132,6 +133,7 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
               <Button
                 variant="outline"
                 className="w-full justify-start text-left font-normal"
+                onClick={toggleCalendar}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 <span>Seleccionar fechas no disponibles</span>
@@ -140,10 +142,11 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
+                selected={selectedDate}
                 onSelect={handleDateSelect}
                 disabled={disabledDays}
                 locale={es}
-                className={cn("p-3 pointer-events-auto")}
+                className="p-3 pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
