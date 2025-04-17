@@ -67,22 +67,25 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
     return (
       <div className="flex flex-wrap gap-2 mt-2">
         {fields.map((field, index) => {
-          // Check if the field value is a valid date string
+          // Check if the field is a string or an object with an id property
+          let dateString: string;
+          
+          if (typeof field === 'string') {
+            dateString = field;
+          } else {
+            // For object type fields, use the id as fallback
+            dateString = String(field.id);
+          }
+          
+          // Format the date for display
           let displayDate = '';
           try {
-            // Get the date string from the field
-            const dateString = field && typeof field === 'object' && 'id' in field 
-              ? field.value || field.id 
-              : typeof field === 'string' 
-                ? field 
-                : '';
-            
-            if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
               // It's a formatted date string like "2023-04-17"
               displayDate = format(new Date(dateString), 'dd/MM/yyyy');
             } else {
-              // Try to display whatever we have
-              displayDate = String(dateString);
+              // Use the raw string if it's not in expected format
+              displayDate = dateString;
             }
           } catch (err) {
             console.error("Error formatting date:", err);
@@ -107,7 +110,7 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
   };
 
   return (
-    <Card className="mt-6">
+    <Card className="mt-6 overflow-visible">
       <CardContent className="p-4 space-y-4">
         <div>
           <FormLabel className="text-base">Fechas no disponibles</FormLabel>
