@@ -94,7 +94,17 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
     })),
     isAlwaysAvailable: product.isAlwaysAvailable || false,
     unavailableDates: product.unavailableDates || [],
-    availabilitySchedule: product.availabilitySchedule || {},
+    availabilitySchedule: product.availabilitySchedule ? 
+      Object.fromEntries(
+        Object.entries(product.availabilitySchedule).map(([day, ranges]) => [
+          day,
+          ranges.map(range => ({
+            startTime: range.startTime || '08:00', // Ensure default value if missing
+            endTime: range.endTime || '18:00'      // Ensure default value if missing
+          }))
+        ])
+      )
+      : undefined,
     images: [], // Initialize empty images array
   };
 };
@@ -107,6 +117,26 @@ export const mapFormValuesToProduct = (values: ProductFormValues, originalProduc
     name: values.category.name || '',
     slug: values.category.slug || '',
   } : originalProduct.category;
+
+  // Process secondHand with required fields
+  const secondHand = values.secondHand ? {
+    price: values.secondHand.price || 0, // Ensure default value
+    negotiable: values.secondHand.negotiable || false, // Ensure default value
+    additionalInfo: values.secondHand.additionalInfo
+  } : undefined;
+
+  // Process availabilitySchedule with required fields
+  const availabilitySchedule = values.availabilitySchedule ? 
+    Object.fromEntries(
+      Object.entries(values.availabilitySchedule).map(([day, ranges]) => [
+        day,
+        ranges.map(range => ({
+          startTime: range.startTime, // Already guaranteed by the schema
+          endTime: range.endTime      // Already guaranteed by the schema
+        }))
+      ])
+    )
+    : undefined;
 
   return {
     ...originalProduct,
@@ -123,7 +153,7 @@ export const mapFormValuesToProduct = (values: ProductFormValues, originalProduc
       hourly: values.price.hourly,
       deposit: values.price.deposit,
     },
-    secondHand: values.secondHand,
+    secondHand,
     isRentable: values.isRentable,
     isForSale: values.isForSale,
     productType: values.productType,
@@ -131,6 +161,6 @@ export const mapFormValuesToProduct = (values: ProductFormValues, originalProduc
     availability: values.availability as AvailabilityPeriod[],
     isAlwaysAvailable: values.isAlwaysAvailable,
     unavailableDates: values.unavailableDates,
-    availabilitySchedule: values.availabilitySchedule,
+    availabilitySchedule,
   };
 };
