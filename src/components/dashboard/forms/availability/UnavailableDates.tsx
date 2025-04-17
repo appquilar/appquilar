@@ -12,6 +12,7 @@ import { CalendarIcon, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { formatToISODate } from './dateUtils';
 
 interface UnavailableDatesProps {
   control: Control<ProductFormValues>;
@@ -33,6 +34,7 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
     
+    // Format the date as YYYY-MM-DD
     const formattedDate = format(date, 'yyyy-MM-dd');
     
     // Check if date already exists in the array
@@ -49,7 +51,7 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
     remove(index);
   };
   
-  // Disable dates that are already in the unavailable dates array
+  // Disable dates that are already in the unavailable dates array or in the past
   const disabledDays = (date: Date) => {
     // Don't allow dates in the past
     if (date < new Date(new Date().setHours(0, 0, 0, 0))) {
@@ -67,14 +69,19 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
     return (
       <div className="flex flex-wrap gap-2 mt-2">
         {fields.map((field, index) => {
-          // Check if the field is a string or an object with an id property
+          // Get the date value
           let dateString: string;
           
           if (typeof field === 'string') {
+            // If field is directly a string
             dateString = field;
-          } else {
-            // For object type fields, use the id as fallback
+          } else if (typeof field === 'object' && field !== null) {
+            // If field is an object (from react-hook-form's useFieldArray)
             dateString = String(field.id);
+          } else {
+            // Fallback
+            dateString = "Fecha inválida";
+            return null;
           }
           
           // Format the date for display
@@ -82,9 +89,9 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
           try {
             if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
               // It's a formatted date string like "2023-04-17"
-              displayDate = format(new Date(dateString), 'dd/MM/yyyy');
+              displayDate = format(new Date(dateString), 'dd/MM/yyyy', { locale: es });
             } else {
-              // Use the raw string if it's not in expected format
+              // Not a valid date format, try to display it anyway
               displayDate = dateString;
             }
           } catch (err) {
