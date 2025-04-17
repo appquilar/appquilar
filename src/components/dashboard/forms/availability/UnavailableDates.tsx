@@ -63,18 +63,37 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
     
     return (
       <div className="flex flex-wrap gap-2 mt-2">
-        {fields.map((field, index) => (
-          <Badge key={field.id} variant="secondary" className="px-2 py-1 gap-1">
-            {format(new Date(field.id as any), 'dd/MM/yyyy')}
-            <button 
-              type="button" 
-              className="ml-1 rounded-full hover:bg-muted"
-              onClick={() => handleRemoveDate(index)}
-            >
-              <X size={14} />
-            </button>
-          </Badge>
-        ))}
+        {fields.map((field, index) => {
+          // Check if the field value is a valid date string
+          let displayDate = '';
+          try {
+            // The field value is stored in field.value since we're using useFieldArray
+            const dateValue = field.value || field.id;
+            if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+              // It's already a formatted date string like "2023-04-17"
+              displayDate = format(new Date(dateValue), 'dd/MM/yyyy');
+            } else {
+              // Try to display whatever we have
+              displayDate = String(dateValue);
+            }
+          } catch (err) {
+            console.error("Error formatting date:", err);
+            displayDate = "Fecha inválida";
+          }
+          
+          return (
+            <Badge key={index} variant="secondary" className="px-2 py-1 gap-1">
+              {displayDate}
+              <button 
+                type="button" 
+                className="ml-1 rounded-full hover:bg-muted"
+                onClick={() => handleRemoveDate(index)}
+              >
+                <X size={14} />
+              </button>
+            </Badge>
+          );
+        })}
       </div>
     );
   };
