@@ -10,15 +10,15 @@ export const productFormSchema = z.object({
   imageUrl: z.string().optional(),
   thumbnailUrl: z.string().optional(),
   price: z.object({
-    daily: z.coerce.number().optional().default(0),
+    daily: z.coerce.number().default(0), // Remove optional to match Product type
     weekly: z.coerce.number().optional(),
     monthly: z.coerce.number().optional(),
     hourly: z.coerce.number().optional(),
     deposit: z.coerce.number().optional(),
   }),
   secondHand: z.object({
-    price: z.coerce.number().optional().default(0),
-    negotiable: z.boolean().optional().default(false),
+    price: z.coerce.number().default(0), // Default value instead of optional
+    negotiable: z.boolean().default(false), // Default value instead of optional
     additionalInfo: z.string().optional(),
   }).optional(),
   isRentable: z.boolean().optional(),
@@ -31,20 +31,20 @@ export const productFormSchema = z.object({
   }),
   availability: z.array(
     z.object({
-      id: z.string(),
-      startDate: z.string(),
-      endDate: z.string(),
+      id: z.string(), // Not optional anymore
+      startDate: z.string(), // Not optional anymore
+      endDate: z.string(), // Not optional anymore
       status: z.enum(['available', 'unavailable']),
-      includeWeekends: z.boolean(),
+      includeWeekends: z.boolean(), // Not optional anymore
     })
-  ).optional(),
+  ).default([]), // Default to empty array
   isAlwaysAvailable: z.boolean().optional(),
   unavailableDates: z.array(z.string()).optional(),
   availabilitySchedule: z.record(
     z.array(
       z.object({
-        startTime: z.string(),
-        endTime: z.string(),
+        startTime: z.string(), // Not optional anymore
+        endTime: z.string(), // Not optional anymore
       })
     )
   ).optional(),
@@ -85,7 +85,13 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
       name: product.category?.name || '',
       slug: product.category?.slug || '',
     },
-    availability: product.availability || [],
+    availability: (product.availability || []).map(item => ({
+      id: item.id,
+      startDate: item.startDate,
+      endDate: item.endDate,
+      status: item.status,
+      includeWeekends: item.includeWeekends
+    })),
     isAlwaysAvailable: product.isAlwaysAvailable || false,
     unavailableDates: product.unavailableDates || [],
     availabilitySchedule: product.availabilitySchedule || {},
