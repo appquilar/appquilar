@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { useFormContext, useFieldArray, Control } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
 import { FormLabel, FormDescription } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,6 @@ import { CalendarIcon, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { formatToISODate } from './dateUtils';
 
 interface UnavailableDatesProps {
   control: Control<ProductFormValues>;
@@ -22,36 +22,36 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
-  // Watch the unavailable dates directly instead of using useFieldArray
   const watchedUnavailableDates = watch('unavailableDates') || [];
   
-  // Handle date selection in the calendar
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
     setSelectedDate(date);
     
-    // Format the date as YYYY-MM-DD for internal storage
     const formattedDate = format(date, 'yyyy-MM-dd');
     
-    // Check if date already exists in the array
-    if (!watchedUnavailableDates.includes(formattedDate)) {
-      // Add the new date to the existing array
+    // If date exists, remove it (toggle off)
+    if (watchedUnavailableDates.includes(formattedDate)) {
+      const updatedDates = watchedUnavailableDates.filter(d => d !== formattedDate);
+      setValue('unavailableDates', updatedDates, {
+        shouldDirty: true,
+        shouldValidate: true
+      });
+    } else {
+      // If date doesn't exist, add it (toggle on)
       setValue('unavailableDates', [...watchedUnavailableDates, formattedDate], {
         shouldDirty: true,
         shouldValidate: true
       });
     }
     
-    // Keep the calendar open for multiple selections
     setIsCalendarOpen(true);
   };
-  
-  // Toggle the calendar
+
   const toggleCalendar = () => {
     setIsCalendarOpen(!isCalendarOpen);
   };
-  
-  // Remove a date
+
   const handleRemoveDate = (index: number) => {
     const updatedDates = [...watchedUnavailableDates];
     updatedDates.splice(index, 1);
@@ -60,13 +60,27 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
       shouldValidate: true
     });
   };
-  
-  // Disable dates in the past
+
   const disabledDays = (date: Date) => {
     return date < new Date(new Date().setHours(0, 0, 0, 0));
   };
-  
-  // Render the selected dates as badges
+
+  // Custom modifiers for the calendar
+  const modifiers = {
+    selected: (date: Date) => {
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      return watchedUnavailableDates.includes(formattedDate);
+    }
+  };
+
+  // Custom styles for the modifiers
+  const modifiersStyles = {
+    selected: {
+      backgroundColor: 'rgb(243 244 246)', // grey background for selected dates
+      color: 'rgb(75 85 99)', // darker text for selected dates
+    }
+  };
+
   const renderSelectedDates = () => {
     if (!watchedUnavailableDates || watchedUnavailableDates.length === 0) {
       return <p className="text-sm text-muted-foreground">No hay fechas seleccionadas</p>;
@@ -75,16 +89,13 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
     return (
       <div className="flex flex-wrap gap-2 mt-2">
         {watchedUnavailableDates.map((dateString: string, index: number) => {
-          // Format the date for display
           let displayDate: string;
           
           try {
             if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-              // It's a valid ISO date format (YYYY-MM-DD)
               const dateObj = new Date(dateString);
               displayDate = format(dateObj, 'dd/MM/yyyy', { locale: es });
             } else {
-              // Not a valid date format
               displayDate = "Fecha inválida";
             }
           } catch (err) {
@@ -138,6 +149,8 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
                 onSelect={handleDateSelect}
                 disabled={disabledDays}
                 locale={es}
+                modifiers={modifiers}
+                modifiersStyles={modifiersStyles}
                 className="p-3 pointer-events-auto"
               />
             </PopoverContent>
