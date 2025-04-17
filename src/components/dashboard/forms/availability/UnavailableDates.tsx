@@ -18,16 +18,11 @@ interface UnavailableDatesProps {
 }
 
 const UnavailableDates = ({ control }: UnavailableDatesProps) => {
-  const { setValue, watch } = useFormContext();
+  const { setValue, watch } = useFormContext<ProductFormValues>();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
-  // Use useFieldArray from react-hook-form to handle the array of dates
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "unavailableDates"
-  });
-  
+  // Watch the unavailable dates directly instead of using useFieldArray
   const watchedUnavailableDates = watch('unavailableDates') || [];
   
   // Handle date selection in the calendar
@@ -40,11 +35,15 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
     
     // Check if date already exists in the array
     if (!watchedUnavailableDates.includes(formattedDate)) {
-      append(formattedDate);
+      // Add the new date to the existing array
+      setValue('unavailableDates', [...watchedUnavailableDates, formattedDate], {
+        shouldDirty: true,
+        shouldValidate: true
+      });
     }
     
     // Keep the calendar open for multiple selections
-    // setIsCalendarOpen(true);
+    setIsCalendarOpen(true);
   };
   
   // Toggle the calendar
@@ -54,7 +53,12 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
   
   // Remove a date
   const handleRemoveDate = (index: number) => {
-    remove(index);
+    const updatedDates = [...watchedUnavailableDates];
+    updatedDates.splice(index, 1);
+    setValue('unavailableDates', updatedDates, {
+      shouldDirty: true,
+      shouldValidate: true
+    });
   };
   
   // Disable dates in the past
@@ -64,25 +68,13 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
   
   // Render the selected dates as badges
   const renderSelectedDates = () => {
-    if (!fields || fields.length === 0) {
+    if (!watchedUnavailableDates || watchedUnavailableDates.length === 0) {
       return <p className="text-sm text-muted-foreground">No hay fechas seleccionadas</p>;
     }
     
     return (
       <div className="flex flex-wrap gap-2 mt-2">
-        {fields.map((field, index) => {
-          let dateString: string;
-          
-          if (typeof field === 'string') {
-            dateString = field;
-          } else if (field && typeof field === 'object' && 'id' in field) {
-            // For react-hook-form fields
-            dateString = String(field.id);
-          } else {
-            // Invalid data, skip this item
-            return null;
-          }
-          
+        {watchedUnavailableDates.map((dateString: string, index: number) => {
           // Format the date for display
           let displayDate: string;
           
