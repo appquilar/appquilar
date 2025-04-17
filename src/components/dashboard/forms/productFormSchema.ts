@@ -86,11 +86,11 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
       slug: product.category?.slug || '',
     },
     availability: (product.availability || []).map(item => ({
-      id: item.id,
-      startDate: item.startDate,
-      endDate: item.endDate,
-      status: item.status,
-      includeWeekends: item.includeWeekends
+      id: item.id || `avail-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      startDate: item.startDate || '',
+      endDate: item.endDate || '',
+      status: item.status || 'available',
+      includeWeekends: item.includeWeekends || false
     })),
     isAlwaysAvailable: product.isAlwaysAvailable || false,
     unavailableDates: product.unavailableDates || [],
@@ -128,7 +128,7 @@ export const mapFormValuesToProduct = (values: ProductFormValues, originalProduc
     isForSale: values.isForSale,
     productType: values.productType,
     category,
-    availability: values.availability,
+    availability: values.availability as AvailabilityPeriod[],
     isAlwaysAvailable: values.isAlwaysAvailable,
     unavailableDates: values.unavailableDates,
     availabilitySchedule: values.availabilitySchedule,
