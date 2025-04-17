@@ -55,10 +55,13 @@ const ProductFormPage = () => {
           // Find existing product
           const foundProduct = await productService.getProductById(productId);
           if (foundProduct) {
+            // Determine the product type based on isRentable and isForSale flags
+            const productType = foundProduct.isForSale ? 'sale' : 'rental';
+            
             // Add productType to match our UI with the correct type
             const enhancedProduct = {
               ...foundProduct,
-              productType: (foundProduct.isRentable ? 'rental' : 'sale') as 'rental' | 'sale'
+              productType: productType as 'rental' | 'sale'
             };
             setProduct(enhancedProduct);
           }

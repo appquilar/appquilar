@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Form } from '@/components/ui/form';
 import { Product } from '@/domain/models/Product';
@@ -29,6 +28,22 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
 
   const isMobile = useIsMobile();
   
+  // Ensure the form's initial tab matches the product type
+  useEffect(() => {
+    const productType = form.getValues('productType');
+    const currentTab = form.getValues('currentTab');
+    
+    // If on basic info tab, do nothing
+    if (currentTab === 'basic') return;
+    
+    // Otherwise, sync the tab with the product type
+    if (productType === 'rental' && currentTab !== 'rental') {
+      form.setValue('currentTab', 'rental');
+    } else if (productType === 'sale' && currentTab !== 'secondhand') {
+      form.setValue('currentTab', 'secondhand');
+    }
+  }, [form]);
+  
   // Update tabs when product type changes
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -38,18 +53,14 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
           form.setValue('isRentable', true);
           form.setValue('isForSale', false);
           
-          // Switch to rental tab if not on basic info tab
-          if (form.getValues('currentTab') !== 'basic') {
-            form.setValue('currentTab', 'rental');
-          }
+          // Switch to rental tab
+          form.setValue('currentTab', 'rental');
         } else if (value.productType === 'sale') {
           form.setValue('isRentable', false);
           form.setValue('isForSale', true);
           
-          // Switch to secondhand tab if not on basic info tab
-          if (form.getValues('currentTab') !== 'basic') {
-            form.setValue('currentTab', 'secondhand');
-          }
+          // Switch to secondhand tab
+          form.setValue('currentTab', 'secondhand');
         }
       }
     });
@@ -57,14 +68,14 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     return () => subscription.unsubscribe();
   }, [form]);
   
-  // Function to handle mobile tab selection
+  // Function to handle tab selection
   const handleTabChange = (value: string) => {
     form.setValue('currentTab', value);
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 overflow-visible">
         {/* Product type selection */}
         <ProductTypeSelector control={form.control} />
 

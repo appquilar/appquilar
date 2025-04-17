@@ -23,12 +23,18 @@ export const useProductForm = ({ product, onSave, onCancel }: UseProductFormProp
   // Initialize form with existing product values and add productType
   const formValues = mapProductToFormValues(product);
   
+  // Determine the initial tab based on product type
+  let initialTab = 'basic';
+  if (product.productType) {
+    initialTab = 'basic'; // Always start at basic
+  }
+  
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
       ...formValues,
       productType: product.productType || (product.isRentable ? 'rental' : 'sale'),
-      currentTab: 'basic', // Default tab for mobile view
+      currentTab: initialTab,
       images: []
     },
     mode: 'onChange', // Enable onChange mode for better reactivity

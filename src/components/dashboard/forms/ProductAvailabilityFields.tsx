@@ -127,17 +127,21 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
         render={({ field }) => (
           <div className={field.value ? 'opacity-50 pointer-events-none' : ''}>
             {/* Weekly schedule */}
-            <WeeklySchedule
-              selectedDays={selectedDays}
-              timeRanges={timeRanges}
-              onToggleDaySelection={toggleDaySelection}
-              onAddTimeRange={addTimeRange}
-              onRemoveTimeRange={removeTimeRange}
-              onUpdateTimeRange={updateTimeRange}
-            />
+            <div className="overflow-visible">
+              <WeeklySchedule
+                selectedDays={selectedDays}
+                timeRanges={timeRanges}
+                onToggleDaySelection={toggleDaySelection}
+                onAddTimeRange={addTimeRange}
+                onRemoveTimeRange={removeTimeRange}
+                onUpdateTimeRange={updateTimeRange}
+              />
+            </div>
             
             {/* Unavailable dates */}
-            <UnavailableDates control={control} />
+            <div className="overflow-visible">
+              <UnavailableDates control={control} />
+            </div>
           </div>
         )}
       />

@@ -39,6 +39,9 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
     if (!currentUnavailableDates.includes(formattedDate)) {
       append(formattedDate);
     }
+    
+    // Close the calendar after selection
+    setIsCalendarOpen(false);
   };
   
   // Remove a date
@@ -67,11 +70,15 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
           // Check if the field value is a valid date string
           let displayDate = '';
           try {
-            // Access the field directly - in useFieldArray, the actual value is the field itself
-            const dateString = typeof field === 'string' ? field : field.id;
+            // Get the date string from the field
+            const dateString = field && typeof field === 'object' && 'id' in field 
+              ? field.value || field.id 
+              : typeof field === 'string' 
+                ? field 
+                : '';
             
             if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-              // It's already a formatted date string like "2023-04-17"
+              // It's a formatted date string like "2023-04-17"
               displayDate = format(new Date(dateString), 'dd/MM/yyyy');
             } else {
               // Try to display whatever we have
