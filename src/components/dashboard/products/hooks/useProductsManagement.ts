@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { useProducts } from '@/application/hooks/useProducts';
 import { toast } from 'sonner';
 import { Product } from '@/domain/models/Product';
+import { useNavigate } from 'react-router-dom';
 
 export const useProductsManagement = () => {
+  const navigate = useNavigate();
   const { products, isLoading, error, deleteProduct } = useProducts();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -57,6 +59,10 @@ export const useProductsManagement = () => {
       toast.error('Error al eliminar el producto');
     }
   };
+
+  const handleEditProduct = (productId: string) => {
+    navigate(`/dashboard/products/${productId}`);
+  };
   
   return {
     searchQuery,
@@ -72,6 +78,7 @@ export const useProductsManagement = () => {
     productToDelete,
     openDeleteModal,
     closeDeleteModal,
-    confirmDeleteProduct
+    confirmDeleteProduct,
+    handleEditProduct
   };
 };

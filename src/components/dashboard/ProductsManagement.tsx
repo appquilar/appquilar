@@ -23,15 +23,12 @@ const ProductsManagement = () => {
     productToDelete,
     openDeleteModal,
     closeDeleteModal,
-    confirmDeleteProduct
+    confirmDeleteProduct,
+    handleEditProduct
   } = useProductsManagement();
   
   const handleAddProduct = () => {
     navigate('/dashboard/products/new');
-  };
-
-  const handleEditProduct = (productId: string) => {
-    navigate(`/dashboard/products/edit/${productId}`);
   };
   
   if (isLoading) {

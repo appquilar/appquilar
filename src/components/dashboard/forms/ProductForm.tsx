@@ -1,4 +1,5 @@
 
+import React, { useEffect } from 'react';
 import { Form } from '@/components/ui/form';
 import { Product } from '@/domain/models/Product';
 import ProductBasicInfoFields from './ProductBasicInfoFields';
@@ -10,7 +11,6 @@ import ProductSecondHandFields from './ProductSecondHandFields';
 import ProductTypeSelector from './ProductTypeSelector';
 import { useProductForm } from './hooks/useProductForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -37,9 +37,19 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         if (value.productType === 'rental') {
           form.setValue('isRentable', true);
           form.setValue('isForSale', false);
+          
+          // Switch to rental tab if not on basic info tab
+          if (form.getValues('currentTab') !== 'basic') {
+            form.setValue('currentTab', 'rental');
+          }
         } else if (value.productType === 'sale') {
           form.setValue('isRentable', false);
           form.setValue('isForSale', true);
+          
+          // Switch to secondhand tab if not on basic info tab
+          if (form.getValues('currentTab') !== 'basic') {
+            form.setValue('currentTab', 'secondhand');
+          }
         }
       }
     });
@@ -105,7 +115,11 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
 
         {/* Desktop Tabs using Tabs */}
         {!isMobile && (
-          <Tabs defaultValue="basic" className="w-full">
+          <Tabs 
+            value={form.watch('currentTab') || 'basic'} 
+            onValueChange={handleTabChange} 
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="basic">Información Básica</TabsTrigger>
               <TabsTrigger value="rental" disabled={form.watch('productType') !== 'rental'}>Alquiler</TabsTrigger>
