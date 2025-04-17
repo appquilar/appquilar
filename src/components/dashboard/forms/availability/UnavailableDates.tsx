@@ -67,14 +67,15 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
           // Check if the field value is a valid date string
           let displayDate = '';
           try {
-            // The field value is stored in field.value since we're using useFieldArray
-            const dateValue = field.value || field.id;
-            if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            // Access the field directly - in useFieldArray, the actual value is the field itself
+            const dateString = typeof field === 'string' ? field : field.id;
+            
+            if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
               // It's already a formatted date string like "2023-04-17"
-              displayDate = format(new Date(dateValue), 'dd/MM/yyyy');
+              displayDate = format(new Date(dateString), 'dd/MM/yyyy');
             } else {
               // Try to display whatever we have
-              displayDate = String(dateValue);
+              displayDate = String(dateString);
             }
           } catch (err) {
             console.error("Error formatting date:", err);
