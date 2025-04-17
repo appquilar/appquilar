@@ -10,15 +10,15 @@ export const productFormSchema = z.object({
   imageUrl: z.string().optional(),
   thumbnailUrl: z.string().optional(),
   price: z.object({
-    daily: z.coerce.number().default(0), // Remove optional to match Product type
+    daily: z.coerce.number().default(0),
     weekly: z.coerce.number().optional(),
     monthly: z.coerce.number().optional(),
     hourly: z.coerce.number().optional(),
     deposit: z.coerce.number().optional(),
   }),
   secondHand: z.object({
-    price: z.coerce.number().default(0), // Default value instead of optional
-    negotiable: z.boolean().default(false), // Default value instead of optional
+    price: z.coerce.number().default(0),
+    negotiable: z.boolean().default(false),
     additionalInfo: z.string().optional(),
   }).optional(),
   isRentable: z.boolean().optional(),
@@ -31,27 +31,27 @@ export const productFormSchema = z.object({
   }),
   availability: z.array(
     z.object({
-      id: z.string(), // Not optional anymore
-      startDate: z.string(), // Not optional anymore
-      endDate: z.string(), // Not optional anymore
+      id: z.string(),
+      startDate: z.string(),
+      endDate: z.string(),
       status: z.enum(['available', 'unavailable']),
-      includeWeekends: z.boolean(), // Not optional anymore
+      includeWeekends: z.boolean(),
     })
-  ).default([]), // Default to empty array
+  ).default([]),
   isAlwaysAvailable: z.boolean().optional(),
-  unavailableDates: z.array(z.string()).optional(),
+  unavailableDates: z.array(z.string()).default([]),
   availabilitySchedule: z.record(
     z.array(
       z.object({
-        startTime: z.string(), // Not optional anymore
-        endTime: z.string(), // Not optional anymore
+        startTime: z.string(),
+        endTime: z.string(),
       })
     )
   ).optional(),
   // Field to track current tab in mobile view
   currentTab: z.string().optional(),
   // Add images field to the schema
-  images: z.array(z.any()).optional(),
+  images: z.array(z.any()).default([]),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -72,11 +72,11 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
       hourly: product.price?.hourly,
       deposit: product.price?.deposit,
     },
-    secondHand: product.secondHand || {
-      price: 0,
-      negotiable: false,
-      additionalInfo: '',
-    },
+    secondHand: product.secondHand ? {
+      price: product.secondHand.price || 0,
+      negotiable: product.secondHand.negotiable || false,
+      additionalInfo: product.secondHand.additionalInfo || '',
+    } : undefined,
     isRentable: product.isRentable,
     isForSale: product.isForSale,
     productType: product.productType || (product.isRentable ? 'rental' : 'sale'),

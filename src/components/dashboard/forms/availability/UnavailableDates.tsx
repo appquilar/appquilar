@@ -15,7 +15,7 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
   // Use useFieldArray from react-hook-form to handle the array of dates
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "unavailableDates" as "availability" // Type assertion to resolve TypeScript error
+    name: "unavailableDates"
   });
 
   // Add a new unavailable date
@@ -41,7 +41,7 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
             <div key={field.id} className="flex items-center gap-2">
               <Input 
                 type="date" 
-                {...control.register(`unavailableDates.${index}` as any)}
+                {...control.register(`unavailableDates.${index}`)}
               />
               <Button 
                 type="button" 
