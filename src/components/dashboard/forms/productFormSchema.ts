@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { Product } from '@/domain/models/Product';
+import { Product, AvailabilityPeriod } from '@/domain/models/Product';
 
 export const productFormSchema = z.object({
   internalId: z.string().optional(),
@@ -10,15 +10,15 @@ export const productFormSchema = z.object({
   imageUrl: z.string().optional(),
   thumbnailUrl: z.string().optional(),
   price: z.object({
-    daily: z.coerce.number().optional(),
+    daily: z.coerce.number().optional().default(0),
     weekly: z.coerce.number().optional(),
     monthly: z.coerce.number().optional(),
     hourly: z.coerce.number().optional(),
     deposit: z.coerce.number().optional(),
   }),
   secondHand: z.object({
-    price: z.coerce.number().optional(),
-    negotiable: z.boolean().optional(),
+    price: z.coerce.number().optional().default(0),
+    negotiable: z.boolean().optional().default(false),
     additionalInfo: z.string().optional(),
   }).optional(),
   isRentable: z.boolean().optional(),
@@ -29,21 +29,29 @@ export const productFormSchema = z.object({
     name: z.string().optional(),
     slug: z.string().optional(),
   }),
-  availability: z.array(z.object({
-    id: z.string(),
-    startDate: z.string(),
-    endDate: z.string(),
-    status: z.enum(['available', 'unavailable']),
-    includeWeekends: z.boolean(),
-  })).optional(),
+  availability: z.array(
+    z.object({
+      id: z.string(),
+      startDate: z.string(),
+      endDate: z.string(),
+      status: z.enum(['available', 'unavailable']),
+      includeWeekends: z.boolean(),
+    })
+  ).optional(),
   isAlwaysAvailable: z.boolean().optional(),
   unavailableDates: z.array(z.string()).optional(),
-  availabilitySchedule: z.record(z.array(z.object({
-    startTime: z.string(),
-    endTime: z.string(),
-  }))).optional(),
+  availabilitySchedule: z.record(
+    z.array(
+      z.object({
+        startTime: z.string(),
+        endTime: z.string(),
+      })
+    )
+  ).optional(),
   // Field to track current tab in mobile view
   currentTab: z.string().optional(),
+  // Add images field to the schema
+  images: z.array(z.any()).optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -58,7 +66,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
     imageUrl: product.imageUrl || '',
     thumbnailUrl: product.thumbnailUrl || '',
     price: {
-      daily: product.price?.daily,
+      daily: product.price?.daily || 0,
       weekly: product.price?.weekly,
       monthly: product.price?.monthly,
       hourly: product.price?.hourly,
@@ -81,6 +89,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
     isAlwaysAvailable: product.isAlwaysAvailable || false,
     unavailableDates: product.unavailableDates || [],
     availabilitySchedule: product.availabilitySchedule || {},
+    images: [], // Initialize empty images array
   };
 };
 
@@ -101,7 +110,13 @@ export const mapFormValuesToProduct = (values: ProductFormValues, originalProduc
     description: values.description,
     imageUrl: values.imageUrl,
     thumbnailUrl: values.thumbnailUrl,
-    price: values.price,
+    price: {
+      daily: values.price.daily || 0,
+      weekly: values.price.weekly,
+      monthly: values.price.monthly,
+      hourly: values.price.hourly,
+      deposit: values.price.deposit,
+    },
     secondHand: values.secondHand,
     isRentable: values.isRentable,
     isForSale: values.isForSale,

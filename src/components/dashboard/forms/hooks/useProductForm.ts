@@ -29,6 +29,7 @@ export const useProductForm = ({ product, onSave, onCancel }: UseProductFormProp
       ...formValues,
       productType: product.productType || (product.isRentable ? 'rental' : 'sale'),
       currentTab: 'basic', // Default tab for mobile view
+      images: []
     },
     mode: 'onChange', // Enable onChange mode for better reactivity
   });
@@ -61,6 +62,17 @@ export const useProductForm = ({ product, onSave, onCancel }: UseProductFormProp
       
       // Create updated product object
       const updatedProduct = mapFormValuesToProduct(values, product);
+      
+      // Handle image uploads if needed
+      if (values.images && values.images.length > 0) {
+        // Find the primary image
+        const primaryImage = values.images.find((img: any) => img.isPrimary);
+        if (primaryImage) {
+          // Set the imageUrl and thumbnailUrl to the primary image URL
+          updatedProduct.imageUrl = primaryImage.url;
+          updatedProduct.thumbnailUrl = primaryImage.url;
+        }
+      }
       
       // Call onSave callback with the updated product
       onSave(updatedProduct);
