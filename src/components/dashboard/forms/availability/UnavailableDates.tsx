@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useFormContext, Control } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,18 +18,15 @@ interface UnavailableDatesProps {
 
 const UnavailableDates = ({ control }: UnavailableDatesProps) => {
   const { setValue, watch } = useFormContext<ProductFormValues>();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
   const watchedUnavailableDates = watch('unavailableDates') || [];
-  
+
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
-    setSelectedDate(date);
     
     const formattedDate = format(date, 'yyyy-MM-dd');
     
-    // If date exists, remove it (toggle off)
     if (watchedUnavailableDates.includes(formattedDate)) {
       const updatedDates = watchedUnavailableDates.filter(d => d !== formattedDate);
       setValue('unavailableDates', updatedDates, {
@@ -38,7 +34,6 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
         shouldValidate: true
       });
     } else {
-      // If date doesn't exist, add it (toggle on)
       setValue('unavailableDates', [...watchedUnavailableDates, formattedDate], {
         shouldDirty: true,
         shouldValidate: true
@@ -65,7 +60,6 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
     return date < new Date(new Date().setHours(0, 0, 0, 0));
   };
 
-  // Custom modifiers for the calendar
   const modifiers = {
     selected: (date: Date) => {
       const formattedDate = format(date, 'yyyy-MM-dd');
@@ -73,7 +67,6 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
     }
   };
 
-  // Custom styles for the modifiers
   const modifiersStyles = {
     selected: {
       backgroundColor: 'rgb(243 244 246)', // grey background for selected dates
@@ -145,7 +138,7 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={selectedDate}
+                selected={undefined}
                 onSelect={handleDateSelect}
                 disabled={disabledDays}
                 locale={es}
