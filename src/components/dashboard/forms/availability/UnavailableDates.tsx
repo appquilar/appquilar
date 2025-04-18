@@ -27,19 +27,17 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
     
     const formattedDate = format(date, 'yyyy-MM-dd');
     
-    if (watchedUnavailableDates.includes(formattedDate)) {
-      const updatedDates = watchedUnavailableDates.filter(d => d !== formattedDate);
-      setValue('unavailableDates', updatedDates, {
-        shouldDirty: true,
-        shouldValidate: true
-      });
-    } else {
-      setValue('unavailableDates', [...watchedUnavailableDates, formattedDate], {
-        shouldDirty: true,
-        shouldValidate: true
-      });
-    }
+    // Toggle date selection - if already selected, remove it
+    const newDates = watchedUnavailableDates.includes(formattedDate)
+      ? watchedUnavailableDates.filter(d => d !== formattedDate)
+      : [...watchedUnavailableDates, formattedDate];
     
+    setValue('unavailableDates', newDates, {
+      shouldDirty: true,
+      shouldValidate: true
+    });
+    
+    // Keep the calendar open after selection
     setIsCalendarOpen(true);
   };
 
@@ -114,7 +112,7 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
   };
 
   return (
-    <Card className="mt-6 overflow-visible">
+    <Card className="mt-6">
       <CardContent className="p-4 space-y-4">
         <div>
           <FormLabel className="text-base">Fechas no disponibles</FormLabel>
