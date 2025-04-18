@@ -113,7 +113,7 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
   };
 
   return (
-    <Card className="mt-6">
+    <Card>
       <CardContent className="p-4 space-y-4">
         <div>
           <FormLabel className="text-base">Fechas no disponibles</FormLabel>
@@ -134,7 +134,11 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
                 <span>Seleccionar fechas no disponibles</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent 
+              className="w-auto p-0 max-h-[350px]" 
+              align="start"
+              style={{ position: 'absolute' }}
+            >
               <Calendar
                 mode="single"
                 selected={undefined}

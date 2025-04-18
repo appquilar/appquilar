@@ -75,7 +75,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 overflow-visible">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Product type selection */}
         <ProductTypeSelector control={form.control} />
 
