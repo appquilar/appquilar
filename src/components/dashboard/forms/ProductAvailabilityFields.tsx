@@ -127,7 +127,7 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
         render={({ field }) => (
           <div className={field.value ? 'opacity-50 pointer-events-none' : ''}>
             {/* Weekly schedule */}
-            <div className="overflow-visible">
+            <div>
               <WeeklySchedule
                 selectedDays={selectedDays}
                 timeRanges={timeRanges}
@@ -139,7 +139,7 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
             </div>
             
             {/* Unavailable dates */}
-            <div className="overflow-visible">
+            <div>
               <UnavailableDates control={control} />
             </div>
           </div>

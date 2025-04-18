@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useFormContext, Control } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
@@ -142,7 +143,7 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
                 locale={es}
                 modifiers={modifiers}
                 modifiersStyles={modifiersStyles}
-                className="p-3 pointer-events-auto"
+                className="p-3"
               />
             </PopoverContent>
           </Popover>

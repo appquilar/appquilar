@@ -51,7 +51,7 @@ const CalendarDisplay = ({
           // Disable dates in the past
           return date < new Date(new Date().setHours(0, 0, 0, 0));
         }}
-        className="p-3 pointer-events-auto"
+        className="p-3"
       />
     </div>
   );
