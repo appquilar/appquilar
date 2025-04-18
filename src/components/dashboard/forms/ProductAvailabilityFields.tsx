@@ -111,7 +111,7 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
   };
 
   return (
-    <div className="space-y-6 max-w-full">
+    <div className="space-y-6">
       <FormLabel className="text-base">Disponibilidad</FormLabel>
       <FormDescription>
         Establece cuándo este producto está disponible para alquilar.
