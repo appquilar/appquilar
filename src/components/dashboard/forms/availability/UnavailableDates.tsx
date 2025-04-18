@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, Control } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
 import { FormLabel, FormDescription } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
