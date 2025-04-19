@@ -8,7 +8,7 @@ interface ProductFormActionsProps {
 
 const ProductFormActions = ({ isSubmitting, onCancel }: ProductFormActionsProps) => {
   return (
-    <div className="flex justify-end gap-3">
+    <div className="flex justify-end gap-3 mt-8 mb-4">
       <Button type="button" variant="outline" onClick={onCancel}>
         Cancelar
       </Button>

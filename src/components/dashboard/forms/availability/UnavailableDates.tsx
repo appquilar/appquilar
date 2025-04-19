@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useFormContext, Control } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
@@ -113,50 +112,48 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
   };
 
   return (
-    <Card className="border-0 shadow-none bg-transparent">
-      <CardContent className="p-4 space-y-4">
-        <div>
-          <FormLabel className="text-base">Fechas no disponibles</FormLabel>
-          <FormDescription>
-            Selecciona las fechas específicas en las que este producto no estará disponible
-          </FormDescription>
-        </div>
-        
-        <div className="space-y-4">
-          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full justify-start text-left font-normal"
-                onClick={toggleCalendar}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                <span>Seleccionar fechas no disponibles</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent 
-              className="w-auto p-0" 
-              align="start"
-              sideOffset={4}
+    <div className="space-y-4">
+      <div>
+        <FormLabel className="text-base">Fechas no disponibles</FormLabel>
+        <FormDescription>
+          Selecciona las fechas específicas en las que este producto no estará disponible
+        </FormDescription>
+      </div>
+      
+      <div className="space-y-4">
+        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left font-normal"
+              onClick={toggleCalendar}
             >
-              <Calendar
-                mode="single"
-                selected={undefined}
-                onSelect={handleDateSelect}
-                disabled={disabledDays}
-                locale={es}
-                modifiers={modifiers}
-                modifiersStyles={modifiersStyles}
-                className="p-3"
-                showOutsideDays={false}
-              />
-            </PopoverContent>
-          </Popover>
-          
-          {renderSelectedDates()}
-        </div>
-      </CardContent>
-    </Card>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              <span>Seleccionar fechas no disponibles</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent 
+            className="w-auto p-0" 
+            align="start"
+            sideOffset={4}
+          >
+            <Calendar
+              mode="single"
+              selected={undefined}
+              onSelect={handleDateSelect}
+              disabled={disabledDays}
+              locale={es}
+              modifiers={modifiers}
+              modifiersStyles={modifiersStyles}
+              className="p-3"
+              showOutsideDays={false}
+            />
+          </PopoverContent>
+        </Popover>
+        
+        {renderSelectedDates()}
+      </div>
+    </div>
   );
 };
 

@@ -111,7 +111,7 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
   };
 
   return (
-    <div className="space-y-6 pb-2">
+    <div className="space-y-4">
       <FormLabel className="text-base">Disponibilidad</FormLabel>
       <FormDescription>
         Establece cuándo este producto está disponible para alquilar.
@@ -139,7 +139,7 @@ const ProductAvailabilityFields = ({ control }: ProductAvailabilityFieldsProps) 
             </div>
             
             {/* Unavailable dates */}
-            <div className="mt-6">
+            <div className="mt-4">
               <UnavailableDates control={control} />
             </div>
           </div>
