@@ -113,7 +113,7 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
   };
 
   return (
-    <Card>
+    <Card className="border-0 shadow-none bg-transparent">
       <CardContent className="p-4 space-y-4">
         <div>
           <FormLabel className="text-base">Fechas no disponibles</FormLabel>

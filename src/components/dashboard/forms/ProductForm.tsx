@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Form } from '@/components/ui/form';
 import { Product } from '@/domain/models/Product';
@@ -69,7 +68,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     return () => subscription.unsubscribe();
   }, [form]);
   
-  // Function to handle tab selection
+  // Function to handle tab change
   const handleTabChange = (value: string) => {
     form.setValue('currentTab', value);
   };
@@ -144,7 +143,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
               <ProductImagesField control={form.control} />
             </TabsContent>
             
-            <TabsContent value="rental" className="space-y-4 pt-4 overflow-visible">
+            <TabsContent value="rental" className="space-y-4 pt-4">
               <ProductPriceFields control={form.control} />
               <ProductAvailabilityFields control={form.control} />
             </TabsContent>
