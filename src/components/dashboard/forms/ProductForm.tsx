@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Form } from '@/components/ui/form';
 import { Product } from '@/domain/models/Product';
@@ -143,7 +144,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
               <ProductImagesField control={form.control} />
             </TabsContent>
             
-            <TabsContent value="rental" className="space-y-4 pt-4">
+            <TabsContent value="rental" className="space-y-4 pt-4 overflow-visible">
               <ProductPriceFields control={form.control} />
               <ProductAvailabilityFields control={form.control} />
             </TabsContent>

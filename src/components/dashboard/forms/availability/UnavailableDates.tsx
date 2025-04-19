@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useFormContext, Control } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
@@ -136,6 +137,7 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
             <PopoverContent 
               className="w-auto p-0" 
               align="start"
+              sideOffset={4}
             >
               <Calendar
                 mode="single"
@@ -146,6 +148,7 @@ const UnavailableDates = ({ control }: UnavailableDatesProps) => {
                 modifiers={modifiers}
                 modifiersStyles={modifiersStyles}
                 className="p-3"
+                showOutsideDays={false}
               />
             </PopoverContent>
           </Popover>
