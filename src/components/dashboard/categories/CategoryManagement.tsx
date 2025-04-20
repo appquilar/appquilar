@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Edit } from 'lucide-react';
@@ -53,21 +52,19 @@ const CategoryManagement = () => {
   };
 
   const handleEditCategory = (categoryId: string) => {
-    navigate(`/dashboard/categories/edit/${categoryId}`);
+    navigate(`/dashboard/categories/${categoryId}`); // Fixed path
   };
 
   const handleParentFilterChange = (value: string) => {
     setParentCategoryFilter(value === 'all' ? null : value);
   };
 
-  // Find parent category name for display
   const getParentCategoryName = (parentId: string | null) => {
     if (!parentId) return 'N/A';
     const parent = categories.find(cat => cat.id === parentId);
     return parent ? parent.name : 'Desconocido';
   };
 
-  // Get all parent categories for the filter
   const parentCategories = categories.filter(cat => !cat.parentId);
 
   const columns = [
