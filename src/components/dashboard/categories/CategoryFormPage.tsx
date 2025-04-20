@@ -12,6 +12,8 @@ import FormHeader from '../common/FormHeader';
 import FormActions from '../common/FormActions';
 import { Category, CategoryFormData } from '@/domain/models/Category';
 import CategorySelector from './CategorySelector';
+import IconPicker from './icon-picker/IconPicker';
+import CategoryImageUpload from './form/CategoryImageUpload';
 import { CategoryService } from '@/application/services/CategoryService';
 
 const CategoryFormPage = () => {
@@ -101,7 +103,6 @@ const CategoryFormPage = () => {
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Nombre */}
           <FormField
             control={form.control}
             name="name"
@@ -116,7 +117,6 @@ const CategoryFormPage = () => {
             )}
           />
           
-          {/* Slug */}
           <FormField
             control={form.control}
             name="slug"
@@ -131,7 +131,6 @@ const CategoryFormPage = () => {
             )}
           />
           
-          {/* Categoría Padre */}
           <FormField
             control={form.control}
             name="parentId"
@@ -151,45 +150,53 @@ const CategoryFormPage = () => {
             )}
           />
           
-          {/* URL del icono */}
           <FormField
             control={form.control}
             name="iconUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>URL del icono</FormLabel>
+                <FormLabel>Icono</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://ejemplo.com/imagen.jpg" {...field} value={field.value || ''} />
+                  <IconPicker
+                    selectedIcon={field.value}
+                    onSelectIcon={field.onChange}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           
-          {/* URL de la imagen de cabecera */}
           <FormField
             control={form.control}
             name="headerImageUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>URL de la imagen de cabecera</FormLabel>
+                <FormLabel>Imagen de cabecera</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://ejemplo.com/imagen.jpg" {...field} value={field.value || ''} />
+                  <CategoryImageUpload
+                    label="Imagen de cabecera"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           
-          {/* URL de la imagen destacada */}
           <FormField
             control={form.control}
             name="featuredImageUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>URL de la imagen destacada</FormLabel>
+                <FormLabel>Imagen destacada</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://ejemplo.com/imagen.jpg" {...field} value={field.value || ''} />
+                  <CategoryImageUpload
+                    label="Imagen destacada"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
