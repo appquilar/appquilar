@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Edit } from 'lucide-react';
@@ -6,7 +7,7 @@ import { toast } from 'sonner';
 import TableHeader from '../common/TableHeader';
 import DataTable from '../common/DataTable';
 import { Category } from '@/domain/models/Category';
-import { MOCK_CATEGORIES } from './data/mockCategories';
+import { CategoryService } from '@/application/services/CategoryService';
 import { 
   Select,
   SelectContent,
@@ -18,14 +19,34 @@ import { Label } from '@/components/ui/label';
 
 const CategoryManagement = () => {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredCategories, setFilteredCategories] = useState<Category[]>(categories);
+  const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   const [parentCategoryFilter, setParentCategoryFilter] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const categoryService = CategoryService.getInstance();
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     filterCategories();
   }, [searchQuery, parentCategoryFilter, categories]);
+
+  const loadCategories = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedCategories = await categoryService.getAllCategories();
+      setCategories(fetchedCategories);
+      setFilteredCategories(fetchedCategories);
+    } catch (error) {
+      console.error("Error loading categories:", error);
+      toast.error("Error al cargar las categorías");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filterCategories = () => {
     let filtered = categories;
@@ -52,7 +73,7 @@ const CategoryManagement = () => {
   };
 
   const handleEditCategory = (categoryId: string) => {
-    navigate(`/dashboard/categories/${categoryId}`); // Fixed path
+    navigate(`/dashboard/categories/${categoryId}`);
   };
 
   const handleParentFilterChange = (value: string) => {
@@ -95,6 +116,14 @@ const CategoryManagement = () => {
       onClick: (category: Category) => handleEditCategory(category.id)
     }
   ];
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6">

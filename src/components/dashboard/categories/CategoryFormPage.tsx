@@ -6,19 +6,20 @@ import { toast } from 'sonner';
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 import FormHeader from '../common/FormHeader';
 import FormActions from '../common/FormActions';
 import { Category, CategoryFormData } from '@/domain/models/Category';
-import { MOCK_CATEGORIES } from './data/mockCategories';
 import CategorySelector from './CategorySelector';
+import { CategoryService } from '@/application/services/CategoryService';
 
 const CategoryFormPage = () => {
-  const { categoryId } = useParams();
+  const { id: categoryId } = useParams();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const isAddMode = !categoryId || categoryId === 'new';
+  const categoryService = CategoryService.getInstance();
 
   const form = useForm<CategoryFormData>({
     defaultValues: {
@@ -32,12 +33,15 @@ const CategoryFormPage = () => {
   });
 
   useEffect(() => {
+    loadCategoryData();
+  }, [categoryId]);
+
+  const loadCategoryData = async () => {
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
       if (!isAddMode) {
-        const category = MOCK_CATEGORIES.find(c => c.id === categoryId);
+        const category = await categoryService.getCategoryById(categoryId);
         if (category) {
           form.reset({
             name: category.name,
@@ -47,22 +51,37 @@ const CategoryFormPage = () => {
             headerImageUrl: category.headerImageUrl,
             featuredImageUrl: category.featuredImageUrl
           });
+        } else {
+          toast.error("Categoría no encontrada");
+          navigate('/dashboard/categories');
         }
       }
+    } catch (error) {
+      console.error("Error loading category:", error);
+      toast.error("Error al cargar la categoría");
+    } finally {
       setIsLoading(false);
-    }, 300);
-  }, [categoryId, form, isAddMode]);
+    }
+  };
 
-  const onSubmit = (data: CategoryFormData) => {
-    // In a real app, this would save the category via API call
-    console.log('Saving category:', data);
-    
-    toast.success(isAddMode 
-      ? 'Categoría creada correctamente' 
-      : 'Categoría actualizada correctamente'
-    );
-    
-    navigate('/dashboard/categories');
+  const onSubmit = async (data: CategoryFormData) => {
+    try {
+      // In a real app, this would save the category via API call
+      console.log('Saving category:', data);
+      
+      toast.success(isAddMode 
+        ? 'Categoría creada correctamente' 
+        : 'Categoría actualizada correctamente'
+      );
+      
+      navigate('/dashboard/categories');
+    } catch (error) {
+      console.error("Error saving category:", error);
+      toast.error(isAddMode
+        ? 'Error al crear la categoría'
+        : 'Error al actualizar la categoría'
+      );
+    }
   };
 
   if (isLoading) {
@@ -121,10 +140,10 @@ const CategoryFormPage = () => {
                 <FormLabel>Categoría Padre</FormLabel>
                 <FormControl>
                   <CategorySelector
-                    categories={MOCK_CATEGORIES.filter(c => c.id !== categoryId)} // Prevent circular reference
                     selectedCategoryId={field.value}
                     onCategoryChange={field.onChange}
                     placeholder="Seleccionar categoría padre (opcional)"
+                    excludeCategoryId={categoryId !== 'new' ? categoryId : undefined}
                   />
                 </FormControl>
                 <FormMessage />
