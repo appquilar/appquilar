@@ -4,7 +4,6 @@ import { Product } from '@/domain/models/Product';
 import ProductBasicInfoFields from './ProductBasicInfoFields';
 import ProductPriceFields from './ProductPriceFields';
 import ProductImagesField from './ProductImagesField';
-import ProductAvailabilityFields from './ProductAvailabilityFields';
 import ProductFormActions from './ProductFormActions';
 import ProductSecondHandFields from './ProductSecondHandFields';
 import ProductTypeSelector from './ProductTypeSelector';
@@ -111,7 +110,6 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
               {form.watch('currentTab') === 'rental' && (
                 <div className="space-y-4">
                   <ProductPriceFields control={form.control} />
-                  <ProductAvailabilityFields control={form.control} />
                 </div>
               )}
               
@@ -145,7 +143,6 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
             
             <TabsContent value="rental" className="space-y-4 pt-4">
               <ProductPriceFields control={form.control} />
-              <ProductAvailabilityFields control={form.control} />
             </TabsContent>
             
             <TabsContent value="secondhand" className="space-y-4 pt-4">

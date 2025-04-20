@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { Product, AvailabilityPeriod } from '@/domain/models/Product';
+import { Product } from '@/domain/models/Product';
 
 export const productFormSchema = z.object({
   internalId: z.string().optional(),
@@ -29,25 +29,6 @@ export const productFormSchema = z.object({
     name: z.string().optional(),
     slug: z.string().optional(),
   }),
-  availability: z.array(
-    z.object({
-      id: z.string(),
-      startDate: z.string(),
-      endDate: z.string(),
-      status: z.enum(['available', 'unavailable']),
-      includeWeekends: z.boolean(),
-    })
-  ).default([]),
-  isAlwaysAvailable: z.boolean().optional(),
-  unavailableDates: z.array(z.string()).default([]),
-  availabilitySchedule: z.record(
-    z.array(
-      z.object({
-        startTime: z.string(),
-        endTime: z.string(),
-      })
-    )
-  ).optional(),
   // Field to track current tab in mobile view
   currentTab: z.string().optional(),
   // Add images field to the schema
@@ -85,26 +66,6 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
       name: product.category?.name || '',
       slug: product.category?.slug || '',
     },
-    availability: (product.availability || []).map(item => ({
-      id: item.id || `avail-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      startDate: item.startDate || '',
-      endDate: item.endDate || '',
-      status: item.status || 'available',
-      includeWeekends: item.includeWeekends || false
-    })),
-    isAlwaysAvailable: product.isAlwaysAvailable || false,
-    unavailableDates: product.unavailableDates || [],
-    availabilitySchedule: product.availabilitySchedule ? 
-      Object.fromEntries(
-        Object.entries(product.availabilitySchedule).map(([day, ranges]) => [
-          day,
-          ranges.map(range => ({
-            startTime: range.startTime || '08:00', // Ensure default value if missing
-            endTime: range.endTime || '18:00'      // Ensure default value if missing
-          }))
-        ])
-      )
-      : undefined,
     images: [], // Initialize empty images array
   };
 };
@@ -120,23 +81,10 @@ export const mapFormValuesToProduct = (values: ProductFormValues, originalProduc
 
   // Process secondHand with required fields
   const secondHand = values.secondHand ? {
-    price: values.secondHand.price || 0, // Ensure default value
-    negotiable: values.secondHand.negotiable || false, // Ensure default value
+    price: values.secondHand.price || 0,
+    negotiable: values.secondHand.negotiable || false,
     additionalInfo: values.secondHand.additionalInfo
   } : undefined;
-
-  // Process availabilitySchedule with required fields
-  const availabilitySchedule = values.availabilitySchedule ? 
-    Object.fromEntries(
-      Object.entries(values.availabilitySchedule).map(([day, ranges]) => [
-        day,
-        ranges.map(range => ({
-          startTime: range.startTime, // Already guaranteed by the schema
-          endTime: range.endTime      // Already guaranteed by the schema
-        }))
-      ])
-    )
-    : undefined;
 
   return {
     ...originalProduct,
@@ -158,9 +106,5 @@ export const mapFormValuesToProduct = (values: ProductFormValues, originalProduc
     isForSale: values.isForSale,
     productType: values.productType,
     category,
-    availability: values.availability as AvailabilityPeriod[],
-    isAlwaysAvailable: values.isAlwaysAvailable,
-    unavailableDates: values.unavailableDates,
-    availabilitySchedule,
   };
 };

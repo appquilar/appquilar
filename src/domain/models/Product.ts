@@ -37,23 +37,8 @@ export interface Product {
   };
   rating: number;
   reviewCount: number;
-  availability?: AvailabilityPeriod[];
-  isAlwaysAvailable?: boolean;
-  unavailableDates?: string[];
-  availabilitySchedule?: Record<string, Array<{ startTime: string; endTime: string }>>;
   createdAt?: string;
   updatedAt?: string;
-}
-
-/**
- * Period of availability for a rental product
- */
-export interface AvailabilityPeriod {
-  id: string;
-  startDate: string;
-  endDate: string;
-  status: 'available' | 'unavailable';
-  includeWeekends: boolean;
 }
 
 /**
@@ -82,8 +67,8 @@ export interface ProductFormData {
   productType?: 'rental' | 'sale';
   companyId: string;
   categoryId: string;
-  availability?: AvailabilityPeriod[];
-  isAlwaysAvailable?: boolean;
-  unavailableDates?: string[];
-  availabilitySchedule?: Record<string, Array<{ startTime: string; endTime: string }>>;
+  // Field to track current tab in mobile view
+  currentTab: string;
+  // Add images field to the schema
+  images: any[];
 }
