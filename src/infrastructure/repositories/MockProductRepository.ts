@@ -1,5 +1,5 @@
 
-import { Product, ProductFormData, AvailabilityPeriod } from '@/domain/models/Product';
+import { Product, ProductFormData } from '@/domain/models/Product';
 import { ProductRepository } from '@/domain/repositories/ProductRepository';
 
 /**
@@ -34,17 +34,7 @@ export class MockProductRepository implements ProductRepository {
         slug: "herramientas-electricas"
       },
       rating: 4.7,
-      reviewCount: 124,
-      isAlwaysAvailable: true,
-      availability: [
-        {
-          id: "period-1",
-          startDate: "2024-04-01",
-          endDate: "2024-12-31",
-          status: "available",
-          includeWeekends: true
-        }
-      ]
+      reviewCount: 124
     },
     {
       id: "2",
@@ -78,18 +68,7 @@ export class MockProductRepository implements ProductRepository {
         slug: "herramientas-electricas"
       },
       rating: 4.5,
-      reviewCount: 89,
-      isAlwaysAvailable: false,
-      availability: [
-        {
-          id: "period-1",
-          startDate: "2024-04-01",
-          endDate: "2024-06-30",
-          status: "available",
-          includeWeekends: true
-        }
-      ],
-      unavailableDates: ["2024-05-01", "2024-05-02", "2024-05-03"]
+      reviewCount: 89
     }
   ];
 
@@ -135,9 +114,6 @@ export class MockProductRepository implements ProductRepository {
         name: 'Categoría Demo', 
         slug: 'categoria-demo'
       },
-      isAlwaysAvailable: productData.isAlwaysAvailable,
-      availability: productData.availability,
-      unavailableDates: productData.unavailableDates,
       rating: 0,
       reviewCount: 0,
       createdAt: new Date().toISOString(),
@@ -187,9 +163,6 @@ export class MockProductRepository implements ProductRepository {
       isForSale: productData.isForSale,
       company,
       category,
-      isAlwaysAvailable: productData.isAlwaysAvailable,
-      availability: productData.availability,
-      unavailableDates: productData.unavailableDates,
       updatedAt: new Date().toISOString()
     };
     

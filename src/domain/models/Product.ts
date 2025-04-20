@@ -71,4 +71,5 @@ export interface ProductFormData {
   currentTab: string;
   // Add images field to the schema
   images: any[];
+  internalId?: string;
 }

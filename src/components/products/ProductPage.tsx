@@ -5,7 +5,6 @@ import CompanyInfo from './CompanyInfo';
 import ProductImageGallery from './ProductImageGallery';
 import ProductInfo from './ProductInfo';
 import RentalSummary from './RentalSummary';
-import AvailabilityCalendar from './AvailabilityCalendar';
 import SecondHandInfo from './SecondHandInfo';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
@@ -124,13 +123,6 @@ const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
               </TabsList>
               
               <TabsContent value="rental" className="space-y-6 pt-4">
-                <AvailabilityCalendar 
-                  availabilityPeriods={product.availability || []}
-                  isAlwaysAvailable={product.isAlwaysAvailable}
-                  unavailableDates={product.unavailableDates}
-                  onSelectDateRange={handleDateRangeSelect}
-                />
-                
                 <RentalSummary 
                   product={product}
                   selectedStartDate={selectedStartDate}
@@ -148,13 +140,6 @@ const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
             </Tabs>
           ) : product.isRentable ? (
             <div className="space-y-6">
-              <AvailabilityCalendar 
-                availabilityPeriods={product.availability || []}
-                isAlwaysAvailable={product.isAlwaysAvailable}
-                unavailableDates={product.unavailableDates}
-                onSelectDateRange={handleDateRangeSelect}
-              />
-              
               <RentalSummary 
                 product={product}
                 selectedStartDate={selectedStartDate}

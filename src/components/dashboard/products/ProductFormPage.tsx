@@ -47,7 +47,6 @@ const ProductFormPage = () => {
             },
             rating: 0,
             reviewCount: 0,
-            isAlwaysAvailable: true,
             productType: 'rental' as const // Specify the type literal
           };
           setProduct(newProduct);
