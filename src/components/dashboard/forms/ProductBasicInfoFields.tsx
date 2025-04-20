@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Control } from "react-hook-form";
 import { ProductFormValues } from "./productFormSchema";
-import { CategorySelector } from "@/components/dashboard/categories/CategorySelector";
+import CategorySelector from "@/components/dashboard/categories/CategorySelector";
 import { useEffect, useState } from "react";
 import { Category } from "@/domain/models/Category";
 import { CategoryService } from "@/application/services/CategoryService";
@@ -77,7 +77,6 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
             <FormLabel>Categoría</FormLabel>
             <FormControl>
               <CategorySelector 
-                categories={categories}
                 selectedCategoryId={field.value}
                 onCategoryChange={(categoryId) => field.onChange(categoryId)}
                 placeholder="Seleccionar categoría del producto"
