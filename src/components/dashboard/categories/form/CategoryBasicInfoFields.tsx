@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CategoryFormData } from '@/domain/models/Category';
 import { useEffect, useState } from 'react';
-import { CategoryService } from '@/application/services/CategoryService';
 import IconPicker from '../icon-picker/IconPicker';
+import { MockCategoryRepository } from '@/infrastructure/repositories/MockCategoryRepository';
 
 interface CategoryBasicInfoFieldsProps {
   form: UseFormReturn<CategoryFormData>;
@@ -14,11 +14,11 @@ interface CategoryBasicInfoFieldsProps {
 
 const CategoryBasicInfoFields = ({ form }: CategoryBasicInfoFieldsProps) => {
   const [parentCategories, setParentCategories] = useState<{ id: string; name: string; }[]>([]);
-  const categoryService = CategoryService.getInstance();
+  const categoryRepository = new MockCategoryRepository();
 
   useEffect(() => {
     const loadParentCategories = async () => {
-      const categories = await categoryService.getAllCategories();
+      const categories = await categoryRepository.getAllCategories();
       setParentCategories(categories);
     };
     loadParentCategories();
