@@ -32,48 +32,36 @@ const CategorySelector = ({
   excludeCategoryId
 }: CategorySelectorProps) => {
   const [open, setOpen] = useState(false);
-  // Ensure this is initialized as an empty array
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const categoryService = CategoryService.getInstance();
 
   useEffect(() => {
+    const loadCategories = async () => {
+      setIsLoading(true);
+      try {
+        const fetchedCategories = await categoryService.getAllCategories();
+        const validCategories = fetchedCategories.filter(cat => 
+          cat && cat.id && cat.id !== excludeCategoryId
+        );
+        setCategories(validCategories);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+        setCategories([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     loadCategories();
   }, [excludeCategoryId]);
 
-  const loadCategories = async () => {
-    setIsLoading(true);
-    setHasError(false);
-    
-    try {
-      const fetchedCategories = await categoryService.getAllCategories();
-      
-      // Ensure we have a valid array and filter by excludeCategoryId if needed
-      let validCategories = Array.isArray(fetchedCategories) ? fetchedCategories : [];
-      
-      // Filter out any null/undefined or invalid category items
-      validCategories = validCategories.filter(cat => cat && typeof cat === 'object' && 'id' in cat); 
-      
-      if (excludeCategoryId) {
-        validCategories = validCategories.filter(cat => cat.id !== excludeCategoryId);
-      }
-      
-      setCategories(validCategories);
-    } catch (error) {
-      console.error('Error loading categories', error);
-      setHasError(true);
-      setCategories([]); // Reset to empty array on error
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const filteredCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  // Find selected category from the categories array
-  const selectedCategory = categories.find(category => category && category.id === selectedCategoryId);
-
-  // Safely check if we have categories to render
-  const hasCategories = Array.isArray(categories) && categories.length > 0;
+  const selectedCategory = categories.find(category => category.id === selectedCategoryId);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -82,6 +70,7 @@ const CategorySelector = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label="Seleccionar categoría padre"
           className="w-full justify-between"
           disabled={isLoading}
         >
@@ -93,20 +82,21 @@ const CategorySelector = ({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
-        <Command>
-          <CommandInput placeholder="Buscar categoría..." />
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+        <Command shouldFilter={false}>
+          <CommandInput 
+            placeholder="Buscar categoría..." 
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+          />
           <CommandEmpty>No se encontraron categorías.</CommandEmpty>
           <CommandGroup>
-            {/* Add the "no category" option */}
             <CommandItem
-              key="none"
               value="none"
               onSelect={() => {
                 onCategoryChange(null);
                 setOpen(false);
               }}
-              className="text-muted-foreground"
             >
               <Check
                 className={cn(
@@ -114,35 +104,26 @@ const CategorySelector = ({
                   !selectedCategoryId ? "opacity-100" : "opacity-0"
                 )}
               />
-              Sin categoría padre
+              <span>Sin categoría padre</span>
             </CommandItem>
-            
-            {/* Only render category items if we have valid categories */}
-            {hasCategories && categories.map((category) => {
-              // Skip rendering if category is invalid
-              if (!category || !category.id || typeof category.name !== 'string') {
-                return null;
-              }
-              
-              return (
-                <CommandItem
-                  key={category.id}
-                  value={category.name}
-                  onSelect={() => {
-                    onCategoryChange(category.id);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedCategoryId === category.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {category.name}
-                </CommandItem>
-              );
-            })}
+            {filteredCategories.map((category) => (
+              <CommandItem
+                key={category.id}
+                value={category.name}
+                onSelect={() => {
+                  onCategoryChange(category.id);
+                  setOpen(false);
+                }}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    selectedCategoryId === category.id ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                {category.name}
+              </CommandItem>
+            ))}
           </CommandGroup>
         </Command>
       </PopoverContent>
