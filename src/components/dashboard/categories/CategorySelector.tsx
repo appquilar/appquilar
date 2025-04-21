@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -26,30 +26,43 @@ interface CategorySelectorProps {
   excludeCategoryId?: string;
 }
 
+/**
+ * A selector component for categories with search functionality
+ */
 const CategorySelector = ({
   selectedCategoryId,
   onCategoryChange,
   placeholder = 'Seleccionar categoría',
   excludeCategoryId
 }: CategorySelectorProps) => {
+  // States
   const [open, setOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Services
   const categoryService = useMemo(() => CategoryService.getInstance(), []);
 
-  // Load categories on component mount or when excludeCategoryId changes
+  // Load categories when component mounts or excludeCategoryId changes
   useEffect(() => {
     const loadCategories = async () => {
+      // Reset states
       setIsLoading(true);
       setError(null);
       
       try {
+        // Fetch categories
         const fetchedCategories = await categoryService.getAllCategories();
         
-        // Ensure we have valid category data and filter out the excluded category
+        // Validate fetched data and filter out excluded category
+        if (!Array.isArray(fetchedCategories)) {
+          console.error('Invalid category data received:', fetchedCategories);
+          throw new Error('Los datos de categorías no son válidos');
+        }
+        
+        // Filter out invalid categories and the excluded one
         const validCategories = fetchedCategories
           .filter(cat => cat && typeof cat === 'object' && cat.id)
           .filter(cat => cat.id !== excludeCategoryId);
@@ -99,17 +112,26 @@ const CategorySelector = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          aria-label="Seleccionar categoría padre"
+          aria-label="Seleccionar categoría"
           className="w-full justify-between"
           disabled={isLoading}
-          onClick={() => setOpen(!open)}
+          data-testid="category-selector-trigger"
         >
-          {selectedCategory ? selectedCategory.name : placeholder}
           {isLoading ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span>Cargando categorías...</span>
+          ) : selectedCategory ? (
+            selectedCategory.name
           ) : (
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            placeholder
           )}
+          
+          <div>
+            {isLoading ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            ) : (
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            )}
+          </div>
         </Button>
       </PopoverTrigger>
       
@@ -135,53 +157,57 @@ const CategorySelector = ({
               placeholder="Buscar categoría..." 
               value={searchQuery}
               onValueChange={setSearchQuery}
+              disabled={isLoading}
             />
+            
+            <CommandEmpty>
+              {isLoading ? 'Cargando...' : 'No se encontraron categorías.'}
+            </CommandEmpty>
             
             {isLoading ? (
               <div className="flex items-center justify-center p-4">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               </div>
             ) : (
-              <>
-                <CommandEmpty>No se encontraron categorías.</CommandEmpty>
-                <CommandGroup>
+              <CommandGroup>
+                {/* "No category" option */}
+                <CommandItem
+                  key="none"
+                  value="none"
+                  onSelect={() => {
+                    onCategoryChange(null);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      !selectedCategoryId ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  <span>Sin categoría padre</span>
+                </CommandItem>
+                
+                {/* Category items */}
+                {filteredCategories.length > 0 && filteredCategories.map((category) => (
                   <CommandItem
-                    key="none"
-                    value="none"
+                    key={category.id}
+                    value={category.id}
                     onSelect={() => {
-                      onCategoryChange(null);
+                      onCategoryChange(category.id);
                       setOpen(false);
                     }}
                   >
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        !selectedCategoryId ? "opacity-100" : "opacity-0"
+                        selectedCategoryId === category.id ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    <span>Sin categoría padre</span>
+                    {category.name}
                   </CommandItem>
-                  
-                  {filteredCategories.length > 0 && filteredCategories.map((category) => (
-                    <CommandItem
-                      key={category.id}
-                      value={category.id}
-                      onSelect={() => {
-                        onCategoryChange(category.id);
-                        setOpen(false);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedCategoryId === category.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {category.name}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </>
+                ))}
+              </CommandGroup>
             )}
           </Command>
         )}
