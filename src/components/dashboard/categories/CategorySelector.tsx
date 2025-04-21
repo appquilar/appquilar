@@ -38,7 +38,7 @@ const CategorySelector = ({
 
   useEffect(() => {
     loadCategories();
-  }, []);
+  }, [excludeCategoryId]);
 
   const loadCategories = async () => {
     setIsLoading(true);
@@ -48,7 +48,7 @@ const CategorySelector = ({
       const filteredCategories = excludeCategoryId 
         ? fetchedCategories.filter(cat => cat.id !== excludeCategoryId)
         : fetchedCategories;
-      setCategories(filteredCategories || []);
+      setCategories(Array.isArray(filteredCategories) ? filteredCategories : []);
     } catch (error) {
       console.error('Error loading categories', error);
       setCategories([]);
@@ -78,51 +78,48 @@ const CategorySelector = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
-        {/* Ensure we're not passing undefined values to Command */}
-        {categories && (
-          <Command>
-            <CommandInput placeholder="Buscar categoría..." />
-            <CommandEmpty>No se encontraron categorías.</CommandEmpty>
-            <CommandGroup className="max-h-64 overflow-auto">
+        <Command>
+          <CommandInput placeholder="Buscar categoría..." />
+          <CommandEmpty>No se encontraron categorías.</CommandEmpty>
+          <CommandGroup className="max-h-64 overflow-auto">
+            <CommandItem
+              key="none"
+              value="none"
+              onSelect={() => {
+                onCategoryChange(null);
+                setOpen(false);
+              }}
+              className="text-muted-foreground"
+            >
+              <Check
+                className={cn(
+                  "mr-2 h-4 w-4",
+                  !selectedCategoryId ? "opacity-100" : "opacity-0"
+                )}
+              />
+              Sin categoría padre
+            </CommandItem>
+            
+            {categories.map((category) => (
               <CommandItem
-                key="none"
-                value="none"
+                key={category.id}
+                value={category.name || ''}
                 onSelect={() => {
-                  onCategoryChange(null);
+                  onCategoryChange(category.id);
                   setOpen(false);
                 }}
-                className="text-muted-foreground"
               >
                 <Check
                   className={cn(
                     "mr-2 h-4 w-4",
-                    !selectedCategoryId ? "opacity-100" : "opacity-0"
+                    selectedCategoryId === category.id ? "opacity-100" : "opacity-0"
                   )}
                 />
-                Sin categoría padre
+                {category.name || ''}
               </CommandItem>
-              
-              {Array.isArray(categories) && categories.map((category) => (
-                <CommandItem
-                  key={category.id}
-                  value={category.name}
-                  onSelect={() => {
-                    onCategoryChange(category.id);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedCategoryId === category.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {category.name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </Command>
-        )}
+            ))}
+          </CommandGroup>
+        </Command>
       </PopoverContent>
     </Popover>
   );
