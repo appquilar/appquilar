@@ -15,7 +15,7 @@ const CategoryImagesFields = ({ form }: CategoryImagesFieldsProps) => {
         control={form.control}
         name="headerImageUrl"
         render={({ field }) => (
-          <FormItem>
+          <FormItem className="w-full">
             <FormLabel>Imagen de cabecera</FormLabel>
             <FormControl>
               <CategoryImageUpload
@@ -32,7 +32,7 @@ const CategoryImagesFields = ({ form }: CategoryImagesFieldsProps) => {
         control={form.control}
         name="featuredImageUrl"
         render={({ field }) => (
-          <FormItem>
+          <FormItem className="w-full">
             <FormLabel>Imagen destacada</FormLabel>
             <FormControl>
               <CategoryImageUpload

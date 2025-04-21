@@ -64,7 +64,7 @@ const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   "kitchen": Fa.FaUtensils,
   "blender": Fa.FaBlender,
   "refrigerator": Fa.FaSnowflake,
-  "oven": Md.MdOutlineOvenGen,
+  "oven": Md.MdOutlineOven, // Fixed: Changed MdOutlineOvenGen to MdOutlineOven
   "utensils": Fa.FaUtensils
 };
 
