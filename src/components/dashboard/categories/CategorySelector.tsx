@@ -32,7 +32,7 @@ const CategorySelector = ({
   excludeCategoryId
 }: CategorySelectorProps) => {
   const [open, setOpen] = useState(false);
-  // Always initialize as an empty array
+  // Ensure this is initialized as an empty array
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -51,7 +51,9 @@ const CategorySelector = ({
       
       // Ensure we have a valid array and filter by excludeCategoryId if needed
       let validCategories = Array.isArray(fetchedCategories) ? fetchedCategories : [];
-      validCategories = validCategories.filter(Boolean); // Remove any null/undefined items
+      
+      // Filter out any null/undefined or invalid category items
+      validCategories = validCategories.filter(cat => cat && typeof cat === 'object' && 'id' in cat); 
       
       if (excludeCategoryId) {
         validCategories = validCategories.filter(cat => cat.id !== excludeCategoryId);
@@ -96,6 +98,7 @@ const CategorySelector = ({
           <CommandInput placeholder="Buscar categoría..." />
           <CommandEmpty>No se encontraron categorías.</CommandEmpty>
           <CommandGroup>
+            {/* Add the "no category" option */}
             <CommandItem
               key="none"
               value="none"
@@ -114,14 +117,17 @@ const CategorySelector = ({
               Sin categoría padre
             </CommandItem>
             
+            {/* Only render category items if we have valid categories */}
             {hasCategories && categories.map((category) => {
-              // Guard against any invalid category objects
-              if (!category || !category.id) return null;
+              // Skip rendering if category is invalid
+              if (!category || !category.id || typeof category.name !== 'string') {
+                return null;
+              }
               
               return (
                 <CommandItem
                   key={category.id}
-                  value={category.name || ''}
+                  value={category.name}
                   onSelect={() => {
                     onCategoryChange(category.id);
                     setOpen(false);
@@ -133,7 +139,7 @@ const CategorySelector = ({
                       selectedCategoryId === category.id ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {category.name || ''}
+                  {category.name}
                 </CommandItem>
               );
             })}
