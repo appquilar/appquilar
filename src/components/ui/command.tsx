@@ -85,9 +85,20 @@ const CommandGroup = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Group>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group>
 >(({ className, children, ...props }, ref) => {
-  // Ensure children is never undefined to prevent iteration issues
+  // Triple-check to prevent undefined children from being passed to cmdk
   const safeChildren = React.useMemo(() => {
-    return children || null;
+    // If children is undefined or null, return an empty array
+    if (children === undefined || children === null) {
+      return [];
+    }
+    
+    // If children is already an array or iterable, make sure it contains no undefined or null items
+    if (Array.isArray(children)) {
+      return children.filter(child => child !== undefined && child !== null);
+    }
+    
+    // If it's a single child, return it in an array
+    return [children];
   }, [children]);
 
   return (
