@@ -48,16 +48,45 @@ const CategorySelector = ({
       const filteredCategories = excludeCategoryId 
         ? fetchedCategories.filter(cat => cat.id !== excludeCategoryId)
         : fetchedCategories;
+      // Ensure we always have a valid array
       setCategories(Array.isArray(filteredCategories) ? filteredCategories : []);
     } catch (error) {
       console.error('Error loading categories', error);
+      // Always initialize with an empty array on error
       setCategories([]);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Find selected category from the categories array
   const selectedCategory = categories.find(category => category.id === selectedCategoryId);
+
+  // Safe rendering to avoid issues with undefined values
+  const renderCategories = () => {
+    if (!Array.isArray(categories) || categories.length === 0) {
+      return null;
+    }
+    
+    return categories.map((category) => (
+      <CommandItem
+        key={category.id}
+        value={category.name || ''}
+        onSelect={() => {
+          onCategoryChange(category.id);
+          setOpen(false);
+        }}
+      >
+        <Check
+          className={cn(
+            "mr-2 h-4 w-4",
+            selectedCategoryId === category.id ? "opacity-100" : "opacity-0"
+          )}
+        />
+        {category.name || ''}
+      </CommandItem>
+    ));
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -100,24 +129,8 @@ const CategorySelector = ({
               Sin categoría padre
             </CommandItem>
             
-            {categories.map((category) => (
-              <CommandItem
-                key={category.id}
-                value={category.name || ''}
-                onSelect={() => {
-                  onCategoryChange(category.id);
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    selectedCategoryId === category.id ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {category.name || ''}
-              </CommandItem>
-            ))}
+            {/* Render categories with a safe method to ensure we never pass undefined */}
+            {renderCategories()}
           </CommandGroup>
         </Command>
       </PopoverContent>
