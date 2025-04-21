@@ -57,21 +57,25 @@ const CategoryImageUpload = ({ value, onChange }: CategoryImageUploadProps) => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full max-w-[400px]">
       {selectedImage ? (
-        <ImagePreview
-          image={selectedImage}
-          onRemove={handleRemoveImage}
-          onSetPrimary={() => {}}
-        />
+        <div className="relative w-full max-w-[400px] h-[225px] border rounded-md overflow-hidden">
+          <ImagePreview
+            image={selectedImage}
+            onRemove={handleRemoveImage}
+            onSetPrimary={() => {}}
+          />
+        </div>
       ) : (
-        <ImageDropZone
-          isDragging={isDragging}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onFileChange={handleFileChange}
-        />
+        <div className="w-full max-w-[400px]">
+          <ImageDropZone
+            isDragging={isDragging}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onFileChange={handleFileChange}
+          />
+        </div>
       )}
     </div>
   );

@@ -10,12 +10,12 @@ interface CategoryImagesFieldsProps {
 
 const CategoryImagesFields = ({ form }: CategoryImagesFieldsProps) => {
   return (
-    <>
+    <div className="space-y-6">
       <FormField
         control={form.control}
         name="headerImageUrl"
         render={({ field }) => (
-          <FormItem className="w-full">
+          <FormItem>
             <FormLabel>Imagen de cabecera</FormLabel>
             <FormControl>
               <CategoryImageUpload
@@ -32,7 +32,7 @@ const CategoryImagesFields = ({ form }: CategoryImagesFieldsProps) => {
         control={form.control}
         name="featuredImageUrl"
         render={({ field }) => (
-          <FormItem className="w-full">
+          <FormItem>
             <FormLabel>Imagen destacada</FormLabel>
             <FormControl>
               <CategoryImageUpload
@@ -44,7 +44,7 @@ const CategoryImagesFields = ({ form }: CategoryImagesFieldsProps) => {
           </FormItem>
         )}
       />
-    </>
+    </div>
   );
 };
 

@@ -4,7 +4,7 @@ import { ImageFile } from "./types";
 
 export const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 export const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png"];
-export const MAX_IMAGES = 1; // Confirmed: Maximum is 1 image
+export const MAX_IMAGES = 1; // Maximum is 1 image
 
 export const validateAndProcessFiles = (
   files: File[], 

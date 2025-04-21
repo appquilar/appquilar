@@ -13,12 +13,12 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
   return (
     <div
       key={image.id}
-      className={`relative group rounded-lg overflow-hidden border ${
+      className={`relative group h-full ${
         image.isPrimary ? "border-primary border-2" : "border-gray-200"
       }`}
     >
-      {/* Image container */}
-      <div className="aspect-square">
+      {/* Image container with fixed aspect ratio */}
+      <div className="h-full">
         <img
           src={image.url}
           alt="Preview"
@@ -38,9 +38,9 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
       )}
       
       {/* Action buttons container */}
-      <div className="flex justify-between p-2 bg-gray-50">
+      <div className="absolute bottom-0 left-0 right-0 flex justify-between p-2 bg-gray-50/80">
         <Button
-          type="button" // Explicitly set button type to prevent form submission
+          type="button"
           size="sm"
           variant="ghost"
           className="h-8 w-8 p-0 hover:bg-gray-200"
@@ -51,7 +51,7 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
         </Button>
         
         <Button
-          type="button" // Explicitly set button type to prevent form submission
+          type="button"
           size="sm"
           variant="ghost"
           className="h-8 w-8 p-0 hover:bg-gray-200"
