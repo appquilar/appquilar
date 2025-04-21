@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,7 @@ const CategorySelector = ({
   const [searchQuery, setSearchQuery] = useState('');
   
   // Services
-  const categoryService = useMemo(() => CategoryService.getInstance(), []);
+  const categoryService = CategoryService.getInstance();
 
   // Load categories when component mounts or excludeCategoryId changes
   useEffect(() => {
@@ -56,7 +56,7 @@ const CategorySelector = ({
         // Fetch categories
         const fetchedCategories = await categoryService.getAllCategories();
         
-        // Validate fetched data and filter out excluded category
+        // Validate fetched data
         if (!Array.isArray(fetchedCategories)) {
           console.error('Invalid category data received:', fetchedCategories);
           throw new Error('Los datos de categorías no son válidos');
@@ -82,28 +82,16 @@ const CategorySelector = ({
   }, [excludeCategoryId, categoryService]);
 
   // Filter categories based on search query
-  const filteredCategories = useMemo(() => {
+  const filteredCategories = (() => {
     if (!searchQuery.trim() || !categories.length) return categories;
     
     return categories.filter(category => 
       category.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [categories, searchQuery]);
+  })();
 
   // Find the selected category
-  const selectedCategory = useMemo(() => 
-    categories.find(category => category.id === selectedCategoryId),
-    [categories, selectedCategoryId]
-  );
-
-  // Handle the case where the selected category is no longer available
-  useEffect(() => {
-    if (selectedCategoryId && !isLoading && categories.length > 0 &&
-        !categories.some(c => c.id === selectedCategoryId)) {
-      // Selected category not found in available categories
-      onCategoryChange(null);
-    }
-  }, [categories, selectedCategoryId, isLoading, onCategoryChange]);
+  const selectedCategory = categories.find(category => category.id === selectedCategoryId);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -160,54 +148,64 @@ const CategorySelector = ({
               disabled={isLoading}
             />
             
-            <CommandEmpty>
-              {isLoading ? 'Cargando...' : 'No se encontraron categorías.'}
-            </CommandEmpty>
-            
             {isLoading ? (
               <div className="flex items-center justify-center p-4">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               </div>
             ) : (
-              <CommandGroup>
-                {/* "No category" option */}
-                <CommandItem
-                  key="none"
-                  value="none"
-                  onSelect={() => {
-                    onCategoryChange(null);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      !selectedCategoryId ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <span>Sin categoría padre</span>
-                </CommandItem>
+              <>
+                {filteredCategories.length === 0 && !isLoading ? (
+                  <CommandEmpty>
+                    No se encontraron categorías.
+                  </CommandEmpty>
+                ) : null}
                 
-                {/* Category items */}
-                {filteredCategories.length > 0 && filteredCategories.map((category) => (
+                {/* "No category" option */}
+                <CommandGroup>
                   <CommandItem
-                    key={category.id}
-                    value={category.id}
+                    key="none"
+                    value="none"
                     onSelect={() => {
-                      onCategoryChange(category.id);
+                      onCategoryChange(null);
                       setOpen(false);
+                      setSearchQuery('');
                     }}
                   >
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        selectedCategoryId === category.id ? "opacity-100" : "opacity-0"
+                        !selectedCategoryId ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    {category.name}
+                    <span>Sin categoría padre</span>
                   </CommandItem>
-                ))}
-              </CommandGroup>
+                </CommandGroup>
+                
+                {/* Categories */}
+                {filteredCategories.length > 0 && (
+                  <CommandGroup>
+                    {filteredCategories.map((category) => (
+                      <CommandItem
+                        key={category.id}
+                        value={category.id}
+                        onSelect={() => {
+                          onCategoryChange(category.id);
+                          setOpen(false);
+                          setSearchQuery('');
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedCategoryId === category.id ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {category.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+              </>
             )}
           </Command>
         )}
