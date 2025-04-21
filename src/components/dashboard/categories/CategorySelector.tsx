@@ -32,7 +32,7 @@ const CategorySelector = ({
   excludeCategoryId
 }: CategorySelectorProps) => {
   const [open, setOpen] = useState(false);
-  // Initialize with empty array to avoid undefined issues
+  // Always initialize as an empty array
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -48,18 +48,20 @@ const CategorySelector = ({
     
     try {
       const fetchedCategories = await categoryService.getAllCategories();
-      // Filter out the category to exclude (to avoid circular references)
-      const filteredCategories = excludeCategoryId && Array.isArray(fetchedCategories)
-        ? fetchedCategories.filter(cat => cat && cat.id !== excludeCategoryId)
-        : fetchedCategories;
       
-      // Triple-check to ensure we always have a valid array
-      setCategories(Array.isArray(filteredCategories) ? filteredCategories.filter(Boolean) : []);
+      // Ensure we have a valid array and filter by excludeCategoryId if needed
+      let validCategories = Array.isArray(fetchedCategories) ? fetchedCategories : [];
+      validCategories = validCategories.filter(Boolean); // Remove any null/undefined items
+      
+      if (excludeCategoryId) {
+        validCategories = validCategories.filter(cat => cat.id !== excludeCategoryId);
+      }
+      
+      setCategories(validCategories);
     } catch (error) {
       console.error('Error loading categories', error);
       setHasError(true);
-      // Always initialize with an empty array on error
-      setCategories([]);
+      setCategories([]); // Reset to empty array on error
     } finally {
       setIsLoading(false);
     }
@@ -68,47 +70,8 @@ const CategorySelector = ({
   // Find selected category from the categories array
   const selectedCategory = categories.find(category => category && category.id === selectedCategoryId);
 
-  // Safe rendering to avoid issues with undefined values
-  const renderCategories = () => {
-    if (!Array.isArray(categories) || categories.length === 0) {
-      return null;
-    }
-    
-    return categories.map((category) => {
-      // Skip any potentially undefined or invalid categories
-      if (!category || !category.id) return null;
-      
-      return (
-        <CommandItem
-          key={category.id}
-          value={category.name || ''}
-          onSelect={() => {
-            onCategoryChange(category.id);
-            setOpen(false);
-          }}
-        >
-          <Check
-            className={cn(
-              "mr-2 h-4 w-4",
-              selectedCategoryId === category.id ? "opacity-100" : "opacity-0"
-            )}
-          />
-          {category.name || ''}
-        </CommandItem>
-      );
-    }).filter(Boolean); // Filter out any null items
-  };
-
-  // Render a message when an error occurs
-  const renderError = () => {
-    if (!hasError) return null;
-    
-    return (
-      <div className="p-2 text-sm text-destructive">
-        Error al cargar categorías. Intente nuevamente.
-      </div>
-    );
-  };
+  // Safely check if we have categories to render
+  const hasCategories = Array.isArray(categories) && categories.length > 0;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -129,34 +92,52 @@ const CategorySelector = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
-        {/* Safe rendering of the Command component with guaranteed valid data */}
         <Command>
           <CommandInput placeholder="Buscar categoría..." />
           <CommandEmpty>No se encontraron categorías.</CommandEmpty>
-          {!hasError ? (
-            <CommandGroup>
-              <CommandItem
-                key="none"
-                value="none"
-                onSelect={() => {
-                  onCategoryChange(null);
-                  setOpen(false);
-                }}
-                className="text-muted-foreground"
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    !selectedCategoryId ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                Sin categoría padre
-              </CommandItem>
+          <CommandGroup>
+            <CommandItem
+              key="none"
+              value="none"
+              onSelect={() => {
+                onCategoryChange(null);
+                setOpen(false);
+              }}
+              className="text-muted-foreground"
+            >
+              <Check
+                className={cn(
+                  "mr-2 h-4 w-4",
+                  !selectedCategoryId ? "opacity-100" : "opacity-0"
+                )}
+              />
+              Sin categoría padre
+            </CommandItem>
+            
+            {hasCategories && categories.map((category) => {
+              // Guard against any invalid category objects
+              if (!category || !category.id) return null;
               
-              {/* Render categories with a safe method to ensure we never pass undefined */}
-              {renderCategories()}
-            </CommandGroup>
-          ) : renderError()}
+              return (
+                <CommandItem
+                  key={category.id}
+                  value={category.name || ''}
+                  onSelect={() => {
+                    onCategoryChange(category.id);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedCategoryId === category.id ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {category.name || ''}
+                </CommandItem>
+              );
+            })}
+          </CommandGroup>
         </Command>
       </PopoverContent>
     </Popover>
