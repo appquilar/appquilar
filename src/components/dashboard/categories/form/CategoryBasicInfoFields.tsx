@@ -2,8 +2,10 @@
 import { UseFormReturn } from 'react-hook-form';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CategoryFormData } from '@/domain/models/Category';
-import CategorySelector from '../CategorySelector';
+import { useEffect, useState } from 'react';
+import { CategoryService } from '@/application/services/CategoryService';
 import IconPicker from '../icon-picker/IconPicker';
 
 interface CategoryBasicInfoFieldsProps {
@@ -11,6 +13,17 @@ interface CategoryBasicInfoFieldsProps {
 }
 
 const CategoryBasicInfoFields = ({ form }: CategoryBasicInfoFieldsProps) => {
+  const [parentCategories, setParentCategories] = useState<{ id: string; name: string; }[]>([]);
+  const categoryService = CategoryService.getInstance();
+
+  useEffect(() => {
+    const loadParentCategories = async () => {
+      const categories = await categoryService.getAllCategories();
+      setParentCategories(categories);
+    };
+    loadParentCategories();
+  }, []);
+
   return (
     <>
       <FormField
@@ -47,13 +60,24 @@ const CategoryBasicInfoFields = ({ form }: CategoryBasicInfoFieldsProps) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Categoría Padre</FormLabel>
-            <FormControl>
-              <CategorySelector
-                selectedCategoryId={field.value}
-                onCategoryChange={field.onChange}
-                placeholder="Seleccionar categoría padre (opcional)"
-              />
-            </FormControl>
+            <Select
+              value={field.value || "none"}
+              onValueChange={(value) => field.onChange(value === "none" ? null : value)}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar categoría padre (opcional)" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="none">Sin categoría padre</SelectItem>
+                {parentCategories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}

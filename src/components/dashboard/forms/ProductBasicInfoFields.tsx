@@ -8,9 +8,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Control } from "react-hook-form";
 import { ProductFormValues } from "./productFormSchema";
-import CategorySelector from "@/components/dashboard/categories/CategorySelector";
 import { useEffect, useState } from "react";
 import { Category } from "@/domain/models/Category";
 import { CategoryService } from "@/application/services/CategoryService";
@@ -22,7 +22,6 @@ interface ProductBasicInfoFieldsProps {
 const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
   const [categories, setCategories] = useState<Category[]>([]);
   
-  // Load categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -39,7 +38,6 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
 
   return (
     <>
-      {/* Internal ID (now editable) */}
       <FormField
         control={control}
         name="internalId"
@@ -68,26 +66,34 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
         )}
       />
       
-      {/* Category selector */}
       <FormField
         control={control}
         name="category.id"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Categoría</FormLabel>
-            <FormControl>
-              <CategorySelector 
-                selectedCategoryId={field.value}
-                onCategoryChange={(categoryId) => field.onChange(categoryId)}
-                placeholder="Seleccionar categoría del producto"
-              />
-            </FormControl>
+            <Select
+              value={field.value || ""}
+              onValueChange={field.onChange}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar categoría del producto" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}
       />
       
-      {/* New slug field */}
       <FormField
         control={control}
         name="slug"
