@@ -37,7 +37,7 @@ const ImageDropZone = ({
           <span className="font-medium">Haz clic para subir</span> o arrastra y suelta
         </div>
         <p className="text-xs text-muted-foreground">
-          JPEG o PNG, máximo 2MB (Máximo 5 imágenes)
+          JPEG o PNG, máximo 2MB
         </p>
       </div>
       <input
@@ -45,7 +45,6 @@ const ImageDropZone = ({
         ref={fileInputRef}
         onChange={onFileChange}
         accept="image/jpeg, image/png"
-        multiple
         className="hidden"
         value=""
       />

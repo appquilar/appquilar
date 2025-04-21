@@ -6,12 +6,11 @@ import { validateAndProcessFiles } from '../../forms/image-upload/imageUtils';
 import ImagePreview from '../../forms/image-upload/ImagePreview';
 
 interface CategoryImageUploadProps {
-  label: string;
   value: string | null;
   onChange: (value: string | null) => void;
 }
 
-const CategoryImageUpload = ({ label, value, onChange }: CategoryImageUploadProps) => {
+const CategoryImageUpload = ({ value, onChange }: CategoryImageUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ImageFile | null>(
     value ? {
@@ -58,8 +57,7 @@ const CategoryImageUpload = ({ label, value, onChange }: CategoryImageUploadProp
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="font-medium text-sm">{label}</h3>
+    <div className="w-full">
       {selectedImage ? (
         <ImagePreview
           image={selectedImage}

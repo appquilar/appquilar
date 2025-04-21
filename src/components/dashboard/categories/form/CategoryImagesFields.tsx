@@ -19,7 +19,6 @@ const CategoryImagesFields = ({ form }: CategoryImagesFieldsProps) => {
             <FormLabel>Imagen de cabecera</FormLabel>
             <FormControl>
               <CategoryImageUpload
-                label="Imagen de cabecera"
                 value={field.value}
                 onChange={field.onChange}
               />
@@ -37,7 +36,6 @@ const CategoryImagesFields = ({ form }: CategoryImagesFieldsProps) => {
             <FormLabel>Imagen destacada</FormLabel>
             <FormControl>
               <CategoryImageUpload
-                label="Imagen destacada"
                 value={field.value}
                 onChange={field.onChange}
               />
