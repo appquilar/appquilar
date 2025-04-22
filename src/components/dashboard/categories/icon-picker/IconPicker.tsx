@@ -12,7 +12,6 @@ import * as Md from 'react-icons/md';
 import * as Io from 'react-icons/io';
 import * as Fi from 'react-icons/fi';
 
-// Combine icons from different sets with more options
 const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   // Tools and Equipment
   "tools": Fa.FaTools,
@@ -21,6 +20,8 @@ const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   "screwdriver": Fa.FaScrewdriver,
   "drill": Fa.FaDrumSteelpan,
   "toolbox": Fa.FaToolbox,
+  "repair": Fa.FaWrench,
+  "equipment": Fa.FaTools,
 
   // Electronics
   "electronics": Md.MdDevices,
@@ -31,6 +32,10 @@ const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   "computer": Md.MdComputer,
   "tablet": Md.MdTablet,
   "printer": Md.MdPrint,
+  "phone": Md.MdPhone,
+  "battery": Md.MdBattery90,
+  "bluetooth": Md.MdBluetooth,
+  "wifi": Md.MdWifi,
 
   // Garden and Outdoor
   "garden": Fa.FaSeedling,
@@ -40,6 +45,9 @@ const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   "shovel": Fa.FaSpa,
   "rake": Fa.FaCanadianMapleLeaf,
   "lawnmower": Fa.FaLeaf,
+  "watering": Fi.FiCloudRain,
+  "plant": Fa.FaSeedling,
+  "sun": Fa.FaSun,
 
   // Music and Audio
   "music": Fa.FaMusic,
@@ -49,6 +57,9 @@ const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   "piano": Fa.FaMusic,
   "drum": Fa.FaDrum,
   "speaker": Md.MdSpeaker,
+  "volume": Fa.FaVolumeUp,
+  "playlist": Fa.FaPlayCircle,
+  "record": Fa.FaRecordVinyl,
 
   // Sports and Recreation
   "sports": Md.MdSportsBasketball,
@@ -58,6 +69,9 @@ const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   "tennis": Md.MdSportsTennis,
   "volleyball": Md.MdSportsVolleyball,
   "fitness": Md.MdFitnessCenter,
+  "running": Fa.FaRunning,
+  "swimming": Fa.FaSwimmer,
+  "cycling": Fa.FaBiking,
 
   // Furniture
   "furniture": Md.MdChair,
@@ -67,6 +81,9 @@ const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   "sofa": Md.MdWeekend,
   "desk": Md.MdDesk,
   "cabinet": Md.MdStorage,
+  "drawer": Md.MdStorage,
+  "lamp": Fa.FaLightbulb,
+  "mirror": Md.MdOutlineMonitor,
 
   // Clothing and Accessories
   "clothing": Fa.FaTshirt,
@@ -76,6 +93,9 @@ const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   "hat": Fa.FaHatCowboy,
   "shoes": Fa.FaShoePrints,
   "glasses": Fa.FaGlasses,
+  "watch": Fa.FaClock,
+  "ring": Fa.FaRing,
+  "bag": Fa.FaShoppingBag,
 
   // Kitchen and Appliances
   "kitchen": Fa.FaUtensils,
@@ -85,21 +105,57 @@ const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   "utensils": Fa.FaUtensils,
   "coffee": Fa.FaCoffee,
   "mixer": Fa.FaBlender,
+  "dish": Fa.FaUtensils,
+  "glass": Fa.FaWineGlass,
+  "bottle": Fa.FaWineBottle,
 
   // Home and Living
   "home": Fa.FaHome,
   "lamp": Fa.FaLightbulb,
   "clock": Fa.FaClock,
-  "mirror": Md.MdOutlineMonitor, // Fixed: Replaced MdMirror with MdOutlineMonitor
   "carpet": Md.MdCarpenter,
   "curtains": Md.MdCurtains,
+  "door": Fa.FaDoorOpen,
+  "window": Fa.FaWindowMaximize,
+  "paint": Fa.FaPaintBrush,
+  "book": Fa.FaBook,
+  "picture": Fa.FaImage,
 
   // Party and Events
   "party": Fa.FaGlassCheers,
   "balloons": Fa.FaBirthdayCake,
   "karaoke": Fa.FaMicrophone,
   "lights": Fa.FaLightbulb,
-  "speaker-system": Md.MdSpeaker
+  "speaker-system": Md.MdSpeaker,
+  "cake": Fa.FaBirthdayCake,
+  "gift": Fa.FaGift,
+  "celebration": Fa.FaGlassCheers,
+  "confetti": Fa.FaStarAndCrescent,
+  "dance": Fa.FaMusic,
+
+  // Technology
+  "robot": Fa.FaRobot,
+  "code": Fa.FaCode,
+  "database": Fa.FaDatabase,
+  "server": Fa.FaServer,
+  "cloud": Fa.FaCloud,
+  "keyboard": Fa.FaKeyboard,
+  "mouse": Fa.FaMouse,
+  "network": Fa.FaNetworkWired,
+  "security": Fa.FaShieldAlt,
+  "settings": Fa.FaCog,
+
+  // Transportation
+  "car": Fa.FaCar,
+  "bicycle": Fa.FaBicycle,
+  "bus": Fa.FaBus,
+  "train": Fa.FaTrain,
+  "plane": Fa.FaPlane,
+  "ship": Fa.FaShip,
+  "motorcycle": Fa.FaMotorcycle,
+  "truck": Fa.FaTruck,
+  "helicopter": Fa.FaHelicopter,
+  "rocket": Fa.FaRocket,
 };
 
 interface IconPickerProps {
@@ -122,14 +178,16 @@ const IconPicker = ({ selectedIcon, onSelectIcon }: IconPickerProps) => {
   return (
     <TooltipProvider>
       <div className="w-full space-y-2">
-        <div className="flex items-center border rounded-md px-3">
-          <Search className="w-4 h-4 text-muted-foreground" />
+        <div className="relative">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-muted-foreground" />
+          </div>
           <Input
             type="text"
             placeholder="Buscar icono..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="border-0 focus-visible:ring-0"
+            className="pl-9 w-full"
           />
         </div>
         
