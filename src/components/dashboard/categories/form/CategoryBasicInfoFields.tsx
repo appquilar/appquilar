@@ -33,7 +33,7 @@ const CategoryBasicInfoFields = ({ form }: CategoryBasicInfoFieldsProps) => {
           <FormItem>
             <FormLabel>Nombre</FormLabel>
             <FormControl>
-              <Input placeholder="Nombre de la categoría" {...field} />
+              <Input placeholder="Nombre de la categoría" {...field} className="w-full" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -47,7 +47,7 @@ const CategoryBasicInfoFields = ({ form }: CategoryBasicInfoFieldsProps) => {
           <FormItem>
             <FormLabel>Slug</FormLabel>
             <FormControl>
-              <Input placeholder="slug-de-categoria" {...field} />
+              <Input placeholder="slug-de-categoria" {...field} className="w-full" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -65,7 +65,7 @@ const CategoryBasicInfoFields = ({ form }: CategoryBasicInfoFieldsProps) => {
               onValueChange={(value) => field.onChange(value === "none" ? null : value)}
             >
               <FormControl>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Seleccionar categoría padre (opcional)" />
                 </SelectTrigger>
               </FormControl>
