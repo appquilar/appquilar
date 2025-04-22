@@ -29,9 +29,10 @@ const CategoryBasicInfoFields = ({ form }: CategoryBasicInfoFieldsProps) => {
     loadParentCategories();
   }, []);
 
-  const filteredCategories = parentCategories.filter(category => 
+  // Handle empty or undefined categories gracefully
+  const filteredCategories = parentCategories ? parentCategories.filter(category => 
     category.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) : [];
 
   return (
     <>
@@ -79,7 +80,7 @@ const CategoryBasicInfoFields = ({ form }: CategoryBasicInfoFieldsProps) => {
                     )}
                   >
                     {field.value
-                      ? parentCategories.find((category) => category.id === field.value)?.name
+                      ? parentCategories.find((category) => category.id === field.value)?.name || "Categoría no encontrada"
                       : "Seleccionar categoría padre (opcional)"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </div>
@@ -92,42 +93,45 @@ const CategoryBasicInfoFields = ({ form }: CategoryBasicInfoFieldsProps) => {
                     value={searchQuery}
                     onValueChange={setSearchQuery}
                   />
-                  <CommandEmpty>No se encontraron categorías</CommandEmpty>
-                  <CommandGroup>
-                    <CommandItem
-                      value="none"
-                      onSelect={() => {
-                        field.onChange(null);
-                        setOpen(false);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          field.value === null ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      Sin categoría padre
-                    </CommandItem>
-                    {filteredCategories.map((category) => (
+                  {filteredCategories.length === 0 ? (
+                    <CommandEmpty>No se encontraron categorías</CommandEmpty>
+                  ) : (
+                    <CommandGroup>
                       <CommandItem
-                        key={category.id}
-                        value={category.id}
+                        value="none"
                         onSelect={() => {
-                          field.onChange(category.id);
+                          field.onChange(null);
                           setOpen(false);
                         }}
                       >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            field.value === category.id ? "opacity-100" : "opacity-0"
+                            field.value === null ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        {category.name}
+                        Sin categoría padre
                       </CommandItem>
-                    ))}
-                  </CommandGroup>
+                      {filteredCategories.map((category) => (
+                        <CommandItem
+                          key={category.id}
+                          value={category.id}
+                          onSelect={() => {
+                            field.onChange(category.id);
+                            setOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              field.value === category.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {category.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
                 </Command>
               </PopoverContent>
             </Popover>
