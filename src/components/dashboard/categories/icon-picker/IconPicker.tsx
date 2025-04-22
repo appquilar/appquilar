@@ -82,7 +82,7 @@ const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   "desk": Md.MdDesk,
   "cabinet": Md.MdStorage,
   "drawer": Md.MdStorage,
-  "lamp": Fa.FaLightbulb,
+  "floor-lamp": Fa.FaLightbulb, // Changed from "lamp" to "floor-lamp"
   "mirror": Md.MdOutlineMonitor,
 
   // Clothing and Accessories
