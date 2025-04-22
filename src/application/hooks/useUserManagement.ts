@@ -7,11 +7,16 @@ import { MOCK_USERS } from '@/infrastructure/services/mockData/companyUserMockDa
 export const useUserManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Filter users based on search query
-  const filteredUsers = MOCK_USERS.filter(user => 
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter users based on search query with null checks
+  const filteredUsers = MOCK_USERS.filter(user => {
+    if (!searchQuery) return true;
+    
+    const query = searchQuery.toLowerCase();
+    return (
+      (user?.name?.toLowerCase() || '').includes(query) ||
+      (user?.email?.toLowerCase() || '').includes(query)
+    );
+  });
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

@@ -16,10 +16,11 @@ export const useUsers = () => {
       
       try {
         const allUsers = await userService.getAllUsers();
-        setUsers(allUsers);
+        setUsers(allUsers || []); // Ensure we always have an array
       } catch (err) {
         console.error('Error loading users:', err);
         setError('Error al cargar usuarios');
+        setUsers([]); // Set empty array on error
       } finally {
         setIsLoading(false);
       }

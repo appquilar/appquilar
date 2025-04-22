@@ -26,12 +26,17 @@ const UserManagement = () => {
     return <AccessRestricted />;
   }
   
-  // Filter users based on search query
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter users based on search query, adding null checks for each property
+  const filteredUsers = users.filter(user => {
+    if (!searchQuery) return true;
+    
+    const query = searchQuery.toLowerCase();
+    return (
+      (user?.name?.toLowerCase() || '').includes(query) ||
+      (user?.email?.toLowerCase() || '').includes(query) ||
+      (user?.role?.toLowerCase() || '').includes(query)
+    );
+  });
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
