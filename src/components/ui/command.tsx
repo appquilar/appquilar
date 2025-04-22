@@ -81,12 +81,12 @@ const CommandEmpty = React.forwardRef<
 
 CommandEmpty.displayName = CommandPrimitive.Empty.displayName
 
-// Improved CommandGroup component that safely handles undefined or null children
+// Fixed CommandGroup component that safely handles undefined children
 const CommandGroup = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Group>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group>
 >(({ className, children, ...props }, ref) => {
-  // Make sure children is always defined and valid before rendering
+  // Ensure children is always an array of valid React elements
   const safeChildren = React.Children.toArray(children).filter(Boolean);
   
   // Only render if there are valid children
