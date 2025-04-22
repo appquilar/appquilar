@@ -90,7 +90,7 @@ const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   "home": Fa.FaHome,
   "lamp": Fa.FaLightbulb,
   "clock": Fa.FaClock,
-  "mirror": Md.MdMirror,
+  "mirror": Md.MdOutlineMonitor, // Fixed: Replaced MdMirror with MdOutlineMonitor
   "carpet": Md.MdCarpenter,
   "curtains": Md.MdCurtains,
 
