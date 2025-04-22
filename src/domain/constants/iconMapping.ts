@@ -1,3 +1,4 @@
+
 import * as Bi from 'react-icons/bi';
 import * as Fa from 'react-icons/fa';
 import * as Hi from 'react-icons/hi';
@@ -13,7 +14,7 @@ import {
   Film,
   Monitor,
   Tv,
-  Desktop,
+  // Desktop, // Removed - not exported
   Laptop,
   Phone,
   Tablet,
@@ -42,11 +43,11 @@ import {
   Bus,
   Train,
   Plane,
-  Bicycle,
-  Tools,
+  // Bicycle, // Removed - not exported
+  // Tools, // Removed - not exported
   Settings,
   Wrench,
-  Screwdriver,
+  // Screwdriver, // Removed - not exported
   Scissors,
   PenTool,
   Brush,
@@ -56,8 +57,8 @@ import {
   Sidebar,
   Layers,
   Filter,
-  Magic,
-  Wand,
+  // Magic, // Removed - not exported
+  // Wand, // Removed - not exported 
   Star,
   Heart,
   Trophy,
@@ -74,7 +75,7 @@ import {
   ChartLine,
   ChartPie,
   Activity,
-  Pulse,
+  // Pulse, // Removed - not exported
   Thermometer,
   Droplet,
   Database,
@@ -82,7 +83,7 @@ import {
   Terminal,
   Code,
   Cpu,
-  Chip,
+  // Chip, // Removed - not exported
   Battery,
   Plug,
   Wifi,
@@ -95,7 +96,7 @@ import {
   Send,
   Share,
   Link,
-  LinkUnlink,
+  // LinkUnlink, // Removed - not exported
   Paperclip,
   Hash,
   List,
@@ -115,7 +116,7 @@ import {
   Maximize,
   Minimize,
   Expand,
-  Shrink,
+  // Shrink, // Removed - not exported
   ArrowUp,
   ArrowDown,
   ArrowLeft,
@@ -131,7 +132,7 @@ import {
   AlertCircle,
   AlertTriangle,
   AlertOctagon,
-  Help,
+  // Help, // Removed - not exported
   Eye,
   EyeOff,
   Lock,
@@ -301,7 +302,6 @@ export const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   'lucide-film': Film,
   'lucide-monitor': Monitor,
   'lucide-tv': Tv,
-  'lucide-desktop': Desktop,
   'lucide-laptop': Laptop,
   'lucide-phone': Phone,
   'lucide-tablet': Tablet,
@@ -336,13 +336,10 @@ export const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   'lucide-bus': Bus,
   'lucide-train': Train,
   'lucide-plane': Plane,
-  'lucide-bicycle': Bicycle,
 
   // Tools & Settings
-  'lucide-tools': Tools,
   'lucide-settings': Settings,
   'lucide-wrench': Wrench,
-  'lucide-screwdriver': Screwdriver,
   'lucide-scissors': Scissors,
   'lucide-pen-tool': PenTool,
   'lucide-brush': Brush,
@@ -354,8 +351,6 @@ export const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   'lucide-sidebar': Sidebar,
   'lucide-layers': Layers,
   'lucide-filter': Filter,
-  'lucide-magic': Magic,
-  'lucide-wand': Wand,
 
   // Common Elements
   'lucide-star': Star,
@@ -378,7 +373,6 @@ export const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   'lucide-chart-line': ChartLine,
   'lucide-chart-pie': ChartPie,
   'lucide-activity': Activity,
-  'lucide-pulse': Pulse,
 
   // Hardware & Devices
   'lucide-thermometer': Thermometer,
@@ -388,7 +382,6 @@ export const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   'lucide-terminal': Terminal,
   'lucide-code': Code,
   'lucide-cpu': Cpu,
-  'lucide-chip': Chip,
   'lucide-battery': Battery,
   'lucide-plug': Plug,
   'lucide-wifi': Wifi,
@@ -403,7 +396,6 @@ export const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   'lucide-send': Send,
   'lucide-share': Share,
   'lucide-link': Link,
-  'lucide-unlink': LinkUnlink,
   'lucide-paperclip': Paperclip,
   'lucide-hash': Hash,
 
@@ -427,7 +419,6 @@ export const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   'lucide-maximize': Maximize,
   'lucide-minimize': Minimize,
   'lucide-expand': Expand,
-  'lucide-shrink': Shrink,
 
   // Navigation Arrows
   'lucide-arrow-up': ArrowUp,
@@ -449,7 +440,6 @@ export const ICONS_MAP: Record<string, React.ComponentType<any>> = {
   'lucide-alert-circle': AlertCircle,
   'lucide-alert-triangle': AlertTriangle,
   'lucide-alert-octagon': AlertOctagon,
-  'lucide-help': Help,
 
   // Security & Access
   'lucide-eye': Eye,
