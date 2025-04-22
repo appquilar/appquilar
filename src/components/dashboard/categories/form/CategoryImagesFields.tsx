@@ -10,17 +10,18 @@ interface CategoryImagesFieldsProps {
 
 const CategoryImagesFields = ({ form }: CategoryImagesFieldsProps) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       <FormField
         control={form.control}
         name="headerImageUrl"
         render={({ field }) => (
-          <FormItem>
+          <FormItem className="w-full">
             <FormLabel>Imagen de cabecera</FormLabel>
             <FormControl>
               <CategoryImageUpload
                 value={field.value}
                 onChange={field.onChange}
+                className="w-full"
               />
             </FormControl>
             <FormMessage />
@@ -32,12 +33,13 @@ const CategoryImagesFields = ({ form }: CategoryImagesFieldsProps) => {
         control={form.control}
         name="featuredImageUrl"
         render={({ field }) => (
-          <FormItem>
+          <FormItem className="w-full">
             <FormLabel>Imagen destacada</FormLabel>
             <FormControl>
               <CategoryImageUpload
                 value={field.value}
                 onChange={field.onChange}
+                className="w-full"
               />
             </FormControl>
             <FormMessage />

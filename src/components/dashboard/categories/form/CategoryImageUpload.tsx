@@ -4,13 +4,15 @@ import { ImageFile } from '../../forms/image-upload/types';
 import ImageDropZone from '../../forms/image-upload/ImageDropZone';
 import { validateAndProcessFiles } from '../../forms/image-upload/imageUtils';
 import ImagePreview from '../../forms/image-upload/ImagePreview';
+import { cn } from '@/lib/utils';
 
 interface CategoryImageUploadProps {
   value: string | null;
   onChange: (value: string | null) => void;
+  className?: string;
 }
 
-const CategoryImageUpload = ({ value, onChange }: CategoryImageUploadProps) => {
+const CategoryImageUpload = ({ value, onChange, className }: CategoryImageUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ImageFile | null>(
     value ? {
@@ -57,9 +59,9 @@ const CategoryImageUpload = ({ value, onChange }: CategoryImageUploadProps) => {
   };
 
   return (
-    <div className="w-full max-w-[400px]">
+    <div className={cn("w-full max-w-full", className)}>
       {selectedImage ? (
-        <div className="relative w-full max-w-[400px] h-[225px] border rounded-md overflow-hidden">
+        <div className="relative w-full h-[225px] border rounded-md overflow-hidden">
           <ImagePreview
             image={selectedImage}
             onRemove={handleRemoveImage}
@@ -67,7 +69,7 @@ const CategoryImageUpload = ({ value, onChange }: CategoryImageUploadProps) => {
           />
         </div>
       ) : (
-        <div className="w-full max-w-[400px]">
+        <div className="w-full">
           <ImageDropZone
             isDragging={isDragging}
             onDragOver={handleDragOver}
