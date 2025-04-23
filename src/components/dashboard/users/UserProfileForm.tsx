@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -7,8 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { useUserProfileForm } from './hooks/useUserProfileForm';
 import { CompanyUser } from '@/domain/models/CompanyUser';
-
-const ProductImagesField = React.lazy(() => import('@/components/dashboard/forms/ProductImagesField'));
+import ProfileImageUpload from './ProfileImageUpload';
 
 export const UserProfileForm = ({ 
   user, 
@@ -41,18 +39,16 @@ export const UserProfileForm = ({
           control={profileForm.control}
           name="images"
           render={({ field }) => (
-            <React.Suspense fallback={<div className="h-40 bg-muted/20 flex items-center justify-center rounded-md">Cargando...</div>}>
-              <FormItem>
-                <FormLabel>Imagen de perfil</FormLabel>
-                <div className="flex justify-center">
-                  <div className="w-40 h-40 rounded-full overflow-hidden">
-                    <ProductImagesField 
-                      control={profileForm.control as any}
-                    />
-                  </div>
-                </div>
-              </FormItem>
-            </React.Suspense>
+            <FormItem>
+              <FormLabel>Imagen de perfil</FormLabel>
+              <div className="flex justify-center">
+                <ProfileImageUpload
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              </div>
+              <FormMessage />
+            </FormItem>
           )}
         />
 
