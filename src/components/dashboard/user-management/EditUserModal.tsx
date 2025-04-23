@@ -15,7 +15,7 @@ interface EditUserModalProps {
 
 const EditUserModal = ({ user, isOpen, onClose, onSave }: EditUserModalProps) => {
   const [name, setName] = useState(user?.name || '');
-  const [role, setRole] = useState(user?.role || 'company_user');
+  const [role, setRole] = useState<CompanyUser['role']>(user?.role || 'company_user');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,9 +23,17 @@ const EditUserModal = ({ user, isOpen, onClose, onSave }: EditUserModalProps) =>
     
     onSave(user.id, {
       name,
-      role: role as CompanyUser['role']
+      role
     });
     onClose();
+  };
+
+  // Type-safe handler for role selection
+  const handleRoleChange = (value: string) => {
+    // Validate that the value is a valid role before setting it
+    if (value === 'company_user' || value === 'company_admin') {
+      setRole(value);
+    }
   };
 
   return (
@@ -48,7 +56,7 @@ const EditUserModal = ({ user, isOpen, onClose, onSave }: EditUserModalProps) =>
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Rol</label>
-            <Select value={role} onValueChange={setRole}>
+            <Select value={role} onValueChange={handleRoleChange}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
