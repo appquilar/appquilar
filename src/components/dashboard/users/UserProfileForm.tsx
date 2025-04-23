@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -44,10 +45,9 @@ export const UserProfileForm = ({
               <FormItem>
                 <FormLabel>Imagen de perfil</FormLabel>
                 <div className="flex justify-center">
-                  <div className="w-40 h-40">
+                  <div className="w-40 h-40 rounded-full overflow-hidden">
                     <ProductImagesField 
-                      control={profileForm.control as any} 
-                      className="rounded-full overflow-hidden" 
+                      control={profileForm.control as any}
                     />
                   </div>
                 </div>
