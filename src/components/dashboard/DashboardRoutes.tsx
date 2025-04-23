@@ -1,9 +1,9 @@
-
 import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardOverview from './overview/DashboardOverview';
 import ProductsManagement from '@/components/dashboard/ProductsManagement';
 import ProductFormPage from './products/ProductFormPage';
 import UserManagement from '@/components/dashboard/UserManagement';
+import EditUserPage from '@/pages/dashboard/users/EditUser';
 import MessagesDashboard from './MessagesDashboard';
 import RentalsPage from '@/pages/dashboard/rentals/RentalsPage';
 import CompanyManagement from './companies/CompanyManagement';
@@ -53,6 +53,7 @@ const DashboardRoutes = () => {
       
       {/* Users */}
       <Route path="users" element={<UserManagement />} />
+      <Route path="users/:userId" element={<EditUserPage />} />
       
       {/* Messages */}
       <Route path="messages" element={<MessagesDashboard />} />

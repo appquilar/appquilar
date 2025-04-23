@@ -1,5 +1,5 @@
-
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useUsers } from '@/application/hooks/useUsers';
 import UserManagementHeader from './user-management/UserManagementHeader';
@@ -7,22 +7,18 @@ import UserSearchForm from './user-management/UserSearchForm';
 import UserTable from './user-management/UserTable';
 import ResultsCount from './user-management/ResultsCount';
 import AccessRestricted from './user-management/AccessRestricted';
-import EditUserModal from './user-management/EditUserModal';
 import InviteUserModal from './user-management/InviteUserModal';
-import { CompanyUser } from '@/domain/models/CompanyUser';
 import { toast } from 'sonner';
 
 const UserManagement = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUser, setSelectedUser] = useState<CompanyUser | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const {
     users,
     isLoading,
     error,
-    handleEditUser,
     handleDeleteUser,
     handleInviteUser
   } = useUsers();
@@ -44,11 +40,7 @@ const UserManagement = () => {
   });
 
   const onEditUser = (userId: string) => {
-    const userToEdit = users.find(u => u.id === userId);
-    if (userToEdit) {
-      setSelectedUser(userToEdit);
-      setIsEditModalOpen(true);
-    }
+    navigate(`/dashboard/users/${userId}`);
   };
 
   const handleInviteSubmit = async (email: string, message: string) => {
@@ -65,10 +57,6 @@ const UserManagement = () => {
     }
   };
   
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-  };
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -92,7 +80,7 @@ const UserManagement = () => {
       <UserSearchForm 
         searchQuery={searchQuery}
         onSearchChange={(e) => setSearchQuery(e.target.value)}
-        onSubmit={handleSearch}
+        onSubmit={(e) => e.preventDefault()}
       />
       
       <UserTable 
@@ -102,16 +90,6 @@ const UserManagement = () => {
       />
       
       <ResultsCount filteredUsers={filteredUsers} />
-
-      <EditUserModal
-        user={selectedUser}
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedUser(null);
-        }}
-        onSave={handleEditUser}
-      />
 
       <InviteUserModal
         isOpen={isInviteModalOpen}
