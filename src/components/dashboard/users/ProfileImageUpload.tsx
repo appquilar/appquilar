@@ -1,9 +1,9 @@
-
 import { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { ImageFile } from '@/components/dashboard/forms/image-upload/types';
 import { validateAndProcessFiles } from '@/components/dashboard/forms/image-upload/imageUtils';
 import ImagePreview from '@/components/dashboard/forms/image-upload/ImagePreview';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ProfileImageUploadProps {
   value: ImageFile[] | undefined;
@@ -12,8 +12,10 @@ interface ProfileImageUploadProps {
 
 const ProfileImageUpload = ({ value, onChange }: ProfileImageUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
+  const isMobile = useIsMobile();
   
   const currentImage = value?.[0];
+  const size = isMobile ? 'w-32 h-32' : 'w-40 h-40';
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -53,7 +55,7 @@ const ProfileImageUpload = ({ value, onChange }: ProfileImageUploadProps) => {
   };
 
   return (
-    <div className="w-40 h-40">
+    <div className={size}>
       {currentImage ? (
         <ImagePreview
           image={currentImage}
@@ -70,7 +72,7 @@ const ProfileImageUpload = ({ value, onChange }: ProfileImageUploadProps) => {
           onDrop={handleDrop}
           onClick={() => document.getElementById('profile-image-input')?.click()}
         >
-          <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+          <Upload className={`${isMobile ? 'h-6 w-6' : 'h-8 w-8'} text-muted-foreground mb-2`} />
           <span className="text-sm text-muted-foreground text-center px-2">
             Subir foto
           </span>

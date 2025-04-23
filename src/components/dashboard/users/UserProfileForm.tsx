@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useUserProfileForm } from './hooks/useUserProfileForm';
 import { CompanyUser } from '@/domain/models/CompanyUser';
 import ProfileImageUpload from './ProfileImageUpload';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const UserProfileForm = ({ 
   user, 
@@ -18,6 +20,7 @@ export const UserProfileForm = ({
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { profileForm, companies } = useUserProfileForm(user);
+  const isMobile = useIsMobile();
 
   const handleSubmit = async (data) => {
     setIsSubmitting(true);
@@ -34,13 +37,13 @@ export const UserProfileForm = ({
 
   return (
     <Form {...profileForm}>
-      <form onSubmit={profileForm.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={profileForm.handleSubmit(handleSubmit)} className="space-y-4 md:space-y-6">
         <FormField
           control={profileForm.control}
           name="images"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Imagen de perfil</FormLabel>
+              <FormLabel className="text-center block">Imagen de perfil</FormLabel>
               <div className="flex justify-center">
                 <ProfileImageUpload
                   value={field.value}
@@ -52,7 +55,7 @@ export const UserProfileForm = ({
           )}
         />
 
-        <div className="grid gap-4">
+        <div className="grid gap-3 md:gap-4">
           <FormField
             control={profileForm.control}
             name="name"
@@ -60,7 +63,7 @@ export const UserProfileForm = ({
               <FormItem>
                 <FormLabel>Nombre</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Nombre del usuario" />
+                  <Input {...field} placeholder="Nombre del usuario" className="h-11 md:h-10" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -74,7 +77,7 @@ export const UserProfileForm = ({
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input {...field} type="email" placeholder="Email del usuario" />
+                  <Input {...field} type="email" placeholder="Email del usuario" className="h-11 md:h-10" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -89,7 +92,7 @@ export const UserProfileForm = ({
                 <FormLabel>Rol</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11 md:h-10">
                       <SelectValue placeholder="Selecciona un rol" />
                     </SelectTrigger>
                   </FormControl>
@@ -112,7 +115,7 @@ export const UserProfileForm = ({
                   <FormLabel>Empresa</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11 md:h-10">
                         <SelectValue placeholder="Selecciona una empresa" />
                       </SelectTrigger>
                     </FormControl>
@@ -131,16 +134,21 @@ export const UserProfileForm = ({
           )}
         </div>
 
-        <div className="flex justify-end space-x-4">
+        <div className={`flex ${isMobile ? 'flex-col' : 'justify-end'} gap-3 mt-6`}>
           <Button 
             type="button" 
             variant="outline" 
             onClick={() => navigate('/dashboard/users')}
             disabled={isSubmitting}
+            className={`h-11 md:h-10 ${isMobile ? 'w-full' : ''}`}
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button 
+            type="submit" 
+            disabled={isSubmitting}
+            className={`h-11 md:h-10 ${isMobile ? 'w-full' : ''}`}
+          >
             {isSubmitting ? 'Guardando...' : 'Guardar cambios'}
           </Button>
         </div>
