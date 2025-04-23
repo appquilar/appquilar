@@ -36,8 +36,8 @@ const CompanyManagement = () => {
     navigate('/dashboard/companies/new');
   };
 
-  const handleEditCompany = (companyId: string) => {
-    navigate(`/dashboard/companies/edit/${companyId}`);
+  const handleEditCompany = (company: Company) => {
+    navigate(`/dashboard/companies/${company.id}`);
   };
 
   const handleManageUsers = (companyId: string) => {
@@ -85,7 +85,7 @@ const CompanyManagement = () => {
     {
       label: 'Editar',
       icon: <Edit size={16} />,
-      onClick: (company: Company) => handleEditCompany(company.id)
+      onClick: (company: Company) => handleEditCompany(company)
     }
   ];
 

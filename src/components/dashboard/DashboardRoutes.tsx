@@ -39,8 +39,8 @@ const DashboardRoutes = () => {
       <Route path="companies" element={<CompanyManagement />} />
       <Route path="companies/new" element={<CompanyFormPage />} />
       <Route path="companies/:id" element={<CompanyFormPage />} />
-      <Route path="companies/:id/products" element={<CompanyProductsPage />} />
-      <Route path="companies/:id/users" element={<CompanyUsersPage />} />
+      <Route path="companies/:companyId/products" element={<CompanyProductsPage />} />
+      <Route path="companies/:companyId/users" element={<CompanyUsersPage />} />
       
       {/* Categories */}
       <Route path="categories" element={<CategoryManagement />} />
