@@ -7,11 +7,17 @@ import UserSearchForm from './user-management/UserSearchForm';
 import UserTable from './user-management/UserTable';
 import ResultsCount from './user-management/ResultsCount';
 import AccessRestricted from './user-management/AccessRestricted';
+import EditUserModal from './user-management/EditUserModal';
+import InviteUserModal from './user-management/InviteUserModal';
 import { CompanyUser } from '@/domain/models/CompanyUser';
+import { toast } from 'sonner';
 
 const UserManagement = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUser, setSelectedUser] = useState<CompanyUser | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const {
     users,
     isLoading,
@@ -21,12 +27,11 @@ const UserManagement = () => {
     handleInviteUser
   } = useUsers();
   
-  // Check if the current user is a company admin
   if (user?.role !== 'company_admin') {
     return <AccessRestricted />;
   }
   
-  // Filter users based on search query, adding null checks for each property
+  // Filter users based on search query
   const filteredUsers = users.filter(user => {
     if (!searchQuery) return true;
     
@@ -37,31 +42,33 @@ const UserManagement = () => {
       (user?.role?.toLowerCase() || '').includes(query)
     );
   });
+
+  const onEditUser = (userId: string) => {
+    const userToEdit = users.find(u => u.id === userId);
+    if (userToEdit) {
+      setSelectedUser(userToEdit);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleInviteSubmit = async (email: string, message: string) => {
+    try {
+      await handleInviteUser({
+        email,
+        role: 'company_user',
+        status: 'invited',
+        companyId: '1'
+      });
+      toast.success('Invitación enviada correctamente');
+    } catch (error) {
+      toast.error('Error al enviar la invitación');
+    }
+  };
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // This is handled by the filter above, no need for API call
   };
 
-  const onInviteUser = () => {
-    // This would open a modal in a real app
-    const newUserData: Partial<CompanyUser> = {
-      email: 'newuser@example.com',
-      role: 'company_user',
-      status: 'invited',
-      companyId: '1'
-    };
-    handleInviteUser(newUserData);
-  };
-
-  const onEditUser = (userId: string) => {
-    // This would open a modal in a real app with the user's data
-    const userData: Partial<CompanyUser> = {
-      name: `Updated Name ${Date.now()}`
-    };
-    handleEditUser(userId, userData);
-  };
-  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -80,7 +87,7 @@ const UserManagement = () => {
   
   return (
     <div className="space-y-6 max-w-full">
-      <UserManagementHeader onInvite={onInviteUser} />
+      <UserManagementHeader onInvite={() => setIsInviteModalOpen(true)} />
       
       <UserSearchForm 
         searchQuery={searchQuery}
@@ -95,6 +102,22 @@ const UserManagement = () => {
       />
       
       <ResultsCount filteredUsers={filteredUsers} />
+
+      <EditUserModal
+        user={selectedUser}
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedUser(null);
+        }}
+        onSave={handleEditUser}
+      />
+
+      <InviteUserModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        onInvite={handleInviteSubmit}
+      />
     </div>
   );
 };
