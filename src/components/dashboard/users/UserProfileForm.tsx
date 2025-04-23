@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -42,7 +41,17 @@ export const UserProfileForm = ({
           name="images"
           render={({ field }) => (
             <React.Suspense fallback={<div className="h-40 bg-muted/20 flex items-center justify-center rounded-md">Cargando...</div>}>
-              <ProductImagesField control={profileForm.control as any} />
+              <FormItem>
+                <FormLabel>Imagen de perfil</FormLabel>
+                <div className="flex justify-center">
+                  <div className="w-40 h-40">
+                    <ProductImagesField 
+                      control={profileForm.control as any} 
+                      className="rounded-full overflow-hidden" 
+                    />
+                  </div>
+                </div>
+              </FormItem>
             </React.Suspense>
           )}
         />
