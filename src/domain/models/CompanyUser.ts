@@ -1,3 +1,4 @@
+
 /**
  * Company user model representing a user with access to company features
  */
