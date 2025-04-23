@@ -3,8 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { CompanyUser } from '@/domain/models/CompanyUser';
-import { useEffect, useState } from 'react';
-import { ImageFile } from '@/components/dashboard/forms/image-upload/types';
+import { useEffect } from 'react';
 import { useCompanies } from '@/application/hooks/useCompanies';
 
 // Define schema outside of the hook to avoid recreation on each render
@@ -20,19 +19,26 @@ export type UserProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export const useUserProfileForm = (user: CompanyUser | undefined) => {
   const { companies } = useCompanies();
-  const [profileImage, setProfileImage] = useState<ImageFile[]>([]);
 
   const profileForm = useForm<UserProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      role: 'company_user',
-      companyId: undefined,
-      images: [],
+      name: user?.name || '',
+      email: user?.email || '',
+      role: user?.role || 'company_user',
+      companyId: user?.companyId,
+      images: user?.imageUrl ? [
+        {
+          id: 'profile-image',
+          url: user.imageUrl,
+          file: null,
+          isPrimary: true
+        }
+      ] : [],
     }
   });
 
+  // Update form values when user data changes
   useEffect(() => {
     if (user) {
       profileForm.reset({
@@ -40,16 +46,15 @@ export const useUserProfileForm = (user: CompanyUser | undefined) => {
         email: user.email,
         role: user.role,
         companyId: user.companyId,
+        images: user.imageUrl ? [
+          {
+            id: 'profile-image',
+            url: user.imageUrl,
+            file: null,
+            isPrimary: true
+          }
+        ] : [],
       });
-
-      if (user.imageUrl) {
-        setProfileImage([{
-          id: 'profile-image',
-          url: user.imageUrl,
-          file: null,
-          isPrimary: true
-        }]);
-      }
     }
   }, [user, profileForm]);
 
@@ -65,7 +70,5 @@ export const useUserProfileForm = (user: CompanyUser | undefined) => {
     profileForm,
     getInitials,
     companies,
-    profileImage,
-    setProfileImage
   };
 };

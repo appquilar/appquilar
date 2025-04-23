@@ -5,34 +5,32 @@ import { useUsers } from '@/application/hooks/useUsers';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import FormHeader from '@/components/dashboard/common/FormHeader';
-import { useState } from 'react';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { useUserProfileForm, UserProfileFormValues } from '@/components/dashboard/users/hooks/useUserProfileForm';
-import { Control } from 'react-hook-form';
-
-const UserImageField = ({ control }: { control: Control<UserProfileFormValues> }) => {
-  const ProductImagesField = React.lazy(() => import('@/components/dashboard/forms/ProductImagesField'));
-  
-  return (
-    <React.Suspense fallback={<div>Loading...</div>}>
-      <ProductImagesField control={control as any} />
-    </React.Suspense>
-  );
-};
+import { UserProfileForm } from '@/components/dashboard/users/UserProfileForm';
 
 const EditUserPage = () => {
   const { userId } = useParams();
-  const { users, handleEditUser } = useUsers();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { users, handleEditUser, isLoading } = useUsers();
   const navigate = useNavigate();
   
+  // Find the user once, without any conditional logic that might affect hook order
   const user = users.find(u => u.id === userId);
-  
-  const { profileForm, getInitials, companies, profileImage, setProfileImage } = useUserProfileForm(user);
 
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-6 space-y-8 max-w-3xl">
+        <FormHeader title="Editar Usuario" backUrl="/dashboard/users" />
+        <Card>
+          <CardContent className="p-6 flex justify-center items-center min-h-[200px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Handle user not found
   if (!user) {
     return (
       <div className="container mx-auto py-6 space-y-8 max-w-3xl">
@@ -54,19 +52,12 @@ const EditUserPage = () => {
     );
   }
 
-  const onSubmit = async (data: UserProfileFormValues) => {
-    setIsSubmitting(true);
+  const onSubmit = async (formData) => {
     try {
-      const imageUrl = data.images?.[0]?.url || user.imageUrl;
-      await handleEditUser(user.id, {
-        ...data,
-        imageUrl,
-      });
+      await handleEditUser(user.id, formData);
       toast.success('Usuario actualizado correctamente');
     } catch (error) {
       toast.error('Error al actualizar el usuario');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -80,110 +71,7 @@ const EditUserPage = () => {
           <CardDescription>Actualiza la información personal del usuario</CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...profileForm}>
-            <form onSubmit={profileForm.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={profileForm.control}
-                name="images"
-                render={({ field }) => (
-                  <UserImageField control={profileForm.control} />
-                )}
-              />
-
-              <div className="grid gap-4">
-                <FormField
-                  control={profileForm.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nombre</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Nombre del usuario" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={profileForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="email" placeholder="Email del usuario" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={profileForm.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rol</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecciona un rol" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="company_user">Usuario</SelectItem>
-                          <SelectItem value="company_admin">Administrador</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {!user.companyId && (
-                  <FormField
-                    control={profileForm.control}
-                    name="companyId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Empresa</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona una empresa" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {companies.map((company) => (
-                              <SelectItem key={company.id} value={company.id}>
-                                {company.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </div>
-
-              <div className="flex justify-end space-x-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => navigate('/dashboard/users')}
-                  disabled={isSubmitting}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Guardando...' : 'Guardar cambios'}
-                </Button>
-              </div>
-            </form>
-          </Form>
+          <UserProfileForm user={user} onSubmit={onSubmit} />
         </CardContent>
       </Card>
     </div>
