@@ -7,7 +7,8 @@ import { useEffect, useState } from 'react';
 import { ImageFile } from '@/components/dashboard/forms/image-upload/types';
 import { useCompanies } from '@/application/hooks/useCompanies';
 
-const profileFormSchema = z.object({
+// Define schema outside of the hook to avoid recreation on each render
+export const profileFormSchema = z.object({
   name: z.string().min(2, { message: 'El nombre debe tener al menos 2 caracteres' }),
   email: z.string().email({ message: 'El email debe ser válido' }),
   role: z.enum(['company_user', 'company_admin'] as const),
@@ -15,17 +16,19 @@ const profileFormSchema = z.object({
   images: z.array(z.any()).optional(),
 });
 
-export const useUserProfileForm = (user: CompanyUser) => {
+export type UserProfileFormValues = z.infer<typeof profileFormSchema>;
+
+export const useUserProfileForm = (user: CompanyUser | undefined) => {
   const { companies } = useCompanies();
   const [profileImage, setProfileImage] = useState<ImageFile[]>([]);
 
-  const profileForm = useForm({
+  const profileForm = useForm<UserProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: user?.name || '',
-      email: user?.email || '',
-      role: user?.role || 'company_user',
-      companyId: user?.companyId || undefined,
+      name: '',
+      email: '',
+      role: 'company_user',
+      companyId: undefined,
       images: [],
     }
   });
@@ -48,7 +51,7 @@ export const useUserProfileForm = (user: CompanyUser) => {
         }]);
       }
     }
-  }, [user]);
+  }, [user, profileForm]);
 
   const getInitials = (name: string) => {
     return name

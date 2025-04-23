@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useUsers } from '@/application/hooks/useUsers';
 import { toast } from 'sonner';
@@ -9,8 +9,18 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { useUserProfileForm } from '@/components/dashboard/users/hooks/useUserProfileForm';
-import ProductImagesField from '@/components/dashboard/forms/ProductImagesField';
+import { useUserProfileForm, UserProfileFormValues } from '@/components/dashboard/users/hooks/useUserProfileForm';
+import { Control } from 'react-hook-form';
+
+const UserImageField = ({ control }: { control: Control<UserProfileFormValues> }) => {
+  const ProductImagesField = React.lazy(() => import('@/components/dashboard/forms/ProductImagesField'));
+  
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <ProductImagesField control={control as any} />
+    </React.Suspense>
+  );
+};
 
 const EditUserPage = () => {
   const { userId } = useParams();
@@ -19,14 +29,31 @@ const EditUserPage = () => {
   const navigate = useNavigate();
   
   const user = users.find(u => u.id === userId);
-
-  if (!user) {
-    return <div className="p-4">Usuario no encontrado</div>;
-  }
-
+  
   const { profileForm, getInitials, companies, profileImage, setProfileImage } = useUserProfileForm(user);
 
-  const onSubmit = async (data: any) => {
+  if (!user) {
+    return (
+      <div className="container mx-auto py-6 space-y-8 max-w-3xl">
+        <FormHeader title="Editar Usuario" backUrl="/dashboard/users" />
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center py-8">
+              <p className="text-lg font-medium text-muted-foreground">Usuario no encontrado</p>
+              <Button 
+                onClick={() => navigate('/dashboard/users')} 
+                className="mt-4"
+              >
+                Volver a la lista de usuarios
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const onSubmit = async (data: UserProfileFormValues) => {
     setIsSubmitting(true);
     try {
       const imageUrl = data.images?.[0]?.url || user.imageUrl;
@@ -58,7 +85,7 @@ const EditUserPage = () => {
                 control={profileForm.control}
                 name="images"
                 render={({ field }) => (
-                  <ProductImagesField control={profileForm.control} />
+                  <UserImageField control={profileForm.control} />
                 )}
               />
 
