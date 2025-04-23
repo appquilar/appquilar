@@ -1,4 +1,3 @@
-
 /**
  * Company user model representing a user with access to company features
  */
@@ -10,6 +9,7 @@ export interface CompanyUser {
   status: 'pending' | 'accepted' | 'expired' | 'active' | 'invited' | 'deactivated';
   dateAdded: string;
   companyId: string;
+  imageUrl?: string;
 }
 
 /**
