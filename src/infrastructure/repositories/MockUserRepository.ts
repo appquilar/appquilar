@@ -1,56 +1,57 @@
 
-import { CompanyUser } from '@/domain/models/CompanyUser';
-import { UserRepository } from '@/domain/repositories/UserRepository';
-import { MOCK_USERS } from '@/infrastructure/services/mockData/companyUserMockData';
+import { CompanyUser, UserInvitationFormData } from '@/domain/models/CompanyUser';
+import { IUserRepository } from '@/domain/repositories/UserRepository';
+import { v4 as uuidv4 } from 'uuid';
+import { MOCK_COMPANY_USERS } from '@/components/dashboard/companies/data/mockCompanyUsers';
 
-/**
- * Mock implementation of the UserRepository interface
- */
-export class MockUserRepository implements UserRepository {
-  private users: CompanyUser[] = [...MOCK_USERS];
+export class MockUserRepository implements IUserRepository {
+  private users: CompanyUser[] = [...MOCK_COMPANY_USERS];
 
   async getAllUsers(): Promise<CompanyUser[]> {
-    return Promise.resolve([...this.users]);
+    return [...this.users];
   }
 
   async getUserById(id: string): Promise<CompanyUser | null> {
-    const user = this.users.find(user => user.id === id);
-    return Promise.resolve(user || null);
+    const user = this.users.find(u => u.id === id);
+    return user ? { ...user } : null;
   }
 
   async getUsersByCompanyId(companyId: string): Promise<CompanyUser[]> {
-    const filtered = this.users.filter(user => user.companyId === companyId);
-    return Promise.resolve(filtered);
+    return this.users.filter(user => user.companyId === companyId);
   }
 
-  async createUser(userData: Partial<CompanyUser>): Promise<CompanyUser> {
-    const newUser = {
-      id: `user-${Date.now()}`,
-      ...userData
-    } as CompanyUser;
+  async createUser(userData: UserInvitationFormData): Promise<CompanyUser> {
+    const newUser: CompanyUser = {
+      id: uuidv4(),
+      name: '',
+      email: userData.email,
+      role: userData.role,
+      status: 'invited',
+      dateAdded: new Date().toISOString(),
+      companyId: userData.companyId
+    };
     
     this.users.push(newUser);
-    return Promise.resolve(newUser);
+    return { ...newUser };
   }
 
   async updateUser(id: string, userData: Partial<CompanyUser>): Promise<CompanyUser> {
     const index = this.users.findIndex(user => user.id === id);
     if (index === -1) {
-      throw new Error(`User with id ${id} not found`);
+      throw new Error('User not found');
     }
-    
-    const updatedUser = {
+
+    this.users[index] = {
       ...this.users[index],
       ...userData
     };
-    
-    this.users[index] = updatedUser;
-    return Promise.resolve(updatedUser);
+
+    return { ...this.users[index] };
   }
 
   async deleteUser(id: string): Promise<boolean> {
     const initialLength = this.users.length;
     this.users = this.users.filter(user => user.id !== id);
-    return Promise.resolve(this.users.length !== initialLength);
+    return this.users.length !== initialLength;
   }
 }

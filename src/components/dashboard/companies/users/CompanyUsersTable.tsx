@@ -90,9 +90,11 @@ export const CompanyUsersTable = ({ users, onUsersChange }: CompanyUsersTablePro
                       className="h-8 w-8 p-0 text-green-500"
                       onClick={async () => {
                         try {
-                          await userService.updateUser(user.id, { status: 'active' as any });
+                          const updatedUser = await userService.updateUser(user.id, { 
+                            status: 'active' as CompanyUser['status']
+                          });
                           const updatedUsers = users.map(u => 
-                            u.id === user.id ? {...u, status: 'active' as const} : u
+                            u.id === user.id ? updatedUser : u
                           );
                           onUsersChange(updatedUsers);
                           toast.success('Usuario aceptado correctamente');
