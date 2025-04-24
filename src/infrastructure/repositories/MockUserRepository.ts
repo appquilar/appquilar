@@ -2,10 +2,10 @@
 import { CompanyUser, UserInvitationFormData } from '@/domain/models/CompanyUser';
 import { IUserRepository } from '@/domain/repositories/UserRepository';
 import { v4 as uuidv4 } from 'uuid';
-import { MOCK_COMPANY_USERS } from '@/components/dashboard/companies/data/mockCompanyUsers';
+import { MOCK_USERS } from '../services/mockData/userMockData';
 
 export class MockUserRepository implements IUserRepository {
-  private users: CompanyUser[] = [...MOCK_COMPANY_USERS];
+  private users: CompanyUser[] = [...MOCK_USERS];
 
   async getAllUsers(): Promise<CompanyUser[]> {
     return [...this.users];

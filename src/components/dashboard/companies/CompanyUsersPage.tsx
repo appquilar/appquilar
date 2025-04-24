@@ -53,11 +53,7 @@ const CompanyUsersPage = () => {
 
   const handleSendInvite = async (data: UserInvitationFormData) => {
     try {
-      const newUser = await userService.createUser({
-        ...data,
-        status: 'invited',
-        dateAdded: new Date().toISOString(),
-      });
+      const newUser = await userService.createUser(data);
       
       setUsers(prev => [...prev, newUser]);
       setInviteDialogOpen(false);

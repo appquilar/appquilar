@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { CompanyUser } from '@/domain/models/CompanyUser';
+import { CompanyUser, UserInvitationFormData } from '@/domain/models/CompanyUser';
 import { UserService } from '@/application/services/UserService';
 
 export const useUsers = () => {
@@ -53,7 +53,7 @@ export const useUsers = () => {
     }
   };
 
-  const handleInviteUser = async (userData: Partial<CompanyUser>) => {
+  const handleInviteUser = async (userData: UserInvitationFormData): Promise<CompanyUser> => {
     try {
       const newUser = await userService.createUser(userData);
       setUsers(prev => [...prev, newUser]);
