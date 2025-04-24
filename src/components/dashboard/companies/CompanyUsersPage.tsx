@@ -10,24 +10,27 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import FormHeader from '../common/FormHeader';
 import { useForm } from 'react-hook-form';
 import { Company } from '@/domain/models/Company';
 import { CompanyUser, UserInvitationFormData } from '@/domain/models/CompanyUser';
 import { MOCK_COMPANIES } from './data/mockCompanies';
-import { MOCK_COMPANY_USERS } from './data/mockCompanyUsers';
+import { UserService } from '@/application/services/UserService';
 
 const statusColors = {
+  'active': 'bg-green-100 text-green-800',
   'pending': 'bg-yellow-100 text-yellow-800',
-  'accepted': 'bg-green-100 text-green-800',
-  'expired': 'bg-red-100 text-red-800'
+  'invited': 'bg-blue-100 text-blue-800',
+  'deactivated': 'bg-red-100 text-red-800'
 };
 
 const statusLabels = {
+  'active': 'Activo',
   'pending': 'Pendiente',
-  'accepted': 'Aceptado',
-  'expired': 'Expirado'
+  'invited': 'Invitado',
+  'deactivated': 'Desactivado'
 };
 
 const CompanyUsersPage = () => {
@@ -37,6 +40,7 @@ const CompanyUsersPage = () => {
   const [users, setUsers] = useState<CompanyUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const userService = UserService.getInstance();
 
   const inviteForm = useForm<UserInvitationFormData>({
     defaultValues: {
@@ -52,43 +56,45 @@ const CompanyUsersPage = () => {
       return;
     }
 
-    setIsLoading(true);
-    
-    // Simulate API calls
-    setTimeout(() => {
-      const foundCompany = MOCK_COMPANIES.find(c => c.id === companyId);
-      if (!foundCompany) {
-        navigate('/dashboard/companies');
-        return;
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const foundCompany = MOCK_COMPANIES.find(c => c.id === companyId);
+        if (!foundCompany) {
+          navigate('/dashboard/companies');
+          return;
+        }
+        setCompany(foundCompany);
+        
+        const companyUsers = await userService.getUsersByCompanyId(companyId);
+        setUsers(companyUsers);
+      } catch (error) {
+        console.error('Error loading company users:', error);
+        toast.error('Error al cargar los usuarios');
+      } finally {
+        setIsLoading(false);
       }
-      
-      setCompany(foundCompany);
-      const companyUsers = MOCK_COMPANY_USERS.filter(user => user.companyId === companyId);
-      setUsers(companyUsers);
-      setIsLoading(false);
-    }, 300);
+    };
+
+    loadData();
   }, [companyId, navigate]);
 
-  const handleSendInvite = (data: UserInvitationFormData) => {
-    // In a real app, this would send an invitation via API
-    console.log('Sending invitation:', data);
-    
-    // Create a mock user to add to the list
-    const newUser: CompanyUser = {
-      id: `new-${Date.now()}`,
-      name: '',
-      email: data.email,
-      role: data.role,
-      status: 'pending',
-      dateAdded: new Date().toISOString(),
-      companyId: companyId || ''
-    };
-    
-    setUsers([...users, newUser]);
-    setInviteDialogOpen(false);
-    inviteForm.reset();
-    
-    toast.success('Invitación enviada correctamente');
+  const handleSendInvite = async (data: UserInvitationFormData) => {
+    try {
+      const newUser = await userService.createUser({
+        ...data,
+        status: 'invited',
+        dateAdded: new Date().toISOString(),
+      });
+      
+      setUsers(prev => [...prev, newUser]);
+      setInviteDialogOpen(false);
+      inviteForm.reset();
+      toast.success('Invitación enviada correctamente');
+    } catch (error) {
+      console.error('Error sending invitation:', error);
+      toast.error('Error al enviar la invitación');
+    }
   };
 
   if (isLoading) {
@@ -130,18 +136,26 @@ const CompanyUsersPage = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nombre</TableHead>
+                <TableHead>Usuario</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Rol</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead>Fecha</TableHead>
+                <TableHead>Fecha de alta</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell>{user.name || 'Pendiente'}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarImage src={user.imageUrl} />
+                        <AvatarFallback>{user.name?.charAt(0) || user.email.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">{user.name || 'Pendiente'}</span>
+                    </div>
+                  </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
                     {user.role === 'company_admin' ? 'Administrador' : 'Usuario'}
@@ -152,7 +166,7 @@ const CompanyUsersPage = () => {
                     </span>
                   </TableCell>
                   <TableCell>
-                    {new Date(user.dateAdded).toLocaleDateString()}
+                    {new Date(user.dateAdded).toLocaleDateString('es-ES')}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -161,12 +175,16 @@ const CompanyUsersPage = () => {
                           variant="outline"
                           size="sm"
                           className="h-8 w-8 p-0 text-green-500"
-                          onClick={() => {
-                            const updatedUsers = users.map(u => 
-                              u.id === user.id ? {...u, status: 'accepted' as const} : u
-                            );
-                            setUsers(updatedUsers);
-                            toast.success('Usuario aceptado correctamente');
+                          onClick={async () => {
+                            try {
+                              await userService.updateUser(user.id, { status: 'active' });
+                              setUsers(users.map(u => 
+                                u.id === user.id ? {...u, status: 'active'} : u
+                              ));
+                              toast.success('Usuario aceptado correctamente');
+                            } catch (error) {
+                              toast.error('Error al aceptar el usuario');
+                            }
                           }}
                         >
                           <Check size={16} />
@@ -253,3 +271,4 @@ const CompanyUsersPage = () => {
 };
 
 export default CompanyUsersPage;
+
