@@ -1,3 +1,4 @@
+
 import { Edit, UserMinus, Check } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
@@ -130,7 +131,7 @@ export const CompanyUsersTable = ({ users, onUsersChange }: CompanyUsersTablePro
                       variant="outline"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => navigate(`/dashboard/companies/users/${user.id}/edit`)}
+                      onClick={() => navigate(`/dashboard/users/${user.id}`)}
                     >
                       <Edit size={16} />
                       <span className="sr-only">Editar</span>
