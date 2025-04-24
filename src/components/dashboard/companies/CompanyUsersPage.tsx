@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Mail } from 'lucide-react';
@@ -7,7 +6,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import FormHeader from '../common/FormHeader';
 import { Company } from '@/domain/models/Company';
-import { CompanyUser, UserInvitationFormData } from '@/domain/models/CompanyUser';
+import { CompanyUser } from '@/domain/models/CompanyUser';
 import { MOCK_COMPANIES } from './data/mockCompanies';
 import { UserService } from '@/application/services/UserService';
 import { CompanyUsersTable } from './users/CompanyUsersTable';
@@ -51,9 +50,13 @@ const CompanyUsersPage = () => {
     loadData();
   }, [companyId, navigate]);
 
-  const handleSendInvite = async (data: UserInvitationFormData) => {
+  const handleSendInvite = async (data: { email: string; message: string }) => {
     try {
-      const newUser = await userService.createUser(data);
+      const newUser = await userService.createUser({
+        email: data.email,
+        role: 'company_user',
+        companyId: companyId || ''
+      });
       
       setUsers(prev => [...prev, newUser]);
       setInviteDialogOpen(false);
