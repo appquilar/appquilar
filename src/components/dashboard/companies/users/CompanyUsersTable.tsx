@@ -11,14 +11,18 @@ const statusColors = {
   'active': 'bg-green-100 text-green-800',
   'pending': 'bg-yellow-100 text-yellow-800',
   'invited': 'bg-blue-100 text-blue-800',
-  'deactivated': 'bg-red-100 text-red-800'
+  'deactivated': 'bg-red-100 text-red-800',
+  'accepted': 'bg-green-100 text-green-800',
+  'expired': 'bg-gray-100 text-gray-800'
 };
 
 const statusLabels = {
   'active': 'Activo',
   'pending': 'Pendiente',
   'invited': 'Invitado',
-  'deactivated': 'Desactivado'
+  'deactivated': 'Desactivado',
+  'accepted': 'Aceptado',
+  'expired': 'Expirado'
 };
 
 interface CompanyUsersTableProps {
@@ -86,9 +90,9 @@ export const CompanyUsersTable = ({ users, onUsersChange }: CompanyUsersTablePro
                       className="h-8 w-8 p-0 text-green-500"
                       onClick={async () => {
                         try {
-                          await userService.updateUser(user.id, { status: 'active' });
+                          await userService.updateUser(user.id, { status: 'active' as any });
                           const updatedUsers = users.map(u => 
-                            u.id === user.id ? {...u, status: 'active'} : u
+                            u.id === user.id ? {...u, status: 'active' as const} : u
                           );
                           onUsersChange(updatedUsers);
                           toast.success('Usuario aceptado correctamente');
