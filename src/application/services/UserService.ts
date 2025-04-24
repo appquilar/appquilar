@@ -42,4 +42,11 @@ export class UserService {
   async deleteUser(id: string): Promise<boolean> {
     return this.repository.deleteUser(id);
   }
+
+  async removeUserFromCompany(userId: string): Promise<boolean> {
+    const user = await this.repository.getUserById(userId);
+    if (!user) return false;
+
+    return this.repository.updateUser(userId, { companyId: '' }).then(() => true);
+  }
 }

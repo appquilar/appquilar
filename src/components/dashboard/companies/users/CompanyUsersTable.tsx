@@ -1,11 +1,11 @@
-
-import { Edit, Check } from 'lucide-react';
+import { Edit, UserMinus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CompanyUser } from '@/domain/models/CompanyUser';
 import { toast } from 'sonner';
 import { UserService } from '@/application/services/UserService';
+import { useNavigate } from 'react-router-dom';
 
 const statusColors = {
   'active': 'bg-green-100 text-green-800',
@@ -32,6 +32,20 @@ interface CompanyUsersTableProps {
 
 export const CompanyUsersTable = ({ users, onUsersChange }: CompanyUsersTableProps) => {
   const userService = UserService.getInstance();
+  const navigate = useNavigate();
+
+  const handleRemoveFromCompany = async (userId: string) => {
+    try {
+      const success = await userService.removeUserFromCompany(userId);
+      if (success) {
+        const updatedUsers = users.filter(u => u.id !== userId);
+        onUsersChange(updatedUsers);
+        toast.success('Usuario removido de la empresa');
+      }
+    } catch (error) {
+      toast.error('Error al remover el usuario de la empresa');
+    }
+  };
 
   if (users.length === 0) {
     return (
@@ -111,9 +125,19 @@ export const CompanyUsersTable = ({ users, onUsersChange }: CompanyUsersTablePro
                     variant="outline"
                     size="sm"
                     className="h-8 w-8 p-0"
+                    onClick={() => navigate(`/dashboard/users/${user.id}/edit`)}
                   >
                     <Edit size={16} />
                     <span className="sr-only">Editar</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                    onClick={() => handleRemoveFromCompany(user.id)}
+                  >
+                    <UserMinus size={16} />
+                    <span className="sr-only">Remover de la empresa</span>
                   </Button>
                 </div>
               </TableCell>
