@@ -1,4 +1,5 @@
-import { Edit, UserMinus } from 'lucide-react';
+
+import { Edit, UserMinus, Check } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
