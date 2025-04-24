@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Mail } from 'lucide-react';
@@ -50,12 +51,12 @@ const CompanyUsersPage = () => {
     loadData();
   }, [companyId, navigate]);
 
-  const handleSendInvite = async (data: { email: string; message: string }) => {
+  const handleSendInvite = async (data: { email: string; role: string; companyId: string; message?: string }) => {
     try {
       const newUser = await userService.createUser({
         email: data.email,
-        role: 'company_user',
-        companyId: companyId || ''
+        role: data.role as 'company_admin' | 'company_user',
+        companyId: data.companyId
       });
       
       setUsers(prev => [...prev, newUser]);

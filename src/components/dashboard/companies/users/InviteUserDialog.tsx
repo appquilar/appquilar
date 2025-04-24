@@ -6,20 +6,26 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { UserInvitationFormData } from '@/domain/models/CompanyUser';
 import { useForm } from 'react-hook-form';
+import { Textarea } from '@/components/ui/textarea';
+
+interface InviteUserFormData extends UserInvitationFormData {
+  message?: string;
+}
 
 interface InviteUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: UserInvitationFormData) => Promise<void>;
+  onSubmit: (data: InviteUserFormData) => Promise<void>;
   companyId: string;
 }
 
 export const InviteUserDialog = ({ open, onOpenChange, onSubmit, companyId }: InviteUserDialogProps) => {
-  const form = useForm<UserInvitationFormData>({
+  const form = useForm<InviteUserFormData>({
     defaultValues: {
       email: '',
       role: 'company_user',
-      companyId: companyId
+      companyId: companyId,
+      message: ''
     }
   });
 
@@ -66,6 +72,24 @@ export const InviteUserDialog = ({ open, onOpenChange, onSubmit, companyId }: In
                       <SelectItem value="company_user">Usuario</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="message"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mensaje personalizado (opcional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Escribe un mensaje personalizado para el usuario..." 
+                      className="min-h-[100px]"
+                      {...field} 
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
