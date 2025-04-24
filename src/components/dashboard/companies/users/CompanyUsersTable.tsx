@@ -1,4 +1,3 @@
-
 import { Edit, UserMinus, Check } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,8 @@ import { CompanyUser } from '@/domain/models/CompanyUser';
 import { toast } from 'sonner';
 import { UserService } from '@/application/services/UserService';
 import { useNavigate } from 'react-router-dom';
+import RemoveUserConfirmationModal from './RemoveUserConfirmationModal';
+import { useState } from 'react';
 
 const statusColors = {
   'active': 'bg-green-100 text-green-800',
@@ -34,6 +35,7 @@ interface CompanyUsersTableProps {
 export const CompanyUsersTable = ({ users, onUsersChange }: CompanyUsersTableProps) => {
   const userService = UserService.getInstance();
   const navigate = useNavigate();
+  const [userToRemove, setUserToRemove] = useState<CompanyUser | null>(null);
 
   const handleRemoveFromCompany = async (userId: string) => {
     try {
@@ -46,6 +48,7 @@ export const CompanyUsersTable = ({ users, onUsersChange }: CompanyUsersTablePro
     } catch (error) {
       toast.error('Error al remover el usuario de la empresa');
     }
+    setUserToRemove(null);
   };
 
   if (users.length === 0) {
@@ -60,92 +63,101 @@ export const CompanyUsersTable = ({ users, onUsersChange }: CompanyUsersTablePro
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Usuario</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Rol</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead>Fecha de alta</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage src={user.imageUrl} />
-                    <AvatarFallback>{user.name?.charAt(0) || user.email.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium">{user.name || 'Pendiente'}</span>
-                </div>
-              </TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>
-                {user.role === 'company_admin' ? 'Administrador' : 'Usuario'}
-              </TableCell>
-              <TableCell>
-                <span className={`inline-block px-2 py-1 text-xs rounded-full ${statusColors[user.status]}`}>
-                  {statusLabels[user.status]}
-                </span>
-              </TableCell>
-              <TableCell>
-                {new Date(user.dateAdded).toLocaleDateString('es-ES')}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  {user.status === 'pending' && (
+    <>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Usuario</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Rol</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Fecha de alta</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={user.imageUrl} />
+                      <AvatarFallback>{user.name?.charAt(0) || user.email.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">{user.name || 'Pendiente'}</span>
+                  </div>
+                </TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  {user.role === 'company_admin' ? 'Administrador' : 'Usuario'}
+                </TableCell>
+                <TableCell>
+                  <span className={`inline-block px-2 py-1 text-xs rounded-full ${statusColors[user.status]}`}>
+                    {statusLabels[user.status]}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  {new Date(user.dateAdded).toLocaleDateString('es-ES')}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    {user.status === 'pending' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-green-500"
+                        onClick={async () => {
+                          try {
+                            const updatedUser = await userService.updateUser(user.id, { 
+                              status: 'active' as CompanyUser['status']
+                            });
+                            const updatedUsers = users.map(u => 
+                              u.id === user.id ? updatedUser : u
+                            );
+                            onUsersChange(updatedUsers);
+                            toast.success('Usuario aceptado correctamente');
+                          } catch (error) {
+                            toast.error('Error al aceptar el usuario');
+                          }
+                        }}
+                      >
+                        <Check size={16} />
+                        <span className="sr-only">Aceptar</span>
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-8 w-8 p-0 text-green-500"
-                      onClick={async () => {
-                        try {
-                          const updatedUser = await userService.updateUser(user.id, { 
-                            status: 'active' as CompanyUser['status']
-                          });
-                          const updatedUsers = users.map(u => 
-                            u.id === user.id ? updatedUser : u
-                          );
-                          onUsersChange(updatedUsers);
-                          toast.success('Usuario aceptado correctamente');
-                        } catch (error) {
-                          toast.error('Error al aceptar el usuario');
-                        }
-                      }}
+                      className="h-8 w-8 p-0"
+                      onClick={() => navigate(`/dashboard/companies/users/${user.id}/edit`)}
                     >
-                      <Check size={16} />
-                      <span className="sr-only">Aceptar</span>
+                      <Edit size={16} />
+                      <span className="sr-only">Editar</span>
                     </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => navigate(`/dashboard/users/${user.id}/edit`)}
-                  >
-                    <Edit size={16} />
-                    <span className="sr-only">Editar</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                    onClick={() => handleRemoveFromCompany(user.id)}
-                  >
-                    <UserMinus size={16} />
-                    <span className="sr-only">Remover de la empresa</span>
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      onClick={() => setUserToRemove(user)}
+                    >
+                      <UserMinus size={16} />
+                      <span className="sr-only">Remover de la empresa</span>
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <RemoveUserConfirmationModal
+        isOpen={!!userToRemove}
+        onClose={() => setUserToRemove(null)}
+        onConfirm={() => userToRemove && handleRemoveFromCompany(userToRemove.id)}
+        userName={userToRemove?.name || userToRemove?.email || ''}
+      />
+    </>
   );
 };
