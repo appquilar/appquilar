@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -48,7 +49,6 @@ const UserManagement = () => {
       await handleInviteUser({
         email,
         role: 'company_user',
-        status: 'invited',
         companyId: '1'
       });
       toast.success('Invitación enviada correctamente');
