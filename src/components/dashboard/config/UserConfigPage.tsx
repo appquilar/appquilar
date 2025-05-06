@@ -17,8 +17,6 @@ const UserConfigPage: React.FC = () => {
     notifications,
     theme,
     language,
-    isDrawerOpen,
-    setIsDrawerOpen,
     profileForm,
     passwordForm,
     onProfileSubmit,
@@ -79,8 +77,6 @@ const UserConfigPage: React.FC = () => {
         <MobileConfigLayout
           activeTab={activeTab}
           title={getActiveTabTitle()}
-          isDrawerOpen={isDrawerOpen}
-          setIsDrawerOpen={setIsDrawerOpen}
           handleTabChange={handleTabChange}
         >
           {renderTabContent()}
