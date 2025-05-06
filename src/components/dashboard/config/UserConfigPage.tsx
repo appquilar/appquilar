@@ -13,7 +13,17 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { UserPlus, Lock, Bell, Globe, Palette } from 'lucide-react';
+import { UserPlus, Lock, Bell, Globe, Palette, Settings2 } from 'lucide-react';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Schema para validación de formulario de perfil
 const profileFormSchema = z.object({
@@ -38,6 +48,8 @@ const UserConfigPage = () => {
   const [notifications, setNotifications] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('light');
   const [language, setLanguage] = useState<'es' | 'en'>('es');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const isMobile = useIsMobile();
   
   // Form para perfil
   const profileForm = useForm({
@@ -99,21 +111,27 @@ const UserConfigPage = () => {
       .toUpperCase();
   };
 
-  return (
-    <div className="container mx-auto py-6 space-y-8 max-w-5xl">
-      <div>
-        <h1 className="text-2xl font-display font-semibold">Configuración</h1>
-        <p className="text-muted-foreground">Gestiona tus preferencias y datos personales</p>
-      </div>
+  // Obtener título según el tab activo
+  const getActiveTabTitle = () => {
+    switch (activeTab) {
+      case 'profile': return 'Perfil';
+      case 'password': return 'Contraseña';
+      case 'notifications': return 'Notificaciones';
+      case 'appearance': return 'Apariencia';
+      default: return 'Perfil';
+    }
+  };
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-4 md:w-[400px]">
-          <TabsTrigger value="profile">Perfil</TabsTrigger>
-          <TabsTrigger value="password">Contraseña</TabsTrigger>
-          <TabsTrigger value="notifications">Notificaciones</TabsTrigger>
-          <TabsTrigger value="appearance">Apariencia</TabsTrigger>
-        </TabsList>
+  // Cambiar tab y cerrar drawer en móvil
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setIsDrawerOpen(false);
+  };
 
+  // Renderiza el contenido del tab
+  const renderTabContent = () => {
+    return (
+      <>
         {/* Perfil */}
         <TabsContent value="profile" className="space-y-6">
           <Card>
@@ -343,7 +361,94 @@ const UserConfigPage = () => {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+      </>
+    );
+  };
+
+  // Renderizado para escritorio
+  const renderDesktopLayout = () => (
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <TabsList className="grid grid-cols-4 md:w-[400px]">
+        <TabsTrigger value="profile">Perfil</TabsTrigger>
+        <TabsTrigger value="password">Contraseña</TabsTrigger>
+        <TabsTrigger value="notifications">Notificaciones</TabsTrigger>
+        <TabsTrigger value="appearance">Apariencia</TabsTrigger>
+      </TabsList>
+
+      {renderTabContent()}
+    </Tabs>
+  );
+
+  // Renderizado para móvil
+  const renderMobileLayout = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">{getActiveTabTitle()}</h2>
+        
+        <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+          <DrawerTrigger asChild>
+            <Button variant="outline" size="icon">
+              <Settings2 size={18} />
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent className="px-4">
+            <DrawerHeader className="text-left p-4">
+              <DrawerTitle>Configuración</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-4">
+              <div className="flex flex-col space-y-1 w-full">
+                <Button 
+                  variant={activeTab === 'profile' ? 'default' : 'ghost'}
+                  className="justify-start w-full"
+                  onClick={() => handleTabChange('profile')}
+                >
+                  Perfil
+                </Button>
+                <Button 
+                  variant={activeTab === 'password' ? 'default' : 'ghost'}
+                  className="justify-start w-full"
+                  onClick={() => handleTabChange('password')}
+                >
+                  Contraseña
+                </Button>
+                <Button 
+                  variant={activeTab === 'notifications' ? 'default' : 'ghost'}
+                  className="justify-start w-full"
+                  onClick={() => handleTabChange('notifications')}
+                >
+                  Notificaciones
+                </Button>
+                <Button 
+                  variant={activeTab === 'appearance' ? 'default' : 'ghost'}
+                  className="justify-start w-full"
+                  onClick={() => handleTabChange('appearance')}
+                >
+                  Apariencia
+                </Button>
+              </div>
+            </div>
+            <DrawerFooter className="pt-0">
+              <DrawerClose asChild>
+                <Button variant="outline">Cerrar</Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      </div>
+      
+      {/* Contenido del tab seleccionado */}
+      {renderTabContent()}
+    </div>
+  );
+
+  return (
+    <div className="container mx-auto py-6 space-y-8 max-w-5xl">
+      <div>
+        <h1 className="text-2xl font-display font-semibold">Configuración</h1>
+        <p className="text-muted-foreground">Gestiona tus preferencias y datos personales</p>
+      </div>
+
+      {isMobile ? renderMobileLayout() : renderDesktopLayout()}
     </div>
   );
 };
