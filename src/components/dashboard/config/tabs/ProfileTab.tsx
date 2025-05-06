@@ -32,7 +32,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profileForm, onProfileSubmit, g
             <div className="flex flex-col md:flex-row gap-8 items-start">
               <div className="flex flex-col items-center space-y-2">
                 <Avatar className="w-24 h-24">
-                  <AvatarImage src={profileForm.watch('profileImage')} />
+                  <AvatarImage src={profileForm.watch('profileImage') || ''} />
                   <AvatarFallback className="text-xl">
                     {getInitials(user?.name || 'Usuario')}
                   </AvatarFallback>
