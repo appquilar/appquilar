@@ -17,9 +17,9 @@ const MobileConfigLayout: React.FC<MobileConfigLayoutProps> = ({
 }) => {
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end">
-        <Select value={activeTab} onValueChange={handleTabChange}>
-          <SelectTrigger className="w-[140px]">
+      <div className="flex items-center justify-center w-full">
+        <Select value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Sección" />
           </SelectTrigger>
           <SelectContent>
