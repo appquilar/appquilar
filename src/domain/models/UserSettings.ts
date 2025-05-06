@@ -3,6 +3,9 @@
  * @fileoverview Modelo de dominio para la configuración del usuario
  */
 
+export type ThemeType = 'light' | 'dark' | 'system';
+export type LanguageType = 'es' | 'en';
+
 export interface UserSettings {
   id: string;
   userId: string;
@@ -10,6 +13,6 @@ export interface UserSettings {
   email: string;
   profileImage?: string;
   notificationsEnabled: boolean;
-  language: 'es' | 'en';
-  theme: 'light' | 'dark' | 'system';
+  language: LanguageType;
+  theme: ThemeType;
 }

@@ -7,7 +7,6 @@
 import { Conversation, Message } from "../../core/domain/Message";
 import { MessageRepository } from "../../core/ports/MessageRepository";
 import { MockMessageRepository } from "../adapters/MockMessageRepository";
-import { SupabaseMessageRepository } from "../adapters/SupabaseMessageRepository";
 
 /**
  * Servicio para la gestión de mensajes en la aplicación
@@ -37,16 +36,14 @@ export class ChatService {
   }
 
   /**
-   * Cambia entre el uso de datos reales (Supabase) y datos mock
-   * @param useSupabase Indica si se deben usar datos de Supabase
+   * Cambia entre el uso de datos reales y datos mock
+   * @param useSupabase Indica si se deben usar datos de Supabase (ignorado en esta implementación)
    */
   public setUseSupabase(useSupabase: boolean): void {
-    if (this.useSupabase === useSupabase) return;
-    
-    this.useSupabase = useSupabase;
-    this.messageRepository = useSupabase 
-      ? new SupabaseMessageRepository() 
-      : new MockMessageRepository();
+    // En esta implementación siempre usamos datos mock
+    console.log('Usando repositorio mock para mensajes');
+    this.useSupabase = false;
+    this.messageRepository = new MockMessageRepository();
   }
 
   /**
