@@ -1,11 +1,12 @@
-
 import { IRentalRepository } from '@/domain/repositories/IRentalRepository';
 import { IProductRepository } from '@/domain/repositories/IProductRepository';
 import { IConversationRepository } from '@/domain/repositories/IConversationRepository';
+import { IUserSettingsRepository } from '@/domain/repositories/UserSettingsRepository';
 
 import { MockRentalRepository } from './MockRentalRepository';
 import { MockProductRepository } from './MockProductRepository';
 import { MockConversationRepository } from './MockConversationRepository';
+import { MockUserSettingsRepository } from './MockUserSettingsRepository';
 
 /**
  * Factory for creating repositories with proper dependency injection
@@ -14,6 +15,7 @@ export class RepositoryFactory {
   private static rentalRepository: IRentalRepository;
   private static productRepository: IProductRepository;
   private static conversationRepository: IConversationRepository;
+  private static userSettingsRepository: IUserSettingsRepository;
 
   /**
    * Get the rental repository instance
@@ -67,5 +69,23 @@ export class RepositoryFactory {
    */
   public static setConversationRepository(repository: IConversationRepository): void {
     this.conversationRepository = repository;
+  }
+
+  /**
+   * Get the user settings repository instance
+   */
+  public static getUserSettingsRepository(): IUserSettingsRepository {
+    if (!this.userSettingsRepository) {
+      // Default to mock implementation
+      this.userSettingsRepository = new MockUserSettingsRepository();
+    }
+    return this.userSettingsRepository;
+  }
+
+  /**
+   * Set a custom user settings repository implementation
+   */
+  public static setUserSettingsRepository(repository: IUserSettingsRepository): void {
+    this.userSettingsRepository = repository;
   }
 }
