@@ -1,5 +1,5 @@
 
-import { Edit, UserMinus, Check } from 'lucide-react';
+import { Edit, UserMinus, Check, Package } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -127,6 +127,15 @@ export const CompanyUsersTable = ({ users, onUsersChange }: CompanyUsersTablePro
                         <span className="sr-only">Aceptar</span>
                       </Button>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-blue-500"
+                      onClick={() => navigate(`/dashboard/users/${user.id}/products`)}
+                    >
+                      <Package size={16} />
+                      <span className="sr-only">Ver productos</span>
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"

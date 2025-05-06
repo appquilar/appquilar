@@ -19,6 +19,7 @@ import UserConfigPage from './config/UserConfigPage';
 import UpgradePage from './upgrade/UpgradePage';
 import CreateRental from '@/pages/dashboard/rentals/CreateRental';
 import RentalDetails from '@/pages/dashboard/rentals/RentalDetails';
+import UserProductsPage from './users/UserProductsPage';
 
 const DashboardRoutes = () => {
   return (
@@ -55,6 +56,7 @@ const DashboardRoutes = () => {
       {/* Users */}
       <Route path="users" element={<UserManagement />} />
       <Route path="users/:userId" element={<EditUserPage />} />
+      <Route path="users/:userId/products" element={<UserProductsPage />} />
       
       {/* Messages */}
       <Route path="messages" element={<MessagesDashboard />} />
