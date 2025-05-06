@@ -4,10 +4,11 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfileFormValues } from '@/domain/schemas/userConfigSchema';
 import { UseFormReturn } from 'react-hook-form';
+import ProfileImageUpload from '../../users/ProfileImageUpload';
+import { ImageFile } from '@/components/dashboard/forms/image-upload/types';
 
 interface ProfileTabProps {
   profileForm: UseFormReturn<ProfileFormValues>;
@@ -17,6 +18,12 @@ interface ProfileTabProps {
 
 const ProfileTab: React.FC<ProfileTabProps> = ({ profileForm, onProfileSubmit, getInitials }) => {
   const { user } = useAuth();
+  
+  const handleImageChange = (images: ImageFile[]) => {
+    profileForm.setValue('profileImage', images.length > 0 ? images[0].url || '' : '', { 
+      shouldValidate: true 
+    });
+  };
 
   return (
     <Card>
@@ -31,15 +38,26 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profileForm, onProfileSubmit, g
           <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
             <div className="flex flex-col md:flex-row gap-8 items-start">
               <div className="flex flex-col items-center space-y-2">
-                <Avatar className="w-24 h-24">
-                  <AvatarImage src={profileForm.watch('profileImage') || ''} />
-                  <AvatarFallback className="text-xl">
-                    {getInitials(user?.name || 'Usuario')}
-                  </AvatarFallback>
-                </Avatar>
-                <Button variant="outline" size="sm" className="mt-2">
-                  Cambiar foto
-                </Button>
+                <FormField
+                  control={profileForm.control}
+                  name="profileImage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <ProfileImageUpload 
+                          value={field.value ? [{
+                            id: 'profile-image',
+                            url: field.value,
+                            file: null,
+                            isPrimary: true
+                          }] : []}
+                          onChange={handleImageChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <div className="flex-1 space-y-4">
