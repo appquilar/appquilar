@@ -18,7 +18,7 @@ export const useUserConfig = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Form para perfil
-  const profileForm = useForm({
+  const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       name: user?.name || '',
@@ -28,7 +28,7 @@ export const useUserConfig = () => {
   });
 
   // Form para contraseña
-  const passwordForm = useForm({
+  const passwordForm = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordFormSchema),
     defaultValues: {
       currentPassword: '',
