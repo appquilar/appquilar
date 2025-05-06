@@ -5,8 +5,6 @@ import { useUserConfig } from './hooks/useUserConfig';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ProfileTab from './tabs/ProfileTab';
 import PasswordTab from './tabs/PasswordTab';
-import NotificationsTab from './tabs/NotificationsTab';
-import AppearanceTab from './tabs/AppearanceTab';
 import MobileConfigLayout from './layout/MobileConfigLayout';
 import DesktopConfigLayout from './layout/DesktopConfigLayout';
 
@@ -14,16 +12,10 @@ const UserConfigPage: React.FC = () => {
   const {
     activeTab,
     setActiveTab,
-    notifications,
-    theme,
-    language,
     profileForm,
     passwordForm,
     onProfileSubmit,
     onPasswordSubmit,
-    handleNotificationsChange,
-    handleThemeChange,
-    handleLanguageChange,
     getInitials,
     getActiveTabTitle,
     handleTabChange
@@ -45,22 +37,6 @@ const UserConfigPage: React.FC = () => {
         <PasswordTab 
           passwordForm={passwordForm}
           onPasswordSubmit={onPasswordSubmit}
-        />
-      </TabsContent>
-
-      <TabsContent value="notifications" className="space-y-6">
-        <NotificationsTab
-          notifications={notifications}
-          handleNotificationsChange={handleNotificationsChange}
-        />
-      </TabsContent>
-
-      <TabsContent value="appearance" className="space-y-6">
-        <AppearanceTab
-          theme={theme}
-          language={language}
-          handleThemeChange={handleThemeChange}
-          handleLanguageChange={handleLanguageChange}
         />
       </TabsContent>
     </>
