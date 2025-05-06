@@ -1,5 +1,5 @@
 
-import { Edit } from 'lucide-react';
+import { Edit, Package2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -8,10 +8,11 @@ import { CompanyUser } from '@/domain/models/CompanyUser';
 interface UserTableProps {
   users: CompanyUser[];
   onEdit: (userId: string) => void;
-  onDelete?: (userId: string) => Promise<boolean>; // Added onDelete as optional prop
+  onDelete?: (userId: string) => Promise<boolean>;
+  onViewProducts?: (userId: string) => void;
 }
 
-const UserTable = ({ users, onEdit, onDelete }: UserTableProps) => {
+const UserTable = ({ users, onEdit, onDelete, onViewProducts }: UserTableProps) => {
   // Status badge renderer
   const renderStatusBadge = (status: CompanyUser['status']) => {
     return (
@@ -62,11 +63,23 @@ const UserTable = ({ users, onEdit, onDelete }: UserTableProps) => {
                 <TableCell>{user.dateAdded}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
+                    {onViewProducts && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => onViewProducts(user.id)}
+                        title="Ver productos"
+                      >
+                        <Package2 size={16} />
+                        <span className="sr-only">Ver productos</span>
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => onEdit(user.id)}
                       disabled={user.id === '1'} // Can't edit the owner
+                      title="Editar usuario"
                     >
                       <Edit size={16} />
                       <span className="sr-only">Editar</span>

@@ -44,6 +44,10 @@ const UserManagement = () => {
     navigate(`/dashboard/users/${userId}`);
   };
 
+  const onViewUserProducts = (userId: string) => {
+    navigate(`/dashboard/users/${userId}/products`);
+  };
+
   const handleInviteSubmit = async (email: string, message: string) => {
     try {
       await handleInviteUser({
@@ -87,6 +91,7 @@ const UserManagement = () => {
         users={filteredUsers}
         onEdit={onEditUser}
         onDelete={handleDeleteUser}
+        onViewProducts={onViewUserProducts}
       />
       
       <ResultsCount filteredUsers={filteredUsers} />
