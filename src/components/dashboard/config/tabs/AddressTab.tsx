@@ -3,9 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AddressFormValues } from '@/domain/schemas/userConfigSchema';
 import { UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
+import { MapPin } from 'lucide-react';
 
 interface AddressTabProps {
   addressForm: UseFormReturn<AddressFormValues>;
@@ -16,6 +18,9 @@ const AddressTab: React.FC<AddressTabProps> = ({ addressForm, onAddressSubmit })
   const streetInputRef = useRef<HTMLInputElement>(null);
   const [isLoadingMaps, setIsLoadingMaps] = useState(false);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  
+  const formValues = addressForm.watch();
+  const isAddressEmpty = !formValues.street && !formValues.city && !formValues.country;
 
   useEffect(() => {
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -121,16 +126,26 @@ const AddressTab: React.FC<AddressTabProps> = ({ addressForm, onAddressSubmit })
   }, [addressForm]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Dirección</CardTitle>
-        <CardDescription>
-          Configura tu dirección. Usa el autocompletado para encontrar tu ubicación
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...addressForm}>
-          <form onSubmit={addressForm.handleSubmit(onAddressSubmit)} className="space-y-4">
+    <>
+      {isAddressEmpty && (
+        <Alert className="mb-6">
+          <MapPin className="h-4 w-4" />
+          <AlertDescription>
+            No tienes una dirección registrada. Añade tu dirección para mejorar tu experiencia.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Dirección</CardTitle>
+          <CardDescription>
+            Configura tu dirección. Usa el autocompletado para encontrar tu ubicación
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...addressForm}>
+            <form onSubmit={addressForm.handleSubmit(onAddressSubmit)} className="space-y-4">
             <FormField
               control={addressForm.control}
               name="street"
@@ -237,6 +252,7 @@ const AddressTab: React.FC<AddressTabProps> = ({ addressForm, onAddressSubmit })
         </Form>
       </CardContent>
     </Card>
+    </>
   );
 };
 
