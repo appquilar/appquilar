@@ -26,6 +26,7 @@ const MobileConfigLayout: React.FC<MobileConfigLayoutProps> = ({
             <SelectContent>
               <SelectItem value="profile">Perfil</SelectItem>
               <SelectItem value="password">Contraseña</SelectItem>
+              <SelectItem value="address">Dirección</SelectItem>
             </SelectContent>
           </Select>
         </div>

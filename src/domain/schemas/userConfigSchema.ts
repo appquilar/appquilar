@@ -18,5 +18,18 @@ export const passwordFormSchema = z.object({
   path: ["confirmPassword"],
 });
 
+// Schema para validación de formulario de dirección
+export const addressFormSchema = z.object({
+  street: z.string().min(1, { message: 'La calle es requerida' }),
+  street2: z.string().optional(),
+  city: z.string().min(1, { message: 'La ciudad es requerida' }),
+  state: z.string().min(1, { message: 'El estado/provincia es requerido' }),
+  country: z.string().min(1, { message: 'El país es requerido' }),
+  postalCode: z.string().min(1, { message: 'El código postal es requerido' }),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+});
+
 export type ProfileFormValues = z.infer<typeof profileFormSchema>;
 export type PasswordFormValues = z.infer<typeof passwordFormSchema>;
+export type AddressFormValues = z.infer<typeof addressFormSchema>;

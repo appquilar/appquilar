@@ -4,7 +4,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
-import { profileFormSchema, passwordFormSchema, ProfileFormValues, PasswordFormValues } from '@/domain/schemas/userConfigSchema';
+import { 
+  profileFormSchema, 
+  passwordFormSchema, 
+  addressFormSchema,
+  ProfileFormValues, 
+  PasswordFormValues,
+  AddressFormValues 
+} from '@/domain/schemas/userConfigSchema';
 
 export const useUserConfig = () => {
   const { user } = useAuth();
@@ -31,6 +38,21 @@ export const useUserConfig = () => {
     },
   });
 
+  // Form para dirección
+  const addressForm = useForm<AddressFormValues>({
+    resolver: zodResolver(addressFormSchema),
+    defaultValues: {
+      street: '',
+      street2: '',
+      city: '',
+      state: '',
+      country: '',
+      postalCode: '',
+      latitude: undefined,
+      longitude: undefined,
+    },
+  });
+
   // Manejar envío de formulario de perfil
   const onProfileSubmit = (data: ProfileFormValues) => {
     toast.success('Perfil actualizado correctamente');
@@ -42,6 +64,12 @@ export const useUserConfig = () => {
     toast.success('Contraseña actualizada correctamente');
     console.log('Password data:', data);
     passwordForm.reset();
+  };
+
+  // Manejar envío de formulario de dirección
+  const onAddressSubmit = (data: AddressFormValues) => {
+    toast.success('Dirección guardada correctamente');
+    console.log('Address data:', data);
   };
 
   // Obtener iniciales para avatar
@@ -58,6 +86,7 @@ export const useUserConfig = () => {
     switch (activeTab) {
       case 'profile': return 'Perfil';
       case 'password': return 'Contraseña';
+      case 'address': return 'Dirección';
       default: return 'Perfil';
     }
   };
@@ -75,8 +104,10 @@ export const useUserConfig = () => {
     setIsDrawerOpen,
     profileForm,
     passwordForm,
+    addressForm,
     onProfileSubmit,
     onPasswordSubmit,
+    onAddressSubmit,
     getInitials,
     getActiveTabTitle,
     handleTabChange,
