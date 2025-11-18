@@ -38,6 +38,12 @@ export class NavigationConfig {
           href: '/dashboard/messages',
           title: 'Mensajes',
           icon: MessageCircle
+        },
+        {
+          id: 'config',
+          href: '/dashboard/config',
+          title: 'Configuración',
+          icon: Settings
         }
       ]
     });
@@ -106,12 +112,6 @@ export class NavigationConfig {
             href: '/dashboard/sites',
             title: 'Sitios',
             icon: Globe
-          },
-          {
-            id: 'config',
-            href: '/dashboard/config',
-            title: 'Configuración',
-            icon: Settings
           }
         ]
       });
