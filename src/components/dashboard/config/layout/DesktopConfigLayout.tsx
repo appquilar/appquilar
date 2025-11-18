@@ -15,9 +15,10 @@ const DesktopConfigLayout: React.FC<DesktopConfigLayoutProps> = ({
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-      <TabsList className="grid grid-cols-2 md:w-[400px]">
+      <TabsList className="grid grid-cols-3 md:w-[500px]">
         <TabsTrigger value="profile">Perfil</TabsTrigger>
         <TabsTrigger value="password">Contraseña</TabsTrigger>
+        <TabsTrigger value="address">Dirección</TabsTrigger>
       </TabsList>
 
       {children}

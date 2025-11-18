@@ -6,6 +6,17 @@
 export type ThemeType = 'light' | 'dark' | 'system';
 export type LanguageType = 'es' | 'en';
 
+export interface Address {
+  street: string;
+  street2?: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+  latitude?: number;
+  longitude?: number;
+}
+
 export interface UserSettings {
   id: string;
   userId: string;
@@ -15,4 +26,5 @@ export interface UserSettings {
   notificationsEnabled: boolean;
   language: LanguageType;
   theme: ThemeType;
+  address?: Address;
 }
