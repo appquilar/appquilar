@@ -18,8 +18,11 @@ export class MockProductRepository implements ProductRepository {
       thumbnailUrl: "/images/products/taladro-1-thumb.jpg",
       price: {
         daily: 12.99,
-        weekly: 60.99,
-        monthly: 180.99
+        tiers: [
+          { daysFrom: 1, daysTo: 6, pricePerDay: 12.99 },
+          { daysFrom: 7, daysTo: 29, pricePerDay: 10.99 },
+          { daysFrom: 30, pricePerDay: 8.99 }
+        ]
       },
       isRentable: true,
       isForSale: false,
@@ -46,9 +49,12 @@ export class MockProductRepository implements ProductRepository {
       thumbnailUrl: "/images/products/sierra-1-thumb.jpg",
       price: {
         daily: 25.99,
-        weekly: 120.99,
-        monthly: 350.99,
-        deposit: 100
+        deposit: 100,
+        tiers: [
+          { daysFrom: 1, daysTo: 6, pricePerDay: 25.99 },
+          { daysFrom: 7, daysTo: 13, pricePerDay: 22.99 },
+          { daysFrom: 14, pricePerDay: 18.99 }
+        ]
       },
       secondHand: {
         price: 299.99,

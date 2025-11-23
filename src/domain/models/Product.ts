@@ -12,10 +12,12 @@ export interface Product {
   thumbnailUrl: string;
   price: {
     daily: number;
-    weekly?: number;
-    monthly?: number;
-    hourly?: number;
     deposit?: number;
+    tiers?: {
+      daysFrom: number;
+      daysTo?: number;
+      pricePerDay: number;
+    }[];
   };
   secondHand?: {
     price: number;
@@ -52,10 +54,12 @@ export interface ProductFormData {
   thumbnailUrl: string;
   price: {
     daily: number;
-    weekly?: number;
-    monthly?: number;
-    hourly?: number;
     deposit?: number;
+    tiers?: {
+      daysFrom: number;
+      daysTo?: number;
+      pricePerDay: number;
+    }[];
   };
   secondHand?: {
     price: number;

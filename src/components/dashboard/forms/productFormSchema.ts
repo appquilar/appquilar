@@ -11,10 +11,12 @@ export const productFormSchema = z.object({
   thumbnailUrl: z.string().optional(),
   price: z.object({
     daily: z.coerce.number().default(0),
-    weekly: z.coerce.number().optional(),
-    monthly: z.coerce.number().optional(),
-    hourly: z.coerce.number().optional(),
     deposit: z.coerce.number().optional(),
+    tiers: z.array(z.object({
+      daysFrom: z.coerce.number().min(1, { message: 'Debe ser al menos 1' }),
+      daysTo: z.coerce.number().optional(),
+      pricePerDay: z.coerce.number().min(0, { message: 'El precio debe ser mayor o igual a 0' }),
+    })).optional(),
   }),
   secondHand: z.object({
     price: z.coerce.number().default(0),
@@ -48,10 +50,12 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
     thumbnailUrl: product.thumbnailUrl || '',
     price: {
       daily: product.price?.daily || 0,
-      weekly: product.price?.weekly,
-      monthly: product.price?.monthly,
-      hourly: product.price?.hourly,
       deposit: product.price?.deposit,
+      tiers: product.price?.tiers?.map(tier => ({
+        daysFrom: tier.daysFrom,
+        daysTo: tier.daysTo,
+        pricePerDay: tier.pricePerDay
+      })) || [],
     },
     secondHand: product.secondHand ? {
       price: product.secondHand.price || 0,
@@ -96,10 +100,12 @@ export const mapFormValuesToProduct = (values: ProductFormValues, originalProduc
     thumbnailUrl: values.thumbnailUrl,
     price: {
       daily: values.price.daily || 0,
-      weekly: values.price.weekly,
-      monthly: values.price.monthly,
-      hourly: values.price.hourly,
       deposit: values.price.deposit,
+      tiers: values.price.tiers?.map(tier => ({
+        daysFrom: tier.daysFrom,
+        daysTo: tier.daysTo,
+        pricePerDay: tier.pricePerDay
+      })) || [],
     },
     secondHand,
     isRentable: values.isRentable,
