@@ -25,7 +25,8 @@ export const useSiteForm = ({ siteId }: UseSiteFormProps) => {
       categoryIds: [],
       menuCategoryIds: [],
       featuredCategoryIds: [],
-      primaryColor: '#4F46E5'
+      primaryColor: '#4F46E5',
+      heroAnimatedTexts: []
     }
   });
 
@@ -52,7 +53,8 @@ export const useSiteForm = ({ siteId }: UseSiteFormProps) => {
               categoryIds: site.categoryIds,
               menuCategoryIds,
               featuredCategoryIds,
-              primaryColor: site.primaryColor
+              primaryColor: site.primaryColor,
+              heroAnimatedTexts: site.heroAnimatedTexts || []
             });
           }
         }

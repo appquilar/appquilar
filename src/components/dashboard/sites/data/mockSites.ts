@@ -13,6 +13,7 @@ export const MOCK_SITES: Site[] = [
     menuCategoryIds: ['1', '2'],
     featuredCategoryIds: ['3'],
     primaryColor: '#4F46E5',
+    heroAnimatedTexts: ['Herramientas Eléctricas', 'Equipamiento', 'Maquinaria', 'Todo lo que necesitas'],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z'
   },
@@ -27,6 +28,7 @@ export const MOCK_SITES: Site[] = [
     menuCategoryIds: ['1'],
     featuredCategoryIds: ['2'],
     primaryColor: '#F59E0B',
+    heroAnimatedTexts: ['Taladros', 'Sierras', 'Lijadoras', 'Martillos'],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z'
   },
@@ -41,6 +43,7 @@ export const MOCK_SITES: Site[] = [
     menuCategoryIds: [],
     featuredCategoryIds: ['3'],
     primaryColor: '#10B981',
+    heroAnimatedTexts: ['Cortacéspedes', 'Desbrozadoras', 'Motosierras'],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z'
   }

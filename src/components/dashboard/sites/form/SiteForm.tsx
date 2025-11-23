@@ -8,6 +8,7 @@ import SiteBasicInfoFields from './SiteBasicInfoFields';
 import SiteContentFields from './SiteContentFields';
 import SiteStyleFields from './SiteStyleFields';
 import SiteCategoriesFields from './SiteCategoriesFields';
+import SiteHeroTextsField from './SiteHeroTextsField';
 import { useSiteOperations } from '../hooks/useSiteOperations';
 
 interface SiteFormProps {
@@ -36,6 +37,8 @@ const SiteForm = ({ form, isAddMode, siteId }: SiteFormProps) => {
             <SiteStyleFields form={form} />
           </div>
         </div>
+        
+        <SiteHeroTextsField form={form} />
         
         <SiteCategoriesFields form={form} />
         
