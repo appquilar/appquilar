@@ -13,6 +13,7 @@ export interface Site {
   menuCategoryIds: string[];
   featuredCategoryIds: string[];
   primaryColor: string;
+  heroAnimatedTexts: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -30,4 +31,5 @@ export interface SiteFormData {
   menuCategoryIds: string[];
   featuredCategoryIds: string[];
   primaryColor: string;
+  heroAnimatedTexts: string[];
 }
