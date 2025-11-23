@@ -1,5 +1,5 @@
 
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DashboardNavigationProps } from './types';
 import UserProfile from './UserProfile';
@@ -7,13 +7,18 @@ import NavItem from './NavItem';
 import NavSection from './NavSection';
 import UpgradeLink from './UpgradeLink';
 import { useNavigation } from '@/hooks/useNavigation';
+import { useUserAddress } from '@/hooks/useUserAddress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { MapPin } from 'lucide-react';
 
 /**
  * Contenido principal de la navegación del panel de control
  */
 const DashboardNavigationContent = ({ activeTab, onTabChange, onNavigate }: DashboardNavigationProps) => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const { navSections, canUpgradeToCompany, isActive } = useNavigation();
+  const { hasAddress, isLoading } = useUserAddress();
 
   // Manejador de clic para cambiar pestañas
   const handleTabChange = (href: string) => {
@@ -40,6 +45,21 @@ const DashboardNavigationContent = ({ activeTab, onTabChange, onNavigate }: Dash
           ))}
         </ul>
       </nav>
+      
+      {/* Alerta de dirección vacía */}
+      {!isLoading && !hasAddress && (
+        <div className="px-2 mb-2">
+          <Alert 
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => navigate('/dashboard/config?tab=address')}
+          >
+            <MapPin className="h-4 w-4" />
+            <AlertDescription className="text-xs">
+              Añade tu dirección en Configuración
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
       
       {/* Enlace para actualizar a cuenta de empresa (justo antes del perfil) */}
       {canUpgradeToCompany && (

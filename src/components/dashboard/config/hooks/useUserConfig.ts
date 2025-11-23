@@ -1,9 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 import { 
   profileFormSchema, 
   passwordFormSchema, 
@@ -15,8 +16,17 @@ import {
 
 export const useUserConfig = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('profile');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Leer el tab de los query params al montar
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['profile', 'password', 'address'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Form para perfil
   const profileForm = useForm<ProfileFormValues>({
