@@ -46,7 +46,7 @@ const ProductSearch = ({
                 >
                   <div className="font-medium">{product.name}</div>
                   <div className="text-xs text-muted-foreground">
-                    {product.price.daily}€ diario | {product.price.weekly}€ semanal
+                    Desde {product.price.daily}€/día
                   </div>
                 </li>
               ))}

@@ -11,8 +11,11 @@ const SelectedProductDisplay = ({ product }: SelectedProductDisplayProps) => {
       <h3 className="font-medium">{product.name}</h3>
       <p className="text-sm text-muted-foreground">{product.description}</p>
       <div className="mt-2 text-sm">
-        <span className="font-medium">Precios: </span>
-        <span>{product.price.daily}€ diario | {product.price.weekly}€ semanal | {product.price.monthly}€ mensual</span>
+        <span className="font-medium">Precio: </span>
+        <span>Desde {product.price.daily}€/día</span>
+        {product.price.deposit && (
+          <span className="ml-2">| Fianza: {product.price.deposit}€</span>
+        )}
       </div>
     </div>
   );

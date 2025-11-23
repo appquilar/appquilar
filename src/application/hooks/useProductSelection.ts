@@ -19,8 +19,8 @@ export const useProductSelection = (form: UseFormReturn<RentalFormValues>) => {
   const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
     form.setValue('product', product.name);
-    // Calculate default rental price (7 days)
-    form.setValue('totalAmount', product.price.weekly);
+    // Calculate default rental price (7 days based on daily rate)
+    form.setValue('totalAmount', product.price.daily * 7);
     setProductSearch('');
   };
 
