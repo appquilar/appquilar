@@ -4,9 +4,9 @@ import { Product } from '@/domain/models/Product';
 import CompanyInfo from './CompanyInfo';
 import ProductImageGallery from './ProductImageGallery';
 import ProductInfo from './ProductInfo';
-import RentalSummary from './RentalSummary';
 import SecondHandInfo from './SecondHandInfo';
 import ProductLocationMap from './ProductLocationMap';
+import ContactModal from './ContactModal';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { ProductService } from '@/application/services/ProductService';
@@ -18,10 +18,9 @@ interface ProductPageProps {
 
 const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
   const [product, setProduct] = useState<Product | null>(null);
-  const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(null);
-  const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'rental' | 'secondhand'>('rental');
+  const [contactModalOpen, setContactModalOpen] = useState(false);
   const { isLoggedIn } = useAuth();
   const productService = ProductService.getInstance();
 
@@ -53,11 +52,6 @@ const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
     loadProduct();
   }, [productId, productService]);
 
-  const handleDateRangeSelect = (startDate: Date, endDate: Date) => {
-    setSelectedStartDate(startDate);
-    setSelectedEndDate(endDate);
-  };
-
   const handleContactRequest = () => {
     if (!isLoggedIn) {
       toast.error("Debes iniciar sesión para contactar con el propietario", {
@@ -71,8 +65,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
       return;
     }
 
-    toast.success("Solicitud de contacto enviada");
-    // Additional logic to handle contact request
+    setContactModalOpen(true);
   };
 
   if (isLoading) {
@@ -130,45 +123,13 @@ const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
             isLoggedIn={isLoggedIn}
           />
           
-          {/* Show tabs only if the product is available for both rental and second hand */}
-          {product.isRentable && product.isForSale ? (
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'rental' | 'secondhand')}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="rental">Alquiler</TabsTrigger>
-                <TabsTrigger value="secondhand">Compra</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="rental" className="space-y-6 pt-4">
-                <RentalSummary 
-                  product={product}
-                  selectedStartDate={selectedStartDate}
-                  selectedEndDate={selectedEndDate}
-                  onContactClick={handleContactRequest}
-                />
-              </TabsContent>
-              
-              <TabsContent value="secondhand" className="space-y-6 pt-4">
-                <SecondHandInfo 
-                  product={product}
-                  onContactClick={handleContactRequest}
-                />
-              </TabsContent>
-            </Tabs>
-          ) : product.isRentable ? (
-            <div className="space-y-6">
-              <RentalSummary 
-                product={product}
-                selectedStartDate={selectedStartDate}
-                selectedEndDate={selectedEndDate}
-                onContactClick={handleContactRequest}
-              />
-            </div>
-          ) : product.isForSale ? (
+          {/* Show second hand info only if product is for sale */}
+          {product.isForSale && (
             <SecondHandInfo 
               product={product}
               onContactClick={handleContactRequest}
             />
-          ) : null}
+          )}
         </div>
       </div>
       
@@ -180,6 +141,14 @@ const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
           isLoggedIn={isLoggedIn}
         />
       </div>
+      
+      {/* Contact Modal */}
+      <ContactModal
+        isOpen={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
+        productName={product.name}
+        ownerName={product.company.name}
+      />
     </div>
   );
 };
