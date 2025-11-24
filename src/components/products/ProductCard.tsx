@@ -89,32 +89,43 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
         </p>
         <p className="text-sm line-clamp-2">{product.description}</p>
       </CardContent>
-      {(onEdit || onDelete) && (
-        <CardFooter className="pt-2 pb-4 flex justify-between">
-          {onEdit && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="gap-1"
-              onClick={() => onEdit(product.id)}
-            >
-              <Edit size={14} />
-              Editar
-            </Button>
-          )}
-          {onDelete && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="gap-1 text-red-500 hover:text-red-600 hover:bg-red-50"
-              onClick={() => onDelete(product.id)}
-            >
-              <Trash size={14} />
-              Eliminar
-            </Button>
-          )}
-        </CardFooter>
-      )}
+      <CardFooter className="pt-2 pb-4 flex flex-col gap-2">
+        <Link to={`/products/${product.slug}`} className="w-full">
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="gap-1 w-full"
+          >
+            Ver producto
+          </Button>
+        </Link>
+        {(onEdit || onDelete) && (
+          <div className="flex gap-2 w-full">
+            {onEdit && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1 flex-1"
+                onClick={() => onEdit(product.id)}
+              >
+                <Edit size={14} />
+                Editar
+              </Button>
+            )}
+            {onDelete && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1 flex-1 text-red-500 hover:text-red-600 hover:bg-red-50"
+                onClick={() => onDelete(product.id)}
+              >
+                <Trash size={14} />
+                Eliminar
+              </Button>
+            )}
+          </div>
+        )}
+      </CardFooter>
     </Card>
   );
 };
