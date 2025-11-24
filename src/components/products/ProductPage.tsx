@@ -6,6 +6,7 @@ import ProductImageGallery from './ProductImageGallery';
 import ProductInfo from './ProductInfo';
 import RentalSummary from './RentalSummary';
 import SecondHandInfo from './SecondHandInfo';
+import ProductLocationMap from './ProductLocationMap';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { ProductService } from '@/application/services/ProductService';
@@ -97,17 +98,32 @@ const ProductPage: React.FC<ProductPageProps> = ({ productId }) => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Product Image Gallery - 6 columns on large screens */}
-        <div className="lg:col-span-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Product Image Gallery - 2 columns on large screens */}
+        <div className="lg:col-span-2">
           <ProductImageGallery 
-            images={[product.imageUrl]}
+            images={[product.imageUrl, product.thumbnailUrl]}
             productName={product.name} 
           />
+          
+          {/* Product description section */}
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-4">Detalles</h2>
+            <p className="text-muted-foreground">{product.description}</p>
+          </div>
+          
+          {/* Location Map */}
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-4">Ubicación</h2>
+            <ProductLocationMap 
+              location="Campohermoso (Almería)" 
+              coordinates={[-2.4637, 36.8381]}
+            />
+          </div>
         </div>
         
-        {/* Product Info - 6 columns on large screens */}
-        <div className="lg:col-span-6 space-y-8">
+        {/* Product Info Sidebar - 1 column on large screens */}
+        <div className="lg:col-span-1 space-y-6">
           <ProductInfo 
             product={product}
             onContact={handleContactRequest}

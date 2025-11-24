@@ -11,13 +11,14 @@ export class MockProductRepository implements ProductRepository {
     {
       id: "1",
       internalId: "PRD001",
-      name: "Taladro Percutor 20V",
-      slug: "taladro-percutor-20v",
-      description: "Taladro percutor de 20V con batería de litio de larga duración",
-      imageUrl: "/images/products/taladro-1.jpg",
-      thumbnailUrl: "/images/products/taladro-1-thumb.jpg",
+      name: "Taladro Percutor Profesional 20V",
+      slug: "professional-hammer-drill-20v",
+      description: "Taladro percutor de 20V con batería de litio de larga duración. Incluye maletín de transporte y accesorios. Ideal para trabajos profesionales de construcción y bricolaje. Motor sin escobillas para mayor durabilidad y eficiencia.",
+      imageUrl: "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&h=600&fit=crop",
+      thumbnailUrl: "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&h=600&fit=crop",
       price: {
         daily: 12.99,
+        deposit: 50,
         tiers: [
           { daysFrom: 1, daysTo: 6, pricePerDay: 12.99 },
           { daysFrom: 7, daysTo: 29, pricePerDay: 10.99 },
@@ -83,7 +84,8 @@ export class MockProductRepository implements ProductRepository {
   }
 
   async getProductById(id: string): Promise<Product | null> {
-    const product = this.products.find(product => product.id === id);
+    // Search by both id and slug to support URL routing
+    const product = this.products.find(product => product.id === id || product.slug === id);
     return Promise.resolve(product || null);
   }
 
