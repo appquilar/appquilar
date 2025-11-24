@@ -90,7 +90,7 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
         <p className="text-sm line-clamp-2">{product.description}</p>
       </CardContent>
       <CardFooter className="pt-2 pb-4 flex flex-col gap-2">
-        <Link to={`/products/${product.slug}`} className="w-full">
+        <Link to={`/product/${product.slug}`} className="w-full">
           <Button 
             variant="default" 
             size="sm" 
