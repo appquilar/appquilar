@@ -1,91 +1,146 @@
-import { IRentalRepository } from '@/domain/repositories/IRentalRepository';
-import { IProductRepository } from '@/domain/repositories/IProductRepository';
-import { IConversationRepository } from '@/domain/repositories/IConversationRepository';
-import { IUserSettingsRepository } from '@/domain/repositories/UserSettingsRepository';
+// src/infrastructure/repositories/RepositoryFactory.ts
 
-import { MockRentalRepository } from './MockRentalRepository';
-import { MockProductRepository } from './MockProductRepository';
-import { MockConversationRepository } from './MockConversationRepository';
-import { MockUserSettingsRepository } from './MockUserSettingsRepository';
+import { IRentalRepository } from "@/domain/repositories/IRentalRepository";
+import { IProductRepository } from "@/domain/repositories/IProductRepository";
+import { IConversationRepository } from "@/domain/repositories/IConversationRepository";
+
+import { MockRentalRepository } from "./MockRentalRepository";
+import { MockProductRepository } from "./MockProductRepository";
+import { MockConversationRepository } from "./MockConversationRepository";
+
+import type { AuthRepository } from "@/domain/repositories/AuthRepository";
+import type { UserRepository } from "@/domain/repositories/UserRepository";
+
+import { ApiAuthRepository } from "./ApiAuthRepository";
+import { ApiUserRepository } from "./ApiUserRepository";
+
+import { ApiClient } from "../http/ApiClient";
+import { AuthSessionStorage } from "../auth/AuthSessionStorage";
 
 /**
- * Factory for creating repositories with proper dependency injection
+ * Central DI container for repositories
  */
 export class RepositoryFactory {
-  private static rentalRepository: IRentalRepository;
-  private static productRepository: IProductRepository;
-  private static conversationRepository: IConversationRepository;
-  private static userSettingsRepository: IUserSettingsRepository;
+    // Existing repositories
+    private static rentalRepository: IRentalRepository;
+    private static productRepository: IProductRepository;
+    private static conversationRepository: IConversationRepository;
 
-  /**
-   * Get the rental repository instance
-   */
-  public static getRentalRepository(): IRentalRepository {
-    if (!this.rentalRepository) {
-      // Default to mock implementation
-      this.rentalRepository = new MockRentalRepository();
+    // New repositories
+    private static authRepository: AuthRepository;
+    private static userRepository: UserRepository;
+
+    // Shared infrastructure
+    private static apiClient: ApiClient;
+    private static sessionStorage: AuthSessionStorage;
+
+    /**
+     * Internal: lazy init ApiClient
+     */
+    private static getApiClient(): ApiClient {
+        if (!this.apiClient) {
+            this.apiClient = new ApiClient({
+                baseUrl:
+                    process.env.NEXT_PUBLIC_API_BASE_URL ??
+                    "http://localhost:9000", // fallback
+            });
+        }
+        return this.apiClient;
     }
-    return this.rentalRepository;
-  }
 
-  /**
-   * Set a custom rental repository implementation
-   */
-  public static setRentalRepository(repository: IRentalRepository): void {
-    this.rentalRepository = repository;
-  }
-
-  /**
-   * Get the product repository instance
-   */
-  public static getProductRepository(): IProductRepository {
-    if (!this.productRepository) {
-      // Default to mock implementation
-      this.productRepository = new MockProductRepository();
+    /**
+     * Internal: lazy init AuthSessionStorage
+     */
+    private static getSessionStorage(): AuthSessionStorage {
+        if (!this.sessionStorage) {
+            this.sessionStorage = new AuthSessionStorage();
+        }
+        return this.sessionStorage;
     }
-    return this.productRepository;
-  }
 
-  /**
-   * Set a custom product repository implementation
-   */
-  public static setProductRepository(repository: IProductRepository): void {
-    this.productRepository = repository;
-  }
+    // --------------------------------------------------------------------------
+    // AUTH REPOSITORY
+    // --------------------------------------------------------------------------
 
-  /**
-   * Get the conversation repository instance
-   */
-  public static getConversationRepository(): IConversationRepository {
-    if (!this.conversationRepository) {
-      // Default to mock implementation
-      this.conversationRepository = new MockConversationRepository();
+    public static getAuthRepository(): AuthRepository {
+        if (!this.authRepository) {
+            this.authRepository = new ApiAuthRepository(
+                this.getApiClient(),
+                this.getSessionStorage()
+            );
+        }
+        return this.authRepository;
     }
-    return this.conversationRepository;
-  }
 
-  /**
-   * Set a custom conversation repository implementation
-   */
-  public static setConversationRepository(repository: IConversationRepository): void {
-    this.conversationRepository = repository;
-  }
-
-  /**
-   * Get the user settings repository instance
-   */
-  public static getUserSettingsRepository(): IUserSettingsRepository {
-    if (!this.userSettingsRepository) {
-      // Default to mock implementation
-      this.userSettingsRepository = new MockUserSettingsRepository();
+    public static setAuthRepository(repository: AuthRepository): void {
+        this.authRepository = repository;
     }
-    return this.userSettingsRepository;
-  }
 
-  /**
-   * Set a custom user settings repository implementation
-   */
-  public static setUserSettingsRepository(repository: IUserSettingsRepository): void {
-    this.userSettingsRepository = repository;
-  }
+    // --------------------------------------------------------------------------
+    // USER REPOSITORY
+    // --------------------------------------------------------------------------
+
+    public static getUserRepository(): UserRepository {
+        if (!this.userRepository) {
+            const getSession = async () =>
+                this.getAuthRepository().getCurrentSession();
+
+            this.userRepository = new ApiUserRepository(
+                this.getApiClient(),
+                getSession
+            );
+        }
+        return this.userRepository;
+    }
+
+    public static setUserRepository(repository: UserRepository): void {
+        this.userRepository = repository;
+    }
+
+    // --------------------------------------------------------------------------
+    // RENTAL
+    // --------------------------------------------------------------------------
+
+    public static getRentalRepository(): IRentalRepository {
+        if (!this.rentalRepository) {
+            this.rentalRepository = new MockRentalRepository();
+        }
+        return this.rentalRepository;
+    }
+
+    public static setRentalRepository(repository: IRentalRepository): void {
+        this.rentalRepository = repository;
+    }
+
+    // --------------------------------------------------------------------------
+    // PRODUCT
+    // --------------------------------------------------------------------------
+
+    public static getProductRepository(): IProductRepository {
+        if (!this.productRepository) {
+            this.productRepository = new MockProductRepository();
+        }
+        return this.productRepository;
+    }
+
+    public static setProductRepository(repository: IProductRepository): void {
+        this.productRepository = repository;
+    }
+
+    // --------------------------------------------------------------------------
+    // CONVERSATION
+    // --------------------------------------------------------------------------
+
+    public static getConversationRepository(): IConversationRepository {
+        if (!this.conversationRepository) {
+            this.conversationRepository = new MockConversationRepository();
+        }
+        return this.conversationRepository;
+    }
+
+    public static setConversationRepository(
+        repository: IConversationRepository
+    ): void {
+        this.conversationRepository = repository;
+    }
 }

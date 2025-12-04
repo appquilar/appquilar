@@ -1,5 +1,5 @@
 
-import { CompanyUser } from '@/domain/models/CompanyUser';
+import { User } from '@/domain/models/User.ts';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,7 +10,7 @@ import { useUserProfileForm } from '../hooks/useUserProfileForm';
 import { useNavigate } from 'react-router-dom';
 
 interface ProfileTabProps {
-  user: CompanyUser;
+  user: User;
   onSubmit: (data: { name: string; role: 'company_user' | 'company_admin' }) => Promise<void>;
   isSubmitting: boolean;
 }

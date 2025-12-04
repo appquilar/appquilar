@@ -1,29 +1,28 @@
 
-import { CompanyUser } from '@/domain/models/CompanyUser';
+import { User } from '@/domain/models/User.ts';
+import {UserRole} from "@/domain/models/UserRole.ts";
 
 // Mock users - would come from backend API in production
-export const MOCK_USERS: CompanyUser[] = [
+export const MOCK_USERS: User[] = [
   {
-    id: '1',
-    name: 'John Smith',
+    id: '1', 
+    firstName: 'John Smith',
     email: 'john@example.com',
     role: 'company_admin',
     status: 'active',
-    dateAdded: '2023-05-15',
     companyId: '1'
   },
   {
     id: '2',
-    name: 'Sarah Johnson',
+    firstName: 'Sarah Johnson',
     email: 'sarah@example.com',
-    role: 'company_user',
+    roles: 'company_user',
     status: 'active',
-    dateAdded: '2023-06-10',
     companyId: '1'
   },
   {
     id: '3',
-    name: 'Michael Brown',
+    firstName: 'Michael Brown',
     email: 'michael@example.com',
     role: 'company_user',
     status: 'active',
@@ -32,7 +31,7 @@ export const MOCK_USERS: CompanyUser[] = [
   },
   {
     id: '4',
-    name: 'Emily Wilson',
+    firstName: 'Emily Wilson',
     email: 'emily@example.com',
     role: 'company_user',
     status: 'invited',
@@ -41,7 +40,7 @@ export const MOCK_USERS: CompanyUser[] = [
   },
   {
     id: '5',
-    name: 'David Thompson',
+    firstName: 'David Thompson',
     email: 'david@example.com',
     role: 'company_user',
     status: 'deactivated',

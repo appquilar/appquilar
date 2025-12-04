@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useUserProfileForm } from './hooks/useUserProfileForm';
-import { CompanyUser } from '@/domain/models/CompanyUser';
+import { User } from '@/domain/models/User.ts';
 import ProfileImageUpload from './ProfileImageUpload';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -14,7 +14,7 @@ export const UserProfileForm = ({
   user, 
   onSubmit 
 }: { 
-  user: CompanyUser; 
+  user: User;
   onSubmit: (data: any) => Promise<void>; 
 }) => {
   const navigate = useNavigate();

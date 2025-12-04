@@ -1,7 +1,7 @@
 
-import { CompanyUser } from "@/domain/models/CompanyUser";
+import { User } from "@/domain/models/User.ts";
 
-export const MOCK_COMPANY_USERS: CompanyUser[] = [
+export const MOCK_COMPANY_USERS: User[] = [
   {
     id: "cu1",
     name: "Ana Martínez",

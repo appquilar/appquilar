@@ -4,7 +4,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { UserInvitationFormData } from '@/domain/models/CompanyUser';
+import { UserInvitationFormData } from '@/domain/models/User.ts';
 import { useForm } from 'react-hook-form';
 import { Textarea } from '@/components/ui/textarea';
 

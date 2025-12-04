@@ -3,10 +3,10 @@ import { Edit, Package2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { CompanyUser } from '@/domain/models/CompanyUser';
+import { User } from '@/domain/models/User.ts';
 
 interface UserTableProps {
-  users: CompanyUser[];
+  users: User[];
   onEdit: (userId: string) => void;
   onDelete?: (userId: string) => Promise<boolean>;
   onViewProducts?: (userId: string) => void;
@@ -14,7 +14,7 @@ interface UserTableProps {
 
 const UserTable = ({ users, onEdit, onDelete, onViewProducts }: UserTableProps) => {
   // Status badge renderer
-  const renderStatusBadge = (status: CompanyUser['status']) => {
+  const renderStatusBadge = (status: User['status']) => {
     return (
       <Badge
         className={`${

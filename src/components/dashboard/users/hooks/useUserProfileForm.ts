@@ -2,7 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { CompanyUser } from '@/domain/models/CompanyUser';
+import { User } from '@/domain/models/User.ts';
 import { useEffect } from 'react';
 import { useCompanies } from '@/application/hooks/useCompanies';
 
@@ -17,7 +17,7 @@ export const profileFormSchema = z.object({
 
 export type UserProfileFormValues = z.infer<typeof profileFormSchema>;
 
-export const useUserProfileForm = (user: CompanyUser | undefined) => {
+export const useUserProfileForm = (user: User | undefined) => {
   const { companies } = useCompanies();
 
   const profileForm = useForm<UserProfileFormValues>({

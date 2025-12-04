@@ -3,7 +3,7 @@ import { Edit, UserMinus, Check, Package } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CompanyUser } from '@/domain/models/CompanyUser';
+import { User } from '@/domain/models/User.ts';
 import { toast } from 'sonner';
 import { UserService } from '@/application/services/UserService';
 import { useNavigate } from 'react-router-dom';
@@ -29,14 +29,14 @@ const statusLabels = {
 };
 
 interface CompanyUsersTableProps {
-  users: CompanyUser[];
-  onUsersChange: (users: CompanyUser[]) => void;
+  users: User[];
+  onUsersChange: (users: User[]) => void;
 }
 
 export const CompanyUsersTable = ({ users, onUsersChange }: CompanyUsersTableProps) => {
   const userService = UserService.getInstance();
   const navigate = useNavigate();
-  const [userToRemove, setUserToRemove] = useState<CompanyUser | null>(null);
+  const [userToRemove, setUserToRemove] = useState<User | null>(null);
 
   const handleRemoveFromCompany = async (userId: string) => {
     try {
@@ -111,7 +111,7 @@ export const CompanyUsersTable = ({ users, onUsersChange }: CompanyUsersTablePro
                         onClick={async () => {
                           try {
                             const updatedUser = await userService.updateUser(user.id, { 
-                              status: 'active' as CompanyUser['status']
+                              status: 'active' as User['status']
                             });
                             const updatedUsers = users.map(u => 
                               u.id === user.id ? updatedUser : u

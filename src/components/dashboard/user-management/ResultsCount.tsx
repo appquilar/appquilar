@@ -1,9 +1,9 @@
 
-import { CompanyUser } from '@/domain/models/CompanyUser';
+import { User } from '@/domain/models/User.ts';
 import { MOCK_USERS } from '@/infrastructure/services/mockData/companyUserMockData';
 
 interface ResultsCountProps {
-  filteredUsers: CompanyUser[];
+  filteredUsers: User[];
 }
 
 const ResultsCount = ({ filteredUsers }: ResultsCountProps) => {

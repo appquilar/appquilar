@@ -4,7 +4,6 @@ import { MockRentalRepository } from '../repositories/MockRentalRepository';
 import { ApiConversationRepository } from '../repositories/ApiConversationRepository';
 import { MockConversationRepository } from '../repositories/MockConversationRepository'; 
 import { RepositoryFactory } from '../repositories/RepositoryFactory';
-import { MockUserSettingsRepository } from '../repositories/MockUserSettingsRepository';
 
 /**
  * Repository Configuration
@@ -29,7 +28,6 @@ export class RepositoryConfig {
       // Set mock repositories
       RepositoryFactory.setRentalRepository(new MockRentalRepository());
       RepositoryFactory.setConversationRepository(new MockConversationRepository());
-      RepositoryFactory.setUserSettingsRepository(new MockUserSettingsRepository());
       // Repository factory already defaults to mock repositories, but we're explicit here
     }
   }

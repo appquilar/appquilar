@@ -1,52 +1,78 @@
+import type { UserRepository } from "@/domain/repositories/UserRepository";
+import type { AuthRepository } from "@/domain/repositories/AuthRepository";
+import type { User } from "@/domain/models/User";
 
-import { CompanyUser, UserInvitationFormData } from '@/domain/models/CompanyUser';
-import { IUserRepository } from '@/domain/repositories/UserRepository';
-import { MockUserRepository } from '@/infrastructure/repositories/MockUserRepository';
-
+/**
+ * UserService provides application-level operations on the User domain model.
+ *
+ * It can coordinate with AuthRepository to:
+ * - retrieve the current user based on the current session
+ * - handle profile updates for the logged-in user
+ */
 export class UserService {
-  private static instance: UserService;
-  private repository: IUserRepository;
+    private readonly userRepository: UserRepository;
+    private readonly authRepository: AuthRepository;
 
-  private constructor(repository: IUserRepository) {
-    this.repository = repository;
-  }
-
-  public static getInstance(): UserService {
-    if (!UserService.instance) {
-      const repository = new MockUserRepository();
-      UserService.instance = new UserService(repository);
+    constructor(userRepository: UserRepository, authRepository: AuthRepository) {
+        this.userRepository = userRepository;
+        this.authRepository = authRepository;
     }
-    return UserService.instance;
-  }
 
-  async getAllUsers(): Promise<CompanyUser[]> {
-    return this.repository.getAllUsers();
-  }
+    /**
+     * Get a user by ID.
+     */
+    async getUserById(userId: string): Promise<User> {
+        return this.userRepository.getById(userId);
+    }
 
-  async getUserById(id: string): Promise<CompanyUser | null> {
-    return this.repository.getUserById(id);
-  }
+    /**
+     * Get the currently authenticated user.
+     * Returns null if there's no valid session or userId.
+     */
+    async getCurrentUser(): Promise<User | null> {
+        const session = await this.authRepository.getCurrentSession();
 
-  async getUsersByCompanyId(companyId: string): Promise<CompanyUser[]> {
-    return this.repository.getUsersByCompanyId(companyId);
-  }
+        if (!session || !session.userId) {
+            return null;
+        }
 
-  async createUser(userData: UserInvitationFormData): Promise<CompanyUser> {
-    return this.repository.createUser(userData);
-  }
+        return this.userRepository.getById(session.userId);
+    }
 
-  async updateUser(id: string, userData: Partial<CompanyUser>): Promise<CompanyUser> {
-    return this.repository.updateUser(id, userData);
-  }
+    /**
+     * Update the profile of the given user.
+     */
+    async updateUser(
+        userId: string,
+        partialUser: Partial<User>
+    ): Promise<User> {
+        return this.userRepository.update(userId, partialUser);
+    }
 
-  async deleteUser(id: string): Promise<boolean> {
-    return this.repository.deleteUser(id);
-  }
+    /**
+     * Update the address and/or location of the given user.
+     */
+    async updateUserAddress(
+        userId: string,
+        data: {
+            address?: User["address"];
+            location?: User["location"];
+        }
+    ): Promise<User> {
+        return this.userRepository.updateAddress(userId, data);
+    }
 
-  async removeUserFromCompany(userId: string): Promise<boolean> {
-    const user = await this.repository.getUserById(userId);
-    if (!user) return false;
+    /**
+     * Get users belonging to a given company.
+     * Only available if the underlying repository supports it.
+     */
+    async getUsersByCompanyId(companyId: string): Promise<User[]> {
+        if (!this.userRepository.getByCompanyId) {
+            throw new Error(
+                "getByCompanyId is not implemented in the current UserRepository."
+            );
+        }
 
-    return this.repository.updateUser(userId, { companyId: '' }).then(() => true);
-  }
+        return this.userRepository.getByCompanyId(companyId);
+    }
 }

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 import FormHeader from '../common/FormHeader';
 import { Product } from '@/domain/models/Product';
-import { CompanyUser } from '@/domain/models/CompanyUser';
+import { User } from '@/domain/models/User.ts';
 import { ProductService } from '@/application/services/ProductService';
 import { UserService } from '@/application/services/UserService';
 import DataTable from '../common/DataTable';
@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 const UserProductsPage = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const [user, setUser] = useState<CompanyUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const productService = ProductService.getInstance();

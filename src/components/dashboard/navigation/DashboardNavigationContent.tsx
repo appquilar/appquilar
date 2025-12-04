@@ -1,15 +1,12 @@
-
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { DashboardNavigationProps } from './types';
+import {useNavigate} from 'react-router-dom';
+import {useIsMobile} from '@/hooks/use-mobile';
+import {DashboardNavigationProps} from './types';
 import UserProfile from './UserProfile';
-import NavItem from './NavItem';
 import NavSection from './NavSection';
 import UpgradeLink from './UpgradeLink';
-import { useNavigation } from '@/hooks/useNavigation';
-import { useUserAddress } from '@/hooks/useUserAddress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MapPin } from 'lucide-react';
+import {useNavigation} from '@/hooks/useNavigation';
+import {Alert, AlertDescription} from '@/components/ui/alert';
+import {MapPin} from 'lucide-react';
 
 /**
  * Contenido principal de la navegación del panel de control
@@ -18,9 +15,8 @@ const DashboardNavigationContent = ({ activeTab, onTabChange, onNavigate }: Dash
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { navSections, canUpgradeToCompany, isActive } = useNavigation();
-  const { hasAddress, isLoading } = useUserAddress();
+  const hasAddress = false;
 
-  // Manejador de clic para cambiar pestañas
   const handleTabChange = (href: string) => {
     // Extraer la última parte de la URL como identificador de pestaña, o 'overview' para la ruta principal
     const tabName = href === '/dashboard' ? 'overview' : href.split('/').pop() || 'overview';
@@ -47,7 +43,7 @@ const DashboardNavigationContent = ({ activeTab, onTabChange, onNavigate }: Dash
       </nav>
       
       {/* Alerta de dirección vacía */}
-      {!isLoading && !hasAddress && (
+      {!hasAddress && (
         <div className="px-2 mb-2">
           <Alert 
             className="cursor-pointer hover:bg-muted/50 transition-colors"

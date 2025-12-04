@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import FormHeader from '../common/FormHeader';
 import { Company } from '@/domain/models/Company';
-import { CompanyUser } from '@/domain/models/CompanyUser';
+import { User } from '@/domain/models/User.ts';
 import { MOCK_COMPANIES } from './data/mockCompanies';
 import { UserService } from '@/application/services/UserService';
 import { CompanyUsersTable } from './users/CompanyUsersTable';
@@ -17,7 +17,7 @@ const CompanyUsersPage = () => {
   const { companyId } = useParams();
   const navigate = useNavigate();
   const [company, setCompany] = useState<Company | null>(null);
-  const [users, setUsers] = useState<CompanyUser[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const userService = UserService.getInstance();

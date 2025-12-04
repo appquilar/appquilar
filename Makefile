@@ -1,69 +1,121 @@
-
 # Variables
 PROJECT_NAME = appquilar
 DOCKER_COMPOSE = docker-compose
 NPM = npm
+CONTAINER_FE = $(PROJECT_NAME)-web-1
 
-# Colores
+# Colors
 GREEN = \033[0;32m
-NC = \033[0m # Sin color
+YELLOW = \033[0;33m
+RED = \033[0;31m
+NC = \033[0m # No color
 
-.PHONY: help install dev build up down restart logs clean test
+NETWORK_NAME = appquilar
 
-# Ayuda
+.PHONY: help install dev build up down restart logs clean test start exec destroy rebuild network check-be shell
+
+# Help
 help:
-	@echo "${GREEN}Comandos disponibles:${NC}"
-	@echo "  make install - Instala dependencias"
-	@echo "  make dev     - Inicia el entorno de desarrollo"
-	@echo "  make build   - Construye la aplicación para producción"
-	@echo "  make up      - Inicia los contenedores Docker"
-	@echo "  make down    - Detiene los contenedores Docker"
-	@echo "  make restart - Reinicia los contenedores Docker"
-	@echo "  make logs    - Muestra los logs de los contenedores"
-	@echo "  make clean   - Limpia archivos generados y caché"
-	@echo "  make test    - Ejecuta los tests"
+	@echo "${GREEN}Available commands:${NC}"
+	@echo "  make install   - Install dependencies"
+	@echo "  make dev       - Start development environment (Vite)"
+	@echo "  make build     - Build the application for production"
+	@echo "  make up        - Start Docker containers"
+	@echo "  make start     - Start the FE in Docker like in the BE"
+	@echo "  make down      - Stop Docker containers"
+	@echo "  make restart   - Restart Docker containers"
+	@echo "  make logs      - Show container logs"
+	@echo "  make clean     - Remove dist/ and node_modules/"
+	@echo "  make destroy   - Remove containers, images and volumes"
+	@echo "  make rebuild   - Equivalent to clean + build + up"
+	@echo "  make shell     - Enter the FE container to execute npm or other commands"
+	@echo "  make test      - Run tests"
+	@echo "  make check-be  - Check if the FE can reach the BE inside Docker"
 
-# Instalar dependencias
+# Create network only if it doesn't exist
+network:
+	@if [ -z "$$(docker network ls --filter name=^$(NETWORK_NAME)$$ -q)" ]; then \
+		echo "⛵  Creating network $(NETWORK_NAME)..."; \
+		docker network create $(NETWORK_NAME); \
+	else \
+		echo "✔️  Network $(NETWORK_NAME) already exists"; \
+	fi
+
+# Install dependencies
 install:
-	@echo "${GREEN}Instalando dependencias...${NC}"
+	@echo "${GREEN}Installing dependencies...${NC}"
 	$(NPM) install
 
-# Iniciar entorno de desarrollo
+# Development mode
 dev:
-	@echo "${GREEN}Iniciando entorno de desarrollo...${NC}"
+	@echo "${GREEN}Starting development environment...${NC}"
 	$(NPM) run dev
 
-# Construir para producción
+# Build for production
 build:
-	@echo "${GREEN}Construyendo para producción...${NC}"
+	@echo "${GREEN}Building for production...${NC}"
 	$(NPM) run build
 
-# Iniciar contenedores Docker
+# Start Docker containers
 up:
-	@echo "${GREEN}Iniciando contenedores Docker...${NC}"
+	@echo "${GREEN}Starting Docker containers...${NC}"
 	$(DOCKER_COMPOSE) up -d
 
-# Detener contenedores Docker
+# Start FE (Docker) like BE
+start: network
+	@echo "${GREEN}Starting frontend in Docker...${NC}"
+	$(DOCKER_COMPOSE) up -d --build
+	@echo ""
+	@echo "${GREEN}Frontend available at:${NC} http://localhost:8080"
+	@echo ""
+
+# Stop containers
 down:
-	@echo "${GREEN}Deteniendo contenedores Docker...${NC}"
+	@echo "${GREEN}Stopping Docker containers...${NC}"
 	$(DOCKER_COMPOSE) down
 
-# Reiniciar contenedores Docker
+# Restart containers
 restart:
-	@echo "${GREEN}Reiniciando contenedores Docker...${NC}"
+	@echo "${GREEN}Restarting Docker containers...${NC}"
 	$(DOCKER_COMPOSE) restart
 
-# Ver logs de contenedores
+# Show logs
 logs:
-	@echo "${GREEN}Mostrando logs...${NC}"
+	@echo "${GREEN}Showing logs...${NC}"
 	$(DOCKER_COMPOSE) logs -f
 
-# Limpiar archivos generados
+# Clean generated files
 clean:
-	@echo "${GREEN}Limpiando archivos generados...${NC}"
+	@echo "${GREEN}Cleaning dist/ and node_modules/...${NC}"
 	rm -rf dist node_modules
 
-# Ejecutar tests
+# Enter the FE container
+shell:
+	@echo "${GREEN}Entering the FE container...${NC}"
+	@docker exec -it $(CONTAINER_FE) sh || echo "${RED}❌ The container cannot be found. Is it running?${NC}"
+
+# Destroy everything: containers, images, and volumes
+destroy:
+	@echo "${GREEN}Destroying containers, images, and volumes for the FE...${NC}"
+	$(DOCKER_COMPOSE) down --rmi all --volumes --remove-orphans
+	@echo "✔️ Project cleaned completely"
+
+# Rebuild (clean + build + up)
+rebuild: clean build up
+	@echo "${GREEN}Completed full rebuild${NC}"
+
+# Run tests
 test:
-	@echo "${GREEN}Ejecutando tests...${NC}"
+	@echo "${GREEN}Running tests...${NC}"
 	$(NPM) test
+
+# Check connectivity FE → BE inside Docker
+check-be:
+	@echo "${GREEN}Checking Backend communication...${NC}"
+	@if docker ps --format '{{.Names}}' | grep -q "$(CONTAINER_FE)"; then \
+		echo "${GREEN}→${NC} ${YELLOW}Running test inside container $(CONTAINER_FE)...${NC}"; \
+		docker exec -it $(CONTAINER_FE) sh -c "wget -qO- http://php/api/health || echo 'ERROR'"; \
+	else \
+		echo "${RED}❌ FE container is not running. Execute: make start${NC}"; \
+		exit 1; \
+	fi

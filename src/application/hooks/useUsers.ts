@@ -1,10 +1,10 @@
 
 import { useState, useEffect } from 'react';
-import { CompanyUser, UserInvitationFormData } from '@/domain/models/CompanyUser';
+import { User, UserInvitationFormData } from '@/domain/models/User.ts';
 import { UserService } from '@/application/services/UserService';
 
 export const useUsers = () => {
-  const [users, setUsers] = useState<CompanyUser[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const userService = UserService.getInstance();
@@ -29,7 +29,7 @@ export const useUsers = () => {
     loadUsers();
   }, []);
 
-  const handleEditUser = async (userId: string, userData: Partial<CompanyUser>) => {
+  const handleEditUser = async (userId: string, userData: Partial<User>) => {
     try {
       const updatedUser = await userService.updateUser(userId, userData);
       setUsers(prev => prev.map(user => user.id === userId ? updatedUser : user));
@@ -53,7 +53,7 @@ export const useUsers = () => {
     }
   };
 
-  const handleInviteUser = async (userData: UserInvitationFormData): Promise<CompanyUser> => {
+  const handleInviteUser = async (userData: UserInvitationFormData): Promise<User> => {
     try {
       const newUser = await userService.createUser(userData);
       setUsers(prev => [...prev, newUser]);

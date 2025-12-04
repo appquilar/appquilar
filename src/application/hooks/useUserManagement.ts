@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { CompanyUser } from '@/domain/models/CompanyUser';
+import { User } from '@/domain/models/User.ts';
 import { MOCK_USERS } from '@/infrastructure/services/mockData/companyUserMockData';
 
 export const useUserManagement = () => {

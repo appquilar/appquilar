@@ -1,8 +1,6 @@
-
 version: '3.8'
 
 services:
-  # Aplicación web
   web:
     build:
       context: .
@@ -10,24 +8,13 @@ services:
     ports:
       - "8080:80"
     restart: unless-stopped
+    environment:
+      # Estas vars deben usarlas tus servicios/repos en el FE para llamar al BE
+      VITE_API_BASE_URL: "http://php"
+      VITE_USE_MOCK_DATA: "false"
     networks:
-      - appquilar-network
-
-  # API mock (opcional, para desarrollo)
-  api-mock:
-    image: node:20-alpine
-    working_dir: /app
-    volumes:
-      - ./mock-api:/app
-    command: >
-      sh -c "npm install -g json-server json-server-auth cors && 
-             json-server --watch db.json --port 3000 --middlewares ./node_modules/json-server-auth --host 0.0.0.0"
-    ports:
-      - "3000:3000"
-    restart: unless-stopped
-    networks:
-      - appquilar-network
+      - appquilar
 
 networks:
-  appquilar-network:
-    driver: bridge
+  appquilar:
+    external: true
