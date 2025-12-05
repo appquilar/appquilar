@@ -14,12 +14,12 @@ export interface UseCurrentUserResult {
     isLoading: boolean;
     /**
      * Alias for refreshCurrentUser from AuthContext.
-     * Useful after profile updates, etc.
+     * Forces a fresh /api/me and updates the cache.
      */
-    refresh: () => Promise<void>;
+    refresh: () => Promise<User | null>;
 }
 
-export function useCurrentUser(): UseCurrentUserResult {
+export const useCurrentUser = (): UseCurrentUserResult => {
     const {
         currentUser,
         isAuthenticated,
@@ -33,4 +33,4 @@ export function useCurrentUser(): UseCurrentUserResult {
         isLoading,
         refresh: refreshCurrentUser,
     };
-}
+};

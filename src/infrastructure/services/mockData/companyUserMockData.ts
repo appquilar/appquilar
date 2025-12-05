@@ -1,6 +1,5 @@
 
 import { User } from '@/domain/models/User.ts';
-import {UserRole} from "@/domain/models/UserRole.ts";
 
 // Mock users - would come from backend API in production
 export const MOCK_USERS: User[] = [
@@ -16,7 +15,7 @@ export const MOCK_USERS: User[] = [
     id: '2',
     firstName: 'Sarah Johnson',
     email: 'sarah@example.com',
-    roles: 'company_user',
+    roles: 'company_admin',
     status: 'active',
     companyId: '1'
   },

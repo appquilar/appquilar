@@ -2,7 +2,7 @@
 PROJECT_NAME = appquilar
 DOCKER_COMPOSE = docker-compose
 NPM = npm
-CONTAINER_FE = $(PROJECT_NAME)-web-1
+CONTAINER_FE = $(PROJECT_NAME)-web-dev
 
 # Colors
 GREEN = \033[0;32m
@@ -12,25 +12,26 @@ NC = \033[0m # No color
 
 NETWORK_NAME = appquilar
 
-.PHONY: help install dev build up down restart logs clean test start exec destroy rebuild network check-be shell
+.PHONY: help install dev build up down restart logs clean test start start-prod exec destroy rebuild network check-be shell
 
 # Help
 help:
 	@echo "${GREEN}Available commands:${NC}"
-	@echo "  make install   - Install dependencies"
-	@echo "  make dev       - Start development environment (Vite)"
-	@echo "  make build     - Build the application for production"
-	@echo "  make up        - Start Docker containers"
-	@echo "  make start     - Start the FE in Docker like in the BE"
-	@echo "  make down      - Stop Docker containers"
-	@echo "  make restart   - Restart Docker containers"
-	@echo "  make logs      - Show container logs"
-	@echo "  make clean     - Remove dist/ and node_modules/"
-	@echo "  make destroy   - Remove containers, images and volumes"
-	@echo "  make rebuild   - Equivalent to clean + build + up"
-	@echo "  make shell     - Enter the FE container to execute npm or other commands"
-	@echo "  make test      - Run tests"
-	@echo "  make check-be  - Check if the FE can reach the BE inside Docker"
+	@echo "  make install     - Install dependencies"
+	@echo "  make dev         - Start development environment (Vite) on host"
+	@echo "  make build       - Build the application for production"
+	@echo "  make up          - Start Docker containers (production compose)"
+	@echo "  make start       - Start the FE in Docker in DEVELOPMENT mode (Vite + hot reload)"
+	@echo "  make start-prod  - Start the FE in Docker like in the BE (Nginx + built dist)"
+	@echo "  make down        - Stop Docker containers"
+	@echo "  make restart     - Restart Docker containers"
+	@echo "  make logs        - Show container logs"
+	@echo "  make clean       - Remove dist/ and node_modules/"
+	@echo "  make destroy     - Remove containers, images and volumes"
+	@echo "  make rebuild     - Equivalent to clean + build + up"
+	@echo "  make shell       - Enter the FE container to execute npm or other commands"
+	@echo "  make test        - Run tests"
+	@echo "  make check-be    - Check if the FE can reach the BE inside Docker"
 
 # Create network only if it doesn't exist
 network:
@@ -46,9 +47,9 @@ install:
 	@echo "${GREEN}Installing dependencies...${NC}"
 	$(NPM) install
 
-# Development mode
+# Development mode (host)
 dev:
-	@echo "${GREEN}Starting development environment...${NC}"
+	@echo "${GREEN}Starting development environment on host...${NC}"
 	$(NPM) run dev
 
 # Build for production
@@ -56,17 +57,25 @@ build:
 	@echo "${GREEN}Building for production...${NC}"
 	$(NPM) run build
 
-# Start Docker containers
+# Start Docker containers (production compose)
 up:
-	@echo "${GREEN}Starting Docker containers...${NC}"
+	@echo "${GREEN}Starting Docker containers (production compose)...${NC}"
 	$(DOCKER_COMPOSE) up -d
 
-# Start FE (Docker) like BE
+# Start FE (Docker) in DEVELOPMENT mode (Vite + hot reload)
 start: network
-	@echo "${GREEN}Starting frontend in Docker...${NC}"
-	$(DOCKER_COMPOSE) up -d --build
+	@echo "${GREEN}Starting frontend in Docker (development mode)...${NC}"
+	$(DOCKER_COMPOSE) -f docker-compose.dev.yml up -d --build
 	@echo ""
-	@echo "${GREEN}Frontend available at:${NC} http://localhost:8080"
+	@echo "${GREEN}Frontend (dev) available at:${NC} http://localhost:8080"
+	@echo ""
+
+# Start FE (Docker) in PRODUCTION mode (Nginx + dist)
+start-prod: network
+	@echo "${GREEN}Starting frontend in Docker (production mode)...${NC}"
+	$(DOCKER_COMPOSE) -f docker-compose.yml up -d --build
+	@echo ""
+	@echo "${GREEN}Frontend (prod) available at:${NC} http://localhost:8080"
 	@echo ""
 
 # Stop containers
@@ -109,13 +118,13 @@ test:
 	@echo "${GREEN}Running tests...${NC}"
 	$(NPM) test
 
-# Check connectivity FE → BE inside Docker
+# Check connectivity FE → BE inside Docker (production container name)
 check-be:
 	@echo "${GREEN}Checking Backend communication...${NC}"
 	@if docker ps --format '{{.Names}}' | grep -q "$(CONTAINER_FE)"; then \
 		echo "${GREEN}→${NC} ${YELLOW}Running test inside container $(CONTAINER_FE)...${NC}"; \
 		docker exec -it $(CONTAINER_FE) sh -c "wget -qO- http://php/api/health || echo 'ERROR'"; \
 	else \
-		echo "${RED}❌ FE container is not running. Execute: make start${NC}"; \
+		echo "${RED}❌ FE container is not running. Execute: make start-prod${NC}"; \
 		exit 1; \
 	fi

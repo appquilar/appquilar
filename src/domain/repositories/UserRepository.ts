@@ -32,4 +32,9 @@ export interface UserRepository {
      * Returns a list of User domain objects.
      */
     getByCompanyId?(companyId: string): Promise<User[]>;
+
+    /**
+     * Fetch the user from the access token
+     */
+    getCurrentUser(): Promise<User>;
 }

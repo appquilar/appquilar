@@ -3,6 +3,7 @@ import type {
     ChangePasswordData,
     LoginCredentials,
     RegisterUserData,
+    ResetPasswordData,
 } from "../models/AuthCredentials";
 
 /**
@@ -14,34 +15,49 @@ import type {
  */
 export interface AuthRepository {
     /**
-     * Log in a user with email and password.
-     * Returns a new AuthSession if successful.
+     * Perform login with the provided credentials.
+     *
+     * Implementations are expected to:
+     * - Call the backend login endpoint.
+     * - Persist the returned token (if any) in client storage.
+     * - Return the created AuthSession.
      */
     login(credentials: LoginCredentials): Promise<AuthSession>;
 
     /**
-     * Register a new user account.
-     * Depending on your backend, this might also return a session.
-     * To keep it simple, we return void here, but you can change to AuthSession
-     * if your API logs in the user immediately after registration.
+     * Register a new user with the provided data.
      */
     register(data: RegisterUserData): Promise<void>;
 
     /**
-     * Log out the current user.
-     * For many APIs this is a best-effort operation (e.g., client-side only).
+     * Logout the current user.
+     *
+     * Implementations should:
+     * - Best-effort call the backend logout endpoint.
+     * - Clear any local session/token.
      */
     logout(): Promise<void>;
 
     /**
-     * Trigger a password reset email.
+     * Request a password reset for the given email.
+     *
+     * Implementations should call the backend endpoint that sends
+     * a reset email with a token.
      */
     requestPasswordReset(email: string): Promise<void>;
 
     /**
-     * Change the user password with the old password and new password.
+     * Change the user's password by providing the old and the new password.
+     * This is typically used when the user is already authenticated.
      */
     changePassword(data: ChangePasswordData): Promise<void>;
+
+    /**
+     * Reset the user's password using a reset token (usually present in the URL).
+     *
+     * This is the flow triggered from the "reset password" email.
+     */
+    resetPassword(data: ResetPasswordData): Promise<void>;
 
     /**
      * Get the current AuthSession, if available.

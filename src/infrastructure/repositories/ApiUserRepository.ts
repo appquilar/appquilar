@@ -1,11 +1,11 @@
-import type { UserRepository } from "@/domain/repositories/UserRepository";
-import type { User } from "@/domain/models/User";
-import type { Address } from "@/domain/models/Address";
-import type { Location } from "@/domain/models/Location";
-import { UserRole } from "@/domain/models/UserRole";
-import { ApiClient } from "@/infrastructure/http/ApiClient";
-import type { AuthSession } from "@/domain/models/AuthSession";
-import { toAuthorizationHeader } from "@/domain/models/AuthSession";
+import type {UserRepository} from "@/domain/repositories/UserRepository";
+import type {User} from "@/domain/models/User";
+import type {Address} from "@/domain/models/Address";
+import type {Location} from "@/domain/models/Location";
+import {UserRole} from "@/domain/models/UserRole";
+import {ApiClient} from "@/infrastructure/http/ApiClient";
+import type {AuthSession} from "@/domain/models/AuthSession";
+import {toAuthorizationHeader} from "@/domain/models/AuthSession";
 
 /**
  * DTOs aligned with backend User, Address and Location schemas.
@@ -35,11 +35,10 @@ interface UserDto {
     address: AddressDto | null;
     location: LocationDto | null;
 
-    // Optional/legacy fields that may be present in your API.
     company_id?: string | null;
     company_name?: string | null;
     status?: string | null;
-    date_added?: string | null; // ISO string
+    date_added?: string | null;
     avatar_url?: string | null;
 }
 
@@ -101,7 +100,9 @@ function mapUserDtoToDomain(dto: UserDto): User {
     };
 }
 
-function mapAddressDomainToDto(address: Address | null | undefined): AddressDto | null {
+function mapAddressDomainToDto(
+    address: Address | null | undefined
+): AddressDto | null {
     if (!address) return null;
 
     return {
@@ -132,7 +133,10 @@ export class ApiUserRepository implements UserRepository {
     private readonly apiClient: ApiClient;
     private readonly getSession: () => Promise<AuthSession | null>;
 
-    constructor(apiClient: ApiClient, getSession: () => Promise<AuthSession | null>) {
+    constructor(
+        apiClient: ApiClient,
+        getSession: () => Promise<AuthSession | null>
+    ) {
         this.apiClient = apiClient;
         this.getSession = getSession;
     }
@@ -148,6 +152,14 @@ export class ApiUserRepository implements UserRepository {
         return {
             Authorization: authHeader,
         };
+    }
+
+    async getCurrentUser(): Promise<User> {
+        const headers = await this.authHeaders();
+
+        const dto = await this.apiClient.get<UserDto>("/api/me", { headers });
+
+        return mapUserDtoToDomain(dto);
     }
 
     async getById(userId: string): Promise<User> {

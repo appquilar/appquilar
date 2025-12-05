@@ -17,9 +17,23 @@ export interface RegisterUserData {
 }
 
 /**
- * Data required to change a user's password.
+ * Data required to change a user's password
+ * when the user is already authenticated.
  */
 export interface ChangePasswordData {
     oldPassword: string;
+    newPassword: string;
+    token: string;
+}
+
+/**
+ * Data required to reset a user's password using a reset token.
+ *
+ * This is the flow triggered from the "reset password" email.
+ * The token is usually present in the URL.
+ */
+export interface ResetPasswordData {
+    email: string;
+    token: string;
     newPassword: string;
 }

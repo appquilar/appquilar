@@ -1,5 +1,12 @@
 import type { UserRole } from "./UserRole";
 
+/**
+ * AuthSession represents the authenticated session on the client.
+ *
+ * Intentionally small: we only persist the raw token in storage.
+ * All derived fields (userId, roles, expiresAt) can be computed
+ * from the token (e.g. JWT claims) and kept in memory.
+ */
 export interface AuthSession {
     /**
      * Raw access token returned by the backend.
@@ -14,27 +21,30 @@ export interface AuthSession {
     userId: string | null;
 
     /**
-     * Roles extracted from the token if you decide to decode it.
-     * You can leave this empty and rely on the User domain model instead.
+     * Roles attached to this user by the backend.
+     * They are used for UI logic only.
+     * Never rely on them for real security.
      */
     roles: UserRole[];
 
     /**
-     * Expiration date of the current session, if obtainable from the token.
+     * Token expiration date, if available (e.g. from JWT `exp` claim).
+     * Null means “we do not know the expiration”.
      */
     expiresAt: Date | null;
 }
 
-/**
- * Factory to create an AuthSession.
- * Useful when mapping from infrastructure (e.g. JWT + decoded claims) to domain.
- */
-export function createAuthSession(params: {
+export interface CreateAuthSessionParams {
     token: string;
     userId?: string | null;
-    roles?: UserRole[];
+    roles?: UserRole[] | null;
     expiresAt?: Date | null;
-}): AuthSession {
+}
+
+/**
+ * Factory function to create an AuthSession with sensible defaults.
+ */
+export function createAuthSession(params: CreateAuthSessionParams): AuthSession {
     return {
         token: params.token,
         userId: params.userId ?? null,
@@ -44,16 +54,8 @@ export function createAuthSession(params: {
 }
 
 /**
- * Returns true if the session has a non-empty token.
- */
-export function isAuthenticated(session: AuthSession | null | undefined): boolean {
-    if (!session) return false;
-    return Boolean(session.token);
-}
-
-/**
- * Returns true if the session is expired at the given point in time.
- * If expiresAt is null, we consider the session as not expired.
+ * Returns true if the session is expired at the given time.
+ * If no expiration is present, we assume it is NOT expired.
  */
 export function isSessionExpired(
     session: AuthSession | null | undefined,
@@ -67,7 +69,18 @@ export function isSessionExpired(
 }
 
 /**
- * Returns a string suitable for the Authorization header.
+ * Convenience function: returns true if the user is authenticated.
+ * Currently, it means “there is a session, and it is not expired”.
+ */
+export function isAuthenticated(
+    session: AuthSession | null | undefined,
+    now: Date = new Date()
+): boolean {
+    return !!session && !isSessionExpired(session, now);
+}
+
+/**
+ * Builds the Authorisation header from a session, if possible.
  * Example: "Bearer <token>"
  */
 export function toAuthorizationHeader(

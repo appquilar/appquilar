@@ -1,135 +1,142 @@
-import React, {
+import {
     createContext,
-    useCallback,
+    type ReactNode,
     useContext,
     useEffect,
     useState,
 } from "react";
 
 import type { User } from "@/domain/models/User";
-import type { AuthSession } from "@/domain/models/AuthSession";
 import type {
     LoginCredentials,
     RegisterUserData,
-    ChangePasswordData,
+    ResetPasswordData,
 } from "@/domain/models/AuthCredentials";
+import type { AuthSession } from "@/domain/models/AuthSession";
 
 import { AuthService } from "@/application/services/AuthService";
-import { UserService } from "@/application/services/UserService";
-import { RepositoryFactory } from "@/infrastructure/repositories/RepositoryFactory";
 
-/**
- * Application services wired with infrastructure.
- * These are singletons at module level.
- */
-const authService = new AuthService(
-    RepositoryFactory.getAuthRepository(),
-    RepositoryFactory.getUserRepository()
-);
+import { ApiClient } from "@/infrastructure/http/ApiClient";
+import { AuthSessionStorage } from "@/infrastructure/auth/AuthSessionStorage";
+import { ApiAuthRepository } from "@/infrastructure/repositories/ApiAuthRepository";
+import { ApiUserRepository } from "@/infrastructure/repositories/ApiUserRepository";
 
-const userService = new UserService(
-    RepositoryFactory.getUserRepository(),
-    RepositoryFactory.getAuthRepository()
-);
-
-/**
- * Public shape of the Auth context.
- */
-export interface AuthContextState {
+interface AuthContextType {
     /**
-     * Current authenticated user, or null if not logged in.
+     * True when there is a logged-in user.
+     * Alias for isAuthenticated.
      */
+    isLoggedIn: boolean;
+    isAuthenticated: boolean;
+
+    /**
+     * Current authenticated user (or null if there is no session).
+     * Both user and currentUser are exposed for convenience.
+     */
+    user: User | null;
     currentUser: User | null;
 
     /**
-     * Current auth session (token, userId, roles, expiration), or null if none.
-     */
-    session: AuthSession | null;
-
-    /**
-     * True while the auth state is being initialised or an auth operation is in progress.
+     * True while resolving the initial auth state or performing
+     * login/logout/refresh operations.
      */
     isLoading: boolean;
 
     /**
-     * Derived boolean: true if there is a non-null, non-empty session token.
+     * Login with email and password.
      */
-    isAuthenticated: boolean;
+    login: (email: string, password: string) => Promise<void>;
 
     /**
-     * Perform login with email + password. On success, updates session and user.
-     * Throws on error (to be handled by caller UI).
+     * User registration.
      */
-    login: (credentials: LoginCredentials) => Promise<void>;
+    signup: (
+        firstName: string,
+        lastName: string,
+        email: string,
+        password: string
+    ) => Promise<void>;
 
     /**
-     * Log out the current user (server + local session).
+     * Logout current user.
      */
-    logout: () => Promise<void>;
+    logout: () => void;
 
     /**
-     * Register a new user. Does NOT auto-login by default.
-     */
-    register: (data: RegisterUserData) => Promise<void>;
-
-    /**
-     * Request a password reset email.
+     * Request a "forgot password" email for the given address.
      */
     requestPasswordReset: (email: string) => Promise<void>;
 
     /**
-     * Change the current user's password.
+     * Reset the password using a reset token and new password.
      */
-    changePassword: (data: ChangePasswordData) => Promise<void>;
+    resetPassword: (email: string, token: string, newPassword: string) => Promise<void>;
 
     /**
-     * Force reload of the current user from the backend (e.g. after the profile update).
+     * Forces a fresh /api/me and updates the cached user.
      */
-    refreshCurrentUser: () => Promise<void>;
+    refreshCurrentUser: () => Promise<User | null>;
+
+    /**
+     * Exposes the AuthSession in case the UI needs non-sensitive data
+     * (e.g. showing expiration date).
+     */
+    getCurrentSession: () => Promise<AuthSession | null>;
 }
 
-const AuthContext = createContext<AuthContextState | undefined>(undefined);
+// -----------------
+// Composition root
+// -----------------
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-                                                                          children,
-                                                                      }) => {
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+
+const apiClient = new ApiClient({
+    baseUrl: API_BASE_URL,
+});
+
+const sessionStorage = new AuthSessionStorage();
+const authRepository = new ApiAuthRepository(apiClient, sessionStorage);
+const userRepository = new ApiUserRepository(apiClient, () =>
+    authRepository.getCurrentSession()
+);
+
+const authService = new AuthService(authRepository, userRepository);
+
+// -----------------
+// React context
+// -----------------
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = (): AuthContextType => {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return context;
+};
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [session, setSession] = useState<AuthSession | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    /**
-     * Derived: the user is authenticated if there is a session with a non-empty token.
-     */
-    const isAuthenticated = Boolean(session && session.token);
-
-    /**
-     * Initialise auth state on mount:
-     * - Load existing session from storage
-     * - If we have a userId, load the current user from the backend
-     */
+    // Load the current session/user once on mount.
     useEffect(() => {
         let isMounted = true;
 
         const init = async () => {
             setIsLoading(true);
             try {
-                const existingSession = await authService.getCurrentSession();
-
+                const user = await authService.getCurrentUser();
                 if (!isMounted) return;
 
-                setSession(existingSession);
-
-                if (existingSession && existingSession.userId) {
-                    const user = await userService.getUserById(existingSession.userId);
-                    if (!isMounted) return;
-                    setCurrentUser(user);
-                } else {
+                setCurrentUser(user);
+            } catch (error) {
+                console.error("Error initialising auth state:", error);
+                if (isMounted) {
                     setCurrentUser(null);
                 }
-            } catch {
-                if (!isMounted) return;
-                setSession(null);
-                setCurrentUser(null);
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -144,108 +151,109 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         };
     }, []);
 
-    /**
-     * Login: ask AuthService to login → update session + user in state.
-     */
-    const login = useCallback(async (credentials: LoginCredentials) => {
+    const login = async (email: string, password: string): Promise<void> => {
         setIsLoading(true);
         try {
-            const { session: newSession, user } = await authService.login(credentials);
-            setSession(newSession);
-            setCurrentUser(user ?? null);
+            const credentials: LoginCredentials = { email, password };
+            const user = await authService.login(credentials);
+            setCurrentUser(user);
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    };
 
-    /**
-     * Logout: call AuthService → clear state locally.
-     */
-    const logout = useCallback(async () => {
+    const signup = async (
+        firstName: string,
+        lastName: string,
+        email: string,
+        password: string
+    ): Promise<void> => {
         setIsLoading(true);
         try {
-            await authService.logout();
-            setSession(null);
-            setCurrentUser(null);
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    /**
-     * Register: call AuthService. No auto-login by default.
-     * You can change this behaviour later if your UX requires it.
-     */
-    const register = useCallback(async (data: RegisterUserData) => {
-        setIsLoading(true);
-        try {
+            const data: RegisterUserData = {
+                firstName,
+                lastName,
+                email,
+                password,
+            };
             await authService.register(data);
-            // Optionally: auto-login here in the future.
+            // No auto-login: the UI flow is responsible for showing messages.
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    };
 
-    /**
-     * Request password reset email.
-     */
-    const requestPasswordReset = useCallback(async (email: string) => {
+    const logout = (): void => {
+        setIsLoading(true);
+        void (async () => {
+            try {
+                await authService.logout();
+            } finally {
+                setCurrentUser(null);
+                setIsLoading(false);
+            }
+        })();
+    };
+
+    const requestPasswordReset = async (email: string): Promise<void> => {
         setIsLoading(true);
         try {
             await authService.requestPasswordReset(email);
         } finally {
             setIsLoading(false);
         }
-    }, []);
-
-    /**
-     * Change the current user's password.
-     */
-    const changePassword = useCallback(async (data: ChangePasswordData) => {
-        setIsLoading(true);
-        try {
-            await authService.changePassword(data);
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    /**
-     * Reload current user from backend using current session.
-     */
-    const refreshCurrentUser = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const user = await userService.getCurrentUser();
-            setCurrentUser(user);
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    const value: AuthContextState = {
-        currentUser,
-        session,
-        isLoading,
-        isAuthenticated,
-        login,
-        logout,
-        register,
-        requestPasswordReset,
-        changePassword,
-        refreshCurrentUser,
     };
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+    const resetPassword = async (
+        email: string,
+        token: string,
+        newPassword: string
+    ): Promise<void> => {
+        const data: ResetPasswordData = { email, token, newPassword };
+        setIsLoading(true);
+        try {
+            await authService.resetPassword(data);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-/**
- * Convenience hook to access auth context.
- */
-export const useAuth = (): AuthContextState => {
-    const ctx = useContext(AuthContext);
-    if (!ctx) {
-        throw new Error("useAuth must be used within an AuthProvider");
-    }
-    return ctx;
+    const refreshCurrentUser = async (): Promise<User | null> => {
+        setIsLoading(true);
+        try {
+            const user = await authService.refreshCurrentUser();
+            setCurrentUser(user);
+            return user;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const getCurrentSession = async (): Promise<AuthSession | null> => {
+        return authService.getCurrentSession();
+    };
+
+    const isAuthenticated = !!currentUser;
+    const isLoggedIn = isAuthenticated;
+
+    return (
+        <AuthContext.Provider
+            value={{
+                isLoggedIn,
+                isAuthenticated,
+                user: currentUser,
+                currentUser,
+                isLoading,
+                login,
+                signup,
+                logout,
+                requestPasswordReset,
+                resetPassword,
+                refreshCurrentUser,
+                getCurrentSession,
+            }}
+        >
+            {children}
+        </AuthContext.Provider>
+    );
 };
