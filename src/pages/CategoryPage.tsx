@@ -1,11 +1,9 @@
-
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import {useEffect, useState} from 'react';
+import {useParams} from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { Product } from '@/components/products/ProductCard';
-import { AuthProvider } from '@/context/AuthContext';
-import { CATEGORIES, Category } from '@/components/category/CategoryData';
+import {Product} from '@/components/products/ProductCard';
+import {CATEGORIES, Category} from '@/components/category/CategoryData';
 import CategoryHeader from '@/components/category/CategoryHeader';
 import CategorySearch from '@/components/category/CategorySearch';
 import ProductGrid from '@/components/category/ProductGrid';
@@ -59,7 +57,6 @@ const CategoryPage = () => {
   
   if (loading) {
     return (
-      <AuthProvider>
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1">
@@ -67,13 +64,11 @@ const CategoryPage = () => {
           </main>
           <Footer />
         </div>
-      </AuthProvider>
     );
   }
   
   if (!category) {
     return (
-      <AuthProvider>
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1 flex flex-col items-center justify-center p-4">
@@ -82,12 +77,10 @@ const CategoryPage = () => {
           </main>
           <Footer />
         </div>
-      </AuthProvider>
     );
   }
   
   return (
-    <AuthProvider>
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1 pt-20 px-4 sm:px-6 md:px-8 animate-fade-in">
@@ -113,7 +106,6 @@ const CategoryPage = () => {
         </main>
         <Footer />
       </div>
-    </AuthProvider>
   );
 };
 

@@ -1,6 +1,5 @@
-
-import { Link } from 'react-router-dom';
-import { NavItem as NavItemType } from '@/domain/services/navigation/types';
+import {Link} from 'react-router-dom';
+import {NavItem as NavItemType} from '@/domain/services/navigation/types';
 
 interface NavItemProps {
   link: NavItemType;

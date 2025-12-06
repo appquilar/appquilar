@@ -1,7 +1,7 @@
 export enum UserRole {
     REGULAR_USER = "ROLE_USER",
     ADMIN = "ROLE_ADMIN",
-    SUPER_ADMIN = "ROLE_SUPER_ADMIN",
+    COMPANY_ADMIN = "company_admin",
 }
 
 export function canRoleAccess(
@@ -18,4 +18,11 @@ export function canRoleAccess(
         default:
             return false;
     }
+}
+
+export function hasRole(
+    roles: UserRole[],
+    role: UserRole
+): boolean {
+    return roles.includes(role);
 }

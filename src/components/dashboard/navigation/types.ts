@@ -1,22 +1,22 @@
-
-import { ReactNode } from 'react';
-
 /**
- * Props para el componente de navegación del panel de control
+ * Props usadas por los componentes de navegación del dashboard.
+ * Es puramente de presentación (no mezcla dominio).
  */
 export interface DashboardNavigationProps {
-  activeTab?: string;
-  onTabChange?: (tab: string) => void;
-  onNavigate?: () => void;
-}
+    /**
+     * Identificador de la pestaña actualmente activa
+     * (por ejemplo: 'overview', 'products', etc.)
+     */
+    activeTab?: string;
 
-/**
- * Tipo para los enlaces de navegación
- */
-export interface NavLink {
-  title: string;
-  href: string;
-  icon: ReactNode;
-  badge?: string;
-  exact?: boolean;
+    /**
+     * Callback cuando cambia de pestaña (se hace click en un item).
+     * Recibe el "tabName" que calcula DashboardNavigationContent.
+     */
+    onTabChange?: (tab: string) => void;
+
+    /**
+     * Callback opcional cuando se navega en móvil (para cerrar el menú lateral).
+     */
+    onNavigate?: () => void;
 }

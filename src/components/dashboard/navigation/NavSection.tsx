@@ -1,5 +1,4 @@
-
-import { NavItem as NavItemType } from '@/domain/services/navigation/types';
+import {NavItem as NavItemType} from '@/domain/services/navigation/types';
 import NavItem from './NavItem';
 
 interface NavSectionProps {

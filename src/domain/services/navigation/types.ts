@@ -1,27 +1,33 @@
-
-import { ReactNode } from 'react';
-import { UserRole } from '@/domain/models/UserRole';
-import { LucideIcon } from 'lucide-react';
+import type { UserRole } from "@/domain/models/UserRole";
 
 /**
- * Individual navigation item in the sidebar
+ * Item de navegación del dashboard.
+ *
+ * Importante: esto es dominio → nada de React ni imports de lucide aquí.
+ * La capa de presentación decide cómo usar `icon`.
  */
 export interface NavItem {
-  id: string;
-  href: string;
-  title: string;
-  icon: LucideIcon;
-  badge?: string;
-  exact?: boolean;
+    id: string;
+    title: string;
+    href: string;
+    icon?: unknown;
+    exact?: boolean;
+    badge?: string;
+
+    /**
+     * Roles necesarios para ver este item en el sidebar.
+     *
+     * - undefined o []  → visible para cualquier usuario autenticado
+     * - [UserRole.ADMIN] → sólo admins
+     */
+    requiredRoles?: UserRole[];
 }
 
 /**
- * Navigation section grouping related items
+ * Sección del sidebar que agrupa varios NavItem.
  */
 export interface NavSection {
-  id: string;
-  title: string | null; // null means no title
-  requiredRole: UserRole;
-  items: NavItem[];
+    id: string;
+    title: string | null;
+    items: NavItem[];
 }
-

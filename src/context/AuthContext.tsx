@@ -1,25 +1,16 @@
-import {
-    createContext,
-    type ReactNode,
-    useContext,
-    useEffect,
-    useState,
-} from "react";
+import {createContext, type ReactNode, useContext, useEffect, useState,} from "react";
 
-import type { User } from "@/domain/models/User";
-import type {
-    LoginCredentials,
-    RegisterUserData,
-    ResetPasswordData,
-} from "@/domain/models/AuthCredentials";
-import type { AuthSession } from "@/domain/models/AuthSession";
+import type {User} from "@/domain/models/User";
+import type {LoginCredentials, RegisterUserData, ResetPasswordData,} from "@/domain/models/AuthCredentials";
+import type {AuthSession} from "@/domain/models/AuthSession";
 
-import { AuthService } from "@/application/services/AuthService";
+import {AuthService} from "@/application/services/AuthService";
 
-import { ApiClient } from "@/infrastructure/http/ApiClient";
-import { AuthSessionStorage } from "@/infrastructure/auth/AuthSessionStorage";
-import { ApiAuthRepository } from "@/infrastructure/repositories/ApiAuthRepository";
-import { ApiUserRepository } from "@/infrastructure/repositories/ApiUserRepository";
+import {ApiClient} from "@/infrastructure/http/ApiClient";
+import {AuthSessionStorage} from "@/infrastructure/auth/AuthSessionStorage";
+import {ApiAuthRepository} from "@/infrastructure/repositories/ApiAuthRepository";
+import {ApiUserRepository} from "@/infrastructure/repositories/ApiUserRepository";
+import {UserRole,canRoleAccess} from "@/domain/models/UserRole.ts";
 
 interface AuthContextType {
     /**
@@ -82,6 +73,12 @@ interface AuthContextType {
      * (e.g. showing expiration date).
      */
     getCurrentSession: () => Promise<AuthSession | null>;
+
+    /**
+     * Role-based helpers for conditional UI.
+     */
+    hasRole: (role: UserRole) => boolean;
+    canAccess: (requiredRoles: UserRole[]) => boolean;
 }
 
 // -----------------
@@ -120,6 +117,37 @@ export const useAuth = (): AuthContextType => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+
+    /**
+     * Returns true if the current user has the given role.
+     */
+    const hasRole = (role: UserRole): boolean => {
+        if (!currentUser || !Array.isArray(currentUser.roles)) {
+            return false;
+        }
+        return currentUser.roles.includes(role);
+    };
+
+    /**
+     * Returns true if the current user can access a feature that
+     * requires any of the given roles.
+     *
+     * Esto delega en el helper de dominio canRoleAccess, para
+     * que la lógica esté alineada con el backend.
+     */
+    const canAccess = (requiredRoles: UserRole[]): boolean => {
+        if (
+            !currentUser ||
+            !Array.isArray(currentUser.roles) ||
+            requiredRoles.length === 0
+        ) {
+            return false;
+        }
+
+        return currentUser.roles.some((role) =>
+            canRoleAccess(role, requiredRoles)
+        );
+    };
 
     // Load the current session/user once on mount.
     useEffect(() => {
@@ -236,6 +264,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const isAuthenticated = !!currentUser;
     const isLoggedIn = isAuthenticated;
 
+
+
     return (
         <AuthContext.Provider
             value={{
@@ -251,6 +281,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 resetPassword,
                 refreshCurrentUser,
                 getCurrentSession,
+                hasRole,
+                canAccess,
             }}
         >
             {children}

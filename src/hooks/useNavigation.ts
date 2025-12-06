@@ -1,34 +1,102 @@
+import {useLocation} from "react-router-dom";
+import {Calendar, Home, MessageCircle, Package, Settings, Users, Grid2X2Plus, Building2} from "lucide-react";
+import type {NavSection} from "@/domain/services/navigation/types";
+import {UserRole} from "@/domain/models/UserRole";
 
-import { useAuth } from '@/context/AuthContext';
-import { NavigationConfig } from '@/domain/services/navigation/NavigationConfig';
-import { NavSection } from '@/domain/services/navigation/types';
-import { useLocation } from 'react-router-dom';
-
-/**
- * Hook that provides navigation data and helper functions
- */
 export const useNavigation = () => {
-  const { user } = useAuth();
-  const location = useLocation();
-  
-  // Get navigation sections based on user role
-  const navSections = NavigationConfig.getSectionsForRole(user?.role);
-  
-  // Determine if a company upgrade is available
-  const canUpgradeToCompany = user?.role === 'user';
-  
-  // Function to check if a link is active
-  const isActive = (href: string, exact = false) => {
-    if (exact) {
-      return location.pathname === href;
-    }
-    return location.pathname.startsWith(href);
-  };
+    const location = useLocation();
 
-  return {
-    navSections,
-    canUpgradeToCompany,
-    isActive,
-    userRole: user?.role
-  };
+    // TODO: lógica real cuando conectes con company/planes
+    const canUpgradeToCompany = true;
+
+    const navSections: NavSection[] = [
+        {
+            id: "main",
+            title: "General",
+            items: [
+                {
+                    id: "overview",
+                    title: "Resumen",
+                    href: "/dashboard",
+                    icon: Home,
+                    exact: true,
+                    // sin requiredRoles => visible para cualquiera logado
+                },
+                {
+                    id: "products",
+                    title: "Productos",
+                    href: "/dashboard/products",
+                    icon: Package,
+                },
+                {
+                    id: "rentals",
+                    title: "Alquileres",
+                    href: "/dashboard/rentals",
+                    icon: Calendar,
+                },
+                {
+                    id: "messages",
+                    title: "Mensajes",
+                    href: "/dashboard/messages",
+                    icon: MessageCircle,
+                },
+            ],
+        },
+        {
+            id: "admin",
+            title: "Administración",
+            items: [
+                {
+                    id: "users",
+                    title: "Usuarios",
+                    href: "/dashboard/users",
+                    icon: Users,
+                    requiredRoles: [UserRole.ADMIN],
+                },
+                {
+                    id: "categories",
+                    title: "Categorías",
+                    href: "/dashboard/categories",
+                    icon: Grid2X2Plus,
+                    requiredRoles: [UserRole.ADMIN],
+                },
+            ],
+        },
+        {
+            id: "settings",
+            title: "Configuración",
+            items: [
+                {
+                    id: "config",
+                    title: "Configuración",
+                    href: "/dashboard/config",
+                    icon: Settings,
+                },
+                {
+                    id: "sites",
+                    title: "Sitio",
+                    href: "/dashboard/sites",
+                    icon: Building2,
+                    requiredRoles: [UserRole.ADMIN],
+                },
+            ],
+        },
+    ];
+
+    const isActive = (href: string, exact = false): boolean => {
+        if (exact) {
+            return location.pathname === href;
+        }
+
+        return (
+            location.pathname === href ||
+            location.pathname.startsWith(`${href}/`)
+        );
+    };
+
+    return {
+        navSections,
+        canUpgradeToCompany,
+        isActive,
+    };
 };

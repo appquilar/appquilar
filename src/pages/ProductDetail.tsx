@@ -1,10 +1,8 @@
-
-import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import {useEffect} from 'react';
+import {useParams} from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProductPage from '@/components/products/ProductPage';
-import { AuthProvider } from '@/context/AuthContext';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -15,7 +13,6 @@ const ProductDetail = () => {
   }, []);
 
   return (
-    <AuthProvider>
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1">
@@ -23,7 +20,6 @@ const ProductDetail = () => {
         </main>
         <Footer />
       </div>
-    </AuthProvider>
   );
 };
 

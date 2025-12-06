@@ -1,15 +1,15 @@
-
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import { useUsers } from '@/application/hooks/useUsers';
+import {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {useAuth} from '@/context/AuthContext';
+import {useUsers} from '@/application/hooks/useUsers';
 import UserManagementHeader from './user-management/UserManagementHeader';
 import UserSearchForm from './user-management/UserSearchForm';
 import UserTable from './user-management/UserTable';
 import ResultsCount from './user-management/ResultsCount';
 import AccessRestricted from './user-management/AccessRestricted';
 import InviteUserModal from './user-management/InviteUserModal';
-import { toast } from 'sonner';
+import {toast} from 'sonner';
+import {hasRole, UserRole} from "@/domain/models/UserRole.ts";
 
 const UserManagement = () => {
   const navigate = useNavigate();
@@ -23,20 +23,20 @@ const UserManagement = () => {
     handleDeleteUser,
     handleInviteUser
   } = useUsers();
-  
-  if (user?.role !== 'company_admin') {
-    return <AccessRestricted />;
+
+  if (hasRole(user?.roles, UserRole.COMPANY_ADMIN)) {
+      return <AccessRestricted />;
   }
-  
+
   // Filter users based on search query
   const filteredUsers = users.filter(user => {
     if (!searchQuery) return true;
     
     const query = searchQuery.toLowerCase();
     return (
-      (user?.name?.toLowerCase() || '').includes(query) ||
+      (user?.firstName?.toLowerCase() || '').includes(query) ||
       (user?.email?.toLowerCase() || '').includes(query) ||
-      (user?.role?.toLowerCase() || '').includes(query)
+      (user?.roles?.map((role) => role.toString().toLowerCase()) || '').includes(query)
     );
   });
 

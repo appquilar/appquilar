@@ -1,7 +1,6 @@
-
-import { Link } from 'react-router-dom';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { DashboardNavigationProps } from './types';
+import {Link} from 'react-router-dom';
+import {useIsMobile} from '@/hooks/use-mobile';
+import {DashboardNavigationProps} from './types';
 import DashboardNavigationContent from './DashboardNavigationContent';
 
 /**
