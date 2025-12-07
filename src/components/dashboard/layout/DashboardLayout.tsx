@@ -1,69 +1,62 @@
-
 import React from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
+import {SidebarInset, SidebarProvider, useSidebar} from '@/components/ui/sidebar';
+import {Button} from '@/components/ui/button';
+import {Menu} from 'lucide-react';
 
 interface DashboardLayoutProps {
-  sidebar: React.ReactNode;
-  content: React.ReactNode;
+    sidebar: React.ReactNode;
+    content: React.ReactNode;
 }
 
 /**
- * Layout component for the dashboard that handles responsive sidebar and content
+ * Inner layout content to access the sidebar context
  */
-const DashboardLayout = ({ sidebar, content }: DashboardLayoutProps) => {
-  const isMobile = useIsMobile();
-  const [showSidebar, setShowSidebar] = React.useState(false); // Set to false by default for mobile
+const DashboardLayoutContent = ({ sidebar, content }: DashboardLayoutProps) => {
+    const { toggleSidebar, isMobile } = useSidebar();
 
-  return (
-    <div className="flex h-screen w-screen overflow-hidden">
-      {/* Mobile menu toggle and header */}
-      {isMobile && (
-        <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-background border-b border-border h-14 px-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowSidebar(!showSidebar)}
-          >
-            <Menu size={20} />
-          </Button>
-          <div className="text-xl font-display font-semibold tracking-tight text-primary">
-            appquilar
-          </div>
-          <div className="w-9 opacity-0"></div> {/* Spacer for balance */}
+    return (
+        <div className="flex min-h-svh w-full">
+            {/* The Sidebar component (passed as prop) will handle its own rendering/state */}
+            {sidebar}
+
+            {/* Main Content Area */}
+            <SidebarInset className="flex flex-col flex-1 w-full overflow-hidden">
+
+                {/* Mobile Header / Trigger */}
+                {isMobile && (
+                    <header className="flex items-center border-b px-4 h-14 shrink-0 bg-background gap-2">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={toggleSidebar}
+                            className="-ml-2"
+                        >
+                            <Menu size={20} />
+                        </Button>
+                        <div className="text-xl font-display font-semibold tracking-tight text-primary">
+                            appquilar
+                        </div>
+                    </header>
+                )}
+
+                {/* Page Content */}
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+                    {content}
+                </main>
+            </SidebarInset>
         </div>
-      )}
+    );
+};
 
-      {/* Sidebar navigation */}
-      <div 
-        className={`${
-          isMobile 
-            ? `fixed inset-0 z-40 transform ${showSidebar ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out`
-            : 'relative'
-        }`}
-      >
-        {React.cloneElement(sidebar as React.ReactElement, { 
-          onNavigate: () => isMobile && setShowSidebar(false) 
-        })}
-      </div>
-
-      {/* Mobile sidebar backdrop */}
-      {isMobile && showSidebar && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-30"
-          onClick={() => setShowSidebar(false)}
-        />
-      )}
-
-      {/* Main content */}
-      <div className="flex-grow overflow-y-auto w-full">
-        <div className={`${isMobile ? 'pt-16' : ''} h-full p-4 sm:p-6`}>
-          {content}
-        </div>
-      </div>
-    </div>
-  );
+/**
+ * Root Layout that provides the Sidebar Context
+ */
+const DashboardLayout = (props: DashboardLayoutProps) => {
+    return (
+        <SidebarProvider defaultOpen={true}>
+            <DashboardLayoutContent {...props} />
+        </SidebarProvider>
+    );
 };
 
 export default DashboardLayout;

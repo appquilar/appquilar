@@ -1,8 +1,7 @@
-// src/infrastructure/repositories/RepositoryFactory.ts
-
 import { IRentalRepository } from "@/domain/repositories/IRentalRepository";
 import { IProductRepository } from "@/domain/repositories/IProductRepository";
 import { IConversationRepository } from "@/domain/repositories/IConversationRepository";
+import { MediaRepository } from "@/domain/repositories/MediaRepository";
 
 import { MockRentalRepository } from "./MockRentalRepository";
 import { MockProductRepository } from "./MockProductRepository";
@@ -13,6 +12,7 @@ import type { UserRepository } from "@/domain/repositories/UserRepository";
 
 import { ApiAuthRepository } from "./ApiAuthRepository";
 import { ApiUserRepository } from "./ApiUserRepository";
+import { ApiMediaRepository } from "./ApiMediaRepository";
 
 import { ApiClient } from "../http/ApiClient";
 import { AuthSessionStorage } from "../auth/AuthSessionStorage";
@@ -29,6 +29,7 @@ export class RepositoryFactory {
     // New repositories
     private static authRepository: AuthRepository;
     private static userRepository: UserRepository;
+    private static mediaRepository: MediaRepository;
 
     // Shared infrastructure
     private static apiClient: ApiClient;
@@ -39,9 +40,11 @@ export class RepositoryFactory {
      */
     private static getApiClient(): ApiClient {
         if (!this.apiClient) {
+            // CORRECCIÓN: Usamos import.meta.env.VITE_API_BASE_URL para Vite
+            // En lugar de process.env.NEXT_PUBLIC_API_BASE_URL
             this.apiClient = new ApiClient({
                 baseUrl:
-                    process.env.NEXT_PUBLIC_API_BASE_URL ??
+                    import.meta.env.VITE_API_BASE_URL ??
                     "http://localhost:9000", // fallback
             });
         }
@@ -95,6 +98,27 @@ export class RepositoryFactory {
 
     public static setUserRepository(repository: UserRepository): void {
         this.userRepository = repository;
+    }
+
+    // --------------------------------------------------------------------------
+    // MEDIA REPOSITORY
+    // --------------------------------------------------------------------------
+
+    public static getMediaRepository(): MediaRepository {
+        if (!this.mediaRepository) {
+            const getSession = async () =>
+                this.getAuthRepository().getCurrentSession();
+
+            this.mediaRepository = new ApiMediaRepository(
+                this.getApiClient(),
+                getSession
+            );
+        }
+        return this.mediaRepository;
+    }
+
+    public static setMediaRepository(repository: MediaRepository): void {
+        this.mediaRepository = repository;
     }
 
     // --------------------------------------------------------------------------

@@ -25,31 +25,9 @@ const ImagePreview = ({ image, onRemove, onSetPrimary }: ImagePreviewProps) => {
           className="w-full h-full object-cover"
         />
       </div>
-      
-      {/* Principal badge */}
-      {image.isPrimary && (
-        <div 
-          className="absolute top-2 left-2 bg-primary text-white rounded-full px-2 py-1 flex items-center gap-1 text-xs"
-          style={{ zIndex: 20 }}
-        >
-          <Star className="h-3 w-3" />
-          Principal
-        </div>
-      )}
-      
+
       {/* Action buttons container */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-between p-2 bg-gray-50/80">
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          className="h-8 w-8 p-0 hover:bg-gray-200"
-          onClick={() => onSetPrimary(image.id)}
-          title="Establecer como imagen principal"
-        >
-          <Star className={`h-4 w-4 ${image.isPrimary ? "fill-primary text-primary" : "text-gray-600"}`} />
-        </Button>
-        
+      <div className="absolute top-0 right-0 flex justify-between p-2 bg-gray-50/80">
         <Button
           type="button"
           size="sm"

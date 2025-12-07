@@ -6,7 +6,6 @@
  *
  * This client is infrastructure-only and should not leak into domain/UI.
  */
-
 export interface ApiErrorPayload {
     message?: string;
     statusCode?: number;
@@ -36,12 +35,18 @@ export interface ApiClientConfig {
     defaultHeaders?: Record<string, string>;
 }
 
+export type ResponseFormat = 'json' | 'blob' | 'text';
+
 export interface RequestOptions {
     headers?: Record<string, string>;
     /**
      * If true, the client will not send a body (useful for 204 responses).
      */
     skipParseJson?: boolean;
+    /**
+     * Format of the expected response. Defaults to 'json'.
+     */
+    format?: ResponseFormat;
 }
 
 export class ApiClient {
@@ -100,8 +105,13 @@ export class ApiClient {
         };
 
         if (body !== undefined) {
-            headers["Content-Type"] = "application/json";
-            init.body = JSON.stringify(body);
+            if (body instanceof FormData) {
+                // Do not set Content-Type for FormData; the browser sets it with the boundary
+                init.body = body;
+            } else {
+                headers["Content-Type"] = "application/json";
+                init.body = JSON.stringify(body);
+            }
         }
 
         const response = await fetch(url, init);
@@ -110,6 +120,7 @@ export class ApiClient {
             let payload: ApiErrorPayload | undefined;
 
             try {
+                // Try parsing error as JSON even if we expected a blob
                 payload = (await response.json()) as ApiErrorPayload;
             } catch {
                 // ignore json parse error
@@ -126,12 +137,28 @@ export class ApiClient {
             return undefined as unknown as T;
         }
 
-        // If there's no content, return undefined
+        // Handle specific formats
+        const format = options?.format ?? 'json';
+
+        if (format === 'blob') {
+            return (await response.blob()) as unknown as T;
+        }
+
+        if (format === 'text') {
+            return (await response.text()) as unknown as T;
+        }
+
+        // Default: JSON
         const text = await response.text();
         if (!text) {
             return undefined as unknown as T;
         }
 
-        return JSON.parse(text) as T;
+        try {
+            return JSON.parse(text) as T;
+        } catch {
+            // Fallback if response is text/plain but generic <T> was expected
+            return text as unknown as T;
+        }
     }
 }

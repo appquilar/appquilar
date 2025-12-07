@@ -12,10 +12,6 @@ interface ApiResponse<T> {
     data: T;
 }
 
-/**
- * DTOs aligned with backend User, Address and Location schemas.
- */
-
 interface AddressDto {
     street: string | null;
     street2: string | null;
@@ -32,6 +28,7 @@ interface LocationDto {
 
 interface UserDto {
     id: string;
+    user_id?: string;
     first_name: string;
     last_name: string;
     email: string;
@@ -45,12 +42,18 @@ interface UserDto {
     status?: string | null;
     date_added?: string | null;
     avatar_url?: string | null;
+
+    // BACKEND FIELD: profile_image_id
+    profile_image_id?: string | null;
 }
 
 interface UpdateUserDto {
     first_name?: string;
     last_name?: string;
+    email?: string;
     roles?: string[];
+    // BACKEND FIELD: profile_image_id
+    profile_image_id?: string | null;
 }
 
 interface UpdateUserAddressDto {
@@ -58,13 +61,8 @@ interface UpdateUserAddressDto {
     location?: LocationDto | null;
 }
 
-/**
- * Helper to map DTOs to domain models.
- */
-
 function mapAddressDtoToDomain(dto: AddressDto | null): Address | null {
     if (!dto) return null;
-
     return {
         street: dto.street,
         street2: dto.street2,
@@ -77,7 +75,6 @@ function mapAddressDtoToDomain(dto: AddressDto | null): Address | null {
 
 function mapLocationDtoToDomain(dto: LocationDto | null): Location | null {
     if (!dto) return null;
-
     return {
         latitude: dto.latitude,
         longitude: dto.longitude,
@@ -90,7 +87,7 @@ function mapUserDtoToDomain(dto: UserDto): User {
         : [];
 
     return {
-        id: dto.id,
+        id: dto.id || dto.user_id || "",
         firstName: dto.first_name,
         lastName: dto.last_name,
         email: dto.email,
@@ -102,16 +99,14 @@ function mapUserDtoToDomain(dto: UserDto): User {
         status: dto.status ?? null,
         dateAdded: dto.date_added ? new Date(dto.date_added) : null,
         avatarUrl: dto.avatar_url ?? null,
+
+        // MAPPING: DTO (profile_image_id) -> Domain (profileImageId)
+        profileImageId: dto.profile_image_id ?? null,
     };
 }
 
-/**
- * Helper to map domain models to DTOs for updates.
- */
-
 function mapAddressDomainToDto(address?: Address | null): AddressDto | null {
     if (!address) return null;
-
     return {
         street: address.street ?? null,
         street2: address.street2 ?? null,
@@ -124,17 +119,12 @@ function mapAddressDomainToDto(address?: Address | null): AddressDto | null {
 
 function mapLocationDomainToDto(location?: Location | null): LocationDto | null {
     if (!location) return null;
-
     return {
         latitude: location.latitude ?? null,
         longitude: location.longitude ?? null,
     };
 }
 
-/**
- * ApiUserRepository is the HTTP implementation of UserRepository
- * using the Symfony backend.
- */
 export class ApiUserRepository implements UserRepository {
     private readonly apiClient: ApiClient;
     private readonly getSession: () => Promise<AuthSession | null>;
@@ -150,35 +140,21 @@ export class ApiUserRepository implements UserRepository {
     private async authHeaders(): Promise<Record<string, string>> {
         const session = await this.getSession();
         const authHeader = toAuthorizationHeader(session);
-
-        if (!authHeader) {
-            return {};
-        }
-
-        return {
-            Authorization: authHeader,
-        };
+        return authHeader ? { Authorization: authHeader } : {};
     }
 
     async getCurrentUser(): Promise<User> {
         const headers = await this.authHeaders();
-
-        const response = await this.apiClient.get<ApiResponse<UserDto>>(
-            "/api/me",
-            { headers }
-        );
-
+        const response = await this.apiClient.get<ApiResponse<UserDto>>("/api/me", { headers });
         return mapUserDtoToDomain(response.data);
     }
 
     async getById(userId: string): Promise<User> {
         const headers = await this.authHeaders();
-
         const response = await this.apiClient.get<ApiResponse<UserDto>>(
             `/api/users/${encodeURIComponent(userId)}`,
             { headers }
         );
-
         return mapUserDtoToDomain(response.data);
     }
 
@@ -187,58 +163,49 @@ export class ApiUserRepository implements UserRepository {
 
         const payload: UpdateUserDto = {};
 
-        if (partialUser.firstName !== undefined) {
-            payload.first_name = partialUser.firstName;
+        if (partialUser.firstName !== undefined) payload.first_name = partialUser.firstName;
+        if (partialUser.lastName !== undefined) payload.last_name = partialUser.lastName;
+        if (partialUser.email !== undefined) payload.email = partialUser.email;
+        if (partialUser.roles !== undefined) payload.roles = partialUser.roles as string[];
+
+        // MAPPING: Domain (profileImageId) -> DTO (profile_image_id)
+        if (partialUser.profileImageId !== undefined) {
+            payload.profile_image_id = partialUser.profileImageId;
         }
 
-        if (partialUser.lastName !== undefined) {
-            payload.last_name = partialUser.lastName;
-        }
-
-        if (partialUser.roles !== undefined) {
-            payload.roles = partialUser.roles as string[];
-        }
-
-        const response = await this.apiClient.patch<ApiResponse<UserDto>>(
+        await this.apiClient.patch(
             `/api/users/${encodeURIComponent(userId)}`,
             payload,
             { headers }
         );
 
-        return mapUserDtoToDomain(response.data);
+        return this.getById(userId);
     }
 
     async updateAddress(
         userId: string,
-        data: {
-            address?: User["address"];
-            location?: User["location"];
-        }
+        data: { address?: User["address"]; location?: User["location"] }
     ): Promise<User> {
         const headers = await this.authHeaders();
-
         const payload: UpdateUserAddressDto = {
             address: mapAddressDomainToDto(data.address),
             location: mapLocationDomainToDto(data.location),
         };
 
-        const response = await this.apiClient.patch<ApiResponse<UserDto>>(
+        await this.apiClient.patch<ApiResponse<UserDto>>(
             `/api/users/${encodeURIComponent(userId)}/address`,
             payload,
             { headers }
         );
-
-        return mapUserDtoToDomain(response.data);
+        return this.getById(userId);
     }
 
     async getByCompanyId(companyId: string): Promise<User[]> {
         const headers = await this.authHeaders();
-
         const response = await this.apiClient.get<ApiResponse<UserDto[]>>(
             `/api/companies/${encodeURIComponent(companyId)}/users`,
             { headers }
         );
-
         return response.data.map(mapUserDtoToDomain);
     }
 }
