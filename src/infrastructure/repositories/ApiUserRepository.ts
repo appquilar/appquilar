@@ -43,8 +43,10 @@ interface UserDto {
     date_added?: string | null;
     avatar_url?: string | null;
 
-    // BACKEND FIELD: profile_image_id
-    profile_image_id?: string | null;
+    /**
+     * BACKEND FIELD (OpenAPI): profile_picture_id
+     */
+    profile_picture_id?: string | null;
 }
 
 interface UpdateUserDto {
@@ -52,7 +54,10 @@ interface UpdateUserDto {
     last_name?: string;
     email?: string;
     roles?: string[];
-    // BACKEND FIELD: profile_image_id
+
+    /**
+     * BACKEND FIELD (OpenAPI): profile_picture_id
+     */
     profile_picture_id?: string | null;
 }
 
@@ -98,7 +103,8 @@ function mapUserDtoToDomain(dto: UserDto): User {
         companyName: dto.company_name ?? null,
         status: dto.status ?? null,
         dateAdded: dto.date_added ? new Date(dto.date_added) : null,
-        profilePictureId: dto.profile_image_id ?? null,
+        // AHORA SIGUE EL OpenAPI: profile_picture_id
+        profilePictureId: dto.profile_picture_id ?? null,
     };
 }
 
@@ -139,7 +145,10 @@ export class ApiUserRepository implements UserRepository {
 
     async getCurrentUser(): Promise<User> {
         const headers = await this.authHeaders();
-        const response = await this.apiClient.get<ApiResponse<UserDto>>("/api/me", { headers });
+        const response = await this.apiClient.get<ApiResponse<UserDto>>(
+            "/api/me",
+            { headers }
+        );
         return mapUserDtoToDomain(response.data);
     }
 
@@ -163,6 +172,7 @@ export class ApiUserRepository implements UserRepository {
         if (partialUser.roles !== undefined) payload.roles = partialUser.roles as string[];
 
         if (partialUser.profilePictureId !== undefined) {
+            // OpenAPI: profile_picture_id
             payload.profile_picture_id = partialUser.profilePictureId;
         }
 

@@ -1,9 +1,9 @@
-import {useEffect, useState} from 'react';
-import {useForm} from 'react-hook-form';
-import {zodResolver} from '@hookform/resolvers/zod';
-import {toast} from 'sonner';
-import {useAuth} from '@/context/AuthContext';
-import {useSearchParams} from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import { useSearchParams } from "react-router-dom";
 import {
     addressFormSchema,
     AddressFormValues,
@@ -11,133 +11,171 @@ import {
     PasswordFormValues,
     profileFormSchema,
     ProfileFormValues
-} from '@/domain/schemas/userConfigSchema';
-import {RepositoryFactory} from '@/infrastructure/repositories/RepositoryFactory';
-import {Uuid} from '@/domain/valueObject/uuidv4';
+} from "@/domain/schemas/userConfigSchema";
+import { Uuid } from "@/domain/valueObject/uuidv4";
+import { userService, mediaService } from "@/compositionRoot";
 
 export const useUserConfig = () => {
-    const { user, refreshCurrentUser } = useAuth();
+    const { currentUser, refreshCurrentUser } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
-    const [activeTab, setActiveTab] = useState('profile');
+    const [activeTab, setActiveTab] = useState("profile");
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-    // Repositories
-    const userRepository = RepositoryFactory.getUserRepository();
-    const mediaRepository = RepositoryFactory.getMediaRepository();
 
     // Leer el tab de los query params al montar
     useEffect(() => {
-        const tabParam = searchParams.get('tab');
-        if (tabParam && ['profile', 'password', 'address'].includes(tabParam)) {
+        const tabParam = searchParams.get("tab");
+        if (tabParam && ["profile", "password", "address"].includes(tabParam)) {
             setActiveTab(tabParam);
         }
     }, [searchParams]);
 
-    // Form para perfil
+    // --------------------------------------------------------
+    // FORMULARIO DE PERFIL
+    // --------------------------------------------------------
     const profileForm = useForm<ProfileFormValues>({
         resolver: zodResolver(profileFormSchema),
         defaultValues: {
-            firstName: user?.firstName || '',
-            lastName: user?.lastName || '',
-            email: user?.email || '',
-            profilePicture: user?.profilePictureId || '',
+            firstName: currentUser?.firstName || "",
+            lastName: currentUser?.lastName || "",
+            email: currentUser?.email || "",
+            // solo URL de preview, nunca el id
+            profilePicture: "",
         },
     });
 
-    // Update form defaults when user loads or refreshes
     useEffect(() => {
-        if (user) {
+        if (currentUser) {
             profileForm.reset({
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                profilePicture: user.profilePictureId || '',
+                firstName: currentUser.firstName,
+                lastName: currentUser.lastName,
+                email: currentUser.email,
+                profilePicture: "",
             });
         }
-    }, [user, profileForm]);
+    }, [currentUser, profileForm]);
 
-    // Form para contraseña
+    // --------------------------------------------------------
+    // FORMULARIO DE CONTRASEÑA
+    // --------------------------------------------------------
     const passwordForm = useForm<PasswordFormValues>({
         resolver: zodResolver(passwordFormSchema),
         defaultValues: {
-            currentPassword: '',
-            newPassword: '',
-            confirmPassword: '',
+            currentPassword: "",
+            newPassword: "",
+            confirmPassword: "",
         },
     });
 
-    // Form para dirección
+    // --------------------------------------------------------
+    // FORMULARIO DE DIRECCIÓN
+    // --------------------------------------------------------
     const addressForm = useForm<AddressFormValues>({
         resolver: zodResolver(addressFormSchema),
         defaultValues: {
-            street: user?.address?.street || '',
-            street2: user?.address?.street2 || '',
-            city: user?.address?.city || '',
-            state: user?.address?.state || '',
-            country: user?.address?.country || '',
-            postalCode: user?.address?.postalCode || '',
-            latitude: user?.location?.latitude || undefined,
-            longitude: user?.location?.longitude || undefined,
+            street: currentUser?.address?.street || "",
+            street2: currentUser?.address?.street2 || "",
+            city: currentUser?.address?.city || "",
+            state: currentUser?.address?.state || "",
+            country: currentUser?.address?.country || "",
+            postalCode: currentUser?.address?.postalCode || "",
+            latitude: currentUser?.location?.latitude || undefined,
+            longitude: currentUser?.location?.longitude || undefined,
         },
     });
 
     // --------------------------------------------------------
-    // IMMEDIATE IMAGE UPLOAD HANDLER
+    // GESTIÓN INMEDIATA DE IMAGEN DE PERFIL - SUBIR
     // --------------------------------------------------------
     const onImageUpload = async (file: File) => {
-        if (!user) return;
+        if (!currentUser) return;
 
         const toastId = toast.loading("Actualizando foto de perfil...");
 
         try {
-            // 1. Delete existing image if applicable
-            if (user.profilePictureId) {
+            // 1. Borrar imagen anterior si existe
+            if (currentUser.profilePictureId) {
                 try {
-                    await mediaRepository.deleteImage(user.profilePictureId);
+                    await mediaService.deleteImage(currentUser.profilePictureId);
                 } catch (error) {
                     console.warn("Failed to delete old image, continuing with upload.", error);
                 }
             }
 
-            // 2. Generate UUID in FE
+            // 2. Generar nuevo UUID en el FE
             const newImageId = Uuid.generate().toString();
 
-            // 3. Upload new image with the generated ID
-            await mediaRepository.uploadImage(file, newImageId);
+            // 3. Subir nueva imagen con ese ID
+            await mediaService.uploadImage(file, newImageId);
 
-            // 4. Update User: Send ALL required fields + new profile picture ID
-            await userRepository.update(user.id, {
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                profilePictureId: newImageId
+            // 4. Actualizar usuario con el nuevo profilePictureId
+            await userService.updateUser(currentUser.id, {
+                firstName: currentUser.firstName,
+                lastName: currentUser.lastName,
+                email: currentUser.email,
+                profilePictureId: newImageId,
             });
 
-            // 5. Refresh context
+            // 5. Refrescar el usuario en el contexto
             if (refreshCurrentUser) {
                 await refreshCurrentUser();
             }
 
-            toast.success('Foto de perfil actualizada', { id: toastId });
+            toast.success("Foto de perfil actualizada", { id: toastId });
         } catch (error) {
             console.error("Error updating profile picture:", error);
             toast.error("Error al actualizar la foto", { id: toastId });
-            // Revert UI
-            if (user) {
-                profileForm.setValue('profilePicture', user.profilePictureId || '');
-            }
+
+            // Revertir UI: vaciamos el campo para que vuelva a usar la URL del servidor
+            profileForm.setValue("profilePicture", "");
         }
     };
 
     // --------------------------------------------------------
-    // FORM SUBMISSIONS
+    // GESTIÓN DE ELIMINAR IMAGEN (X)
     // --------------------------------------------------------
+    const onImageRemove = async () => {
+        if (!currentUser || !currentUser.profilePictureId) {
+            profileForm.setValue("profilePicture", "");
+            return;
+        }
 
-    const onProfileSubmit = async (data: ProfileFormValues) => {
-        if (!user) return;
+        const toastId = toast.loading("Eliminando foto de perfil...");
 
         try {
-            await userRepository.update(user.id, {
+            // 1. Borrar imagen en media
+            await mediaService.deleteImage(currentUser.profilePictureId);
+
+            // 2. Actualizar usuario para dejar sin imagen
+            await userService.updateUser(currentUser.id, {
+                firstName: currentUser.firstName,
+                lastName: currentUser.lastName,
+                email: currentUser.email,
+                profilePictureId: null,
+            });
+
+            // 3. Refrescar usuario
+            if (refreshCurrentUser) {
+                await refreshCurrentUser();
+            }
+
+            // 4. Limpiar preview del formulario
+            profileForm.setValue("profilePicture", "");
+
+            toast.success("Foto de perfil eliminada", { id: toastId });
+        } catch (error) {
+            console.error("Error deleting profile picture:", error);
+            toast.error("Error al eliminar la foto de perfil", { id: toastId });
+        }
+    };
+
+    // --------------------------------------------------------
+    // SUBMITS DE FORMULARIOS
+    // --------------------------------------------------------
+    const onProfileSubmit = async (data: ProfileFormValues) => {
+        if (!currentUser) return;
+
+        try {
+            await userService.updateUser(currentUser.id, {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 email: data.email,
@@ -147,7 +185,7 @@ export const useUserConfig = () => {
                 await refreshCurrentUser();
             }
 
-            toast.success('Perfil actualizado correctamente');
+            toast.success("Perfil actualizado correctamente");
         } catch (error) {
             console.error("Error updating profile:", error);
             toast.error("Error al guardar los cambios del perfil");
@@ -155,15 +193,16 @@ export const useUserConfig = () => {
     };
 
     const onPasswordSubmit = (data: PasswordFormValues) => {
-        toast.success('Contraseña actualizada correctamente');
-        console.log('Password data:', data);
+        // TODO: integrar con AuthService cuando el endpoint esté
+        toast.success("Contraseña actualizada correctamente");
+        console.log("Password data:", data);
         passwordForm.reset();
     };
 
     const onAddressSubmit = async (data: AddressFormValues) => {
-        if (!user) return;
+        if (!currentUser) return;
         try {
-            await userRepository.updateAddress(user.id, {
+            await userService.updateUserAddress(currentUser.id, {
                 address: {
                     street: data.street,
                     street2: data.street2 || undefined,
@@ -172,43 +211,58 @@ export const useUserConfig = () => {
                     country: data.country,
                     postalCode: data.postalCode,
                 },
-                location: (data.latitude && data.longitude) ? {
-                    latitude: data.latitude,
-                    longitude: data.longitude
-                } : undefined
+                location:
+                    data.latitude && data.longitude
+                        ? {
+                            latitude: data.latitude,
+                            longitude: data.longitude,
+                        }
+                        : undefined,
             });
 
             if (refreshCurrentUser) {
                 await refreshCurrentUser();
             }
 
-            toast.success('Dirección guardada correctamente');
+            toast.success("Dirección guardada correctamente");
         } catch (error) {
             console.error("Error updating address:", error);
             toast.error("Error al guardar la dirección");
         }
     };
 
+    // --------------------------------------------------------
+    // UTILIDADES UI
+    // --------------------------------------------------------
     const getInitials = (name: string) => {
         return name
-            .split(' ')
+            .split(" ")
             .map((n) => n[0])
-            .join('')
+            .join("")
             .toUpperCase();
     };
 
     const getActiveTabTitle = () => {
         switch (activeTab) {
-            case 'profile': return 'Perfil';
-            case 'password': return 'Contraseña';
-            case 'address': return 'Dirección';
-            default: return 'Perfil';
+            case "profile":
+                return "Perfil";
+            case "password":
+                return "Contraseña";
+            case "address":
+                return "Dirección";
+            default:
+                return "Perfil";
         }
     };
 
     const handleTabChange = (value: string) => {
         setActiveTab(value);
         setIsDrawerOpen(false);
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            next.set("tab", value);
+            return next;
+        });
     };
 
     return {
@@ -221,11 +275,12 @@ export const useUserConfig = () => {
         addressForm,
         onProfileSubmit,
         onImageUpload,
+        onImageRemove,
         onPasswordSubmit,
         onAddressSubmit,
         getInitials,
         getActiveTabTitle,
         handleTabChange,
-        user
+        currentUser,
     };
 };

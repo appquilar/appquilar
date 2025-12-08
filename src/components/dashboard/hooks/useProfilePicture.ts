@@ -1,15 +1,13 @@
-import {useEffect, useState} from 'react';
-import {RepositoryFactory} from '@/infrastructure/repositories/RepositoryFactory';
+import { useEffect, useState } from "react";
+import { mediaService } from "@/compositionRoot";
 
 /**
  * Hook to fetch the profile avatar blob using the profilePictureId
+ * vía MediaService (capa de aplicación).
  */
 export function useProfilePicture(profilePictureId: string | null | undefined) {
     const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-
-    // Get the repository via Factory (now guaranteed to exist)
-    const mediaRepository = RepositoryFactory.getMediaRepository();
 
     useEffect(() => {
         if (!profilePictureId) {
@@ -22,17 +20,19 @@ export function useProfilePicture(profilePictureId: string | null | undefined) {
 
         const fetchImage = async () => {
             try {
-                // Fetch the thumbnail using the ID
-                const blob = await mediaRepository.downloadImage(profilePictureId, 'THUMBNAIL');
+                // Descargamos el THUMBNAIL usando MediaService
+                const blob = await mediaService.getImage(profilePictureId, "THUMBNAIL");
 
-                if (isActive) {
-                    const objectUrl = URL.createObjectURL(blob);
-                    setProfilePictureUrl(objectUrl);
-                }
+                if (!isActive) return;
+
+                const objectUrl = URL.createObjectURL(blob);
+                setProfilePictureUrl(objectUrl);
             } catch (err) {
                 console.error("Failed to load profile image", err);
             } finally {
-                if (isActive) setLoading(false);
+                if (isActive) {
+                    setLoading(false);
+                }
             }
         };
 
@@ -44,6 +44,7 @@ export function useProfilePicture(profilePictureId: string | null | undefined) {
                 URL.revokeObjectURL(profilePictureUrl);
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [profilePictureId]);
 
     return { profilePicture: profilePictureUrl, loading };

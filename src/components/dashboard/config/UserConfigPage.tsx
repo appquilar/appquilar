@@ -1,14 +1,14 @@
 // src/components/dashboard/config/UserConfigPage.tsx
 
-import React from 'react';
-import { TabsContent } from '@/components/ui/tabs';
-import { useUserConfig } from './hooks/useUserConfig';
-import { useIsMobile } from '@/hooks/use-mobile';
-import ProfileTab from './tabs/ProfileTab';
-import PasswordTab from './tabs/PasswordTab';
-import AddressTab from './tabs/AddressTab';
-import MobileConfigLayout from './layout/MobileConfigLayout';
-import DesktopConfigLayout from './layout/DesktopConfigLayout';
+import React from "react";
+import { TabsContent } from "@/components/ui/tabs";
+import { useUserConfig } from "./hooks/useUserConfig";
+import { useIsMobile } from "@/hooks/use-mobile";
+import ProfileTab from "./tabs/ProfileTab";
+import PasswordTab from "./tabs/PasswordTab";
+import AddressTab from "./tabs/AddressTab";
+import MobileConfigLayout from "./layout/MobileConfigLayout";
+import DesktopConfigLayout from "./layout/DesktopConfigLayout";
 
 const UserConfigPage: React.FC = () => {
     const {
@@ -18,12 +18,13 @@ const UserConfigPage: React.FC = () => {
         passwordForm,
         addressForm,
         onProfileSubmit,
-        onImageUpload, // <--- Destructure this new function
+        onImageUpload,
+        onImageRemove,
         onPasswordSubmit,
         onAddressSubmit,
         getInitials,
         getActiveTabTitle,
-        handleTabChange
+        handleTabChange,
     } = useUserConfig();
 
     const isMobile = useIsMobile();
@@ -34,7 +35,8 @@ const UserConfigPage: React.FC = () => {
                 <ProfileTab
                     profileForm={profileForm}
                     onProfileSubmit={onProfileSubmit}
-                    onImageUpload={onImageUpload} // <--- Pass it to the component
+                    onImageUpload={onImageUpload}
+                    onImageRemove={onImageRemove}
                     getInitials={getInitials}
                 />
             </TabsContent>
@@ -58,8 +60,12 @@ const UserConfigPage: React.FC = () => {
     return (
         <div className="container mx-auto py-6 space-y-8 max-w-5xl">
             <div>
-                <h1 className="text-2xl font-display font-semibold">Configuración</h1>
-                <p className="text-muted-foreground">Gestiona tus preferencias y datos personales</p>
+                <h1 className="text-2xl font-display font-semibold">
+                    Configuración
+                </h1>
+                <p className="text-muted-foreground">
+                    Gestiona tus preferencias y datos personales
+                </p>
             </div>
 
             {isMobile ? (

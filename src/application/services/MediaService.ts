@@ -1,22 +1,30 @@
-import {ImageSize, MediaRepository} from "@/domain/repositories/MediaRepository.ts";
-import {Uuid} from "@/domain/valueObject/uuidv4.ts";
-import {mediaRepository} from "@/compositionRoot.ts";
+import type { ImageSize, MediaRepository } from "@/domain/repositories/MediaRepository.ts";
+import { Uuid } from "@/domain/valueObject/uuidv4.ts";
 
 export class MediaService {
     constructor(
         private readonly mediaRepository: MediaRepository
-    ) {
+    ) {}
+
+    /**
+     * Nuevo método de alto nivel para UI/hooks:
+     * descarga una imagen por id y tamaño.
+     */
+    async getImage(imageId: string, size: ImageSize = "THUMBNAIL"): Promise<Blob> {
+        return this.mediaRepository.downloadImage(imageId, size);
     }
 
-    async uploadMedia(file: File, id: Uuid): Promise<void> {
-        await mediaRepository.uploadImage(file, id.toString());
+    /**
+     * Sube una imagen usando un ID en string (más cómodo para la mayoría de casos).
+     */
+    async uploadImage(file: File, imageId: string): Promise<void> {
+        await this.mediaRepository.uploadImage(file, imageId);
     }
 
-    async deleteMedia(id: Uuid): Promise<void> {
-        await mediaRepository.deleteImage(id.toString());
-    }
-
-    async getMediaByIdAndSize(id: Uuid, size: ImageSize): Promise<Blob> {
-        return await mediaRepository.downloadImage(id.toString(), size);
+    /**
+     * Elimina una imagen por su ID.
+     */
+    async deleteImage(imageId: string): Promise<void> {
+        await this.mediaRepository.deleteImage(imageId);
     }
 }
