@@ -52,7 +52,6 @@ const DashboardRoutes = () => {
                 element={<CompanyUsersPage />}
             />
 
-            {/* Categories (🔒 sólo ADMIN) */}
             <Route
                 path="categories"
                 element={

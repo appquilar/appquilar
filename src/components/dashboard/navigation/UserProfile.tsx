@@ -15,24 +15,24 @@ import {ChevronsUpDown, LogOut, Settings, User as UserIcon} from 'lucide-react';
 import {useProfilePicture} from '@/components/dashboard/hooks/useProfilePicture.ts';
 
 const UserProfile: React.FC = () => {
-    const { user, logout } = useAuth();
+    const { currentUser, logout } = useAuth();
     const navigate = useNavigate();
 
-    const { profilePicture } = useProfilePicture(user?.profilePictureId);
+    const { profilePicture } = useProfilePicture(currentUser?.profilePictureId);
 
     const handleLogout = async () => {
         await logout();
         navigate('/login');
     };
 
-    if (!user) return null;
+    if (!currentUser) return null;
 
-    const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
-    const displayName = fullName || user.email;
+    const fullName = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim();
+    const displayName = fullName || currentUser.email;
 
     const getInitials = () => {
-        const first = user.firstName?.[0] || '';
-        const last = user.lastName?.[0] || '';
+        const first = currentUser.firstName?.[0] || '';
+        const last = currentUser.lastName?.[0] || '';
         const initials = (first + last).toUpperCase();
         return initials || 'N/A';
     };
@@ -57,7 +57,7 @@ const UserProfile: React.FC = () => {
                             </Avatar>
                             <div className="grid flex-1 text-left text-sm leading-tight">
                                 <span className="truncate font-semibold">{displayName}</span>
-                                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                                <span className="truncate text-xs text-muted-foreground">{currentUser.email}</span>
                             </div>
                             <ChevronsUpDown className="ml-auto size-4" />
                         </SidebarMenuButton>
@@ -78,7 +78,7 @@ const UserProfile: React.FC = () => {
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
                                     <span className="truncate font-semibold">{displayName}</span>
-                                    <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                                    <span className="truncate text-xs text-muted-foreground">{currentUser.email}</span>
                                 </div>
                             </div>
                         </DropdownMenuLabel>

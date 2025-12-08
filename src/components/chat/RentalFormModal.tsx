@@ -33,7 +33,7 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
   conversation
 }) => {
   const isMobile = useIsMobile();
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
   const { form, isSubmitting, onSubmit } = useRentalForm();
   const { 
     productSearch, 
@@ -46,11 +46,11 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
 
   // Pre-fill customer information from the conversation and logged-in user
   React.useEffect(() => {
-    if (user && form) {
+    if (currentUser && form) {
       // For user's information
-      form.setValue('customerId', user.id);
-      form.setValue('customerName', user.name);
-      form.setValue('customerEmail', user.email);
+      form.setValue('customerId', currentUser.id);
+      form.setValue('customerName', currentUser.firstName + ' ' + currentUser.lastName);
+      form.setValue('customerEmail', currentUser.email);
       
       // If we have a product in the conversation, attempt to select it
       if (conversation?.productId) {
@@ -61,7 +61,7 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
         }
       }
     }
-  }, [user, form, conversation, filteredProducts]);
+  }, [currentUser, form, conversation, filteredProducts]);
 
   // Handle form submission
   const handleFormSubmit = async (data: RentalFormValues) => {

@@ -23,7 +23,7 @@ export interface AuthSession {
     /**
      * Roles attached to this user by the backend.
      * They are used for UI logic only.
-     * Never rely on them for real security.
+     * Never rely on them for real saecurity.
      */
     roles: UserRole[];
 

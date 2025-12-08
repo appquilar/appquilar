@@ -1,6 +1,12 @@
-import {createContext, ReactNode, useContext, useEffect, useState,} from "react";
+import {
+    createContext,
+    ReactNode,
+    useContext,
+    useEffect,
+    useState,
+} from "react";
 
-import type {User} from "@/domain/models/User";
+import type { User } from "@/domain/models/User";
 import type {
     ChangePasswordData,
     LoginCredentials,
@@ -8,12 +14,11 @@ import type {
     ResetPasswordData,
 } from "@/domain/models/AuthCredentials";
 
-import {compositionRoot, queryClient} from "@/compositionRoot";
-import {UserRole} from "@/domain/models/UserRole.ts";
-import {AuthSession} from "@/domain/models/AuthSession.ts";
+import { compositionRoot, queryClient } from "@/compositionRoot";
+import { UserRole } from "@/domain/models/UserRole";
+import type { AuthSession } from "@/domain/models/AuthSession";
 
 const authService = compositionRoot.authService;
-const userService = compositionRoot.userService;
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -26,13 +31,18 @@ interface AuthContextType {
 
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
-    register: (        firstName: string,
-                       lastName: string,
-                       email: string,
-                       password: string
+    register: (
+        firstName: string,
+        lastName: string,
+        email: string,
+        password: string
     ) => Promise<void>;
     requestPasswordReset: (email: string) => Promise<void>;
-    resetPassword: (email: string, token: string, newPassword: string) => Promise<void>;
+    resetPassword: (
+        email: string,
+        token: string,
+        newPassword: string
+    ) => Promise<void>;
     changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
     refreshCurrentUser: () => Promise<User | null>;
     getCurrentSession: () => Promise<AuthSession | null>;
@@ -54,16 +64,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     //
-    // Load session on mount
+    // Carga inicial: si hay sesión válida, traemos /api/me
     //
     useEffect(() => {
         const init = async () => {
             try {
-                const session = await authService.getCurrentSession();
-                if (session?.token) {
-                    const user = await userService.getCurrentUser();
-                    setCurrentUser(user);
-                }
+                const user = await authService.getCurrentUser();
+                setCurrentUser(user);
             } catch {
                 setCurrentUser(null);
             } finally {
@@ -75,14 +82,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     //
-    // Refresh /me manually
+    // Refrescar /me manualmente
     //
     const refreshCurrentUser = async (): Promise<User | null> => {
         try {
-            const user = await userService.getCurrentUser();
+            const user = await authService.refreshCurrentUser();
             setCurrentUser(user);
             return user;
         } catch {
+            setCurrentUser(null);
             return null;
         }
     };
@@ -97,16 +105,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const credentials: LoginCredentials = { email, password };
 
             await authService.login(credentials);
-
-            const user = await userService.getCurrentUser();
+            const user = await authService.getCurrentUser();
+            console.log("User logged in:", user);
             setCurrentUser(user);
+
+            // Por si acaso alguien más usa la query "currentUser"
+            await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
         } finally {
             setIsLoading(false);
         }
     };
 
     //
-    // SIGNUP  (no autologin)
+    // SIGNUP (no autologin)
     //
     const register = async (
         firstName: string,
@@ -134,11 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     //
     // FORGOT PASSWORD
     //
-    const forgotPassword = async (email: string): Promise<void> => {
-        await authService.requestPasswordReset(email);
-    };
-
-    const requestPasswordReset = async (email: string) => {
+    const requestPasswordReset = async (email: string): Promise<void> => {
         setIsLoading(true);
         try {
             await authService.requestPasswordReset(email);
@@ -147,7 +154,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const resetPassword = async (email: string, token: string, newPassword: string) => {
+    const resetPassword = async (
+        email: string,
+        token: string,
+        newPassword: string
+    ): Promise<void> => {
         setIsLoading(true);
         try {
             const data: ResetPasswordData = { email, token, newPassword };
@@ -158,7 +169,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     //
-    // CHANGE PASSWORD (logged-in user only)
+    // CHANGE PASSWORD (usuario autenticado)
     //
     const changePassword = async (
         oldPassword: string,
@@ -182,9 +193,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const logout = async () => {
         await authService.logout();
         setCurrentUser(null);
-        queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+
+        await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+        await queryClient.invalidateQueries();
     };
 
+    //
+    // ROLES
+    //
     const hasRole = (role: UserRole): boolean => {
         return currentUser?.roles?.includes(role) ?? false;
     };
@@ -192,7 +208,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const canAccess = (required: UserRole[]): boolean => {
         if (!required || required.length === 0) return true;
         if (!currentUser) return false;
-        return required.some(r => currentUser.roles.includes(r));
+        return required.some((r) => currentUser.roles.includes(r));
     };
 
     return (
@@ -208,10 +224,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 requestPasswordReset,
                 resetPassword,
                 refreshCurrentUser,
-                getCurrentSession: authService.getCurrentSession,
+                getCurrentSession: authService.getCurrentSession.bind(authService),
                 hasRole,
                 canAccess,
-                changePassword
+                changePassword,
             }}
         >
             {children}

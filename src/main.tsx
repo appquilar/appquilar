@@ -1,12 +1,11 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-import { RepositoryConfig } from './infrastructure/config/RepositoryConfig';
+import {RepositoryConfig} from './infrastructure/config/RepositoryConfig';
 
 // Initialize repositories (default to mock repositories)
-RepositoryConfig.useMockRepositories();
+RepositoryConfig.useApiRepositories(import.meta.env.VITE_API_BASE_URL);
 
 // To use API repositories, uncomment the line below:
 // RepositoryConfig.useApiRepositories('https://api.example.com');
