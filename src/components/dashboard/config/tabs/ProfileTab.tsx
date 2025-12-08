@@ -5,9 +5,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfileFormValues } from '@/domain/schemas/userConfigSchema';
 import { UseFormReturn } from 'react-hook-form';
-import ProfileImageUpload from '../../users/ProfileImageUpload';
+import ProfilePictureUpload from '../../users/ProfilePictureUpload.tsx';
 import { ImageFile } from '@/components/dashboard/forms/image-upload/types';
-import { useProfileAvatar } from '@/components/dashboard/hooks/useProfileAvatar';
+import { useProfilePicture } from '@/components/dashboard/hooks/useProfilePicture.ts';
 import { useAuth } from '@/context/AuthContext';
 
 interface ProfileTabProps {
@@ -25,13 +25,13 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
     const { user } = useAuth();
 
     // Obtenemos la URL "segura" (blob) del servidor usando el ID
-    const { avatarUrl: serverAvatarUrl } = useProfileAvatar(user?.profileImageId);
+    const { profilePicture: serverProfilePictureUrl } = useProfilePicture(user?.profilePictureId);
 
     const handleImageChange = async (images: ImageFile[]) => {
         const imageFile = images.length > 0 ? images[0] : null;
 
         // Actualización visual inmediata en el formulario (con la URL del objeto local del input file)
-        profileForm.setValue('profileImage', imageFile?.url || '', {
+        profileForm.setValue('profilePicture', imageFile?.url || '', {
             shouldValidate: true
         });
 
@@ -43,12 +43,12 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
 
     // La URL que vigila el formulario. Puede ser la URL de una nueva subida (local)
     // o string vacío si no se ha subido nada nuevo en esta sesión del form.
-    const formImageUrl = profileForm.watch('profileImage');
+    const formImageUrl = profileForm.watch('profilePicture');
 
     // Decidimos qué mostrar:
     // 1. Si hay una imagen en el form (recién subida/seleccionada), la mostramos.
     // 2. Si no, mostramos la que viene del servidor (blob).
-    const displayUrl = formImageUrl || serverAvatarUrl;
+    const displayUrl = formImageUrl || serverProfilePictureUrl;
 
     return (
         <Card>
@@ -67,11 +67,11 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
                             <div className="flex flex-col items-center space-y-2">
                                 <FormField
                                     control={profileForm.control}
-                                    name="profileImage"
+                                    name="profilePicture"
                                     render={() => (
                                         <FormItem>
                                             <FormControl>
-                                                <ProfileImageUpload
+                                                <ProfilePictureUpload
                                                     value={displayUrl ? [{
                                                         id: 'profile-image',
                                                         url: displayUrl,

@@ -2,18 +2,18 @@ import {useEffect, useState} from 'react';
 import {RepositoryFactory} from '@/infrastructure/repositories/RepositoryFactory';
 
 /**
- * Hook to fetch the profile avatar blob using the profileImageId
+ * Hook to fetch the profile avatar blob using the profilePictureId
  */
-export function useProfileAvatar(profileImageId: string | null | undefined) {
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+export function useProfilePicture(profilePictureId: string | null | undefined) {
+    const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
     // Get the repository via Factory (now guaranteed to exist)
     const mediaRepository = RepositoryFactory.getMediaRepository();
 
     useEffect(() => {
-        if (!profileImageId) {
-            setAvatarUrl(null);
+        if (!profilePictureId) {
+            setProfilePictureUrl(null);
             return;
         }
 
@@ -23,11 +23,11 @@ export function useProfileAvatar(profileImageId: string | null | undefined) {
         const fetchImage = async () => {
             try {
                 // Fetch the thumbnail using the ID
-                const blob = await mediaRepository.downloadImage(profileImageId, 'THUMBNAIL');
+                const blob = await mediaRepository.downloadImage(profilePictureId, 'THUMBNAIL');
 
                 if (isActive) {
                     const objectUrl = URL.createObjectURL(blob);
-                    setAvatarUrl(objectUrl);
+                    setProfilePictureUrl(objectUrl);
                 }
             } catch (err) {
                 console.error("Failed to load profile image", err);
@@ -40,11 +40,11 @@ export function useProfileAvatar(profileImageId: string | null | undefined) {
 
         return () => {
             isActive = false;
-            if (avatarUrl) {
-                URL.revokeObjectURL(avatarUrl);
+            if (profilePictureUrl) {
+                URL.revokeObjectURL(profilePictureUrl);
             }
         };
-    }, [profileImageId]);
+    }, [profilePictureId]);
 
-    return { avatarUrl, loading };
+    return { profilePicture: profilePictureUrl, loading };
 }

@@ -12,14 +12,13 @@ import {SidebarMenu, SidebarMenuButton, SidebarMenuItem} from '@/components/ui/s
 import {useAuth} from '@/context/AuthContext';
 import {useNavigate} from 'react-router-dom';
 import {ChevronsUpDown, LogOut, Settings, User as UserIcon} from 'lucide-react';
-import {useProfileAvatar} from '@/components/dashboard/hooks/useProfileAvatar';
+import {useProfilePicture} from '@/components/dashboard/hooks/useProfilePicture.ts';
 
 const UserProfile: React.FC = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
-    // CORRECCIÓN: Usar profileImageId
-    const { avatarUrl } = useProfileAvatar(user?.profileImageId);
+    const { profilePicture } = useProfilePicture(user?.profilePictureId);
 
     const handleLogout = async () => {
         await logout();
@@ -39,7 +38,7 @@ const UserProfile: React.FC = () => {
     };
 
     // Usar la URL obtenida del hook
-    const displayAvatarSrc = avatarUrl || '';
+    const displayAvatarSrc = profilePicture || '';
 
     return (
         <SidebarMenu>

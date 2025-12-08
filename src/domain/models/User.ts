@@ -22,11 +22,8 @@ export interface User {
     status?: string | null;
     dateAdded?: Date | null;
 
-    // Avatar URL for UI display (optional/computed)
-    avatarUrl?: string | null;
-
     // The UUID of the profile image
-    profileImageId?: string | null;
+    profilePictureId?: string | null;
 }
 
 /**
@@ -44,8 +41,7 @@ export function createUser(params: {
     companyName?: string | null;
     status?: string | null;
     dateAdded?: Date | null;
-    avatarUrl?: string | null;
-    profileImageId?: string | null;
+    profilePictureId?: string | null;
 }): User {
     return {
         id: params.id,
@@ -59,8 +55,7 @@ export function createUser(params: {
         companyName: params.companyName ?? null,
         status: params.status ?? null,
         dateAdded: params.dateAdded ?? null,
-        avatarUrl: params.avatarUrl ?? null,
-        profileImageId: params.profileImageId ?? null,
+        profilePictureId: params.profilePictureId ?? null,
     };
 }
 

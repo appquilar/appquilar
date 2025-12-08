@@ -40,7 +40,7 @@ export const useUserConfig = () => {
             firstName: user?.firstName || '',
             lastName: user?.lastName || '',
             email: user?.email || '',
-            profileImage: user?.avatarUrl || '',
+            profilePicture: user?.profilePictureId || '',
         },
     });
 
@@ -51,7 +51,7 @@ export const useUserConfig = () => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 email: user.email,
-                profileImage: user.avatarUrl || '',
+                profilePicture: user.profilePictureId || '',
             });
         }
     }, [user, profileForm]);
@@ -91,9 +91,9 @@ export const useUserConfig = () => {
 
         try {
             // 1. Delete existing image if applicable
-            if (user.profileImageId) {
+            if (user.profilePictureId) {
                 try {
-                    await mediaRepository.deleteImage(user.profileImageId);
+                    await mediaRepository.deleteImage(user.profilePictureId);
                 } catch (error) {
                     console.warn("Failed to delete old image, continuing with upload.", error);
                 }
@@ -110,7 +110,7 @@ export const useUserConfig = () => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 email: user.email,
-                profileImageId: newImageId
+                profilePictureId: newImageId
             });
 
             // 5. Refresh context
@@ -124,7 +124,7 @@ export const useUserConfig = () => {
             toast.error("Error al actualizar la foto", { id: toastId });
             // Revert UI
             if (user) {
-                profileForm.setValue('profileImage', user.avatarUrl || '');
+                profileForm.setValue('profilePicture', user.profilePictureId || '');
             }
         }
     };
@@ -141,7 +141,6 @@ export const useUserConfig = () => {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 email: data.email,
-                // profileImageId is handled separately by onImageUpload
             });
 
             if (refreshCurrentUser) {

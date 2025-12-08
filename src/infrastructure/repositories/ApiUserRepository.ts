@@ -53,7 +53,7 @@ interface UpdateUserDto {
     email?: string;
     roles?: string[];
     // BACKEND FIELD: profile_image_id
-    profile_image_id?: string | null;
+    profile_picture_id?: string | null;
 }
 
 interface UpdateUserAddressDto {
@@ -98,10 +98,7 @@ function mapUserDtoToDomain(dto: UserDto): User {
         companyName: dto.company_name ?? null,
         status: dto.status ?? null,
         dateAdded: dto.date_added ? new Date(dto.date_added) : null,
-        avatarUrl: dto.avatar_url ?? null,
-
-        // MAPPING: DTO (profile_image_id) -> Domain (profileImageId)
-        profileImageId: dto.profile_image_id ?? null,
+        profilePictureId: dto.profile_image_id ?? null,
     };
 }
 
@@ -168,9 +165,8 @@ export class ApiUserRepository implements UserRepository {
         if (partialUser.email !== undefined) payload.email = partialUser.email;
         if (partialUser.roles !== undefined) payload.roles = partialUser.roles as string[];
 
-        // MAPPING: Domain (profileImageId) -> DTO (profile_image_id)
-        if (partialUser.profileImageId !== undefined) {
-            payload.profile_image_id = partialUser.profileImageId;
+        if (partialUser.profilePictureId !== undefined) {
+            payload.profile_picture_id = partialUser.profilePictureId;
         }
 
         await this.apiClient.patch(

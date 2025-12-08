@@ -5,12 +5,12 @@ import { validateAndProcessFiles } from '@/components/dashboard/forms/image-uplo
 import ImagePreview from '@/components/dashboard/forms/image-upload/ImagePreview';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-interface ProfileImageUploadProps {
+interface ProfilePictureUploadProps {
   value: ImageFile[] | undefined;
   onChange: (value: ImageFile[]) => void;
 }
 
-const ProfileImageUpload = ({ value, onChange }: ProfileImageUploadProps) => {
+const ProfilePictureUpload = ({ value, onChange }: ProfilePictureUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const isMobile = useIsMobile();
   
@@ -90,4 +90,4 @@ const ProfileImageUpload = ({ value, onChange }: ProfileImageUploadProps) => {
   );
 };
 
-export default ProfileImageUpload;
+export default ProfilePictureUpload;

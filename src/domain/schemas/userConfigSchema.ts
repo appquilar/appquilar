@@ -5,7 +5,7 @@ export const profileFormSchema = z.object({
     firstName: z.string().min(2, { message: 'El nombre debe tener al menos 2 caracteres' }),
     lastName: z.string().min(2, { message: 'Los apellidos deben tener al menos 2 caracteres' }),
     email: z.string().email({ message: 'Introduce un email válido' }),
-    profileImage: z.string().optional(),
+    profilePicture: z.string().optional(),
     // Field to hold the actual File object for upload
     imageFile: z.custom<File>((val) => val instanceof File).optional(),
 });

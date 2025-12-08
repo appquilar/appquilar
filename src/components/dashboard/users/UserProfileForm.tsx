@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { useUserProfileForm } from './hooks/useUserProfileForm';
 import { User } from '@/domain/models/User.ts';
-import ProfileImageUpload from './ProfileImageUpload';
+import ProfilePictureUpload from './ProfilePictureUpload.tsx';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export const UserProfileForm = ({ 
@@ -25,7 +25,7 @@ export const UserProfileForm = ({
   const handleSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      const imageUrl = data.images?.[0]?.url || user.imageUrl;
+      const imageUrl = user.profilePictureId;
       await onSubmit({
         ...data,
         imageUrl,
@@ -45,7 +45,7 @@ export const UserProfileForm = ({
             <FormItem>
               <FormLabel className="text-center block">Imagen de perfil</FormLabel>
               <div className="flex justify-center">
-                <ProfileImageUpload
+                <ProfilePictureUpload
                   value={field.value}
                   onChange={field.onChange}
                 />
