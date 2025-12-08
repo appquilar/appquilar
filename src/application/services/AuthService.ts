@@ -81,6 +81,10 @@ export class AuthService {
         return this.authRepository.getCurrentSession();
     }
 
+    getCurrentSessionSync(): AuthSession | null {
+        return this.authRepository.getCurrentSessionSync();
+    }
+
     /**
      * Returns the current user using an in-memory cache, so that /api/me
      * is only called once per browser session (or until logout).

@@ -91,7 +91,7 @@ export class ApiAuthRepository implements AuthRepository {
     }
 
     async logout(): Promise<void> {
-        const session = await this.sessionStorage.getCurrentSession();
+        const session = this.sessionStorage.getCurrentSession();
 
         try {
             await this.apiClient.post<void>("/api/auth/logout", undefined, {
@@ -155,5 +155,9 @@ export class ApiAuthRepository implements AuthRepository {
 
     async getCurrentSession(): Promise<AuthSession | null> {
         return this.sessionStorage.getCurrentSession();
+    }
+
+    getCurrentSessionSync(): AuthSession | null {
+        return this.sessionStorage.getCurrentSessionSync();
     }
 }

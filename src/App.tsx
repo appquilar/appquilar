@@ -13,19 +13,11 @@ import ResetPassword from "@/pages/ResetPassword";
 
 import {AuthProvider} from "./context/AuthContext";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
+import {queryClient} from "@/compositionRoot.ts";
 
 /**
  * Cliente de consulta para React Query con configuración predeterminada
  */
-const queryClient = new QueryClient({
-    defaultOptions: {
-        queries: {
-            refetchOnWindowFocus: false,
-            retry: 1,
-            staleTime: 5 * 60 * 1000, // 5 minutos
-        },
-    },
-});
 
 /**
  * Componente principal de la aplicación que configura proveedores y rutas

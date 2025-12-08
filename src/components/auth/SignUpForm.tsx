@@ -1,47 +1,32 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-    Form,
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "@/components/ui/form";
-import { toast } from "sonner";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import {useState} from "react";
+import {useForm} from "react-hook-form";
+import {z} from "zod";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {useAuth} from "@/context/AuthContext";
 
-const formSchema = z.object({
-    firstName: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-    lastName: z.string().min(2, "El apellido debe tener al menos 2 caracteres"),
-    email: z.string().email("Correo electrónico inválido"),
-    password: z
-        .string()
-        .min(8, "La contraseña debe tener al menos 8 caracteres"),
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
+import {LoginCredentials, RegisterUserData} from "@/domain/models/AuthCredentials.ts";
+
+const schema = z.object({
+    firstName: z.string().min(2),
+    lastName: z.string().min(1),
+    email: z.string().email(),
+    password: z.string().min(8),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof schema>;
 
 interface SignUpFormProps {
     onSuccess?: () => void;
 }
 
-/**
- * Formulario de registro
- */
 const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
-    const { signup } = useAuth();
+    const { register } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
 
-    const form = useForm<FormValues>({
-        resolver: zodResolver(formSchema),
+    const form = useForm<RegisterUserData>({
         defaultValues: {
             firstName: "",
             lastName: "",
@@ -50,23 +35,11 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         },
     });
 
-    const onSubmit = async (data: FormValues) => {
+    const handleSubmit = async (data: FormValues) => {
         try {
             setIsLoading(true);
-            await signup(
-                data.firstName,
-                data.lastName,
-                data.email,
-                data.password
-            );
-
-            // Dejamos el mensaje principal al AuthModal
-            if (onSuccess) {
-                onSuccess();
-            }
-        } catch (error) {
-            console.error("Error al crear cuenta:", error);
-            toast.error("No se pudo crear la cuenta");
+            await register(data.firstName, data.lastName, data.email, data.password);
+            onSuccess?.();
         } finally {
             setIsLoading(false);
         }
@@ -74,19 +47,15 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
                 <FormField
-                    control={form.control}
                     name="firstName"
+                    control={form.control}
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Nombre</FormLabel>
                             <FormControl>
-                                <Input
-                                    placeholder="Juan"
-                                    autoComplete="given-name"
-                                    {...field}
-                                />
+                                <Input {...field} placeholder={field.value ?? ""} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -94,17 +63,13 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                 />
 
                 <FormField
-                    control={form.control}
                     name="lastName"
+                    control={form.control}
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Apellidos</FormLabel>
+                            <FormLabel>Apellido</FormLabel>
                             <FormControl>
-                                <Input
-                                    placeholder="Pérez García"
-                                    autoComplete="family-name"
-                                    {...field}
-                                />
+                                <Input {...field} placeholder={field.value ?? ""} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -112,67 +77,33 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                 />
 
                 <FormField
-                    control={form.control}
                     name="email"
+                    control={form.control}
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Correo electrónico</FormLabel>
+                            <FormLabel>Correo</FormLabel>
                             <FormControl>
-                                <Input
-                                    placeholder="nombre@ejemplo.com"
-                                    type="email"
-                                    autoComplete="email"
-                                    {...field}
-                                />
+                                <Input {...field} type="email" placeholder={field.value ?? ""} />
                             </FormControl>
-                            <FormMessage />
                         </FormItem>
                     )}
                 />
 
                 <FormField
-                    control={form.control}
                     name="password"
+                    control={form.control}
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Contraseña</FormLabel>
                             <FormControl>
-                                <div className="relative">
-                                    <Input
-                                        placeholder="••••••••"
-                                        type={showPassword ? "text" : "password"}
-                                        autoComplete="new-password"
-                                        {...field}
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="absolute right-1 top-1 h-7 w-7"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        tabIndex={-1}
-                                    >
-                                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                    </Button>
-                                </div>
+                                <Input {...field} type="password" placeholder={field.value ?? ""} />
                             </FormControl>
-                            <FormDescription className="text-xs">
-                                La contraseña debe tener al menos 8 caracteres
-                            </FormDescription>
-                            <FormMessage />
                         </FormItem>
                     )}
                 />
 
-                <Button type="submit" className="w-full mt-2" disabled={isLoading}>
-                    {isLoading ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Creando cuenta...
-                        </>
-                    ) : (
-                        "Crear cuenta"
-                    )}
+                <Button disabled={isLoading} className="w-full" type="submit">
+                    {isLoading ? "Creando..." : "Crear cuenta"}
                 </Button>
             </form>
         </Form>

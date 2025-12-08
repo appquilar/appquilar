@@ -64,4 +64,6 @@ export interface AuthRepository {
      * Usually this means reading from some storage (localStorage, cookies, etc.).
      */
     getCurrentSession(): Promise<AuthSession | null>;
+
+    getCurrentSessionSync(): AuthSession | null;
 }

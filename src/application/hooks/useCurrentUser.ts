@@ -1,36 +1,25 @@
-import { useAuth } from "@/context/AuthContext";
-import type { User } from "@/domain/models/User";
+import { useQuery } from "@tanstack/react-query";
+import { authService } from "@/compositionRoot";
 
-/**
- * useCurrentUser is the application-level hook that exposes
- * the current authenticated user and auth state to the UI.
- *
- * It wraps the AuthContext so that UI components don't need
- * to know anything about services or repositories.
- */
-export interface UseCurrentUserResult {
-    user: User | null;
-    isAuthenticated: boolean;
-    isLoading: boolean;
-    /**
-     * Alias for refreshCurrentUser from AuthContext.
-     * Forces a fresh /api/me and updates the cache.
-     */
-    refresh: () => Promise<User | null>;
-}
+export function useCurrentUser() {
+    const session = authService.getCurrentSessionSync();
 
-export const useCurrentUser = (): UseCurrentUserResult => {
-    const {
-        currentUser,
-        isAuthenticated,
-        isLoading,
-        refreshCurrentUser,
-    } = useAuth();
+    const token = session?.token ?? null;
+
+    const query = useQuery({
+        queryKey: ["currentUser", token], // <-- depende del token
+        queryFn: () => {
+            if (!token) return null;
+            return authService.getCurrentUser();
+        },
+        enabled: Boolean(token),  // solo corre si hay token
+        staleTime: 1000 * 60 * 5,
+    });
 
     return {
-        user: currentUser,
-        isAuthenticated,
-        isLoading,
-        refresh: refreshCurrentUser,
+        user: query.data,
+        isAuthenticated: Boolean(query.data),
+        isLoading: query.isLoading,
+        refetch: query.refetch,
     };
-};
+}

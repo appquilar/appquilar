@@ -12,37 +12,46 @@ import {UserService} from "@/application/services/UserService";
 import {MediaRepository} from "@/domain/repositories/MediaRepository.ts";
 import {ApiMediaRepository} from "@/infrastructure/repositories/ApiMediaRepository.ts";
 import {MediaService} from "@/application/services/MediaService.ts";
+import {QueryClient} from "@tanstack/react-query";
 
-// 1) Infra básica compartida (cross-cutting)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
-const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-
-export const apiClient = new ApiClient({
-    baseUrl: API_BASE_URL,
+export const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            refetchOnWindowFocus: false,
+            retry: 1,
+            staleTime: 5 * 60 * 1000, // 5 minutos
+        },
+    },
 });
+
+export const apiClient = new ApiClient({baseUrl: API_BASE_URL,});
 
 export const authSessionStorage = new AuthSessionStorage();
 const session = () => authSessionStorage.getCurrentSession();
 
-// 2) Repositorios (infra) ya instanciados
 export const authRepository: AuthRepository = new ApiAuthRepository(apiClient, authSessionStorage);
 export const userRepository: UserRepository = new ApiUserRepository(apiClient, session);
 export const mediaRepository: MediaRepository = new ApiMediaRepository(apiClient, session);
 
-// 3) Servicios de aplicación
 export const authService = new AuthService(authRepository, userRepository);
 export const userService = new UserService(userRepository, authRepository);
 export const mediaService = new MediaService(mediaRepository);
 
-// 4) (Opcional) Objeto “raíz” por si quieres pasarlo completo a algo
 export const compositionRoot = {
+    queryClient,
+
     apiClient,
     authSessionStorage,
+
     authRepository,
     userRepository,
+    mediaRepository,
+
     authService,
     userService,
+    mediaService
 };
 
 export type CompositionRoot = typeof compositionRoot;

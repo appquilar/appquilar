@@ -150,4 +150,13 @@ export class AuthSessionStorage {
             expiresAt,
         });
     }
+
+    getCurrentSessionSync(): AuthSession | null {
+        const token = localStorage.getItem("auth_token");
+        if (!token) {
+            return null;
+        }
+
+        return this.buildSessionFromToken(token);
+    }
 }

@@ -1,202 +1,121 @@
-import {createContext, type ReactNode, useContext, useEffect, useState,} from "react";
+import {createContext, ReactNode, useContext, useEffect, useState,} from "react";
 
 import type {User} from "@/domain/models/User";
-import type {LoginCredentials, RegisterUserData, ResetPasswordData,} from "@/domain/models/AuthCredentials";
-import type {AuthSession} from "@/domain/models/AuthSession";
+import type {
+    ChangePasswordData,
+    LoginCredentials,
+    RegisterUserData,
+    ResetPasswordData,
+} from "@/domain/models/AuthCredentials";
 
-import {AuthService} from "@/application/services/AuthService";
+import {compositionRoot, queryClient} from "@/compositionRoot";
+import {UserRole} from "@/domain/models/UserRole.ts";
+import {AuthSession} from "@/domain/models/AuthSession.ts";
 
-import {ApiClient} from "@/infrastructure/http/ApiClient";
-import {AuthSessionStorage} from "@/infrastructure/auth/AuthSessionStorage";
-import {ApiAuthRepository} from "@/infrastructure/repositories/ApiAuthRepository";
-import {ApiUserRepository} from "@/infrastructure/repositories/ApiUserRepository";
-import {UserRole,canRoleAccess} from "@/domain/models/UserRole.ts";
+const authService = compositionRoot.authService;
+const userService = compositionRoot.userService;
 
 interface AuthContextType {
-    /**
-     * True when there is a logged-in user.
-     * Alias for isAuthenticated.
-     */
-    isLoggedIn: boolean;
     isAuthenticated: boolean;
-
-    /**
-     * Current authenticated user (or null if there is no session).
-     * Both user and currentUser are exposed for convenience.
-     */
-    user: User | null;
+    isLoading: boolean;
     currentUser: User | null;
 
-    /**
-     * True while resolving the initial auth state or performing
-     * login/logout/refresh operations.
-     */
-    isLoading: boolean;
-
-    /**
-     * Login with email and password.
-     */
-    login: (email: string, password: string) => Promise<void>;
-
-    /**
-     * User registration.
-     */
-    signup: (
-        firstName: string,
-        lastName: string,
-        email: string,
-        password: string
-    ) => Promise<void>;
-
-    /**
-     * Logout current user.
-     */
-    logout: () => void;
-
-    /**
-     * Request a "forgot password" email for the given address.
-     */
-    requestPasswordReset: (email: string) => Promise<void>;
-
-    /**
-     * Reset the password using a reset token and new password.
-     */
-    resetPassword: (email: string, token: string, newPassword: string) => Promise<void>;
-
-    /**
-     * Forces a fresh /api/me and updates the cached user.
-     */
-    refreshCurrentUser: () => Promise<User | null>;
-
-    /**
-     * Exposes the AuthSession in case the UI needs non-sensitive data
-     * (e.g. showing expiration date).
-     */
-    getCurrentSession: () => Promise<AuthSession | null>;
-
-    /**
-     * Role-based helpers for conditional UI.
-     */
+    isLoggedIn: boolean;
     hasRole: (role: UserRole) => boolean;
-    canAccess: (requiredRoles: UserRole[]) => boolean;
+    canAccess: (required: UserRole[]) => boolean;
+
+    login: (email: string, password: string) => Promise<void>;
+    logout: () => Promise<void>;
+    register: (        firstName: string,
+                       lastName: string,
+                       email: string,
+                       password: string
+    ) => Promise<void>;
+    requestPasswordReset: (email: string) => Promise<void>;
+    resetPassword: (email: string, token: string, newPassword: string) => Promise<void>;
+    changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
+    refreshCurrentUser: () => Promise<User | null>;
+    getCurrentSession: () => Promise<AuthSession | null>;
 }
-
-// -----------------
-// Composition root
-// -----------------
-
-const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-
-const apiClient = new ApiClient({
-    baseUrl: API_BASE_URL,
-});
-
-const sessionStorage = new AuthSessionStorage();
-const authRepository = new ApiAuthRepository(apiClient, sessionStorage);
-const userRepository = new ApiUserRepository(apiClient, () =>
-    authRepository.getCurrentSession()
-);
-
-const authService = new AuthService(authRepository, userRepository);
-
-// -----------------
-// React context
-// -----------------
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = (): AuthContextType => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error("useAuth must be used within an AuthProvider");
-    }
-    return context;
+    const ctx = useContext(AuthContext);
+    if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
+    return ctx;
 };
 
+//
+// PROVIDER
+//
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isLoading, setIsLoading] = useState(true);
 
-    /**
-     * Returns true if the current user has the given role.
-     */
-    const hasRole = (role: UserRole): boolean => {
-        if (!currentUser || !Array.isArray(currentUser.roles)) {
-            return false;
-        }
-        return currentUser.roles.includes(role);
-    };
-
-    /**
-     * Returns true if the current user can access a feature that
-     * requires any of the given roles.
-     *
-     * Esto delega en el helper de dominio canRoleAccess, para
-     * que la lógica esté alineada con el backend.
-     */
-    const canAccess = (requiredRoles: UserRole[]): boolean => {
-        if (
-            !currentUser ||
-            !Array.isArray(currentUser.roles) ||
-            requiredRoles.length === 0
-        ) {
-            return false;
-        }
-
-        return currentUser.roles.some((role) =>
-            canRoleAccess(role, requiredRoles)
-        );
-    };
-
-    // Load the current session/user once on mount.
+    //
+    // Load session on mount
+    //
     useEffect(() => {
-        let isMounted = true;
-
         const init = async () => {
-            setIsLoading(true);
             try {
-                const user = await authService.getCurrentUser();
-                if (!isMounted) return;
-
-                setCurrentUser(user);
-            } catch (error) {
-                console.error("Error initialising auth state:", error);
-                if (isMounted) {
-                    setCurrentUser(null);
+                const session = await authService.getCurrentSession();
+                if (session?.token) {
+                    const user = await userService.getCurrentUser();
+                    setCurrentUser(user);
                 }
+            } catch {
+                setCurrentUser(null);
             } finally {
-                if (isMounted) {
-                    setIsLoading(false);
-                }
+                setIsLoading(false);
             }
         };
 
         void init();
-
-        return () => {
-            isMounted = false;
-        };
     }, []);
 
+    //
+    // Refresh /me manually
+    //
+    const refreshCurrentUser = async (): Promise<User | null> => {
+        try {
+            const user = await userService.getCurrentUser();
+            setCurrentUser(user);
+            return user;
+        } catch {
+            return null;
+        }
+    };
+
+    //
+    // LOGIN
+    //
     const login = async (email: string, password: string): Promise<void> => {
         setIsLoading(true);
+
         try {
             const credentials: LoginCredentials = { email, password };
-            const user = await authService.login(credentials);
+
+            await authService.login(credentials);
+
+            const user = await userService.getCurrentUser();
             setCurrentUser(user);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const signup = async (
+    //
+    // SIGNUP  (no autologin)
+    //
+    const register = async (
         firstName: string,
         lastName: string,
         email: string,
         password: string
     ): Promise<void> => {
         setIsLoading(true);
+
         try {
             const data: RegisterUserData = {
                 firstName,
@@ -204,26 +123,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 email,
                 password,
             };
+
             await authService.register(data);
-            // No auto-login: the UI flow is responsible for showing messages.
+            // No autologin → el AuthModal cambiará a "login"
         } finally {
             setIsLoading(false);
         }
     };
 
-    const logout = (): void => {
-        setIsLoading(true);
-        void (async () => {
-            try {
-                await authService.logout();
-            } finally {
-                setCurrentUser(null);
-                setIsLoading(false);
-            }
-        })();
+    //
+    // FORGOT PASSWORD
+    //
+    const forgotPassword = async (email: string): Promise<void> => {
+        await authService.requestPasswordReset(email);
     };
 
-    const requestPasswordReset = async (email: string): Promise<void> => {
+    const requestPasswordReset = async (email: string) => {
         setIsLoading(true);
         try {
             await authService.requestPasswordReset(email);
@@ -232,57 +147,71 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const resetPassword = async (
-        email: string,
-        token: string,
-        newPassword: string
-    ): Promise<void> => {
-        const data: ResetPasswordData = { email, token, newPassword };
+    const resetPassword = async (email: string, token: string, newPassword: string) => {
         setIsLoading(true);
         try {
+            const data: ResetPasswordData = { email, token, newPassword };
             await authService.resetPassword(data);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const refreshCurrentUser = async (): Promise<User | null> => {
-        setIsLoading(true);
-        try {
-            const user = await authService.refreshCurrentUser();
-            setCurrentUser(user);
-            return user;
-        } finally {
-            setIsLoading(false);
-        }
+    //
+    // CHANGE PASSWORD (logged-in user only)
+    //
+    const changePassword = async (
+        oldPassword: string,
+        newPassword: string
+    ): Promise<void> => {
+        const session = await authService.getCurrentSession();
+        if (!session?.token) throw new Error("Not authenticated");
+
+        const data: ChangePasswordData = {
+            oldPassword,
+            newPassword,
+            token: session.token,
+        };
+
+        await authService.changePassword(data);
     };
 
-    const getCurrentSession = async (): Promise<AuthSession | null> => {
-        return authService.getCurrentSession();
+    //
+    // LOGOUT
+    //
+    const logout = async () => {
+        await authService.logout();
+        setCurrentUser(null);
+        queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     };
 
-    const isAuthenticated = !!currentUser;
-    const isLoggedIn = isAuthenticated;
+    const hasRole = (role: UserRole): boolean => {
+        return currentUser?.roles?.includes(role) ?? false;
+    };
 
-
+    const canAccess = (required: UserRole[]): boolean => {
+        if (!required || required.length === 0) return true;
+        if (!currentUser) return false;
+        return required.some(r => currentUser.roles.includes(r));
+    };
 
     return (
         <AuthContext.Provider
             value={{
-                isLoggedIn,
-                isAuthenticated,
-                user: currentUser,
+                isLoggedIn: Boolean(currentUser),
+                isAuthenticated: Boolean(currentUser),
                 currentUser,
                 isLoading,
                 login,
-                signup,
                 logout,
+                register,
                 requestPasswordReset,
                 resetPassword,
                 refreshCurrentUser,
-                getCurrentSession,
+                getCurrentSession: authService.getCurrentSession,
                 hasRole,
                 canAccess,
+                changePassword
             }}
         >
             {children}
