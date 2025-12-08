@@ -124,18 +124,15 @@ function mapLocationDomainToDto(location?: Location | null): LocationDto | null 
 
 export class ApiUserRepository implements UserRepository {
     private readonly apiClient: ApiClient;
-    private readonly getSession: () => Promise<AuthSession | null>;
+    private readonly getSession: () => AuthSession | null;
 
-    constructor(
-        apiClient: ApiClient,
-        getSession: () => Promise<AuthSession | null>
-    ) {
+    constructor(apiClient: ApiClient, getSession: () => AuthSession | null) {
         this.apiClient = apiClient;
         this.getSession = getSession;
     }
 
     private async authHeaders(): Promise<Record<string, string>> {
-        const session = await this.getSession();
+        const session = this.getSession();
         const authHeader = toAuthorizationHeader(session);
         return authHeader ? { Authorization: authHeader } : {};
     }

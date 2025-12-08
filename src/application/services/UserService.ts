@@ -1,21 +1,11 @@
-import type { UserRepository } from "@/domain/repositories/UserRepository";
-import type { AuthRepository } from "@/domain/repositories/AuthRepository";
-import type { User } from "@/domain/models/User";
+import type {UserRepository} from "@/domain/repositories/UserRepository";
+import type {AuthRepository} from "@/domain/repositories/AuthRepository";
+import type {User} from "@/domain/models/User";
 
-/**
- * UserService provides application-level operations on the User domain model.
- *
- * It can coordinate with AuthRepository to:
- * - retrieve the current user based on the current session
- * - handle profile updates for the logged-in user
- */
 export class UserService {
-    private readonly userRepository: UserRepository;
-    private readonly authRepository: AuthRepository;
-
-    constructor(userRepository: UserRepository, authRepository: AuthRepository) {
-        this.userRepository = userRepository;
-        this.authRepository = authRepository;
+    constructor(
+        private readonly userRepository: UserRepository,
+        private readonly authRepository: AuthRepository) {
     }
 
     /**
