@@ -26,10 +26,9 @@ interface RegisterUserDto {
     password: string;
 }
 
-interface ChangePasswordDto {
+interface ChangePasswordRequestDto {
     old_password: string;
     new_password: string;
-    token: string;
 }
 
 interface ForgotPasswordDto {
@@ -44,6 +43,17 @@ interface ResetPasswordDto {
     email: string;
     token: string;
     password: string;
+}
+
+/**
+ * Respuesta mínima de /api/me para obtener el user_id.
+ */
+interface MeResponseDto {
+    success: boolean;
+    data: {
+        id?: string;
+        user_id?: string;
+    };
 }
 
 /**
@@ -110,7 +120,7 @@ export class ApiAuthRepository implements AuthRepository {
     }
 
     async requestPasswordReset(email: string): Promise<void> {
-        const payload: ForgotPasswordDto = {email};
+        const payload: ForgotPasswordDto = { email };
 
         await this.apiClient.post<void>("/api/auth/forgot-password", payload, {
             skipParseJson: true,
@@ -118,28 +128,52 @@ export class ApiAuthRepository implements AuthRepository {
     }
 
     /**
-     * Cambio de contraseña autenticado (no forma parte del flujo "he olvidado mi contraseña").
-     * Ojo: revisa que este endpoint coincida con lo que tengas definido en el backend
-     * (/api/users/{user_id}/change-password en la especificación).
+     * Cambio de contraseña autenticado (desde el dashboard).
+     * Usa /api/users/{user_id}/change-password, obteniendo el user_id desde /api/me.
      */
     async changePassword(data: ChangePasswordData): Promise<void> {
-        const payload: ChangePasswordDto = {
-            old_password: data.oldPassword,
-            new_password: data.newPassword,
-            token: data.token,
+        const session = this.sessionStorage.getCurrentSession();
+
+        if (!session || !session.token) {
+            throw new Error("Cannot change password without an authenticated user");
+        }
+
+        const headers = {
+            Authorization: toAuthorizationHeader(session),
         };
 
-        await this.apiClient.post<void>("/api/auth/change-password", payload, {
-            skipParseJson: true,
+        // 1) Obtener el user_id desde /api/me
+        const me = await this.apiClient.get<MeResponseDto>("/api/me", {
+            headers,
         });
+
+        const userId = me?.data?.id ?? me?.data?.user_id;
+
+        if (!userId) {
+            throw new Error("Unable to resolve user id from /api/me");
+        }
+
+        // 2) Construir payload para el cambio de contraseña
+        const payload: ChangePasswordRequestDto = {
+            old_password: data.oldPassword,
+            new_password: data.newPassword,
+        };
+
+        // 3) Llamar al endpoint de cambio de contraseña autenticado
+        await this.apiClient.patch<void>(
+            `/api/users/${encodeURIComponent(userId)}/change-password`,
+            payload,
+            {
+                headers,
+                skipParseJson: true,
+            },
+        );
     }
 
     /**
-     * Flujo de "he olvidado mi contraseña".
+     * Flujo de "he olvidado mi contraseña" (sin sesión).
      *
-     * - El token viene en el enlace del email (?token=...)
-     * - El FE lo pasa como data.token
-     * - El backend resuelve el email a partir de ese token
+     * Sigue usando /api/auth/change-password.
      */
     async resetPassword(data: ResetPasswordData): Promise<void> {
         const payload: ResetPasswordDto = {

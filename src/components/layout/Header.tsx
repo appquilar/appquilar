@@ -53,6 +53,19 @@ const Header = () => {
         await logout();
     };
 
+    // Abrir automáticamente el AuthModal si venimos de cambiar contraseña
+    useEffect(() => {
+        // Sólo tiene sentido si NO hay usuario autenticado
+        if (isAuthenticated) {
+            return;
+        }
+
+        const msg = sessionStorage.getItem("auth:postChangePasswordMessage");
+        if (msg) {
+            setAuthModalOpen(true);
+        }
+    }, [isAuthenticated]);
+
     return (
         <>
             <header

@@ -1,5 +1,11 @@
 import {useEffect, useState} from "react";
-import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from "@/components/ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 import SignInForm from "./SignInForm";
 import SignUpForm from "./SignUpForm";
@@ -15,9 +21,27 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         "signin",
     );
 
+    const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
     useEffect(() => {
         if (isOpen) {
+            // Siempre abrimos en login
             setActiveTab("signin");
+
+            // Leer mensaje de cambio de contraseña (si existe)
+            const postChangePasswordMessage = sessionStorage.getItem(
+                "auth:postChangePasswordMessage",
+            );
+
+            if (postChangePasswordMessage) {
+                setInfoMessage(postChangePasswordMessage);
+                sessionStorage.removeItem("auth:postChangePasswordMessage");
+            } else {
+                setInfoMessage(null);
+            }
+        } else {
+            // Al cerrar el modal limpiamos el mensaje
+            setInfoMessage(null);
         }
     }, [isOpen]);
 
@@ -61,6 +85,13 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 )}
 
                 <div className="px-6 py-6">
+                    {/* Mensaje informativo estático cuando venimos de cambiar contraseña */}
+                    {activeTab === "signin" && infoMessage && (
+                        <div className="mb-4 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                            {infoMessage}
+                        </div>
+                    )}
+
                     {activeTab === "signin" && (
                         <SignInForm
                             onSuccess={onClose}

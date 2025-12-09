@@ -3,21 +3,27 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import {
     addressFormSchema,
     AddressFormValues,
     passwordFormSchema,
     PasswordFormValues,
     profileFormSchema,
-    ProfileFormValues
+    ProfileFormValues,
 } from "@/domain/schemas/userConfigSchema";
 import { Uuid } from "@/domain/valueObject/uuidv4";
 import { userService, mediaService } from "@/compositionRoot";
 
 export const useUserConfig = () => {
-    const { currentUser, refreshCurrentUser } = useAuth();
+    const {
+        currentUser,
+        refreshCurrentUser,
+        changePassword,
+        logout,
+    } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("profile");
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -38,7 +44,6 @@ export const useUserConfig = () => {
             firstName: currentUser?.firstName || "",
             lastName: currentUser?.lastName || "",
             email: currentUser?.email || "",
-            // solo URL de preview, nunca el id
             profilePicture: "",
         },
     });
@@ -97,7 +102,10 @@ export const useUserConfig = () => {
                 try {
                     await mediaService.deleteImage(currentUser.profilePictureId);
                 } catch (error) {
-                    console.warn("Failed to delete old image, continuing with upload.", error);
+                    console.warn(
+                        "Failed to delete old image, continuing with upload.",
+                        error,
+                    );
                 }
             }
 
@@ -171,6 +179,7 @@ export const useUserConfig = () => {
     // --------------------------------------------------------
     // SUBMITS DE FORMULARIOS
     // --------------------------------------------------------
+
     const onProfileSubmit = async (data: ProfileFormValues) => {
         if (!currentUser) return;
 
@@ -192,11 +201,31 @@ export const useUserConfig = () => {
         }
     };
 
-    const onPasswordSubmit = (data: PasswordFormValues) => {
-        // TODO: integrar con AuthService cuando el endpoint esté
-        toast.success("Contraseña actualizada correctamente");
-        console.log("Password data:", data);
-        passwordForm.reset();
+    const onPasswordSubmit = async (data: PasswordFormValues) => {
+        try {
+            // Zod ya valida que newPassword === confirmPassword
+            await changePassword(data.currentPassword, data.newPassword);
+
+            // Reset del formulario
+            passwordForm.reset();
+
+            // Logout de la sesión actual
+            await logout();
+
+            // Guardamos un mensaje para mostrar en el login del AuthModal
+            sessionStorage.setItem(
+                "auth:postChangePasswordMessage",
+                "Has cambiado tu contraseña, por favor, vuelve a iniciar sesión.",
+            );
+
+            // Redirigimos al índice
+            navigate("/", { replace: true });
+        } catch (error) {
+            console.error("Error changing password:", error);
+            toast.error(
+                "No se ha podido actualizar la contraseña. Revisa los datos e inténtalo de nuevo.",
+            );
+        }
     };
 
     const onAddressSubmit = async (data: AddressFormValues) => {
