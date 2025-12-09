@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import {
     Dialog,
     DialogContent,
@@ -21,6 +21,13 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         "signin",
     );
 
+    /**
+     * Mensaje informativo que se muestra sobre el formulario de login.
+     * Se usa para:
+     * - Contraseña cambiada (vía dashboard)
+     * - Registro correcto
+     * - Envío de email de recuperación
+     */
     const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
     useEffect(() => {
@@ -37,6 +44,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 setInfoMessage(postChangePasswordMessage);
                 sessionStorage.removeItem("auth:postChangePasswordMessage");
             } else {
+                // Si abrimos "normal", limpiamos cualquier mensaje anterior
                 setInfoMessage(null);
             }
         } else {
@@ -85,27 +93,36 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 )}
 
                 <div className="px-6 py-6">
-                    {/* Mensaje informativo estático cuando venimos de cambiar contraseña */}
-                    {activeTab === "signin" && infoMessage && (
-                        <div className="mb-4 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-                            {infoMessage}
-                        </div>
-                    )}
-
                     {activeTab === "signin" && (
                         <SignInForm
                             onSuccess={onClose}
                             onForgotPassword={() => setActiveTab("forgot")}
+                            infoMessage={infoMessage}
                         />
                     )}
 
                     {activeTab === "signup" && (
-                        <SignUpForm onSuccess={() => setActiveTab("signin")} />
+                        <SignUpForm
+                            onSuccess={() => {
+                                // Volvemos a login y mostramos mensaje
+                                setActiveTab("signin");
+                                setInfoMessage(
+                                    "Tu cuenta se ha creado correctamente. Ahora puedes iniciar sesión con tu correo y contraseña.",
+                                );
+                            }}
+                        />
                     )}
 
                     {activeTab === "forgot" && (
                         <ForgotPasswordForm
                             onBack={() => setActiveTab("signin")}
+                            onSuccess={() => {
+                                // Tras enviar el email, volvemos al login con mensaje
+                                setActiveTab("signin");
+                                setInfoMessage(
+                                    "Te hemos enviado un correo con instrucciones para restablecer tu contraseña.",
+                                );
+                            }}
                         />
                     )}
                 </div>

@@ -1,13 +1,20 @@
-import {useState} from "react";
-import {useForm} from "react-hook-form";
-import {z} from "zod";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {useAuth} from "@/context/AuthContext";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth } from "@/context/AuthContext";
 
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
-import {LoginCredentials, RegisterUserData} from "@/domain/models/AuthCredentials.ts";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { RegisterUserData } from "@/domain/models/AuthCredentials.ts";
 
 const schema = z.object({
     firstName: z.string().min(2),
@@ -27,6 +34,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const form = useForm<RegisterUserData>({
+        resolver: zodResolver(schema),
         defaultValues: {
             firstName: "",
             lastName: "",
@@ -55,7 +63,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                         <FormItem>
                             <FormLabel>Nombre</FormLabel>
                             <FormControl>
-                                <Input {...field} placeholder={field.value ?? ""} />
+                                <Input {...field} placeholder="Tu nombre" />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -69,7 +77,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                         <FormItem>
                             <FormLabel>Apellido</FormLabel>
                             <FormControl>
-                                <Input {...field} placeholder={field.value ?? ""} />
+                                <Input {...field} placeholder="Tus apellidos" />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -81,10 +89,11 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                     control={form.control}
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Correo</FormLabel>
+                            <FormLabel>Correo electrónico</FormLabel>
                             <FormControl>
-                                <Input {...field} type="email" placeholder={field.value ?? ""} />
+                                <Input {...field} type="email" placeholder="tu@email.com" />
                             </FormControl>
+                            <FormMessage />
                         </FormItem>
                     )}
                 />
@@ -96,8 +105,9 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                         <FormItem>
                             <FormLabel>Contraseña</FormLabel>
                             <FormControl>
-                                <Input {...field} type="password" placeholder={field.value ?? ""} />
+                                <Input {...field} type="password" placeholder="••••••••" />
                             </FormControl>
+                            <FormMessage />
                         </FormItem>
                     )}
                 />

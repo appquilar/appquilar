@@ -32,7 +32,7 @@ const ForgotPasswordForm = ({ onBack, onSuccess }: ForgotPasswordFormProps) => {
 
     const onSubmit = async (values: ForgotPasswordFormValues) => {
         await requestPasswordReset(values.email);
-        // Dejamos la navegación y el mensaje al AuthModal
+        // La navegación y el mensaje los gestiona AuthModal
         onSuccess?.();
     };
 

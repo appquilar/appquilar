@@ -7,12 +7,12 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
-import {SidebarMenu, SidebarMenuButton, SidebarMenuItem} from '@/components/ui/sidebar';
-import {useAuth} from '@/context/AuthContext';
-import {useNavigate} from 'react-router-dom';
-import {ChevronsUpDown, LogOut, Settings, User as UserIcon} from 'lucide-react';
-import {useProfilePicture} from '@/components/dashboard/hooks/useProfilePicture.ts';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { ChevronsUpDown, LogOut, Settings, User as UserIcon } from 'lucide-react';
+import { useProfilePicture } from '@/components/dashboard/hooks/useProfilePicture.ts';
 
 const UserProfile: React.FC = () => {
     const { currentUser, logout } = useAuth();
@@ -22,7 +22,7 @@ const UserProfile: React.FC = () => {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/login');
+        navigate('/');
     };
 
     if (!currentUser) return null;
@@ -62,6 +62,7 @@ const UserProfile: React.FC = () => {
                             <ChevronsUpDown className="ml-auto size-4" />
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
+
                     <DropdownMenuContent
                         className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                         side="bottom"
@@ -78,21 +79,37 @@ const UserProfile: React.FC = () => {
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
                                     <span className="truncate font-semibold">{displayName}</span>
-                                    <span className="truncate text-xs text-muted-foreground">{currentUser.email}</span>
+                                    <span className="truncate text-xs text-muted-foreground">
+                                        {currentUser.email}
+                                    </span>
                                 </div>
                             </div>
                         </DropdownMenuLabel>
+
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => navigate('/dashboard/config?tab=profile')}>
+
+                        <DropdownMenuItem
+                            onClick={() => navigate('/dashboard/config?tab=profile')}
+                            className="cursor-pointer"
+                        >
                             <UserIcon className="mr-2 h-4 w-4" />
                             Perfil
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate('/dashboard/config?tab=password')}>
+
+                        <DropdownMenuItem
+                            onClick={() => navigate('/dashboard/config?tab=password')}
+                            className="cursor-pointer"
+                        >
                             <Settings className="mr-2 h-4 w-4" />
-                            Configuración
+                            Cambiar contraseña
                         </DropdownMenuItem>
+
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+
+                        <DropdownMenuItem
+                            onClick={handleLogout}
+                            className="text-red-600 focus:text-red-600 cursor-pointer hover:underline"
+                        >
                             <LogOut className="mr-2 h-4 w-4" />
                             Cerrar sesión
                         </DropdownMenuItem>

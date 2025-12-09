@@ -188,6 +188,12 @@ export const useUserConfig = () => {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 email: data.email,
+                // 🔥 IMPORTANTE: mantener la imagen actual si ya existe
+                // Si el usuario no ha eliminado la imagen, volvemos a enviarla
+                profilePictureId:
+                    currentUser.profilePictureId !== undefined
+                        ? currentUser.profilePictureId
+                        : null,
             });
 
             if (refreshCurrentUser) {

@@ -1,15 +1,15 @@
 import React from "react";
-import {useNavigate} from "react-router-dom";
-import {useIsMobile} from "@/hooks/use-mobile";
-import {DashboardNavigationProps} from "./types";
+import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { DashboardNavigationProps } from "./types";
 import UserProfile from "./UserProfile";
 import NavSection from "./NavSection";
 import UpgradeLink from "./UpgradeLink";
-import {useNavigation} from "@/hooks/useNavigation";
-import {Alert, AlertDescription} from "@/components/ui/alert";
-import {MapPin} from "lucide-react";
-import {useAuth} from "@/context/AuthContext";
-import {UserRole} from "@/domain/models/UserRole";
+import { useNavigation } from "@/hooks/useNavigation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { MapPin } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { UserRole } from "@/domain/models/UserRole";
 
 /**
  * Contenido principal de la navegación del panel de control
@@ -21,12 +21,20 @@ const DashboardNavigationContent = ({
                                     }: DashboardNavigationProps) => {
     const isMobile = useIsMobile();
     const navigate = useNavigate();
-    const {navSections, canUpgradeToCompany, isActive} = useNavigation();
-    const hasAddress = false;
+    const { navSections, canUpgradeToCompany, isActive } = useNavigation();
 
-    const {currentUser} = useAuth();
+    const { currentUser } = useAuth();
     const roles = currentUser?.roles ?? [];
     const isAdmin = roles.includes(UserRole.ADMIN);
+
+    // El usuario se considera "con dirección" si tiene address
+    // y al menos uno de los campos básicos relleno.
+    const hasAddress = Boolean(
+        currentUser?.address &&
+        (currentUser.address.street ||
+            currentUser.address.city ||
+            currentUser.address.postalCode)
+    );
 
     const handleTabChange = (href: string) => {
         const tabName =
@@ -55,7 +63,7 @@ const DashboardNavigationContent = ({
     const filteredSections = navSections
         .map((section) => {
             const visibleItems = section.items.filter((item) =>
-                canSeeItem(item.requiredRoles),
+                canSeeItem(item.requiredRoles)
             );
 
             return {
@@ -89,7 +97,7 @@ const DashboardNavigationContent = ({
                         className="cursor-pointer hover:bg-muted/50 transition-colors"
                         onClick={() => navigate("/dashboard/config?tab=address")}
                     >
-                        <MapPin className="h-4 w-4"/>
+                        <MapPin className="h-4 w-4" />
                         <AlertDescription className="text-xs">
                             Añade tu dirección en Configuración
                         </AlertDescription>
@@ -100,13 +108,13 @@ const DashboardNavigationContent = ({
             {/* Enlace para actualizar a cuenta de empresa (justo antes del perfil) */}
             {canUpgradeToCompany && (
                 <div className="px-2 mb-2">
-                    <UpgradeLink/>
+                    <UpgradeLink />
                 </div>
             )}
 
             {/* Información del usuario/empresa en la parte inferior */}
             <div className="mt-auto">
-                <UserProfile/>
+                <UserProfile />
             </div>
         </div>
     );
