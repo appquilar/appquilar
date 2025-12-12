@@ -1,11 +1,15 @@
-import type {UserRepository} from "@/domain/repositories/UserRepository";
-import type {User} from "@/domain/models/User";
-import type {Address} from "@/domain/models/Address";
-import type {Location} from "@/domain/models/Location";
-import {UserRole} from "@/domain/models/UserRole";
-import {ApiClient} from "@/infrastructure/http/ApiClient";
-import type {AuthSession} from "@/domain/models/AuthSession";
-import {toAuthorizationHeader} from "@/domain/models/AuthSession";
+import type {
+    UserRepository,
+    UserListFilters,
+    PaginatedUsersResult,
+} from "@/domain/repositories/UserRepository";
+import type { User } from "@/domain/models/User";
+import type { Address } from "@/domain/models/Address";
+import type { Location } from "@/domain/models/Location";
+import { UserRole } from "@/domain/models/UserRole";
+import { ApiClient } from "@/infrastructure/http/ApiClient";
+import type { AuthSession } from "@/domain/models/AuthSession";
+import { toAuthorizationHeader } from "@/domain/models/AuthSession";
 
 interface ApiResponse<T> {
     success: boolean;
@@ -47,6 +51,22 @@ interface UserDto {
      * BACKEND FIELD (OpenAPI): profile_picture_id
      */
     profile_picture_id?: string | null;
+}
+
+/**
+ * Respuesta de /api/users según nelmio_api_doc.yaml:
+ * {
+ *   data: User[],
+ *   total: number,
+ *   page: number,
+ *   per_page: number
+ * }
+ */
+interface UserListResponseDto {
+    data: UserDto[];
+    total: number;
+    page: number;
+    per_page: number;
 }
 
 interface UpdateUserDto {
@@ -103,7 +123,7 @@ function mapUserDtoToDomain(dto: UserDto): User {
         companyName: dto.company_name ?? null,
         status: dto.status ?? null,
         dateAdded: dto.date_added ? new Date(dto.date_added) : null,
-        // AHORA SIGUE EL OpenAPI: profile_picture_id
+        // OpenAPI: profile_picture_id
         profilePictureId: dto.profile_picture_id ?? null,
     };
 }
@@ -166,10 +186,13 @@ export class ApiUserRepository implements UserRepository {
 
         const payload: UpdateUserDto = {};
 
-        if (partialUser.firstName !== undefined) payload.first_name = partialUser.firstName;
-        if (partialUser.lastName !== undefined) payload.last_name = partialUser.lastName;
+        if (partialUser.firstName !== undefined)
+            payload.first_name = partialUser.firstName;
+        if (partialUser.lastName !== undefined)
+            payload.last_name = partialUser.lastName;
         if (partialUser.email !== undefined) payload.email = partialUser.email;
-        if (partialUser.roles !== undefined) payload.roles = partialUser.roles as string[];
+        if (partialUser.roles !== undefined)
+            payload.roles = partialUser.roles as string[];
 
         if (partialUser.profilePictureId !== undefined) {
             // OpenAPI: profile_picture_id
@@ -210,5 +233,47 @@ export class ApiUserRepository implements UserRepository {
             { headers }
         );
         return response.data.map(mapUserDtoToDomain);
+    }
+
+    /**
+     * Global list of users (/api/users) para administradores de plataforma.
+     * Sigue el esquema de nelmio (sin wrapper "success").
+     */
+    async getAllUsers(
+        filters?: UserListFilters
+    ): Promise<PaginatedUsersResult> {
+        const headers = await this.authHeaders();
+
+        const params = new URLSearchParams();
+
+        if (filters?.id) {
+            params.set("id", filters.id);
+        }
+        if (filters?.email) {
+            params.set("email", filters.email);
+        }
+        if (filters?.name) {
+            params.set("name", filters.name);
+        }
+        if (filters?.page) {
+            params.set("page", String(filters.page));
+        }
+        if (filters?.perPage) {
+            params.set("per_page", String(filters.perPage));
+        }
+
+        const qs = params.toString();
+        const path = "/api/users" + (qs ? `?${qs}` : "");
+
+        const response = await this.apiClient.get<UserListResponseDto>(path, {
+            headers,
+        });
+
+        return {
+            users: response.data.map(mapUserDtoToDomain),
+            total: response.total,
+            page: response.page,
+            perPage: response.per_page,
+        };
     }
 }

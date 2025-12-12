@@ -1,74 +1,103 @@
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { User } from '@/domain/models/User.ts';
-import { useEffect } from 'react';
-import { useCompanies } from '@/application/hooks/useCompanies';
+import { User } from "@/domain/models/User";
+import { UserRole } from "@/domain/models/UserRole";
+import { useCompanies } from "@/application/hooks/useCompanies";
+import type { ImageFile } from "@/components/dashboard/forms/image-upload/types";
 
-// Define schema outside of the hook to avoid recreation on each render
+/**
+ * Schema del formulario
+ * - roles: múltiple
+ * - images: SOLO UI
+ */
 export const profileFormSchema = z.object({
-  name: z.string().min(2, { message: 'El nombre debe tener al menos 2 caracteres' }),
-  email: z.string().email({ message: 'El email debe ser válido' }),
-  role: z.enum(['company_user', 'company_admin'] as const),
-  companyId: z.string().optional(),
-  images: z.array(z.any()).optional(),
+    firstName: z
+        .string()
+        .min(2, { message: "El nombre debe tener al menos 2 caracteres" }),
+
+    lastName: z
+        .string()
+        .min(2, { message: "El apellido debe tener al menos 2 caracteres" }),
+
+    email: z.string().email({ message: "El email debe ser válido" }),
+
+    roles: z.array(z.nativeEnum(UserRole)).min(1, {
+        message: "El usuario debe tener al menos un rol",
+    }),
+
+    companyId: z.string().optional(),
+
+    /**
+     * SOLO UI
+     * El backend trabaja con profilePictureId (string | null)
+     */
+    images: z.array(z.any()).optional(),
 });
 
 export type UserProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export const useUserProfileForm = (user: User | undefined) => {
-  const { companies } = useCompanies();
+    const { companies } = useCompanies();
 
-  const profileForm = useForm<UserProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      name: user?.name || '',
-      email: user?.email || '',
-      role: user?.role || 'company_user',
-      companyId: user?.companyId,
-      images: user?.imageUrl ? [
-        {
-          id: 'profile-image',
-          url: user.imageUrl,
-          file: null,
-          isPrimary: true
-        }
-      ] : [],
-    }
-  });
+    const profileForm = useForm<UserProfileFormValues>({
+        resolver: zodResolver(profileFormSchema),
+        defaultValues: {
+            firstName: user?.firstName ?? "",
+            lastName: user?.lastName ?? "",
+            email: user?.email ?? "",
+            roles: user?.roles ?? [],
+            companyId: user?.companyId,
+            images: user?.profilePictureId
+                ? [
+                    {
+                        id: "profile-image",
+                        url: user.profilePictureId,
+                        file: null,
+                        isPrimary: true,
+                    } satisfies ImageFile,
+                ]
+                : [],
+        },
+    });
 
-  // Update form values when user data changes
-  useEffect(() => {
-    if (user) {
-      profileForm.reset({
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        companyId: user.companyId,
-        images: user.imageUrl ? [
-          {
-            id: 'profile-image',
-            url: user.imageUrl,
-            file: null,
-            isPrimary: true
-          }
-        ] : [],
-      });
-    }
-  }, [user, profileForm]);
+    /**
+     * Reset cuando cambia el usuario
+     */
+    useEffect(() => {
+        if (!user) return;
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase();
-  };
+        profileForm.reset({
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            roles: user.roles,
+            companyId: user.companyId,
+            images: user.profilePictureId
+                ? [
+                    {
+                        id: "profile-image",
+                        url: user.profilePictureId,
+                        file: null,
+                        isPrimary: true,
+                    } satisfies ImageFile,
+                ]
+                : [],
+        });
+    }, [user, profileForm]);
 
-  return {
-    profileForm,
-    getInitials,
-    companies,
-  };
+    const getInitials = (name: string) =>
+        name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase();
+
+    return {
+        profileForm,
+        getInitials,
+        companies,
+    };
 };

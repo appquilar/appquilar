@@ -1,12 +1,16 @@
-import type {UserRepository} from "@/domain/repositories/UserRepository";
-import type {AuthRepository} from "@/domain/repositories/AuthRepository";
-import type {User} from "@/domain/models/User";
+import type {
+    UserRepository,
+    UserListFilters,
+    PaginatedUsersResult,
+} from "@/domain/repositories/UserRepository";
+import type { AuthRepository } from "@/domain/repositories/AuthRepository";
+import type { User } from "@/domain/models/User";
 
 export class UserService {
     constructor(
         private readonly userRepository: UserRepository,
-        private readonly authRepository: AuthRepository) {
-    }
+        private readonly authRepository: AuthRepository
+    ) {}
 
     /**
      * Get a user by ID.
@@ -64,5 +68,20 @@ export class UserService {
         }
 
         return this.userRepository.getByCompanyId(companyId);
+    }
+
+    /**
+     * Global, paginated list of users for platform admins (/api/users).
+     */
+    async getAllUsers(
+        filters?: UserListFilters
+    ): Promise<PaginatedUsersResult> {
+        if (!this.userRepository.getAllUsers) {
+            throw new Error(
+                "getAllUsers is not implemented in the current UserRepository."
+            );
+        }
+
+        return this.userRepository.getAllUsers(filters);
     }
 }

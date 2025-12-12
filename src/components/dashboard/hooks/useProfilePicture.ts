@@ -11,11 +11,19 @@ export function useProfilePicture(profilePictureId: string | null | undefined) {
 
     useEffect(() => {
         if (!profilePictureId) {
-            setProfilePictureUrl(null);
+            // Limpia URL anterior si existía
+            setProfilePictureUrl((prev) => {
+                if (prev) {
+                    URL.revokeObjectURL(prev);
+                }
+                return null;
+            });
             return;
         }
 
         let isActive = true;
+        let nextObjectUrl: string | null = null;
+
         setLoading(true);
 
         const fetchImage = async () => {
@@ -23,12 +31,30 @@ export function useProfilePicture(profilePictureId: string | null | undefined) {
                 // Descargamos el THUMBNAIL usando MediaService
                 const blob = await mediaService.getImage(profilePictureId, "THUMBNAIL");
 
-                if (!isActive) return;
+                nextObjectUrl = URL.createObjectURL(blob);
 
-                const objectUrl = URL.createObjectURL(blob);
-                setProfilePictureUrl(objectUrl);
+                if (!isActive) {
+                    // Si el efecto ya fue limpiado, no dejamos object URLs colgadas.
+                    URL.revokeObjectURL(nextObjectUrl);
+                    nextObjectUrl = null;
+                    return;
+                }
+
+                setProfilePictureUrl((prev) => {
+                    if (prev) {
+                        URL.revokeObjectURL(prev);
+                    }
+                    return nextObjectUrl;
+                });
             } catch (err) {
                 console.error("Failed to load profile image", err);
+                // si falla, no mostramos imagen (y evitamos fugas)
+                setProfilePictureUrl((prev) => {
+                    if (prev) {
+                        URL.revokeObjectURL(prev);
+                    }
+                    return null;
+                });
             } finally {
                 if (isActive) {
                     setLoading(false);
@@ -36,15 +62,15 @@ export function useProfilePicture(profilePictureId: string | null | undefined) {
             }
         };
 
-        fetchImage();
+        void fetchImage();
 
         return () => {
             isActive = false;
-            if (profilePictureUrl) {
-                URL.revokeObjectURL(profilePictureUrl);
+            if (nextObjectUrl) {
+                URL.revokeObjectURL(nextObjectUrl);
+                nextObjectUrl = null;
             }
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [profilePictureId]);
 
     return { profilePicture: profilePictureUrl, loading };
