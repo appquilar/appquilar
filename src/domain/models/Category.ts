@@ -1,27 +1,39 @@
-
-/**
- * Category model representing product categories
- */
 export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  parentId: string | null;
-  iconUrl: string | null;
-  headerImageUrl: string | null;
-  featuredImageUrl: string | null;
-  createdAt: string;
-  updatedAt: string;
+    id: string; // backend: category_id
+
+    name: string;
+    slug: string;
+    description?: string | null;
+
+    parentId?: string | null; // backend: parent_id
+
+    // backend fields (ids de media)
+    iconId?: string | null; // icon_id
+    featuredImageId?: string | null; // featured_image_id
+    landscapeImageId?: string | null; // landscape_image_id
 }
 
-/**
- * Form data structure for category creation/editing
- */
-export interface CategoryFormData {
-  name: string;
-  slug: string;
-  parentId: string | null;
-  iconUrl: string | null;
-  headerImageUrl: string | null;
-  featuredImageUrl: string | null;
+export interface CategoryListFilters {
+    id?: string;
+    name?: string;
+    page?: number;
+    perPage?: number;
 }
+
+export interface PaginatedCategoriesResult {
+    categories: Category[];
+    total: number;
+    page: number;
+    perPage: number;
+}
+
+export type CategoryUpsertPayload = {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string | null;
+    parentId?: string | null;
+    iconId?: string | null;
+    featuredImageId?: string | null;
+    landscapeImageId?: string | null;
+};

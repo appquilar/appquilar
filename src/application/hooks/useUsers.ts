@@ -7,7 +7,7 @@ export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const userService = UserService.getInstance();
+  const userService = UserService.getCurrentUser();
 
   useEffect(() => {
     const loadUsers = async () => {

@@ -1,22 +1,15 @@
+import type {
+    Category,
+    CategoryListFilters,
+    PaginatedCategoriesResult,
+    CategoryUpsertPayload,
+} from "@/domain/models/Category";
 
-import { Category } from '../models/Category';
+export type { CategoryListFilters, PaginatedCategoriesResult };
 
-/**
- * Repository interface for accessing and managing Category data
- */
 export interface CategoryRepository {
-  /**
-   * Get all categories
-   */
-  getAllCategories(): Promise<Category[]>;
-  
-  /**
-   * Get a category by ID
-   */
-  getCategoryById(id: string): Promise<Category | null>;
-  
-  /**
-   * Get categories by parent ID
-   */
-  getCategoriesByParentId(parentId: string | null): Promise<Category[]>;
+    getAllCategories(filters?: CategoryListFilters): Promise<PaginatedCategoriesResult>;
+    getById(categoryId: string): Promise<Category>;
+    create(payload: CategoryUpsertPayload): Promise<void>;
+    update(payload: CategoryUpsertPayload): Promise<void>;
 }

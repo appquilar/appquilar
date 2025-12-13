@@ -1,60 +1,27 @@
+import type {
+    Category,
+    CategoryListFilters,
+    PaginatedCategoriesResult,
+    CategoryUpsertPayload,
+} from "@/domain/models/Category";
+import type { CategoryRepository } from "@/domain/repositories/CategoryRepository";
 
-import { Category } from '@/domain/models/Category';
-import { CategoryRepository } from '@/domain/repositories/CategoryRepository';
-import { MockCategoryRepository } from '@/infrastructure/repositories/MockCategoryRepository';
-
-/**
- * Service for managing category data
- */
 export class CategoryService {
-  private static instance: CategoryService;
-  private repository: CategoryRepository;
+    constructor(private readonly categoryRepository: CategoryRepository) {}
 
-  private constructor(repository: CategoryRepository) {
-    this.repository = repository;
-  }
-
-  /**
-   * Get the singleton instance
-   */
-  public static getInstance(): CategoryService {
-    if (!CategoryService.instance) {
-      // Using the mock repository for now
-      const repository = new MockCategoryRepository();
-      CategoryService.instance = new CategoryService(repository);
+    async getAllCategories(filters?: CategoryListFilters): Promise<PaginatedCategoriesResult> {
+        return this.categoryRepository.getAllCategories(filters);
     }
-    return CategoryService.instance;
-  }
 
-  /**
-   * Set a custom repository implementation
-   */
-  public static setRepository(repository: CategoryRepository): void {
-    if (CategoryService.instance) {
-      CategoryService.instance.repository = repository;
-    } else {
-      CategoryService.instance = new CategoryService(repository);
+    async getById(categoryId: string): Promise<Category> {
+        return this.categoryRepository.getById(categoryId);
     }
-  }
 
-  /**
-   * Get all categories
-   */
-  async getAllCategories(): Promise<Category[]> {
-    return this.repository.getAllCategories();
-  }
+    async create(payload: CategoryUpsertPayload): Promise<void> {
+        return this.categoryRepository.create(payload);
+    }
 
-  /**
-   * Get a category by ID
-   */
-  async getCategoryById(id: string): Promise<Category | null> {
-    return this.repository.getCategoryById(id);
-  }
-
-  /**
-   * Get categories by parent ID
-   */
-  async getCategoriesByParentId(parentId: string | null): Promise<Category[]> {
-    return this.repository.getCategoriesByParentId(parentId);
-  }
+    async update(payload: CategoryUpsertPayload): Promise<void> {
+        return this.categoryRepository.update(payload);
+    }
 }

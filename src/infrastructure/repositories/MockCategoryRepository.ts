@@ -1,32 +1,25 @@
+import type { CategoryRepository } from "@/domain/repositories/CategoryRepository";
+import type {
+    Category,
+    CategoryListFilters,
+    PaginatedCategoriesResult,
+    CategoryUpsertPayload,
+} from "@/domain/models/Category";
 
-import { Category } from '@/domain/models/Category';
-import { CategoryRepository } from '@/domain/repositories/CategoryRepository';
-import { MOCK_CATEGORIES } from '@/components/dashboard/categories/data/mockCategories';
-
-/**
- * Mock implementation of CategoryRepository that uses in-memory data
- */
 export class MockCategoryRepository implements CategoryRepository {
-  private categories: Category[] = [...MOCK_CATEGORIES];
+    async getById(categoryId: string): Promise<Category> {
+        throw new Error("MockCategoryRepository.getById not implemented");
+    }
 
-  async getAllCategories(): Promise<Category[]> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return [...this.categories];
-  }
+    async getAll(_filters?: CategoryListFilters): Promise<PaginatedCategoriesResult> {
+        return { categories: [], total: 0, page: 1, perPage: 20 };
+    }
 
-  async getCategoryById(id: string): Promise<Category | null> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const category = this.categories.find(c => c.id === id);
-    return category ? { ...category } : null;
-  }
+    async create(_payload: CategoryUpsertPayload): Promise<Category> {
+        throw new Error("MockCategoryRepository.create not implemented");
+    }
 
-  async getCategoriesByParentId(parentId: string | null): Promise<Category[]> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return this.categories
-      .filter(c => c.parentId === parentId)
-      .map(c => ({ ...c }));
-  }
+    async update(_categoryId: string, _payload: Partial<CategoryUpsertPayload>): Promise<Category> {
+        throw new Error("MockCategoryRepository.update not implemented");
+    }
 }
