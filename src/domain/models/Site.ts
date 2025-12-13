@@ -1,35 +1,26 @@
-
-/**
- * Site model representing different websites
- */
 export interface Site {
-  id: string;
-  name: string;
-  domain: string;
-  logo: string | null;
-  title: string;
-  description: string;
-  categoryIds: string[];
-  menuCategoryIds: string[];
-  featuredCategoryIds: string[];
-  primaryColor: string;
-  heroAnimatedTexts: string[];
-  createdAt: string;
-  updatedAt: string;
+    id: string; // backend: site_id
+    name: string;
+    title: string;
+    url: string;
+    description: string | null;
+
+    logoId: string | null; // backend: logo_id
+    faviconId: string | null; // backend: favicon_id
+
+    primaryColor: string;
+
+    categoryIds: string[];
+    menuCategoryIds: string[];
+    featuredCategoryIds: string[];
 }
 
-/**
- * Form data structure for site creation/editing
- */
-export interface SiteFormData {
-  name: string;
-  domain: string;
-  logo: string | null;
-  title: string;
-  description: string;
-  categoryIds: string[];
-  menuCategoryIds: string[];
-  featuredCategoryIds: string[];
-  primaryColor: string;
-  heroAnimatedTexts: string[];
-}
+export type SiteUpdatePayload = {
+    // Solo lo editable en la UI
+    description: string | null;
+    logoId: string | null;
+
+    categoryIds: string[];
+    menuCategoryIds: string[];
+    featuredCategoryIds: string[];
+};

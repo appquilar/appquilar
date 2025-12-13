@@ -1,40 +1,102 @@
+import type { SiteRepository } from "@/domain/repositories/SiteRepository";
+import type { Site } from "@/domain/models/Site";
+import type { AuthSession } from "@/domain/models/AuthSession";
+import { toAuthorizationHeader } from "@/domain/models/AuthSession";
+import { ApiClient } from "@/infrastructure/http/ApiClient";
 
-import { Site, SiteFormData } from '@/domain/models/Site';
-import { SiteRepository } from '@/domain/repositories/SiteRepository';
+type SiteDto = {
+    site_id?: string;
+    id?: string;
 
-/**
- * API implementation of SiteRepository that uses HTTP requests
- * Currently a placeholder - will be implemented when API is available
- */
+    name: string;
+    title: string;
+    url: string;
+
+    description?: string | null;
+
+    logo_id?: string | null;
+    favicon_id?: string | null;
+
+    primary_color?: string;
+
+    category_ids?: string[];
+    menu_category_ids?: string[];
+    featured_category_ids?: string[];
+};
+
+type SiteGetResponseDto =
+    | { success?: boolean; data: SiteDto }
+    | SiteDto;
+
+const mapDtoToDomain = (dto: SiteDto): Site => {
+    const id = dto.site_id ?? dto.id ?? "";
+
+    return {
+        id,
+        name: dto.name,
+        title: dto.title,
+        url: dto.url,
+        description: dto.description ?? null,
+
+        logoId: dto.logo_id ?? null,
+        faviconId: dto.favicon_id ?? null,
+
+        primaryColor: dto.primary_color ?? "#4F46E5",
+
+        categoryIds: dto.category_ids ?? [],
+        menuCategoryIds: dto.menu_category_ids ?? [],
+        featuredCategoryIds: dto.featured_category_ids ?? [],
+    };
+};
+
+const mapDomainToDto = (site: Site) => ({
+    site_id: site.id,
+    name: site.name,
+    title: site.title,
+    url: site.url,
+    description: site.description ?? null,
+
+    logo_id: site.logoId ?? null,
+    favicon_id: site.faviconId ?? null,
+
+    primary_color: site.primaryColor,
+
+    category_ids: site.categoryIds,
+    menu_category_ids: site.menuCategoryIds,
+    featured_category_ids: site.featuredCategoryIds,
+});
+
 export class ApiSiteRepository implements SiteRepository {
-  private apiBaseUrl: string;
-  
-  constructor(apiBaseUrl: string = '/api') {
-    this.apiBaseUrl = apiBaseUrl;
-  }
+    constructor(
+        private readonly apiClient: ApiClient,
+        private readonly getSession: () => AuthSession | null
+    ) {}
 
-  async getAllSites(): Promise<Site[]> {
-    // TODO: Replace with actual API call
-    throw new Error("Method not implemented yet");
-  }
+    private async authHeaders(): Promise<Record<string, string>> {
+        const session = this.getSession();
+        const authHeader = toAuthorizationHeader(session);
+        return authHeader ? { Authorization: authHeader } : {};
+    }
 
-  async getSiteById(id: string): Promise<Site | null> {
-    // TODO: Replace with actual API call
-    throw new Error("Method not implemented yet");
-  }
+    async getById(siteId: string): Promise<Site> {
+        const headers = await this.authHeaders();
 
-  async createSite(siteData: SiteFormData): Promise<Site> {
-    // TODO: Replace with actual API call
-    throw new Error("Method not implemented yet");
-  }
+        const response = await this.apiClient.get<SiteGetResponseDto>(
+            `/api/sites/${encodeURIComponent(siteId)}`,
+            { headers }
+        );
 
-  async updateSite(id: string, siteData: SiteFormData): Promise<Site> {
-    // TODO: Replace with actual API call
-    throw new Error("Method not implemented yet");
-  }
+        const dto = "data" in (response as any) ? (response as any).data : response;
+        return mapDtoToDomain(dto as SiteDto);
+    }
 
-  async deleteSite(id: string): Promise<boolean> {
-    // TODO: Replace with actual API call
-    throw new Error("Method not implemented yet");
-  }
+    async update(site: Site): Promise<void> {
+        const headers = await this.authHeaders();
+
+        await this.apiClient.patch(
+            `/api/sites/${encodeURIComponent(site.id)}`,
+            mapDomainToDto(site),
+            { headers }
+        );
+    }
 }

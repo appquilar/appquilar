@@ -74,7 +74,7 @@ export function CategoryMultiSelector({
     return cats.filter(cat => 
       filteredCategories.some(fc => fc.id === cat.id)
     ).map(category => (
-      <React.Fragment key={category.id}>
+      <div key={category.id}>
         <CommandItem
           value={category.id}
           onSelect={() => handleSelect(category.id)}
@@ -94,7 +94,7 @@ export function CategoryMultiSelector({
           </div>
         </CommandItem>
         {categoriesByParent[category.id] && renderCategoryItems(categoriesByParent[category.id], level + 1)}
-      </React.Fragment>
+      </div>
     ));
   };
 

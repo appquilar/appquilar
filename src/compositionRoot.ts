@@ -16,6 +16,9 @@ import {QueryClient} from "@tanstack/react-query";
 import {CategoryService} from "@/application/services/CategoryService.ts";
 import {CategoryRepository} from "@/domain/repositories/CategoryRepository.ts";
 import {ApiCategoryRepository} from "@/infrastructure/repositories/ApiCategoryRepository.ts";
+import {SiteRepository} from "@/domain/repositories/SiteRepository.ts";
+import {ApiSiteRepository} from "@/infrastructure/repositories/ApiSiteRepository.ts";
+import {SiteService} from "@/application/services/SiteService.ts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -38,11 +41,13 @@ export const authRepository: AuthRepository = new ApiAuthRepository(apiClient, a
 export const userRepository: UserRepository = new ApiUserRepository(apiClient, session);
 export const mediaRepository: MediaRepository = new ApiMediaRepository(apiClient, session);
 export const categoryRepository: CategoryRepository = new ApiCategoryRepository(apiClient, session);
+export const siteRepository: SiteRepository = new ApiSiteRepository(apiClient, session);
 
 export const authService = new AuthService(authRepository, userRepository);
 export const userService = new UserService(userRepository, authRepository);
 export const mediaService = new MediaService(mediaRepository);
 export const categoryService = new CategoryService(categoryRepository);
+export const siteService = new SiteService(siteRepository);
 
 export const compositionRoot = {
     queryClient,
@@ -54,11 +59,13 @@ export const compositionRoot = {
     userRepository,
     mediaRepository,
     categoryRepository,
+    siteRepository,
 
     authService,
     userService,
     mediaService,
-    categoryService
+    categoryService,
+    siteService,
 };
 
 export type CompositionRoot = typeof compositionRoot;

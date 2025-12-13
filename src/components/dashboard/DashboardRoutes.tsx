@@ -19,6 +19,7 @@ import UpgradePage from "./upgrade/UpgradePage";
 import CreateRental from "@/pages/dashboard/rentals/CreateRental";
 import RentalDetails from "@/pages/dashboard/rentals/RentalDetails";
 import UserProductsPage from "./users/UserProductsPage";
+import SiteSettingsPage from "./sites/SiteSettingsPage";
 
 import RoleGuard from "@/components/auth/RoleGuard";
 import { UserRole } from "@/domain/models/UserRole";
@@ -82,23 +83,7 @@ const DashboardRoutes = () => {
                 path="sites"
                 element={
                     <RoleGuard requiredRoles={[UserRole.ADMIN]}>
-                        <SiteManagement />
-                    </RoleGuard>
-                }
-            />
-            <Route
-                path="sites/new"
-                element={
-                    <RoleGuard requiredRoles={[UserRole.ADMIN]}>
-                        <SiteFormPage />
-                    </RoleGuard>
-                }
-            />
-            <Route
-                path="sites/:id"
-                element={
-                    <RoleGuard requiredRoles={[UserRole.ADMIN]}>
-                        <SiteFormPage />
+                        <SiteSettingsPage />
                     </RoleGuard>
                 }
             />
