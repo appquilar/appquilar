@@ -1,7 +1,8 @@
-import {Link} from 'react-router-dom';
-import {DashboardNavigationProps} from './types';
+import { Link } from 'react-router-dom';
+import { DashboardNavigationProps } from './types';
 import DashboardNavigationContent from './DashboardNavigationContent';
-import {Sidebar, SidebarContent, SidebarHeader, SidebarRail} from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
+import AppLogo from '@/components/common/AppLogo';
 
 /**
  * Sidebar Navigation Component
@@ -13,9 +14,26 @@ const DashboardNavigation = (props: DashboardNavigationProps) => {
             <SidebarHeader className="h-16 flex justify-center px-4 border-b">
                 <Link
                     to="/"
-                    className="flex items-center gap-2 font-display font-semibold tracking-tight text-primary transition-all duration-300 group-data-[collapsible=icon]:scale-0 group-data-[collapsible=icon]:w-0"
+                    aria-label="Ir a inicio"
+                    className="flex items-center justify-center transition-opacity hover:opacity-90"
                 >
-                    <span className="text-2xl">appquilar</span>
+                    {/*
+            - En modo normal (expandido): logo de tamaño estándar
+            - En modo colapsado: logo compacto pero visible
+          */}
+                    <div className="group-data-[collapsible=icon]:hidden">
+                        <AppLogo
+                            imageClassName="h-8 w-auto"
+                            textClassName="text-2xl font-display font-semibold tracking-tight text-primary"
+                        />
+                    </div>
+
+                    <div className="hidden group-data-[collapsible=icon]:block">
+                        <AppLogo
+                            imageClassName="h-7 w-auto"
+                            textClassName="text-xl font-display font-semibold tracking-tight text-primary"
+                        />
+                    </div>
                 </Link>
             </SidebarHeader>
 

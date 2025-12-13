@@ -1,11 +1,12 @@
-import {useEffect, useState} from 'react';
-import {Link, useNavigate} from 'react-router-dom';
-import {LayoutDashboard, LogOut, Menu, Search, User, X} from 'lucide-react';
-import {Button} from '@/components/ui/button';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, LogOut, Menu, Search, User, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import AuthModal from '../auth/AuthModal';
-import {useAuth} from '@/context/AuthContext';
-import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover";
-import {useCurrentUser} from "@/application/hooks/useCurrentUser";
+import { useAuth } from '@/context/AuthContext';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useCurrentUser } from "@/application/hooks/useCurrentUser";
+import AppLogo from "@/components/common/AppLogo";
 
 interface Category {
     id: string;
@@ -78,9 +79,13 @@ const Header = () => {
                     {/* Logo */}
                     <Link
                         to="/"
-                        className="text-2xl font-display font-semibold tracking-tight text-primary transition-all duration-350"
+                        className="flex items-center transition-opacity hover:opacity-90"
+                        aria-label="Ir a inicio"
                     >
-                        appquilar
+                        <AppLogo
+                            imageClassName="h-8 w-auto"
+                            textClassName="text-2xl font-display font-semibold tracking-tight text-primary transition-all duration-350"
+                        />
                     </Link>
 
                     {/* Navegación Desktop */}
@@ -181,10 +186,14 @@ const Header = () => {
                         <div className="flex justify-between items-center mb-8">
                             <Link
                                 to="/"
-                                className="text-2xl font-display font-semibold tracking-tight"
+                                className="flex items-center transition-opacity hover:opacity-90"
                                 onClick={() => setMobileMenuOpen(false)}
+                                aria-label="Ir a inicio"
                             >
-                                appquilar
+                                <AppLogo
+                                    imageClassName="h-8 w-auto"
+                                    textClassName="text-2xl font-display font-semibold tracking-tight"
+                                />
                             </Link>
 
                             <Button

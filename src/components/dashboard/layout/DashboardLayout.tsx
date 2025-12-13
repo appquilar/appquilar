@@ -1,7 +1,9 @@
 import React from 'react';
-import {SidebarInset, SidebarProvider, useSidebar} from '@/components/ui/sidebar';
-import {Button} from '@/components/ui/button';
-import {Menu} from 'lucide-react';
+import { Link } from "react-router-dom";
+import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { Menu } from 'lucide-react';
+import AppLogo from "@/components/common/AppLogo";
 
 interface DashboardLayoutProps {
     sidebar: React.ReactNode;
@@ -30,12 +32,21 @@ const DashboardLayoutContent = ({ sidebar, content }: DashboardLayoutProps) => {
                             size="icon"
                             onClick={toggleSidebar}
                             className="-ml-2"
+                            aria-label="Abrir/cerrar menú"
                         >
                             <Menu size={20} />
                         </Button>
-                        <div className="text-xl font-display font-semibold tracking-tight text-primary">
-                            appquilar
-                        </div>
+
+                        <Link
+                            to="/"
+                            className="flex items-center transition-opacity hover:opacity-90"
+                            aria-label="Ir a inicio"
+                        >
+                            <AppLogo
+                                imageClassName="h-7 w-auto"
+                                textClassName="text-xl font-display font-semibold tracking-tight text-primary"
+                            />
+                        </Link>
                     </header>
                 )}
 
