@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 
@@ -41,7 +41,6 @@ const buildTree = (categories: Category[]): Node[] => {
         };
     };
 
-    // raíces = parentId null o parent no encontrado (robusto a datos “rotos”)
     const roots = categories
         .filter((c) => {
             const pid = c.parentId ?? null;
@@ -51,7 +50,6 @@ const buildTree = (categories: Category[]): Node[] => {
 
     const tree = roots.map(makeNode);
 
-    // si hay “huérfanas” o ciclos raros, las colgamos como roots adicionales
     const missing = categories.filter((c) => !visited.has(c.id)).sort(sortByName);
     for (const c of missing) tree.push(makeNode(c));
 
@@ -62,11 +60,15 @@ const ROW_BASE =
     "flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent transition-colors";
 
 export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) => {
-    // expand state (persistente mientras dure el componente)
     const [openIds, setOpenIds] = useState<Set<string>>(new Set());
 
-    // icon URLs (solo se descargan si drawer abierto)
-    const [iconUrlsById, setIconUrlsById] = useState<Record<string, string>>({});
+    /**
+     * Cache en memoria (por iconId, no por categoryId).
+     * - Si cambia el listado de categorías, mientras el iconId sea el mismo, NO se re-descarga.
+     * - Evita recargas cuando alternas búsqueda / árbol.
+     */
+    const iconUrlByIconIdRef = useRef<Map<string, string>>(new Map());
+    const [iconUrlByIconId, setIconUrlByIconId] = useState<Record<string, string>>({});
 
     const tree = useMemo(() => buildTree(categories), [categories]);
 
@@ -79,38 +81,49 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
         });
     };
 
-    // Descarga de iconos bajo demanda (solo abierto)
+    // Lista de iconIds que existen (estable)
+    const iconIdsKey = useMemo(() => {
+        const ids = categories
+            .map((c) => c.iconId)
+            .filter(Boolean) as string[];
+        // ordenamos para que el key sea estable
+        ids.sort();
+        return ids.join("|");
+    }, [categories]);
+
+    // Descarga de iconos SOLO cuando el drawer está abierto, y SOLO los que faltan en cache
     useEffect(() => {
         let alive = true;
 
         const load = async () => {
             if (!isOpen) return;
-            if (categories.length === 0) return;
+            if (!iconIdsKey) return;
 
-            const candidates = categories
-                .filter((c) => !!c.iconId)
-                .map((c) => ({ id: c.id, iconId: c.iconId! }));
-
-            const missing = candidates.filter(({ id }) => !iconUrlsById[id]);
+            // missing = iconIds que no están en cache
+            const iconIds = iconIdsKey.split("|").filter(Boolean);
+            const missing = iconIds.filter((iconId) => !iconUrlByIconIdRef.current.has(iconId));
             if (missing.length === 0) return;
 
             try {
                 const entries = await Promise.all(
-                    missing.map(async ({ id, iconId }) => {
+                    missing.map(async (iconId) => {
                         const blob = await compositionRoot.mediaService.getImage(iconId, "ORIGINAL");
                         const url = URL.createObjectURL(blob);
-                        return [id, url] as const;
+                        return [iconId, url] as const;
                     })
                 );
 
                 if (!alive) return;
 
-                setIconUrlsById((prev) => {
-                    const next = { ...prev };
-                    for (const [id, url] of entries) {
-                        const prevUrl = next[id];
-                        if (prevUrl && prevUrl !== url) URL.revokeObjectURL(prevUrl);
-                        next[id] = url;
+                // Guardamos en cache ref + sincronizamos estado (para re-render)
+                for (const [iconId, url] of entries) {
+                    iconUrlByIconIdRef.current.set(iconId, url);
+                }
+
+                setIconUrlByIconId(() => {
+                    const next: Record<string, string> = {};
+                    for (const [iconId, url] of iconUrlByIconIdRef.current.entries()) {
+                        next[iconId] = url;
                     }
                     return next;
                 });
@@ -124,20 +137,26 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
         return () => {
             alive = false;
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen, categories]);
+    }, [isOpen, iconIdsKey]);
 
     // cleanup on unmount
     useEffect(() => {
         return () => {
-            Object.values(iconUrlsById).forEach((url) => URL.revokeObjectURL(url));
+            for (const url of iconUrlByIconIdRef.current.values()) {
+                URL.revokeObjectURL(url);
+            }
+            iconUrlByIconIdRef.current.clear();
         };
-    }, [iconUrlsById]);
+    }, []);
 
-    const RowIcon = ({ id }: { id: string }) => {
-        const url = iconUrlsById[id];
-        if (!url) return <span className="h-5 w-5 shrink-0 rounded bg-muted" />;
-        return <img src={url} alt="" className="h-7 w-7 object-contain shrink-0" loading="lazy" />;
+    const RowIcon = ({ category }: { category: Category }) => {
+        if (!category.iconId) return <span className="h-9 w-9 shrink-0 rounded bg-muted" />;
+
+        const url = iconUrlByIconId[category.iconId];
+        if (!url) return <span className="h-9 w-9 shrink-0 rounded bg-muted animate-pulse" />;
+
+        // 👇 un poco más grande (como pedías)
+        return <img src={url} alt="" className="h-10 w-10 object-contain shrink-0" loading="lazy" />;
     };
 
     const renderNode = (node: Node, depth: number) => {
@@ -145,13 +164,14 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
         const hasChildren = children.length > 0;
         const isExpanded = openIds.has(category.id);
 
-        // indent visual (sin complicar CSS)
-        const indent = depth === 0 ? "" : `pl-${Math.min(10, 3 + depth * 2)}`;
+        // ❗ Tailwind no genera clases dinámicas tipo `pl-${x}`.
+        // Usamos padding inline.
+        const paddingLeft = depth === 0 ? 0 : Math.min(28, 8 + depth * 14);
 
         return (
             <div key={category.id} className="select-none">
-                <div className={`${ROW_BASE} ${indent}`}>
-                    <RowIcon id={category.id} />
+                <div className={ROW_BASE} style={{ paddingLeft }}>
+                    <RowIcon category={category} />
 
                     <Link
                         to={`/category/${category.slug}`}
