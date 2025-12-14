@@ -1,8 +1,8 @@
-import {Toaster} from "@/components/ui/toaster";
-import {Toaster as Sonner} from "@/components/ui/sonner";
-import {TooltipProvider} from "@/components/ui/tooltip";
-import {QueryClientProvider} from "@tanstack/react-query";
-import {BrowserRouter, Route, Routes} from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -11,22 +11,25 @@ import CategoryPage from "./pages/CategoryPage";
 import Dashboard from "./pages/Dashboard";
 import ResetPassword from "@/pages/ResetPassword";
 
-import {AuthProvider} from "./context/AuthContext";
+import AboutPage from "@/pages/AboutPage";
+import ContactPage from "@/pages/ContactPage";
+import PartnersPage from "@/pages/PartnersPage";
+
+import LegalNoticePage from "@/pages/legal/LegalNoticePage";
+import TermsPage from "@/pages/legal/TermsPage";
+import CookiesPage from "@/pages/legal/CookiesPage";
+import PrivacyPage from "@/pages/legal/PrivacyPage";
+
+import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
-import {queryClient} from "@/compositionRoot.ts";
+import { queryClient } from "@/compositionRoot.ts";
 
-/**
- * Cliente de consulta para React Query con configuración predeterminada
- */
-
-/**
- * Componente principal de la aplicación que configura proveedores y rutas
- */
 const App = () => (
     <QueryClientProvider client={queryClient}>
         <TooltipProvider>
             <Toaster />
             <Sonner />
+
             {/* 🔒 ÚNICO AuthProvider global */}
             <AuthProvider>
                 <BrowserRouter>
@@ -35,10 +38,21 @@ const App = () => (
                         <Route path="/product/:slug" element={<ProductDetail />} />
                         <Route path="/category/:slug" element={<CategoryPage />} />
 
-                        {/* Ruta de reset de contraseña (pública, pero con token/email en URL) */}
+                        {/* Info */}
+                        <Route path="/about" element={<AboutPage />} />
+                        <Route path="/contact" element={<ContactPage />} />
+                        <Route path="/partners" element={<PartnersPage />} />
+
+                        {/* Legales */}
+                        <Route path="/legal/aviso-legal" element={<LegalNoticePage />} />
+                        <Route path="/legal/terminos" element={<TermsPage />} />
+                        <Route path="/legal/cookies" element={<CookiesPage />} />
+                        <Route path="/legal/privacidad" element={<PrivacyPage />} />
+
+                        {/* Ruta de reset de contraseña */}
                         <Route path="/reset-password" element={<ResetPassword />} />
 
-                        {/* 🔐 Dashboard protegido por sesión válida (/me) */}
+                        {/* 🔐 Dashboard protegido */}
                         <Route
                             path="/dashboard/*"
                             element={
@@ -48,7 +62,7 @@ const App = () => (
                             }
                         />
 
-                        {/* AÑADE TODAS LAS RUTAS PERSONALIZADAS ENCIMA DE LA RUTA CATCH-ALL "*" */}
+                        {/* Catch-all */}
                         <Route path="*" element={<NotFound />} />
                     </Routes>
                 </BrowserRouter>

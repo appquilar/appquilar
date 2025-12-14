@@ -1,15 +1,15 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { DashboardNavigationProps } from "./types";
+import {useNavigate} from "react-router-dom";
+import {useIsMobile} from "@/hooks/use-mobile";
+import {DashboardNavigationProps} from "./types";
 import UserProfile from "./UserProfile";
 import NavSection from "./NavSection";
 import UpgradeLink from "./UpgradeLink";
-import { useNavigation } from "@/hooks/useNavigation";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MapPin } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { UserRole } from "@/domain/models/UserRole";
+import {useNavigation} from "@/hooks/useNavigation";
+import {Alert, AlertDescription} from "@/components/ui/alert";
+import {MapPin} from "lucide-react";
+import {useAuth} from "@/context/AuthContext";
+import {UserRole} from "@/domain/models/UserRole";
 
 /**
  * Contenido principal de la navegación del panel de control
