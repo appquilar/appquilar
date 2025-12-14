@@ -9,11 +9,11 @@ interface NoProductsFoundProps {
 const NoProductsFound = ({ searchQuery, categoryName }: NoProductsFoundProps) => {
   return (
     <div className="text-center py-16 bg-muted/30 rounded-lg">
-      <h3 className="text-lg font-medium mb-2">No products found</h3>
+      <h3 className="text-lg font-medium mb-2">No hay productos</h3>
       <p className="text-muted-foreground">
         {searchQuery 
-          ? `No products matching "${searchQuery}" in this category.` 
-          : `There are currently no products in the ${categoryName} category.`
+          ? `No hay productos de la categoría "${searchQuery}"`
+          : `Ahora mismo no tenemos productos de la categoría ${categoryName}`
         }
       </p>
     </div>

@@ -1,18 +1,28 @@
+import React, { useMemo } from "react";
 
-import React from 'react';
-
-interface CategoryHeaderProps {
-  name: string;
-  description: string;
+interface Props {
+    name: string;
+    description?: string;
 }
 
-const CategoryHeader = ({ name, description }: CategoryHeaderProps) => {
-  return (
-    <div className="py-10">
-      <h1 className="text-3xl font-display font-semibold">{name}</h1>
-      <p className="text-muted-foreground mt-2 max-w-3xl">{description}</p>
-    </div>
-  );
+const CategoryHeader = ({ name, description }: Props) => {
+    // Si tu WYSIWYG mete wrappers raros, esto al menos evita undefined/null
+    const html = useMemo(() => (description ?? "").trim(), [description]);
+
+    return (
+        <header className="w-full">
+            <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight">
+                {name}
+            </h1>
+
+            {html ? (
+                <div
+                    className="mt-3 w-full text-muted-foreground leading-relaxed prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: html }}
+                />
+            ) : null}
+        </header>
+    );
 };
 
 export default CategoryHeader;

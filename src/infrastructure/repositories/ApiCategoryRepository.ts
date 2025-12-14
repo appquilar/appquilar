@@ -82,7 +82,6 @@ export class ApiCategoryRepository implements CategoryRepository {
         if (filters?.name) params.set("name", filters.name);
         if (filters?.page) params.set("page", String(filters.page));
 
-        // ✅ guardrail para evitar 400: per_page máximo 50
         if (filters?.perPage) {
             const safe = Math.max(1, Math.min(filters.perPage, MAX_PER_PAGE));
             params.set("per_page", String(safe));
@@ -105,6 +104,17 @@ export class ApiCategoryRepository implements CategoryRepository {
         const headers = await this.authHeaders();
         const response = await this.apiClient.get<CategoryGetResponseDto>(
             `/api/categories/${encodeURIComponent(categoryId)}`,
+            { headers }
+        );
+
+        const dto = "data" in (response as any) ? (response as any).data : response;
+        return mapCategoryDtoToDomain(dto as CategoryDto);
+    }
+
+    async getBySlug(slug: string): Promise<Category> {
+        const headers = await this.authHeaders();
+        const response = await this.apiClient.get<CategoryGetResponseDto>(
+            `/api/categories/${encodeURIComponent(slug)}`,
             { headers }
         );
 

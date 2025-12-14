@@ -17,6 +17,10 @@ export class CategoryService {
         return this.categoryRepository.getById(categoryId);
     }
 
+    async getBySlug(slug: string): Promise<Category> {
+        return this.categoryRepository.getBySlug(slug);
+    }
+
     async create(payload: CategoryUpsertPayload): Promise<void> {
         return this.categoryRepository.create(payload);
     }
