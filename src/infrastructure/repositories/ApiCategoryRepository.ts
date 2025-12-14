@@ -1,6 +1,4 @@
-import type {
-    CategoryRepository,
-} from "@/domain/repositories/CategoryRepository";
+import type { CategoryRepository } from "@/domain/repositories/CategoryRepository";
 import type {
     Category,
     CategoryListFilters,
@@ -34,9 +32,9 @@ type CategoryListResponseDto = {
     per_page: number;
 };
 
-type CategoryGetResponseDto =
-    | { success?: boolean; data: CategoryDto }
-    | CategoryDto;
+type CategoryGetResponseDto = { success?: boolean; data: CategoryDto } | CategoryDto;
+
+const MAX_PER_PAGE = 50;
 
 const mapCategoryDtoToDomain = (dto: CategoryDto): Category => {
     const id = dto.id ?? dto.category_id ?? "";
@@ -83,7 +81,12 @@ export class ApiCategoryRepository implements CategoryRepository {
         if (filters?.id) params.set("id", filters.id);
         if (filters?.name) params.set("name", filters.name);
         if (filters?.page) params.set("page", String(filters.page));
-        if (filters?.perPage) params.set("per_page", String(filters.perPage));
+
+        // ✅ guardrail para evitar 400: per_page máximo 50
+        if (filters?.perPage) {
+            const safe = Math.max(1, Math.min(filters.perPage, MAX_PER_PAGE));
+            params.set("per_page", String(safe));
+        }
 
         const qs = params.toString();
         const path = "/api/categories" + (qs ? `?${qs}` : "");

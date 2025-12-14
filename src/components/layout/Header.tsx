@@ -1,82 +1,86 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, LogOut, Menu, Search, User, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import AuthModal from '../auth/AuthModal';
-import { useAuth } from '@/context/AuthContext';
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { LayoutDashboard, LogOut, Menu, Search, User } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import AuthModal from "../auth/AuthModal";
+import { useAuth } from "@/context/AuthContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCurrentUser } from "@/application/hooks/useCurrentUser";
+
 import AppLogo from "@/components/common/AppLogo";
+import { usePublicSiteCategories } from "@/application/hooks/usePublicSiteCategories";
 
-interface Category {
-    id: string;
-    name: string;
-    slug: string;
-}
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
 
-const CATEGORIES: Category[] = [
-    { id: '1', name: 'Herramientas Eléctricas', slug: 'power-tools' },
-    { id: '2', name: 'Herramientas Manuales', slug: 'hand-tools' },
-    { id: '3', name: 'Jardinería', slug: 'gardening' },
-    { id: '4', name: 'Construcción', slug: 'construction' },
-    { id: '5', name: 'Equipamiento para Eventos', slug: 'event-equipment' },
-    { id: '6', name: 'Limpieza', slug: 'cleaning' },
-];
+import { CategoryDrawerTree } from "@/components/layout/CategoryDrawerTree";
 
-export { CATEGORIES };
-
-/**
- * Header principal
- */
 const Header = () => {
     const [isScrolled, setIsScrolled] = useState(false);
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [authModalOpen, setAuthModalOpen] = useState(false);
+
+    const [categoriesOpen, setCategoriesOpen] = useState(false);
 
     const { user: currentUser, isAuthenticated } = useCurrentUser();
     const { logout } = useAuth();
 
-    const navigate = useNavigate();
+    const {
+        rotatingCategories,
+        allCategories,
+        isLoading: isSiteLoading,
+    } = usePublicSiteCategories();
 
     const displayName =
         currentUser?.firstName
             ? `${currentUser.firstName} ${currentUser.lastName ?? ""}`.trim()
             : currentUser?.email ?? "Usuario";
 
-    // Scroll visual
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 10);
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
     }, []);
+
+    useEffect(() => {
+        if (isAuthenticated) return;
+
+        const msg = sessionStorage.getItem("auth:postChangePasswordMessage");
+        if (msg) setAuthModalOpen(true);
+    }, [isAuthenticated]);
 
     const handleLogout = async () => {
         await logout();
     };
 
-    // Abrir automáticamente el AuthModal si venimos de cambiar contraseña
-    useEffect(() => {
-        // Sólo tiene sentido si NO hay usuario autenticado
-        if (isAuthenticated) {
-            return;
+    const featuredTop = useMemo(() => {
+        if (!isSiteLoading && rotatingCategories.length > 0) {
+            return rotatingCategories.slice(0, 4);
         }
+        return [];
+    }, [isSiteLoading, rotatingCategories]);
 
-        const msg = sessionStorage.getItem("auth:postChangePasswordMessage");
-        if (msg) {
-            setAuthModalOpen(true);
-        }
-    }, [isAuthenticated]);
+    // Para el drawer jerárquico: si aún no cargó, vació (no fallback “fake”)
+    // porque el árbol con datos falsos puede confundir.
+    const drawerCategories = useMemo(() => {
+        if (isSiteLoading) return [];
+        return allCategories;
+    }, [allCategories, isSiteLoading]);
 
     return (
         <>
             <header
                 className={`fixed top-0 left-0 right-0 z-50 transition-all duration-350 px-4 md:px-8 ${
-                    isScrolled ? 'py-3 bg-white shadow-sm' : 'py-5 bg-transparent'
+                    isScrolled ? "py-3 bg-white shadow-sm" : "py-5 bg-transparent"
                 }`}
             >
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
-
-                    {/* Logo */}
+                    {/* Logo (AppLogo) */}
                     <Link
                         to="/"
                         className="flex items-center transition-opacity hover:opacity-90"
@@ -84,27 +88,86 @@ const Header = () => {
                     >
                         <AppLogo
                             imageClassName="h-8 w-auto"
-                            textClassName="text-2xl font-display font-semibold tracking-tight text-primary transition-all duration-350"
+                            textClassName="text-2xl font-display font-semibold tracking-tight text-primary"
                         />
                     </Link>
 
-                    {/* Navegación Desktop */}
-                    <nav className="hidden md:flex items-center space-x-6">
-                        {CATEGORIES.map((category) => (
-                            <Link
-                                key={category.id}
-                                to={`/category/${category.slug}`}
-                                className="text-sm font-medium text-primary/80 hover:text-primary transition-colors duration-250"
+                    {/* Desktop: chips + botón categorías */}
+                    <div className="hidden md:flex items-center gap-4">
+                        <nav className="flex items-center gap-2">
+                            {featuredTop.map((c) => (
+                                <Link
+                                    key={c.id}
+                                    to={`/category/${c.slug}`}
+                                    className="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
+                                >
+                                    {c.name}
+                                </Link>
+                            ))}
+                        </nav>
+
+                        <Sheet open={categoriesOpen} onOpenChange={setCategoriesOpen}>
+                            <SheetTrigger asChild>
+                                <Button variant="outline" size="sm" className="gap-2">
+                                    <Menu size={18} />
+                                    Categorías
+                                </Button>
+                            </SheetTrigger>
+
+                            <SheetContent
+                                side="left"
+                                className="p-0 w-[360px] sm:w-[420px] flex flex-col"
                             >
-                                {category.name}
-                            </Link>
-                        ))}
-                    </nav>
+                                {/* TOP sticky */}
+                                <div className="sticky top-0 z-10 bg-background border-b p-6">
+                                    <SheetHeader className="space-y-1">
+                                        <SheetTitle>Categorías</SheetTitle>
+                                        <p className="text-sm text-muted-foreground">
+                                            Explora el catálogo por familia
+                                        </p>
+                                    </SheetHeader>
+
+                                    {featuredTop.length > 0 ? (
+                                        <div className="mt-5">
+                                            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-2">
+                                                Destacadas
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {featuredTop.map((c) => (
+                                                    <Link
+                                                        key={c.id}
+                                                        to={`/category/${c.slug}`}
+                                                        onClick={() => setCategoriesOpen(false)}
+                                                        className="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
+                                                    >
+                                                        {c.name}
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ) : null}
+                                </div>
+
+                                {/* Scroll jerárquico */}
+                                <div className="flex-1 overflow-y-auto p-6">
+                                    {drawerCategories.length === 0 ? (
+                                        <div className="text-sm text-muted-foreground">
+                                            Cargando categorías…
+                                        </div>
+                                    ) : (
+                                        <CategoryDrawerTree
+                                            categories={drawerCategories}
+                                            isOpen={categoriesOpen}
+                                            onNavigate={() => setCategoriesOpen(false)}
+                                        />
+                                    )}
+                                </div>
+                            </SheetContent>
+                        </Sheet>
+                    </div>
 
                     {/* Acciones derecha */}
                     <div className="flex items-center space-x-4">
-
-                        {/* Buscar */}
                         <Link
                             to="/search"
                             className="p-2 rounded-full text-muted-foreground hover:text-primary transition-colors"
@@ -113,7 +176,6 @@ const Header = () => {
                             <Search size={20} />
                         </Link>
 
-                        {/* USUARIO LOGADO */}
                         {isAuthenticated && currentUser ? (
                             <Popover>
                                 <PopoverTrigger asChild>
@@ -152,7 +214,6 @@ const Header = () => {
                                 </PopoverContent>
                             </Popover>
                         ) : (
-                            /* Si no está logado -> botón login */
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -163,88 +224,87 @@ const Header = () => {
                             </Button>
                         )}
 
-                        {/* Menú móvil */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="md:hidden"
-                            onClick={() => setMobileMenuOpen(true)}
-                            aria-label="Menú"
-                        >
-                            <Menu size={24} />
-                        </Button>
+                        {/* Mobile: mismo drawer */}
+                        <div className="md:hidden">
+                            <Sheet open={categoriesOpen} onOpenChange={setCategoriesOpen}>
+                                <SheetTrigger asChild>
+                                    <Button variant="ghost" size="icon" aria-label="Categorías">
+                                        <Menu size={24} />
+                                    </Button>
+                                </SheetTrigger>
 
+                                <SheetContent
+                                    side="left"
+                                    className="p-0 w-[320px] sm:w-[380px] flex flex-col"
+                                >
+                                    <div className="sticky top-0 z-10 bg-background border-b p-6">
+                                        <SheetHeader className="space-y-1">
+                                            <SheetTitle>Categorías</SheetTitle>
+                                            <p className="text-sm text-muted-foreground">
+                                                Explora el catálogo por familia
+                                            </p>
+                                        </SheetHeader>
+
+                                        {featuredTop.length > 0 ? (
+                                            <div className="mt-5">
+                                                <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-2">
+                                                    Destacadas
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {featuredTop.map((c) => (
+                                                        <Link
+                                                            key={c.id}
+                                                            to={`/category/${c.slug}`}
+                                                            onClick={() => setCategoriesOpen(false)}
+                                                            className="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
+                                                        >
+                                                            {c.name}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ) : null}
+                                    </div>
+
+                                    <div className="flex-1 overflow-y-auto p-6">
+                                        {drawerCategories.length === 0 ? (
+                                            <div className="text-sm text-muted-foreground">
+                                                Cargando categorías…
+                                            </div>
+                                        ) : (
+                                            <CategoryDrawerTree
+                                                categories={drawerCategories}
+                                                isOpen={categoriesOpen}
+                                                onNavigate={() => setCategoriesOpen(false)}
+                                            />
+                                        )}
+
+                                        <div className="mt-6 pt-6 border-t">
+                                            {isAuthenticated && currentUser ? (
+                                                <Link to="/dashboard" onClick={() => setCategoriesOpen(false)}>
+                                                    <Button className="w-full">Mi Panel</Button>
+                                                </Link>
+                                            ) : (
+                                                <Button
+                                                    className="w-full"
+                                                    onClick={() => {
+                                                        setCategoriesOpen(false);
+                                                        setAuthModalOpen(true);
+                                                    }}
+                                                >
+                                                    Iniciar Sesión
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </SheetContent>
+                            </Sheet>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            {/* --- MENÚ MÓVIL --- */}
-            {mobileMenuOpen && (
-                <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-lg animate-fade-in md:hidden">
-                    <div className="flex flex-col h-full p-6">
-
-                        <div className="flex justify-between items-center mb-8">
-                            <Link
-                                to="/"
-                                className="flex items-center transition-opacity hover:opacity-90"
-                                onClick={() => setMobileMenuOpen(false)}
-                                aria-label="Ir a inicio"
-                            >
-                                <AppLogo
-                                    imageClassName="h-8 w-auto"
-                                    textClassName="text-2xl font-display font-semibold tracking-tight"
-                                />
-                            </Link>
-
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setMobileMenuOpen(false)}
-                                aria-label="Cerrar menú"
-                            >
-                                <X size={24} />
-                            </Button>
-                        </div>
-
-                        <nav className="flex flex-col space-y-6 text-lg">
-                            {CATEGORIES.map((category) => (
-                                <Link
-                                    key={category.id}
-                                    to={`/category/${category.slug}`}
-                                    className="py-2 border-b border-border font-medium"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                >
-                                    {category.name}
-                                </Link>
-                            ))}
-                        </nav>
-
-                        <div className="mt-auto pt-6 flex justify-center">
-                            {isAuthenticated && currentUser ? (
-                                <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                                    <Button className="w-full">Mi Panel</Button>
-                                </Link>
-                            ) : (
-                                <Button
-                                    className="w-full"
-                                    onClick={() => {
-                                        setMobileMenuOpen(false);
-                                        setAuthModalOpen(true);
-                                    }}
-                                >
-                                    Iniciar Sesión
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ---- MODAL LOGIN/REGISTRO ---- */}
-            <AuthModal
-                isOpen={authModalOpen}
-                onClose={() => setAuthModalOpen(false)}
-            />
+            <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
         </>
     );
 };

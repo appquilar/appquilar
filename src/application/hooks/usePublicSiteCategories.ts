@@ -3,9 +3,31 @@ import { compositionRoot } from "@/compositionRoot";
 import type { Category } from "@/domain/models/Category";
 import type { Site } from "@/domain/models/Site";
 
+const MAX_PER_PAGE = 50;
+
+async function fetchAllCategories(): Promise<Category[]> {
+    const out: Category[] = [];
+    let page = 1;
+
+    while (true) {
+        const res = await compositionRoot.categoryService.getAllCategories({
+            page,
+            perPage: MAX_PER_PAGE,
+        });
+
+        out.push(...res.categories);
+
+        if (out.length >= res.total) break;
+
+        page += 1;
+        if (page > 200) break; // guardrail “por si acaso”
+    }
+
+    return out;
+}
+
 /**
  * Carga el site público por env VITE_APPQUILAR_SITE_ID y resuelve sus categorías.
- * Estrategia: pedimos TODAS las categorías (paginado alto) y resolvemos por mapa.
  */
 export const usePublicSiteCategories = () => {
     const siteId = import.meta.env.VITE_APPQUILAR_SITE_ID as string | undefined;
@@ -29,18 +51,15 @@ export const usePublicSiteCategories = () => {
             setError(null);
 
             try {
-                const loadedSite = await compositionRoot.siteService.getById(siteId);
-
-                // Traemos muchas (si tienes miles, lo refinamos luego).
-                const res = await compositionRoot.categoryService.getAllCategories({
-                    page: 1,
-                    perPage: 1000,
-                });
+                const [loadedSite, loadedCategories] = await Promise.all([
+                    compositionRoot.siteService.getById(siteId),
+                    fetchAllCategories(),
+                ]);
 
                 if (!alive) return;
 
                 setSite(loadedSite);
-                setAllCategories(res.categories);
+                setAllCategories(loadedCategories);
             } catch (e) {
                 if (!alive) return;
                 setError("No se pudo cargar el sitio o las categorías.");
@@ -50,7 +69,7 @@ export const usePublicSiteCategories = () => {
             }
         };
 
-        run();
+        void run();
 
         return () => {
             alive = false;
