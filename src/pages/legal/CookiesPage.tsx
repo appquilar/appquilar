@@ -1,7 +1,14 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import {useSeo} from "@/hooks/useSeo.ts";
 
 const CookiesPage = () => {
+    useSeo({
+        type: "static",
+        title: "Política de cookies · Appquilar",
+        description: "Información legal sobre cookies en Appquilar.",
+    });
+
     return (
         <div className="min-h-screen flex flex-col">
             <Header />

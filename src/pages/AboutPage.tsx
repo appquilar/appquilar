@@ -1,7 +1,14 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import {useSeo} from "@/hooks/useSeo.ts";
 
 const AboutPage = () => {
+    useSeo({
+        type: "static",
+        title: "Sobre Appquilar",
+        description: "Conoce qué es Appquilar y nuestra misión.",
+    });
+
     return (
         <div className="min-h-screen flex flex-col">
             <Header />

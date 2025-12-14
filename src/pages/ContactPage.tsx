@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
+import {useSeo} from "@/hooks/useSeo.ts";
 
 const CONTACT_EMAIL = "appquilar.contacto@gmail.com";
 
@@ -10,6 +11,11 @@ type Topic = "Soporte" | "Colaboración" | "Legal" | "Prensa" | "Otro";
 const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
 const ContactPage = () => {
+    useSeo({
+        type: "static",
+        title: "Contacto · Appquilar",
+        description: "Contacta con el equipo de Appquilar.",
+    });
     const [topic, setTopic] = useState<Topic>("Soporte");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");

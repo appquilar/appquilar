@@ -13,6 +13,7 @@ import LoadingState from "@/components/category/LoadingState";
 import type { Product } from "@/components/products/ProductCard";
 import type { Category } from "@/domain/models/Category";
 import { compositionRoot } from "@/compositionRoot";
+import { useSeo } from "@/hooks/useSeo";
 
 const CategoryPage = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -23,6 +24,33 @@ const CategoryPage = () => {
     const [category, setCategory] = useState<Category | null>(null);
     const [products, setProducts] = useState<Product[]>([]); // TODO: conectar products reales
     const [notFound, setNotFound] = useState(false);
+
+    // ✅ SEO: una sola fuente de verdad (prioridad: notFound > category > fallback)
+    const seoContext = useMemo(() => {
+        if (notFound) {
+            return {
+                type: "static" as const,
+                title: "Categoría no encontrada · Appquilar",
+                description: "La categoría que buscas no existe o no está disponible.",
+            };
+        }
+
+        if (category && slug) {
+            return {
+                type: "category" as const,
+                name: category.name,
+                slug,
+            };
+        }
+
+        return {
+            type: "static" as const,
+            title: "Categoría · Appquilar",
+            description: "Explora productos en alquiler por categoría.",
+        };
+    }, [notFound, category, slug]);
+
+    useSeo(seoContext);
 
     // Scroll to top on page load
     useEffect(() => {
@@ -130,7 +158,10 @@ const CategoryPage = () => {
                     {filteredProducts.length > 0 ? (
                         <ProductGrid products={filteredProducts} />
                     ) : (
-                        <NoProductsFound searchQuery={searchQuery} categoryName={category.name} />
+                        <NoProductsFound
+                            searchQuery={searchQuery}
+                            categoryName={category.name}
+                        />
                     )}
                 </div>
             </main>

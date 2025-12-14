@@ -1,7 +1,14 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import {useSeo} from "@/hooks/useSeo.ts";
 
 const LegalNoticePage = () => {
+    useSeo({
+        type: "static",
+        title: "Aviso Legal · Appquilar",
+        description: "Información legal en Appquilar.",
+    });
+
     return (
         <div className="min-h-screen flex flex-col">
             <Header />

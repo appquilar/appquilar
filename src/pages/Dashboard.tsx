@@ -2,6 +2,7 @@ import {useEffect} from "react";
 import {Navigate} from "react-router-dom";
 import DashboardComponent from "@/components/dashboard/Dashboard";
 import {useAuth} from "@/context/AuthContext";
+import {useSeo} from "@/hooks/useSeo.ts";
 
 /**
  * Top-level dashboard route component.
@@ -10,6 +11,7 @@ import {useAuth} from "@/context/AuthContext";
  * - Redirects unauthenticated users to the public home page.
  */
 const Dashboard = () => {
+    useSeo({ type: "dashboard" }, { noIndex: true });
     const { isLoggedIn, isLoading } = useAuth();
 
     // Scroll to top on page load

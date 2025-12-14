@@ -1,7 +1,14 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import {useSeo} from "@/hooks/useSeo.ts";
 
 const PrivacyPage = () => {
+    useSeo({
+        type: "static",
+        title: "Política de privacidad · Appquilar",
+        description: "Política de privacidad en Appquilar.",
+    });
+
     return (
         <div className="min-h-screen flex flex-col">
             <Header />

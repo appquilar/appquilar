@@ -2,10 +2,16 @@ import { useMemo, useState } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
+import {useSeo} from "@/hooks/useSeo.ts";
 
 const PARTNERS_EMAIL = "appquilar.contacto@gmail.com";
 
 const PartnersPage = () => {
+    useSeo({
+        type: "static",
+        title: "Partners · Appquilar",
+        description: "Empresas y colaboradores de Appquilar.",
+    });
     const [company, setCompany] = useState("");
     const [contactName, setContactName] = useState("");
     const [email, setEmail] = useState("");

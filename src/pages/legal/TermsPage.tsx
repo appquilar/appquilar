@@ -1,7 +1,14 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import {useSeo} from "@/hooks/useSeo.ts";
 
 const TermsPage = () => {
+    useSeo({
+        type: "static",
+        title: "Términos y condiciones de uso · Appquilar",
+        description: "Términos y condiciones de uso en Appquilar.",
+    });
+
     return (
         <div className="min-h-screen flex flex-col">
             <Header />

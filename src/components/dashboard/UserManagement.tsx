@@ -6,8 +6,13 @@ import UserManagementHeader from "./user-management/UserManagementHeader";
 import UserSearchForm from "./user-management/UserSearchForm";
 import UserTable from "./user-management/UserTable";
 import ResultsCount from "./user-management/ResultsCount";
+import {useSeo} from "@/hooks/useSeo.ts";
 
 const UserManagement = () => {
+    useSeo(
+        { type: "dashboard-section", section: "Usuarios" },
+        { noIndex: true }
+    );
     const navigate = useNavigate();
 
     const {

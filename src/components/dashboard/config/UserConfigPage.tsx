@@ -9,8 +9,14 @@ import PasswordTab from "./tabs/PasswordTab";
 import AddressTab from "./tabs/AddressTab";
 import MobileConfigLayout from "./layout/MobileConfigLayout";
 import DesktopConfigLayout from "./layout/DesktopConfigLayout";
+import {useSeo} from "@/hooks/useSeo.ts";
 
 const UserConfigPage: React.FC = () => {
+    useSeo(
+        { type: "dashboard-section", section: "Configuración" },
+        { noIndex: true }
+    );
+
     const {
         activeTab,
         setActiveTab,

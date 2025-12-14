@@ -19,6 +19,7 @@ import {ApiCategoryRepository} from "@/infrastructure/repositories/ApiCategoryRe
 import {SiteRepository} from "@/domain/repositories/SiteRepository.ts";
 import {ApiSiteRepository} from "@/infrastructure/repositories/ApiSiteRepository.ts";
 import {SiteService} from "@/application/services/SiteService.ts";
+import {SeoService} from "@/core/application/SeoService.ts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -43,6 +44,7 @@ export const mediaRepository: MediaRepository = new ApiMediaRepository(apiClient
 export const categoryRepository: CategoryRepository = new ApiCategoryRepository(apiClient, session);
 export const siteRepository: SiteRepository = new ApiSiteRepository(apiClient, session);
 
+export const seoService = new SeoService();
 export const authService = new AuthService(authRepository, userRepository);
 export const userService = new UserService(userRepository, authRepository);
 export const mediaService = new MediaService(mediaRepository);
@@ -55,6 +57,7 @@ export const compositionRoot = {
     apiClient,
     authSessionStorage,
 
+    seoService,
     authRepository,
     userRepository,
     mediaRepository,
