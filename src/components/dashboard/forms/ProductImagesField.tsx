@@ -1,120 +1,162 @@
+// src/components/dashboard/forms/ProductImagesField.tsx
+import { useEffect, useState } from "react";
+import type { UseFormReturn } from "react-hook-form";
+import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 
-import { useState, useEffect } from "react";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { ImageFile, ProductImagesFieldProps } from "./image-upload/types";
 import ImageDropZone from "./image-upload/ImageDropZone";
 import ImageGallery from "./image-upload/ImageGallery";
-import { validateAndProcessFiles, MAX_IMAGES } from "./image-upload/imageUtils";
+import type { ImageFile } from "./image-upload/types";
+import { validateAndProcessFiles } from "./image-upload/imageUtils";
+import type { ProductFormData } from "@/domain/models/Product";
+import { compositionRoot } from "@/compositionRoot";
+import { toast } from "sonner";
 
-const ProductImagesField = ({ control }: ProductImagesFieldProps) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [images, setImages] = useState<ImageFile[]>([]);
+interface Props {
+    form: UseFormReturn<ProductFormData>;
+}
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      handleFiles(Array.from(files));
-    }
-  };
+const MAX = 5;
 
-  const handleFiles = (files: File[]) => {
-    const newImages = validateAndProcessFiles(files, images);
-    if (newImages.length > 0) {
-      setImages((prevImages) => [...prevImages, ...newImages]);
-    }
-  };
+const ProductImagesField = ({ form }: Props) => {
+    const [images, setImages] = useState<ImageFile[]>([]);
+    const [drag, setDrag] = useState(false);
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
+    /**
+     * ✅ 1) Inicializar desde defaultValues (edit):
+     * - si el form trae images como string[] (ideal)
+     * - o si te llega como objetos, lo toleramos.
+     */
+    useEffect(() => {
+        const raw = (form.getValues("images") ?? []) as any[];
 
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
+        // Si ya tenemos state, no pisamos
+        if (images.length > 0) return;
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    if (e.dataTransfer.files) {
-      handleFiles(Array.from(e.dataTransfer.files));
-    }
-  };
+        const ids: string[] = raw
+            .map((x) => (typeof x === "string" ? x : x?.id))
+            .filter(Boolean);
 
-  const removeImage = (id: string) => {
-    const imageToRemove = images.find(img => img.id === id);
-    
-    setImages((prevImages) => {
-      // Filter out the image to remove
-      const filteredImages = prevImages.filter((image) => image.id !== id);
-      
-      // If we're removing the primary image, set a new primary if there are remaining images
-      if (imageToRemove?.isPrimary && filteredImages.length > 0) {
-        return filteredImages.map((image, index) => ({
-          ...image,
-          isPrimary: index === 0 // Make the first remaining image primary
-        }));
-      }
-      
-      return filteredImages;
-    });
-    
-    // Revoke the object URL to avoid memory leaks
-    if (imageToRemove) {
-      URL.revokeObjectURL(imageToRemove.url);
-    }
-  };
+        if (ids.length) {
+            setImages(ids.map((id) => ({ id })));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form]);
 
-  const setPrimaryImage = (id: string) => {
-    // Use stopPropagation to ensure the event doesn't bubble up to the form
-    setImages((prevImages) =>
-      prevImages.map((image) => ({
-        ...image,
-        isPrimary: image.id === id,
-      }))
-    );
-  };
-
-  return (
-    <FormField
-      control={control}
-      name="images"
-      render={({ field }) => {
-        // Update the form value when images change
-        useEffect(() => {
-          field.onChange(images);
-        }, [images, field]);
-        
-        return (
-          <FormItem className="space-y-3">
-            <FormLabel>Imágenes del Producto</FormLabel>
-            <p className="text-sm text-muted-foreground mb-2">
-              Arrastra imágenes o haz clic para seleccionarlas. Haz clic en el icono de estrella para establecer una imagen como principal, y en la X para eliminarla.
-            </p>
-            <FormControl>
-              <div className="space-y-4">
-                <ImageDropZone
-                  isDragging={isDragging}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onFileChange={handleFileChange}
-                />
-                <ImageGallery 
-                  images={images} 
-                  onRemoveImage={removeImage}
-                  onSetPrimaryImage={setPrimaryImage}
-                />
-              </div>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
+    /**
+     * ✅ 2) El form SOLO guarda IDs
+     */
+    useEffect(() => {
+        form.setValue(
+            "images",
+            images.map((i) => i.id) as any,
+            { shouldDirty: true }
         );
-      }}
-    />
-  );
+    }, [images, form]);
+
+    const addFiles = async (files: File[]) => {
+        const toAdd = validateAndProcessFiles(files, images, { maxImages: MAX });
+        if (!toAdd.length) return;
+
+        // Insertamos en UI en modo "uploading"
+        setImages((prev) => [
+            ...prev,
+            ...toAdd.map(({ imageId, previewUrl }) => ({
+                id: imageId,
+                previewUrl,
+                isUploading: true,
+                error: null,
+            })),
+        ]);
+
+        // Subimos uno a uno (simple, estable, sin carreras raras)
+        for (const item of toAdd) {
+            try {
+                await compositionRoot.mediaService.uploadImage(item.file, item.imageId);
+
+                setImages((prev) =>
+                    prev.map((img) =>
+                        img.id === item.imageId
+                            ? { ...img, isUploading: false, error: null }
+                            : img
+                    )
+                );
+            } catch (e) {
+                setImages((prev) =>
+                    prev.map((img) =>
+                        img.id === item.imageId
+                            ? { ...img, isUploading: false, error: "Error subiendo imagen" }
+                            : img
+                    )
+                );
+                toast.error("No se pudo subir una imagen.");
+            }
+        }
+    };
+
+    /**
+     * ✅ 3) Borrar = DELETE al BE + quitar de UI
+     */
+    const removeImage = async (imageId: string) => {
+        const current = images.find((i) => i.id === imageId);
+        if (!current) return;
+
+        // Optimista (pero seguro): quitamos primero de UI, y si falla lo reinsertamos
+        setImages((prev) => prev.filter((i) => i.id !== imageId));
+
+        try {
+            await compositionRoot.mediaService.deleteImage(imageId);
+        } catch (e) {
+            toast.error("No se pudo eliminar la imagen.");
+            setImages((prev) => [...prev, current]); // reinsert
+        } finally {
+            // Revocar previewUrl si existía
+            if (current.previewUrl) {
+                URL.revokeObjectURL(current.previewUrl);
+            }
+        }
+    };
+
+    return (
+        <FormField
+            control={form.control}
+            name="images"
+            render={() => (
+                <FormItem>
+                    <FormLabel>Imágenes (máx {MAX})</FormLabel>
+
+                    <FormControl>
+                        <div className="space-y-4">
+                            <ImageDropZone
+                                isDragging={drag}
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    setDrag(true);
+                                }}
+                                onDragLeave={(e) => {
+                                    e.preventDefault();
+                                    setDrag(false);
+                                }}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    setDrag(false);
+                                    void addFiles(Array.from(e.dataTransfer.files));
+                                }}
+                                onFileChange={(e) => void addFiles(Array.from(e.target.files ?? []))}
+                            />
+
+                            <ImageGallery
+                                images={images}
+                                onRemoveImage={(id) => void removeImage(id)}
+                                onSetPrimaryImage={() => {
+                                    /* noop */
+                                }}
+                            />
+                        </div>
+                    </FormControl>
+                </FormItem>
+            )}
+        />
+    );
 };
 
 export default ProductImagesField;

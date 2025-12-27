@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Category } from "@/domain/models/Category";
+import { buildCategoryBreadcrumbName } from "@/utils/categoryBreadcrumb";
 
 type Props = {
     allCategories: Category[];
@@ -45,20 +46,6 @@ function buildChildrenMap(all: Category[]) {
     return children;
 }
 
-function buildBreadcrumbName(category: Category, byId: Map<string, Category>) {
-    const names: string[] = [];
-    let curr: Category | undefined = category;
-    let guard = 0;
-
-    while (curr && guard < 10) {
-        names.unshift(curr.name);
-        curr = curr.parentId ? byId.get(curr.parentId) : undefined;
-        guard += 1;
-    }
-
-    return names.join(" > ");
-}
-
 export default function CategoryDrawerContent({
                                                   allCategories,
                                                   topCategoryIds,
@@ -75,14 +62,13 @@ export default function CategoryDrawerContent({
             .filter(Boolean) as Category[];
     }, [topCategoryIds, byId]);
 
-    // “datatable”: filas filtradas instantáneas
     const filteredRows = useMemo<Row[]>(() => {
         const term = normalize(q);
         if (!term) return [];
 
         return allCategories
             .filter((c) => normalize(c.name).includes(term) || normalize(c.slug).includes(term))
-            .slice(0, 50) // límite UX (puedes subirlo)
+            .slice(0, 50)
             .map((c) => ({
                 id: c.id,
                 name: c.name,
@@ -95,7 +81,6 @@ export default function CategoryDrawerContent({
 
     return (
         <div className="flex h-full flex-col">
-            {/* Top quick categories (site.categoryIds) */}
             <div className="pb-3">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Principales</p>
                 <div className="flex flex-col gap-1">
@@ -106,14 +91,12 @@ export default function CategoryDrawerContent({
                             onClick={onNavigate}
                             className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-secondary"
                         >
-                            {/* si quieres iconos aquí, lo conectamos a iconId como ya haces */}
                             <span className="text-sm font-medium">{c.name}</span>
                         </Link>
                     ))}
                 </div>
             </div>
 
-            {/* Search */}
             <div className="py-3 border-t">
                 <Input
                     value={q}
@@ -126,7 +109,6 @@ export default function CategoryDrawerContent({
                 </p>
             </div>
 
-            {/* Scroll list */}
             <ScrollArea className="flex-1 pr-2">
                 {showSearchResults ? (
                     <div className="py-2">
@@ -138,7 +120,7 @@ export default function CategoryDrawerContent({
                             <div className="divide-y">
                                 {filteredRows.map((r) => {
                                     const c = byId.get(r.id);
-                                    const breadcrumb = c ? buildBreadcrumbName(c, byId) : r.name;
+                                    const breadcrumb = c ? buildCategoryBreadcrumbName(c, byId) : r.name;
 
                                     return (
                                         <Link
@@ -157,7 +139,6 @@ export default function CategoryDrawerContent({
                     </div>
                 ) : (
                     <div className="py-2">
-                        {/* Jerarquía (root -> children) */}
                         {(childrenMap.get(null) ?? []).map((root) => (
                             <CategoryNode
                                 key={root.id}

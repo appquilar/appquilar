@@ -1,42 +1,31 @@
+// src/components/dashboard/products/ProductGrid.tsx
 
-import { Product } from '@/domain/models/Product';
-import ProductCard from './ProductCard';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import ProductCard from "@/components/products/ProductCard";
+import type { ProductFormData } from "@/domain/models/Product";
+
+type DashboardProduct = ProductFormData & { id: string };
 
 interface ProductGridProps {
-  products: Product[];
-  onEdit: (productId: string) => void;
-  onDelete: (product: Product) => void;
-  onAdd: () => void;
+    products: DashboardProduct[];
+    onEdit?: (productId: string) => void;
+    onDelete?: (productId: string, productName: string) => void;
+    onAdd?: () => void;
 }
 
-const ProductGrid = ({ products, onEdit, onDelete, onAdd }: ProductGridProps) => {
-  if (products.length === 0) {
+const ProductGrid = ({ products, onEdit, onDelete }: ProductGridProps) => {
     return (
-      <div className="text-center py-12 bg-muted/30 rounded-lg">
-        <h3 className="text-lg font-medium mb-2">No se encontraron productos</h3>
-        <p className="text-muted-foreground mb-6">Ajusta tu búsqueda o añade un nuevo producto.</p>
-        <Button onClick={onAdd} className="gap-2">
-          <Plus size={16} />
-          Añadir Nuevo Producto
-        </Button>
-      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
+            {products.map((product) => (
+                <ProductCard
+                    key={product.id}
+                    product={product as any}
+                    onEdit={onEdit ? () => onEdit(product.id) : undefined}
+                    onDelete={onDelete ? () => onDelete(product.id, product.name) : undefined}
+                />
+            ))}
+        </div>
     );
-  }
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {products.map(product => (
-        <ProductCard 
-          key={product.id} 
-          product={product} 
-          onEdit={() => onEdit(product.id)} 
-          onDelete={() => onDelete(product)} 
-        />
-      ))}
-    </div>
-  );
 };
 
 export default ProductGrid;

@@ -4,6 +4,8 @@ import { ChevronDown } from "lucide-react";
 
 import type { Category } from "@/domain/models/Category";
 import { compositionRoot } from "@/compositionRoot";
+import { Input } from "@/components/ui/input";
+import { buildCategoryBreadcrumbName } from "@/utils/categoryBreadcrumb";
 
 interface Props {
     categories: Category[];
@@ -16,7 +18,21 @@ type Node = {
     children: Node[];
 };
 
+type SearchRow = {
+    id: string;
+    name: string;
+    slug: string;
+};
+
 const sortByName = (a: Category, b: Category) => a.name.localeCompare(b.name, "es");
+
+const normalize = (s: string) => s.trim().toLowerCase();
+
+const buildCategoryMap = (categories: Category[]) => {
+    const byId = new Map<string, Category>();
+    categories.forEach((c) => byId.set(c.id, c));
+    return byId;
+};
 
 const buildTree = (categories: Category[]): Node[] => {
     const byId = new Map<string, Category>();
@@ -61,16 +77,28 @@ const ROW_BASE =
 
 export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) => {
     const [openIds, setOpenIds] = useState<Set<string>>(new Set());
+    const [q, setQ] = useState("");
 
     /**
      * Cache en memoria (por iconId, no por categoryId).
-     * - Si cambia el listado de categorías, mientras el iconId sea el mismo, NO se re-descarga.
-     * - Evita recargas cuando alternas búsqueda / árbol.
      */
     const iconUrlByIconIdRef = useRef<Map<string, string>>(new Map());
     const [iconUrlByIconId, setIconUrlByIconId] = useState<Record<string, string>>({});
 
+    const byId = useMemo(() => buildCategoryMap(categories), [categories]);
     const tree = useMemo(() => buildTree(categories), [categories]);
+
+    const showSearchResults = q.trim().length > 0;
+
+    const filteredRows = useMemo<SearchRow[]>(() => {
+        const term = normalize(q);
+        if (!term) return [];
+
+        return categories
+            .filter((c) => normalize(c.name).includes(term) || normalize(c.slug).includes(term))
+            .slice(0, 50)
+            .map((c) => ({ id: c.id, name: c.name, slug: c.slug }));
+    }, [categories, q]);
 
     const toggle = (id: string) => {
         setOpenIds((prev) => {
@@ -83,10 +111,7 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
 
     // Lista de iconIds que existen (estable)
     const iconIdsKey = useMemo(() => {
-        const ids = categories
-            .map((c) => c.iconId)
-            .filter(Boolean) as string[];
-        // ordenamos para que el key sea estable
+        const ids = categories.map((c) => c.iconId).filter(Boolean) as string[];
         ids.sort();
         return ids.join("|");
     }, [categories]);
@@ -99,7 +124,6 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
             if (!isOpen) return;
             if (!iconIdsKey) return;
 
-            // missing = iconIds que no están en cache
             const iconIds = iconIdsKey.split("|").filter(Boolean);
             const missing = iconIds.filter((iconId) => !iconUrlByIconIdRef.current.has(iconId));
             if (missing.length === 0) return;
@@ -115,7 +139,6 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
 
                 if (!alive) return;
 
-                // Guardamos en cache ref + sincronizamos estado (para re-render)
                 for (const [iconId, url] of entries) {
                     iconUrlByIconIdRef.current.set(iconId, url);
                 }
@@ -128,7 +151,7 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
                     return next;
                 });
             } catch {
-                // si falla, sin icono
+                // ignore
             }
         };
 
@@ -155,7 +178,6 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
         const url = iconUrlByIconId[category.iconId];
         if (!url) return <span className="h-9 w-9 shrink-0 rounded bg-muted animate-pulse" />;
 
-        // 👇 un poco más grande (como pedías)
         return <img src={url} alt="" className="h-10 w-10 object-contain shrink-0" loading="lazy" />;
     };
 
@@ -164,8 +186,6 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
         const hasChildren = children.length > 0;
         const isExpanded = openIds.has(category.id);
 
-        // ❗ Tailwind no genera clases dinámicas tipo `pl-${x}`.
-        // Usamos padding inline.
         const paddingLeft = depth === 0 ? 0 : Math.min(28, 8 + depth * 14);
 
         return (
@@ -173,14 +193,8 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
                 <div className={ROW_BASE} style={{ paddingLeft }}>
                     <RowIcon category={category} />
 
-                    <Link
-                        to={`/category/${category.slug}`}
-                        onClick={onNavigate}
-                        className="flex-1 min-w-0"
-                    >
-            <span className="text-sm font-medium text-foreground truncate">
-              {category.name}
-            </span>
+                    <Link to={`/category/${category.slug}`} onClick={onNavigate} className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-foreground truncate">{category.name}</span>
                     </Link>
 
                     {hasChildren ? (
@@ -199,13 +213,58 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
                 </div>
 
                 {hasChildren && isExpanded ? (
-                    <div className="mt-1 space-y-1">
-                        {children.map((child) => renderNode(child, depth + 1))}
-                    </div>
+                    <div className="mt-1 space-y-1">{children.map((child) => renderNode(child, depth + 1))}</div>
                 ) : null}
             </div>
         );
     };
 
-    return <div className="space-y-1">{tree.map((n) => renderNode(n, 0))}</div>;
+    return (
+        <div className="space-y-3">
+            {/* Buscador */}
+            <div className="space-y-2">
+                <Input
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    placeholder="Buscar categoría..."
+                    className="h-10"
+                />
+                <p className="text-xs text-muted-foreground">
+                    {showSearchResults ? "Resultados" : "Todas las categorías"}
+                </p>
+            </div>
+
+            {/* Resultados o árbol */}
+            {showSearchResults ? (
+                <div className="space-y-1">
+                    {filteredRows.length === 0 ? (
+                        <div className="text-sm text-muted-foreground py-6">
+                            No hay resultados para “{q}”.
+                        </div>
+                    ) : (
+                        <div className="divide-y">
+                            {filteredRows.map((r) => {
+                                const c = byId.get(r.id);
+                                const breadcrumb = c ? buildCategoryBreadcrumbName(c, byId) : r.name;
+
+                                return (
+                                    <Link
+                                        key={r.id}
+                                        to={`/category/${r.slug}`}
+                                        onClick={onNavigate}
+                                        className="flex flex-col gap-1 py-3 hover:bg-secondary rounded-md px-2"
+                                    >
+                                        <span className="text-sm font-medium">{r.name}</span>
+                                        <span className="text-xs text-muted-foreground">{breadcrumb}</span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="space-y-1">{tree.map((n) => renderNode(n, 0))}</div>
+            )}
+        </div>
+    );
 };

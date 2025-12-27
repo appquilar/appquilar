@@ -33,6 +33,7 @@ const DashboardRoutes = () => {
             {/* Products */}
             <Route path="products" element={<ProductsManagement />} />
             <Route path="products/new" element={<ProductFormPage />} />
+            <Route path="products/:productId/edit" element={<ProductFormPage />} />
             <Route path="products/:productId" element={<ProductFormPage />} />
 
             {/* Rentals */}

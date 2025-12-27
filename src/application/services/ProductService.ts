@@ -1,91 +1,70 @@
+import type {
+    OwnerProductsResult,
+    ProductRepository,
+    SearchProductsFilters,
+    SearchProductsResult,
+} from "@/domain/repositories/ProductRepository";
+import type {ProductFormData} from "@/domain/models/Product";
 
-import { Product, ProductFormData } from '@/domain/models/Product';
-import { IProductRepository } from '@/domain/repositories/IProductRepository';
-import { RepositoryFactory } from '@/infrastructure/repositories/RepositoryFactory';
-
-/**
- * Service for managing product data
- */
 export class ProductService {
-  private static instance: ProductService;
-  private repository: IProductRepository;
+    constructor(private readonly productRepository: ProductRepository) {}
 
-  private constructor(repository: IProductRepository) {
-    this.repository = repository;
-  }
-
-  /**
-   * Get the singleton instance
-   */
-  public static getInstance(): ProductService {
-    if (!ProductService.instance) {
-      // Get repository from factory
-      const repository = RepositoryFactory.getProductRepository();
-      ProductService.instance = new ProductService(repository);
+    /**
+     * Público (marketplace): /api/products/search
+     * (si lo sigues usando en la parte pública)
+     */
+    async search(filters?: SearchProductsFilters): Promise<SearchProductsResult> {
+        return this.productRepository.search(filters);
     }
-    return ProductService.instance;
-  }
 
-  /**
-   * Set a custom repository implementation
-   */
-  public static setRepository(repository: IProductRepository): void {
-    // Update the repository in factory and service
-    RepositoryFactory.setProductRepository(repository);
-    
-    if (ProductService.instance) {
-      ProductService.instance.repository = repository;
-    } else {
-      ProductService.instance = new ProductService(repository);
+    /**
+     * Público (product page): /api/products/{slug}
+     */
+    async getBySlug(slug: string): Promise<ProductFormData> {
+        return this.productRepository.getBySlug(slug);
     }
-  }
 
-  /**
-   * Get all products
-   */
-  async getAllProducts(): Promise<Product[]> {
-    return this.repository.getAllProducts();
-  }
+    /**
+     * Privado (dashboard): /api/products/{product_id}
+     */
+    async getById(id: string): Promise<ProductFormData> {
+        return this.productRepository.getById(id);
+    }
 
-  /**
-   * Get a product by ID
-   */
-  async getProductById(id: string): Promise<Product | null> {
-    return this.repository.getProductById(id);
-  }
+    /**
+     * ✅ Privado (dashboard list): /api/users/{owner_id}/products
+     */
+    async listByOwner(
+        ownerId: string,
+        page = 1,
+        perPage = 10
+    ): Promise<OwnerProductsResult> {
+        return this.productRepository.listByOwner(ownerId, { page, perPage });
+    }
 
-  /**
-   * Get products by company ID
-   */
-  async getProductsByCompanyId(companyId: string): Promise<Product[]> {
-    return this.repository.getProductsByCompanyId(companyId);
-  }
+    /**
+     * Privado (dashboard): POST /api/products
+     */
+    async create(payload: ProductFormData & { id: string }): Promise<void> {
+        return this.productRepository.create(payload);
+    }
 
-  /**
-   * Get products by category ID
-   */
-  async getProductsByCategoryId(categoryId: string): Promise<Product[]> {
-    return this.repository.getProductsByCategoryId(categoryId);
-  }
+    /**
+     * Privado (dashboard): PATCH /api/products/{product_id}
+     */
+    async update(productId: string, payload: ProductFormData): Promise<void> {
+        return this.productRepository.update(productId, payload);
+    }
 
-  /**
-   * Create a new product
-   */
-  async createProduct(productData: ProductFormData): Promise<Product> {
-    return this.repository.createProduct(productData);
-  }
+    async publish(productId: string): Promise<void> {
+        return this.productRepository.publish(productId);
+    }
 
-  /**
-   * Update a product
-   */
-  async updateProduct(id: string, productData: ProductFormData): Promise<Product> {
-    return this.repository.updateProduct(id, productData);
-  }
+    async unpublish(productId: string): Promise<void> {
+        return this.productRepository.unpublish(productId);
+    }
 
-  /**
-   * Delete a product
-   */
-  async deleteProduct(id: string): Promise<boolean> {
-    return this.repository.deleteProduct(id);
-  }
+    async archive(productId: string): Promise<void> {
+        return this.productRepository.archive(productId);
+    }
 }

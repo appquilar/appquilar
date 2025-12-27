@@ -1,28 +1,35 @@
-// src/components/dashboard/forms/image-upload/ImageDropZone.tsx
-
 import { useRef } from "react";
 import { Plus } from "lucide-react";
 
 interface Props {
     disabled?: boolean;
     isDragging: boolean;
-    count?: number; // se mantiene por compat
-    max?: number;   // se mantiene por compat
+    count: number;
+    max: number;
     onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
     onDragLeave: (e: React.DragEvent<HTMLDivElement>) => void;
     onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
     onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const ImageDropZone = ({
-                           disabled,
-                           isDragging,
-                           onDragOver,
-                           onDragLeave,
-                           onDrop,
-                           onFileChange,
-                       }: Props) => {
+const ProductImageDropZone = ({
+                                  disabled,
+                                  isDragging,
+                                  count,
+                                  max,
+                                  onDragOver,
+                                  onDragLeave,
+                                  onDrop,
+                                  onFileChange,
+                              }: Props) => {
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        onFileChange(e);
+
+        // ✅ Permite seleccionar el mismo archivo otra vez (el browser si no, no dispara onChange)
+        e.currentTarget.value = "";
+    };
 
     return (
         <div
@@ -43,23 +50,21 @@ const ImageDropZone = ({
                 <div className="text-sm text-muted-foreground">
                     <span className="font-medium">Haz clic para subir</span> o arrastra y suelta
                 </div>
-                <p className="text-xs text-muted-foreground">JPEG o PNG, máximo 2MB</p>
+                <p className="text-xs text-muted-foreground">
+                    JPEG o PNG, máximo 2MB · {count}/{max}
+                </p>
             </div>
 
             <input
                 type="file"
                 ref={inputRef}
+                onChange={handleChange}
                 accept="image/jpeg,image/png"
                 className="hidden"
                 multiple
-                onChange={(e) => {
-                    onFileChange(e);
-                    // ✅ permitir re-subir el mismo fichero
-                    e.target.value = "";
-                }}
             />
         </div>
     );
 };
 
-export default ImageDropZone;
+export default ProductImageDropZone;
