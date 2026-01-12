@@ -1,61 +1,77 @@
-import type { PublicProductHit } from "@/domain/models/PublicProductHit";
-import type { ProductFormData } from "@/domain/models/Product";
+import { Product, ProductFormData } from '../models/Product';
 
-export type SearchProductsFilters = {
+export interface ProductSearchCriteria {
     text?: string;
     latitude?: number;
     longitude?: number;
     radius?: number;
     categories?: string[];
     page?: number;
-    perPage?: number;
-};
+    per_page?: number;
+}
 
-export type SearchProductsResult = {
-    data: PublicProductHit[];
+export interface ProductListResponse {
+    data: Product[];
     total: number;
     page: number;
-};
+}
 
-export type OwnerProductsFilters = {
-    page?: number;
-    perPage?: number;
-};
-
-export type OwnerProductsResult = {
-    data: ProductFormData[]; // dashboard lista “form-like”
-    total: number;
-    page: number;
-};
-
+/**
+ * Repository interface for accessing and managing Product data
+ */
 export interface ProductRepository {
     /**
-     * PÚBLICO: sólo published. Devuelve hits (no ProductResponse completo).
+     * Search products with filters
      */
-    search(filters?: SearchProductsFilters): Promise<SearchProductsResult>;
+    search(criteria: ProductSearchCriteria): Promise<ProductListResponse>;
 
     /**
-     * DASHBOARD: productos por owner (user). Devuelve ProductFormData[] para pintar y editar.
+     * Get all products
      */
-    listByOwner(ownerId: string, filters?: OwnerProductsFilters): Promise<OwnerProductsResult>;
+    getAllProducts(): Promise<Product[]>;
 
     /**
-     * Público por slug (detalle). Lo devolvemos como ProductFormData para reutilizar el form.
+     * Get a product by ID (Legacy alias)
      */
-    getBySlug(slug: string): Promise<ProductFormData>;
+    getProductById(id: string): Promise<Product | null>;
 
     /**
-     * Privado por id (dashboard).
+     * Get a product by ID
      */
-    getById(id: string): Promise<ProductFormData>;
+    getById(id: string): Promise<Product | null>;
 
     /**
-     * CRUD (según Nelmio: 201/204 sin body).
+     * Get a product by Slug
      */
-    create(payload: ProductFormData & { id: string }): Promise<void>;
-    update(productId: string, payload: ProductFormData): Promise<void>;
+    getBySlug(slug: string): Promise<Product | null>;
 
-    publish(productId: string): Promise<void>;
-    unpublish(productId: string): Promise<void>;
-    archive(productId: string): Promise<void>;
+    /**
+     * Get products by company ID
+     */
+    getProductsByCompanyId(companyId: string): Promise<Product[]>;
+
+    /**
+     * List products by owner (Generic)
+     */
+    listByOwner(ownerId: string): Promise<Product[]>;
+
+    /**
+     * Get products by category ID
+     */
+    getProductsByCategoryId(categoryId: string): Promise<Product[]>;
+
+    /**
+     * Create a new product
+     */
+    createProduct(productData: ProductFormData): Promise<Product>;
+
+    /**
+     * Update an existing product
+     */
+    updateProduct(id: string, productData: ProductFormData): Promise<Product>;
+
+    /**
+     * Delete a product
+     */
+    deleteProduct(id: string): Promise<boolean>;
 }

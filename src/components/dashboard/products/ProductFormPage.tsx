@@ -1,78 +1,132 @@
-// src/pages/dashboard/products/ProductFormPage.tsx
-import { useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import ProductForm from "@/components/dashboard/forms/ProductForm";
-import { useCreateProduct, useUpdateProduct } from "@/application/hooks/useProducts";
-import type { ProductFormData } from "@/domain/models/Product";
-import { useProductById } from "@/application/hooks/useProductById";
-import {Uuid} from "@/domain/valueObject/uuidv4.ts";
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Product } from '@/domain/models/Product';
+import ProductEditForm from '@/components/dashboard/ProductEditForm';
+import { useProduct, useCreateProduct, useUpdateProduct } from '@/application/hooks/useProducts';
 
 const ProductFormPage = () => {
+    const { productId } = useParams();
     const navigate = useNavigate();
-    const { productId } = useParams<{ productId: string }>();
+    const isAddMode = !productId || productId === 'new';
 
-    const isEdit = !!productId;
+    // Use React Query hooks
+    const { data: fetchedProduct, isLoading: isLoadingProduct } = useProduct(productId);
+    const { mutateAsync: createProduct } = useCreateProduct();
+    const { mutateAsync: updateProduct } = useUpdateProduct();
 
-    const create = useCreateProduct();
-    const update = useUpdateProduct(productId ?? "");
-    const productQuery = useProductById(productId ?? null);
+    const [product, setProduct] = useState<Product | null>(null);
 
-    const defaultValues = useMemo<Partial<ProductFormData> | undefined>(() => {
-        if (!isEdit) return undefined;
-        if (!productQuery.data) return undefined;
-
-        // ⚠️ Aquí depende de tu repo: si ya devuelve shape de form, OK.
-        // Pero garantizamos images como string[] si te llega como image_ids.
-        const d: any = productQuery.data as any;
-
-        return {
-            ...d,
-            images: d.images ?? d.image_ids ?? [],
-            categoryId: d.categoryId ?? d.category_id,
-            companyId: d.companyId ?? d.company_id ?? "",
-            internalId: d.internalId ?? d.internal_id ?? "",
-        };
-    }, [isEdit, productQuery.data]);
-
-    const submit = async (data: ProductFormData) => {
-        const imageIds = (data.images ?? [])
-            .map((x: any) => (typeof x === "string" ? x : x?.id))
-            .filter(Boolean);
-
-        const payload: ProductFormData = {
-            ...data,
-            images: imageIds as any, // ✅ ahora ya es string[]
-        };
-
-        if (isEdit) {
-            await update.mutateAsync(payload);
-        } else {
-            await create.mutateAsync({
-                ...payload,
-                id: Uuid.generate().toString(),
-            });
+    useEffect(() => {
+        if (isAddMode) {
+            // Create a new empty product template
+            const newProduct: Product = {
+                id: `new-${Date.now()}`,
+                internalId: '',
+                name: '',
+                slug: '',
+                description: '',
+                imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
+                thumbnailUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
+                price: {
+                    daily: 0
+                },
+                isRentable: true,
+                isForSale: false,
+                company: {
+                    id: '1',
+                    name: 'Pro Tools Inc.',
+                    slug: 'pro-tools-inc'
+                },
+                category: {
+                    id: '1',
+                    name: 'Herramientas Eléctricas',
+                    slug: 'power-tools'
+                },
+                rating: 0,
+                reviewCount: 0,
+                productType: 'rental' as const
+            };
+            setProduct(newProduct);
+        } else if (fetchedProduct) {
+            // Logic to normalize fetched product
+            const productType = fetchedProduct.isForSale ? 'sale' : 'rental';
+            setProduct({
+                ...fetchedProduct,
+                productType: fetchedProduct.productType || productType
+            } as Product);
         }
+    }, [isAddMode, fetchedProduct]);
 
-        navigate("/dashboard/products");
+    const handleSaveProduct = async (updatedProduct: Partial<Product>) => {
+        try {
+            if (isAddMode) {
+                await createProduct(updatedProduct as any);
+            } else {
+                await updateProduct({ id: productId as string, data: updatedProduct as any });
+            }
+            navigate('/dashboard/products');
+        } catch (error) {
+            // Toast is handled in the mutation hook
+            console.error("Failed to save", error);
+        }
     };
 
-    if (isEdit && productQuery.isLoading) {
+    const handleCancel = () => {
+        navigate('/dashboard/products');
+    };
+
+    if (isLoadingProduct && !isAddMode) {
         return (
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+            <div className="p-6 flex justify-center">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
 
-    if (isEdit && productQuery.error) {
+    // If editing but product not found
+    if (!isAddMode && !isLoadingProduct && !fetchedProduct) {
         return (
-            <div className="p-4 rounded-md bg-destructive/10 text-destructive">
-                No se pudo cargar el producto
+            <div className="p-6">
+                <div className="flex flex-col items-center justify-center p-8 text-center">
+                    <h2 className="text-2xl font-bold mb-2">Producto no encontrado</h2>
+                    <p className="text-muted-foreground mb-4">
+                        El producto que estás buscando no existe o ha sido eliminado.
+                    </p>
+                    <Button onClick={() => navigate('/dashboard/products')}>
+                        Volver a Productos
+                    </Button>
+                </div>
             </div>
         );
     }
 
-    return <ProductForm onSubmit={submit} defaultValues={defaultValues} />;
+    return (
+        <div className="p-6 max-w-5xl mx-auto">
+            <div className="mb-6 flex items-center gap-4">
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigate('/dashboard/products')}
+                    className="h-9 w-9"
+                >
+                    <ArrowLeft size={18} />
+                </Button>
+                <h1 className="text-2xl font-bold">
+                    {isAddMode ? 'Añadir Nuevo Producto' : 'Editar Producto'}
+                </h1>
+            </div>
+
+            {product && (
+                <ProductEditForm
+                    product={product}
+                    onSave={handleSaveProduct}
+                    onCancel={handleCancel}
+                />
+            )}
+        </div>
+    );
 };
 
 export default ProductFormPage;

@@ -1,4 +1,4 @@
-import {MediaRepository, ImageSize} from "@/domain/repositories/MediaRepository";
+import {ImageSize, MediaRepository} from "@/domain/repositories/MediaRepository";
 import {ApiClient} from "@/infrastructure/http/ApiClient";
 import {AuthSession, toAuthorizationHeader} from "@/domain/models/AuthSession";
 

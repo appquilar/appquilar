@@ -1,70 +1,49 @@
-import type {
-    OwnerProductsResult,
-    ProductRepository,
-    SearchProductsFilters,
-    SearchProductsResult,
-} from "@/domain/repositories/ProductRepository";
-import type {ProductFormData} from "@/domain/models/Product";
+import { Product, ProductFormData } from '@/domain/models/Product';
+import { ProductRepository, ProductSearchCriteria, ProductListResponse } from '@/domain/repositories/ProductRepository';
 
+/**
+ * Service for managing product data
+ */
 export class ProductService {
-    constructor(private readonly productRepository: ProductRepository) {}
+    constructor(private repository: ProductRepository) {}
 
-    /**
-     * Público (marketplace): /api/products/search
-     * (si lo sigues usando en la parte pública)
-     */
-    async search(filters?: SearchProductsFilters): Promise<SearchProductsResult> {
-        return this.productRepository.search(filters);
+    async search(criteria: ProductSearchCriteria): Promise<ProductListResponse> {
+        return this.repository.search(criteria);
     }
 
-    /**
-     * Público (product page): /api/products/{slug}
-     */
-    async getBySlug(slug: string): Promise<ProductFormData> {
-        return this.productRepository.getBySlug(slug);
+    async getAllProducts(): Promise<Product[]> {
+        return this.repository.getAllProducts();
     }
 
-    /**
-     * Privado (dashboard): /api/products/{product_id}
-     */
-    async getById(id: string): Promise<ProductFormData> {
-        return this.productRepository.getById(id);
+    async getProductById(id: string): Promise<Product | null> {
+        return this.repository.getProductById(id);
     }
 
-    /**
-     * ✅ Privado (dashboard list): /api/users/{owner_id}/products
-     */
-    async listByOwner(
-        ownerId: string,
-        page = 1,
-        perPage = 10
-    ): Promise<OwnerProductsResult> {
-        return this.productRepository.listByOwner(ownerId, { page, perPage });
+    async getBySlug(slug: string): Promise<Product | null> {
+        return this.repository.getBySlug(slug);
     }
 
-    /**
-     * Privado (dashboard): POST /api/products
-     */
-    async create(payload: ProductFormData & { id: string }): Promise<void> {
-        return this.productRepository.create(payload);
+    async getProductsByCompanyId(companyId: string): Promise<Product[]> {
+        return this.repository.getProductsByCompanyId(companyId);
     }
 
-    /**
-     * Privado (dashboard): PATCH /api/products/{product_id}
-     */
-    async update(productId: string, payload: ProductFormData): Promise<void> {
-        return this.productRepository.update(productId, payload);
+    async listByOwner(ownerId: string): Promise<Product[]> {
+        return this.repository.listByOwner(ownerId);
     }
 
-    async publish(productId: string): Promise<void> {
-        return this.productRepository.publish(productId);
+    async getProductsByCategoryId(categoryId: string): Promise<Product[]> {
+        return this.repository.getProductsByCategoryId(categoryId);
     }
 
-    async unpublish(productId: string): Promise<void> {
-        return this.productRepository.unpublish(productId);
+    async createProduct(productData: ProductFormData): Promise<Product> {
+        return this.repository.createProduct(productData);
     }
 
-    async archive(productId: string): Promise<void> {
-        return this.productRepository.archive(productId);
+    async updateProduct(id: string, productData: ProductFormData): Promise<Product> {
+        return this.repository.updateProduct(id, productData);
+    }
+
+    async deleteProduct(id: string): Promise<boolean> {
+        return this.repository.deleteProduct(id);
     }
 }

@@ -1,135 +1,147 @@
-// src/application/hooks/useProducts.ts
-
-import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
-import { compositionRoot } from "@/compositionRoot";
-import { useAuth } from "@/context/AuthContext";
-
-import type { SearchProductsFilters } from "@/domain/repositories/ProductRepository";
-import type { PublicProductHit } from "@/domain/models/PublicProductHit";
-import type { ProductFormData } from "@/domain/models/Product";
-import type { OwnerProductsResult } from "@/domain/repositories/ProductRepository";
-
-const productService = compositionRoot.productService;
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Product, ProductFormData } from '@/domain/models/Product';
+import { productService } from '@/compositionRoot';
+import { toast } from 'sonner';
 
 /**
- * ✅ Dashboard list item = formulario + id (tu BE ya incluye id)
+ * Hook for the Product Dashboard List (Pagination + Search)
  */
-export type DashboardProductListItem = ProductFormData & { id: string };
-
-export type DashboardProductsResult = {
-    data: DashboardProductListItem[];
-    total: number;
-    page: number;
+export const useDashboardProducts = ({ page = 1, perPage = 10 }: { page?: number; perPage?: number }) => {
+    return useQuery({
+        queryKey: ['products', 'dashboard', page, perPage],
+        queryFn: async () => {
+            return await productService.search({ page, per_page: perPage });
+        },
+        placeholderData: (previousData) => previousData,
+    });
 };
 
 /**
- * ✅ PÚBLICO: /api/products/search (hits)
+ * Hook to fetch a single product by ID
  */
-export type SearchPublicProductsResult = {
-    data: PublicProductHit[];
-    total: number;
-    page: number;
+export const useProduct = (id?: string) => {
+    return useQuery({
+        queryKey: ['product', id],
+        queryFn: async () => {
+            if (!id || id === 'new') return null;
+            return await productService.getProductById(id);
+        },
+        enabled: !!id && id !== 'new',
+    });
 };
 
 /**
- * ✅ DASHBOARD (privado): GET /api/users/{ownerId}/products?page&per_page
+ * Hook to fetch a single product by Slug
  */
-export function useDashboardProducts(params: { page: number; perPage: number }) {
-    const { currentUser } = useAuth();
-    const ownerId = currentUser?.id ?? null;
-
-    return useQuery<DashboardProductsResult>({
-        queryKey: ["products", "dashboard", ownerId, params.page, params.perPage],
-        enabled: !!ownerId,
+export const useProductBySlug = (slug?: string) => {
+    return useQuery({
+        queryKey: ['product', 'slug', slug],
         queryFn: async () => {
-            const result: OwnerProductsResult = await productService.listByOwner(ownerId!, params.page, params.perPage);
-
-            // OwnerProductsResult.data es ProductFormData[].
-            // En dashboard lo tratamos como “list item” (ya trae todo lo que pintas).
-            return {
-                data: (result.data ?? []) as DashboardProductListItem[],
-                total: result.total ?? 0,
-                page: result.page ?? params.page,
-            };
+            if (!slug) return null;
+            return await productService.getBySlug(slug);
         },
-        placeholderData: keepPreviousData,
-    });
-}
-
-/**
- * ✅ COMPAT: hay componentes que importan `useProducts(filters)`
- */
-export function useProducts(filters: SearchProductsFilters) {
-    return useDashboardProducts({
-        page: filters.page ?? 1,
-        perPage: filters.perPage ?? 10,
-    });
-}
-
-/**
- * ✅ PÚBLICO: /api/products/search (hits)
- */
-export function usePublicProductsSearch(filters: SearchProductsFilters) {
-    return useQuery<SearchPublicProductsResult>({
-        queryKey: ["products", "public-search", filters],
-        queryFn: async () => {
-            return (await productService.search(filters)) as SearchPublicProductsResult;
-        },
-        placeholderData: keepPreviousData,
-    });
-}
-
-/**
- * ✅ PÚBLICO: /api/products/{slug}
- */
-export function useProductBySlug(slug: string | null) {
-    return useQuery<ProductFormData>({
-        queryKey: ["products", "bySlug", slug],
-        queryFn: () => productService.getBySlug(slug!),
         enabled: !!slug,
     });
-}
+};
 
 /**
- * ✅ PRIVADO: /api/products/{id} (dashboard)
+ * Hook to Create a Product
  */
-export function useProductById(productId: string | null) {
-    return useQuery<ProductFormData>({
-        queryKey: ["products", "byId", productId],
-        queryFn: () => productService.getById(productId!),
-        enabled: !!productId,
+export const useCreateProduct = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: ProductFormData) => productService.createProduct(data),
+        onSuccess: () => {
+            toast.success('Producto creado correctamente');
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+        },
+        onError: (error) => {
+            console.error('Error creating product:', error);
+            toast.error('Error al crear el producto');
+        }
     });
-}
+};
 
 /**
- * ✅ Mutaciones CRUD privadas (dashboard)
+ * Hook to Update a Product
  */
-export function useCreateProduct() {
+export const useUpdateProduct = () => {
+    const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (payload: ProductFormData & { id: string }) => productService.create(payload),
+        mutationFn: ({ id, data }: { id: string; data: ProductFormData }) =>
+            productService.updateProduct(id, data),
+        onSuccess: (data) => {
+            toast.success('Producto actualizado correctamente');
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.invalidateQueries({ queryKey: ['product', data.id] });
+        },
+        onError: (error) => {
+            console.error('Error updating product:', error);
+            toast.error('Error al actualizar el producto');
+        }
     });
-}
+};
 
-export function useUpdateProduct(productId: string) {
+/**
+ * Hook to Delete a Product
+ */
+export const useDeleteProduct = () => {
+    const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (payload: ProductFormData) => productService.update(productId, payload),
+        mutationFn: (id: string) => productService.deleteProduct(id),
+        onSuccess: () => {
+            toast.success('Producto eliminado correctamente');
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+        },
+        onError: (error) => {
+            console.error('Error deleting product:', error);
+            toast.error('Error al eliminar el producto');
+        }
     });
-}
+};
 
-export function usePublishProduct() {
-    return useMutation({
-        mutationFn: (productId: string) => productService.publish(productId),
-    });
-}
+/**
+ * Legacy hook for backward compatibility.
+ * Composes the individual hooks to maintain the original API.
+ */
+export const useProducts = (ownerId?: string) => {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-export function useUnpublishProduct() {
-    return useMutation({
-        mutationFn: (productId: string) => productService.unpublish(productId),
-    });
-}
+    const { mutateAsync: createProduct } = useCreateProduct();
+    const { mutateAsync: updateProduct } = useUpdateProduct();
+    const { mutateAsync: deleteProduct } = useDeleteProduct();
 
-export function useArchiveProduct() {
-    return useMutation({
-        mutationFn: (productId: string) => productService.archive(productId),
-    });
-}
+    useEffect(() => {
+        const loadProducts = async () => {
+            setIsLoading(true);
+            try {
+                let items: Product[];
+                if (ownerId) {
+                    items = await productService.listByOwner(ownerId);
+                } else {
+                    items = await productService.getAllProducts();
+                }
+                setProducts(items);
+            } catch (err) {
+                console.error(err);
+                setError('Error loading products');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadProducts();
+    }, [ownerId]);
+
+    return {
+        products,
+        isLoading,
+        error,
+        createProduct,
+        updateProduct: (id: string, data: ProductFormData) => updateProduct({ id, data }),
+        deleteProduct,
+        getProductById: productService.getProductById.bind(productService)
+    };
+};

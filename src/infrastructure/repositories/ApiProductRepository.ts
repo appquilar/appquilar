@@ -1,283 +1,222 @@
-// src/infrastructure/repositories/ApiProductRepository.ts
-
-import type {
-    OwnerProductsFilters,
-    OwnerProductsResult,
-    ProductRepository,
-    SearchProductsFilters,
-    SearchProductsResult,
-} from "@/domain/repositories/ProductRepository";
-import type { ProductFormData } from "@/domain/models/Product";
-import type { PublicProductHit } from "@/domain/models/PublicProductHit";
-import type { AuthSession } from "@/domain/models/AuthSession";
-import { toAuthorizationHeader } from "@/domain/models/AuthSession";
-import { ApiClient } from "@/infrastructure/http/ApiClient";
-
-type MoneyDto = { amount: number; currency: string };
-
-type ProductDto = {
-    id: string;
-    short_id?: string;
-
-    name: string;
-    slug: string;
-
-    internal_id: string | null;
-    description: string;
-
-    company_id: string | null;
-    category_id: string;
-
-    image_ids: string[];
-
-    publication_status?: {
-        status: string;
-        published_at: string | null;
-    };
-
-    deposit?: MoneyDto;
-    tiers?: Array<{
-        price_per_day: MoneyDto;
-        days_from: number;
-        days_to: number | null;
-    }>;
-};
-
-type ApiSingleResponse<T> = {
-    success?: boolean;
-    data: T;
-};
-
-type ApiOwnerListResponse = {
-    success?: boolean;
-    data: {
-        total: number;
-        page: number;
-        data: ProductDto[];
-    };
-};
-
-type ApiPublicSearchResponse =
-    | SearchProductsResult
-    | {
-    success?: boolean;
-    data: {
-        total: number;
-        page: number;
-        data: PublicProductHit[];
-    };
-};
-
-function unwrapSingle<T>(raw: unknown): T {
-    const r = raw as any;
-    if (r && typeof r === "object" && "data" in r) return r.data as T;
-    return raw as T;
-}
-
-function unwrapOwnerList(raw: unknown): { total: number; page: number; data: ProductDto[] } {
-    const r = raw as any;
-
-    if (r && typeof r === "object" && r.data && typeof r.data === "object" && Array.isArray(r.data.data)) {
-        return {
-            total: r.data.total ?? 0,
-            page: r.data.page ?? 1,
-            data: r.data.data ?? [],
-        };
-    }
-
-    if (r && typeof r === "object" && Array.isArray(r.data) && typeof r.total === "number") {
-        return { total: r.total ?? 0, page: r.page ?? 1, data: r.data ?? [] };
-    }
-
-    return { total: 0, page: 1, data: [] };
-}
-
-function mapProductDtoToFormData(dto: ProductDto): ProductFormData {
-    const tiers = dto.tiers ?? [];
-    const firstTier = tiers.find((t) => t.days_from === 1) ?? tiers[0];
-
-    const price = {
-        daily: firstTier?.price_per_day?.amount ?? 0,
-        deposit: dto.deposit?.amount ?? 0,
-        tiers: tiers.map((t) => ({
-            daysFrom: t.days_from,
-            daysTo: t.days_to ?? null,
-            pricePerDay: t.price_per_day.amount,
-        })),
-    };
-
-    // ✅ IMPORTANT: añadimos id (y shortId si quieres) aunque ProductFormData no lo tipa.
-    // Esto arregla /dashboard/products/undefined en el listado.
-    return {
-        ...( {
-            id: dto.id,
-            shortId: dto.short_id ?? undefined,
-        } as any),
-
-        name: dto.name ?? "",
-        slug: dto.slug ?? "",
-        description: dto.description ?? "",
-
-        imageUrl: "",
-        thumbnailUrl: "",
-
-        price: price as any,
-
-        isRentable: true,
-        isForSale: false,
-        productType: "rental",
-
-        companyId: dto.company_id ?? "",
-        categoryId: dto.category_id ?? "",
-
-        currentTab: "basic",
-
-        images: dto.image_ids ?? [],
-
-        internalId: dto.internal_id ?? "",
-    } as any;
-}
+import { Product, ProductFormData } from '@/domain/models/Product';
+import { ProductRepository, ProductSearchCriteria, ProductListResponse } from '@/domain/repositories/ProductRepository';
+import { ApiClient } from '@/infrastructure/http/ApiClient';
+import { AuthSession } from '@/domain/models/AuthSession';
 
 export class ApiProductRepository implements ProductRepository {
-    constructor(
-        private readonly api: ApiClient,
-        private readonly getSession: () => AuthSession | null
-    ) {}
+    private client: ApiClient;
+    private getSession: () => AuthSession | null;
+    private baseUrl: string;
 
-    private authHeaders(): Record<string, string> {
-        const session = this.getSession();
-        const authHeader = toAuthorizationHeader(session);
-        if (!authHeader) return {};
-        return { Authorization: authHeader };
+    constructor(client: ApiClient, getSession: () => AuthSession | null) {
+        this.client = client;
+        this.getSession = getSession;
+        this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
     }
 
-    async search(filters?: SearchProductsFilters): Promise<SearchProductsResult> {
-        const params = new URLSearchParams();
+    private getAuthHeaders(): Record<string, string> {
+        const session = this.getSession();
+        if (session?.token) {
+            return { Authorization: `Bearer ${session.token}` };
+        }
+        return {};
+    }
 
-        if (filters?.text) params.set("text", filters.text);
-        if (filters?.latitude != null) params.set("latitude", String(filters.latitude));
-        if (filters?.longitude != null) params.set("longitude", String(filters.longitude));
-        if (filters?.radius != null) params.set("radius", String(filters.radius));
-        if (filters?.page != null) params.set("page", String(filters.page));
-        if (filters?.perPage != null) params.set("per_page", String(filters.perPage));
-
-        if (filters?.categories?.length) filters.categories.forEach((c) => params.append("categories[]", c));
-
-        const qs = params.toString();
-        const path = qs.length > 0 ? `/api/products/search?${qs}` : `/api/products/search`;
-
-        const raw = await this.api.get<ApiPublicSearchResponse>(path);
-
-        const r: any = raw as any;
-        if (r && r.data && r.data.data && Array.isArray(r.data.data)) {
-            return {
-                data: r.data.data as PublicProductHit[],
-                total: r.data.total ?? 0,
-                page: r.data.page ?? filters?.page ?? 1,
-            };
+    async search(criteria: ProductSearchCriteria): Promise<ProductListResponse> {
+        const queryParams = new URLSearchParams();
+        if (criteria.text) queryParams.append('text', criteria.text);
+        if (criteria.page) queryParams.append('page', criteria.page.toString());
+        if (criteria.per_page) queryParams.append('per_page', criteria.per_page.toString());
+        if (criteria.categories?.length) {
+            criteria.categories.forEach(c => queryParams.append('categories[]', c));
         }
 
-        return {
-            data: (r?.data ?? []) as PublicProductHit[],
-            total: r?.total ?? 0,
-            page: r?.page ?? filters?.page ?? 1,
-        };
+        try {
+            const response = await this.client.get<{ data: any[], total: number, page: number }>(
+                `/api/products/search?${queryParams.toString()}`
+            );
+
+            return {
+                data: (response.data || []).map(item => this.mapToDomain(item)),
+                total: response.total || 0,
+                page: response.page || 1
+            };
+        } catch (error) {
+            console.error('Search failed', error);
+            return { data: [], total: 0, page: 1 };
+        }
     }
 
-    async listByOwner(ownerId: string, filters?: OwnerProductsFilters): Promise<OwnerProductsResult> {
-        const params = new URLSearchParams();
-        if (filters?.page != null) params.set("page", String(filters.page));
-        if (filters?.perPage != null) params.set("per_page", String(filters.perPage));
-
-        const qs = params.toString();
-        const path =
-            qs.length > 0 ? `/api/users/${ownerId}/products?${qs}` : `/api/users/${ownerId}/products`;
-
-        const raw = await this.api.get<ApiOwnerListResponse>(path, { headers: this.authHeaders() });
-        const unwrapped = unwrapOwnerList(raw);
-
-        return {
-            data: unwrapped.data.map(mapProductDtoToFormData),
-            total: unwrapped.total ?? 0,
-            page: unwrapped.page ?? filters?.page ?? 1,
-        };
+    async getAllProducts(): Promise<Product[]> {
+        const result = await this.search({ page: 1, per_page: 50 });
+        return result.data;
     }
 
-    async getBySlug(slug: string): Promise<ProductFormData> {
-        const raw = await this.api.get<ApiSingleResponse<ProductDto> | ProductDto>(
-            `/api/products/${encodeURIComponent(slug)}`
+    async getById(id: string): Promise<Product | null> {
+        try {
+            const response = await this.client.get<any>(`/api/products/${id}`);
+            return this.mapToDomain(response);
+        } catch (error) {
+            console.error(`Error fetching product ${id}`, error);
+            return null;
+        }
+    }
+
+    async getProductById(id: string): Promise<Product | null> {
+        return this.getById(id);
+    }
+
+    async getBySlug(slug: string): Promise<Product | null> {
+        try {
+            const response = await this.client.get<any>(`/api/products/${slug}`);
+            return this.mapToDomain(response);
+        } catch (error) {
+            console.error(`Error fetching product slug ${slug}`, error);
+            return null;
+        }
+    }
+
+    async getProductsByCompanyId(companyId: string): Promise<Product[]> {
+        try {
+            // Use <any> to handle potential variations in response structure
+            const response = await this.client.get<any>(`/api/companies/${companyId}/products`);
+
+            // Robust check for array location: might be in response.data, or response itself
+            let items: any[] = [];
+            if (response && Array.isArray(response.data)) {
+                items = response.data;
+            } else if (Array.isArray(response)) {
+                items = response;
+            }
+
+            return items.map(item => this.mapToDomain(item));
+        } catch (error) {
+            console.error(`Error fetching company products`, error);
+            return [];
+        }
+    }
+
+    async listByOwner(ownerId: string): Promise<Product[]> {
+        // Determine if ownerId is a company or user.
+        // Typically in dashboard context, we list company products.
+        return this.getProductsByCompanyId(ownerId);
+    }
+
+    async getProductsByCategoryId(categoryId: string): Promise<Product[]> {
+        try {
+            const response = await this.client.get<{ data: any[] }>(`/api/categories/${categoryId}/products`);
+            return (response.data || []).map(item => this.mapToDomain(item));
+        } catch (error) {
+            console.error(`Error fetching category products`, error);
+            return [];
+        }
+    }
+
+    async createProduct(data: ProductFormData): Promise<Product> {
+        const dto = this.mapToDto(data);
+        if (!dto.product_id) dto.product_id = crypto.randomUUID();
+
+        const response = await this.client.post<any>(
+            '/api/products',
+            dto,
+            { headers: this.getAuthHeaders() }
         );
-        return mapProductDtoToFormData(unwrapSingle<ProductDto>(raw));
+        return this.mapToDomain(response);
     }
 
-    async getById(id: string): Promise<ProductFormData> {
-        const raw = await this.api.get<ApiSingleResponse<ProductDto> | ProductDto>(`/api/products/${id}`, {
-            headers: this.authHeaders(),
-        });
-        return mapProductDtoToFormData(unwrapSingle<ProductDto>(raw));
+    async updateProduct(id: string, data: ProductFormData): Promise<Product> {
+        const dto = this.mapToDto(data);
+
+        // PATCH returns 204 (No Content), so we need to fetch the updated object
+        await this.client.patch(
+            `/api/products/${id}`,
+            dto,
+            { headers: this.getAuthHeaders() }
+        );
+
+        const updated = await this.getById(id);
+        if (!updated) throw new Error('Failed to retrieve updated product');
+        return updated;
     }
 
-    async create(payload: ProductFormData & { id: string }): Promise<void> {
-        const body = {
-            id: payload.id,
-            name: payload.name,
-            slug: payload.slug,
-            internal_id: payload.internalId ?? null,
-            description: payload.description,
-            company_id: payload.companyId,
-            category_id: payload.categoryId,
-            image_ids: payload.images ?? [],
-            price: payload.price,
-            is_rentable: payload.isRentable,
-            is_for_sale: payload.isForSale,
-            product_type: payload.productType ?? null,
+    async deleteProduct(id: string): Promise<boolean> {
+        try {
+            await this.client.patch(
+                `/api/products/${id}/archive`,
+                {},
+                { headers: this.getAuthHeaders() }
+            );
+            return true;
+        } catch (error) {
+            console.error('Error deleting product', error);
+            return false;
+        }
+    }
+
+    private mapToDomain(apiData: any): Product {
+        const primaryImageId = apiData.image_ids?.[0];
+
+        return {
+            id: apiData.id || apiData.product_id,
+            internalId: apiData.internal_id || '',
+            name: apiData.name || '',
+            slug: apiData.slug || '',
+            description: apiData.description || '',
+            imageUrl: primaryImageId ? `${this.baseUrl}/api/media/images/${primaryImageId}/MEDIUM` : '',
+            thumbnailUrl: primaryImageId ? `${this.baseUrl}/api/media/images/${primaryImageId}/THUMBNAIL` : '',
+
+            price: {
+                daily: (apiData.tiers?.[0]?.price_per_day?.amount || 0) / 100,
+                deposit: (apiData.deposit?.amount || 0) / 100,
+                tiers: apiData.tiers?.map((t: any) => ({
+                    daysFrom: t.days_from,
+                    daysTo: t.days_to,
+                    pricePerDay: (t.price_per_day?.amount || 0) / 100
+                })) || []
+            },
+            isRentable: true,
+            isForSale: false,
+
+            company: {
+                id: apiData.company_id || '',
+                name: apiData.company_name || '',
+                slug: apiData.company_slug || ''
+            },
+            category: {
+                id: apiData.category_id || '',
+                name: apiData.category_name || '',
+                slug: apiData.category_slug || ''
+            },
+
+            rating: apiData.rating || 0,
+            reviewCount: apiData.review_count || 0,
+            createdAt: apiData.created_at,
+            updatedAt: apiData.updated_at
         };
-
-        await this.api.post(`/api/products`, body, {
-            headers: this.authHeaders(),
-            skipParseJson: true,
-        });
     }
 
-    async update(productId: string, payload: ProductFormData): Promise<void> {
-        const body = {
-            name: payload.name,
-            slug: payload.slug,
-            internal_id: payload.internalId ?? null,
-            description: payload.description,
-            company_id: payload.companyId,
-            category_id: payload.categoryId,
-            image_ids: payload.images ?? [],
-            price: payload.price,
-            is_rentable: payload.isRentable,
-            is_for_sale: payload.isForSale,
-            product_type: payload.productType ?? null,
+    private mapToDto(data: ProductFormData): any {
+        return {
+            product_id: data.internalId,
+            name: data.name,
+            slug: data.slug,
+            internal_id: data.internalId || '',
+            description: data.description,
+            quantity: 1,
+            company_id: data.companyId,
+            category_id: data.categoryId,
+            image_ids: data.images?.map((img: any) => img.id).filter(Boolean) || [],
+
+            deposit: {
+                amount: Math.round((data.price.deposit || 0) * 100),
+                currency: 'EUR'
+            },
+
+            tiers: (data.price.tiers || []).map(tier => ({
+                price_per_day: { amount: Math.round(tier.pricePerDay * 100), currency: 'EUR' },
+                days_from: tier.daysFrom,
+                days_to: tier.daysTo
+            }))
         };
-
-        await this.api.patch(`/api/products/${productId}`, body, {
-            headers: this.authHeaders(),
-            skipParseJson: true,
-        });
-    }
-
-    async publish(productId: string): Promise<void> {
-        await this.api.post(`/api/products/${productId}/publish`, undefined, {
-            headers: this.authHeaders(),
-            skipParseJson: true,
-        });
-    }
-
-    async unpublish(productId: string): Promise<void> {
-        await this.api.post(`/api/products/${productId}/unpublish`, undefined, {
-            headers: this.authHeaders(),
-            skipParseJson: true,
-        });
-    }
-
-    async archive(productId: string): Promise<void> {
-        await this.api.post(`/api/products/${productId}/archive`, undefined, {
-            headers: this.authHeaders(),
-            skipParseJson: true,
-        });
     }
 }
