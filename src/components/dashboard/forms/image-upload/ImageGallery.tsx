@@ -1,25 +1,17 @@
-// src/components/dashboard/forms/image-upload/ImageGallery.tsx
-
-import { ImageFile } from "./types";
+import { ImageFile, ImageGalleryProps } from "./types";
 import ImagePreview from "./ImagePreview";
 
-interface ImageGalleryProps {
-    images: ImageFile[];
-    onRemoveImage: (id: string) => void;
-    onSetPrimaryImage: (id: string) => void;
-}
-
-const ImageGallery = ({ images, onRemoveImage, onSetPrimaryImage }: ImageGalleryProps) => {
+const ImageGallery = ({ images, onRemoveImage }: ImageGalleryProps) => {
     if (images.length === 0) return null;
 
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {images.map((image) => (
+            {images.map((image, index) => (
                 <ImagePreview
                     key={image.id}
                     image={image}
+                    index={index}
                     onRemove={onRemoveImage}
-                    onSetPrimary={onSetPrimaryImage}
                 />
             ))}
         </div>

@@ -1,4 +1,3 @@
-// src/components/dashboard/forms/hooks/useProductForm.ts
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,7 +12,7 @@ import {
 
 interface UseProductFormProps {
     product: Product;
-    onSave: (product: any) => void;
+    onSave: (product: Partial<Product>) => Promise<void> | void;
     onCancel: () => void;
 }
 
@@ -26,7 +25,7 @@ export const useProductForm = ({ product, onSave, onCancel }: UseProductFormProp
         resolver: zodResolver(productFormSchema),
         defaultValues: {
             ...formValues,
-            productType: product.productType || (product.isRentable ? 'rental' : 'sale'),
+            productType: 'rental', // Force default
             currentTab: 'basic',
             images: []
         },
@@ -36,43 +35,37 @@ export const useProductForm = ({ product, onSave, onCancel }: UseProductFormProp
     const onSubmit = async (values: ProductFormValues) => {
         setIsSubmitting(true);
         try {
-            values.isRentable = values.productType === 'rental';
-            values.isForSale = values.productType === 'sale';
+            // Force Rental logic
+            values.isRentable = true;
+            values.isForSale = false;
+            values.productType = 'rental';
 
-            if (values.isForSale && (!values.secondHand || !values.secondHand.price)) {
-                form.setError('secondHand.price', {
-                    type: 'manual',
-                    message: 'El precio de venta es obligatorio'
-                });
-                setIsSubmitting(false);
-                return;
-            }
+            // Basic validation for rental price presence
+            // Note: Tiers are the main pricing model, but if price.daily is 0 and no tiers, warning?
+            // For now, relying on Schema validation.
 
-            if (values.isRentable && !values.price.daily) {
-                form.setError('price.daily', {
-                    type: 'manual',
-                    message: 'El precio diario es obligatorio'
-                });
-                setIsSubmitting(false);
-                return;
-            }
-
+            // Prepare Final DTO
             const updatedProduct = mapFormValuesToProduct(values, product);
 
-            // Prepare the data structure required by ProductService/Repository
-            const productToSave = {
-                ...updatedProduct,
-                companyId: product.company?.id,
-                categoryId: values.category.id,
-                images: values.images,
-                internalId: values.internalId
-            };
+            // Map images to the format expected by the backend
+            const processedImages = values.images?.map((img: any) => ({ id: img.id })) || [];
 
-            await onSave(productToSave);
-            toast.success('Producto guardado correctamente');
+            // Update DTO with image list
+            (updatedProduct as any).images = processedImages;
+
+            // UI Update for main image
+            if (processedImages.length > 0) {
+                const firstId = processedImages[0].id;
+                const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+                updatedProduct.imageUrl = `${baseUrl}/api/media/images/${firstId}/MEDIUM`;
+                updatedProduct.thumbnailUrl = `${baseUrl}/api/media/images/${firstId}/THUMBNAIL`;
+            }
+
+            await onSave(updatedProduct);
+
         } catch (error) {
-            console.error('Error saving product:', error);
-            toast.error('Error al guardar el producto');
+            console.error('Error updating product:', error);
+            toast.error('Error al actualizar el producto');
         } finally {
             setIsSubmitting(false);
         }

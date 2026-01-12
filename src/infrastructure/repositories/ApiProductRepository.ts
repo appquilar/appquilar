@@ -78,18 +78,15 @@ export class ApiProductRepository implements ProductRepository {
 
     async getProductsByCompanyId(companyId: string): Promise<Product[]> {
         try {
-            // Use <any> to handle potential variations in response structure
             const response = await this.client.get<any>(`/api/companies/${companyId}/products`);
-
-            // Robust check for array location: might be in response.data, or response itself
-            let items: any[] = [];
+            // Handle different response structures gracefully
+            let items = [];
             if (response && Array.isArray(response.data)) {
                 items = response.data;
             } else if (Array.isArray(response)) {
                 items = response;
             }
-
-            return items.map(item => this.mapToDomain(item));
+            return items.map((item: any) => this.mapToDomain(item));
         } catch (error) {
             console.error(`Error fetching company products`, error);
             return [];
@@ -97,8 +94,6 @@ export class ApiProductRepository implements ProductRepository {
     }
 
     async listByOwner(ownerId: string): Promise<Product[]> {
-        // Determine if ownerId is a company or user.
-        // Typically in dashboard context, we list company products.
         return this.getProductsByCompanyId(ownerId);
     }
 
@@ -114,7 +109,11 @@ export class ApiProductRepository implements ProductRepository {
 
     async createProduct(data: ProductFormData): Promise<Product> {
         const dto = this.mapToDto(data);
-        if (!dto.product_id) dto.product_id = crypto.randomUUID();
+
+        // Safety check: ensure ID exists
+        if (!dto.product_id) {
+            dto.product_id = crypto.randomUUID();
+        }
 
         const response = await this.client.post<any>(
             '/api/products',
@@ -127,7 +126,6 @@ export class ApiProductRepository implements ProductRepository {
     async updateProduct(id: string, data: ProductFormData): Promise<Product> {
         const dto = this.mapToDto(data);
 
-        // PATCH returns 204 (No Content), so we need to fetch the updated object
         await this.client.patch(
             `/api/products/${id}`,
             dto,
@@ -176,6 +174,7 @@ export class ApiProductRepository implements ProductRepository {
             },
             isRentable: true,
             isForSale: false,
+            productType: 'rental',
 
             company: {
                 id: apiData.company_id || '',
@@ -196,16 +195,20 @@ export class ApiProductRepository implements ProductRepository {
     }
 
     private mapToDto(data: ProductFormData): any {
+        // Cast to any to access the ID that we merged in the FE
+        const product = data as any;
+
         return {
-            product_id: data.internalId,
+            product_id: product.id, // Use the UUID we generated in FE
             name: data.name,
             slug: data.slug,
-            internal_id: data.internalId || '',
+            // API requires internal_id. Use field, or fallback to slug or ID to prevent "not_blank" error
+            internal_id: data.internalId || data.slug || product.id,
             description: data.description,
             quantity: 1,
-            company_id: data.companyId,
-            category_id: data.categoryId,
-            image_ids: data.images?.map((img: any) => img.id).filter(Boolean) || [],
+            company_id: product.company?.id || data.companyId,
+            category_id: product.category?.id || data.categoryId,
+            image_ids: product.images?.map((img: any) => img.id).filter(Boolean) || [],
 
             deposit: {
                 amount: Math.round((data.price.deposit || 0) * 100),

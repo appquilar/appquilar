@@ -1,24 +1,15 @@
-// src/components/dashboard/forms/image-upload/types.ts
-
-import type { Control } from "react-hook-form";
+import { Control } from "react-hook-form";
+import { ProductFormValues } from "../productFormSchema";
 
 export interface ImageFile {
-    /** ✅ Este es el ID REAL del BE (UUID), no un "temp id" */
     id: string;
-
-    /** Preview local (ObjectURL) mientras se sube o recién subida */
-    previewUrl?: string;
-
-    /** Estado UI */
-    isUploading?: boolean;
-    error?: string | null;
+    file: File;
+    url: string;
+    // isPrimary removed; the first image in the array is always primary
 }
 
-/**
- * ✅ Tipos de props reusables (genéricos para no acoplar a un schema que puede no existir)
- */
 export interface ProductImagesFieldProps {
-    control: Control<any>;
+    control: Control<ProductFormValues>;
 }
 
 export interface ImageDropZoneProps {
@@ -32,11 +23,10 @@ export interface ImageDropZoneProps {
 export interface ImageGalleryProps {
     images: ImageFile[];
     onRemoveImage: (id: string) => void;
-    onSetPrimaryImage: (id: string) => void;
 }
 
 export interface ImagePreviewProps {
     image: ImageFile;
     onRemove: (id: string) => void;
-    onSetPrimary: (id: string) => void;
+    index: number;
 }

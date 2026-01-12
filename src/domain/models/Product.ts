@@ -74,6 +74,6 @@ export interface ProductFormData {
   // Field to track current tab in mobile view
   currentTab: string;
   // Add images field to the schema
-  images: any[];
+  images: string[];
   internalId?: string;
 }
