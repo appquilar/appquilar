@@ -31,6 +31,10 @@ export class ProductService {
         return this.repository.listByOwner(ownerId);
     }
 
+    async listByOwnerPaginated(ownerId: string, ownerType: 'company' | 'user', page: number, perPage: number): Promise<ProductListResponse> {
+        return this.repository.listByOwnerPaginated(ownerId, ownerType, page, perPage);
+    }
+
     async getProductsByCategoryId(categoryId: string): Promise<Product[]> {
         return this.repository.getProductsByCategoryId(categoryId);
     }

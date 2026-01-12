@@ -36,10 +36,17 @@ export class ApiProductRepository implements ProductRepository {
                 `/api/products/search?${queryParams.toString()}`
             );
 
+            // Handle potential wrapped response { success: true, data: { ... } }
+            const payload = (response as any).data && (response as any).success !== undefined
+                ? (response as any).data
+                : response;
+
+            const items = Array.isArray(payload.data) ? payload.data : (Array.isArray(payload) ? payload : []);
+
             return {
-                data: (response.data || []).map(item => this.mapToDomain(item)),
-                total: response.total || 0,
-                page: response.page || 1
+                data: items.map((item: any) => this.mapToDomain(item)),
+                total: payload.total || items.length,
+                page: payload.page || 1
             };
         } catch (error) {
             console.error('Search failed', error);
@@ -55,7 +62,8 @@ export class ApiProductRepository implements ProductRepository {
     async getById(id: string): Promise<Product | null> {
         try {
             const response = await this.client.get<any>(`/api/products/${id}`);
-            return this.mapToDomain(response);
+            const data = (response as any).data ? (response as any).data : response;
+            return this.mapToDomain(data);
         } catch (error) {
             console.error(`Error fetching product ${id}`, error);
             return null;
@@ -69,7 +77,8 @@ export class ApiProductRepository implements ProductRepository {
     async getBySlug(slug: string): Promise<Product | null> {
         try {
             const response = await this.client.get<any>(`/api/products/${slug}`);
-            return this.mapToDomain(response);
+            const data = (response as any).data ? (response as any).data : response;
+            return this.mapToDomain(data);
         } catch (error) {
             console.error(`Error fetching product slug ${slug}`, error);
             return null;
@@ -77,30 +86,73 @@ export class ApiProductRepository implements ProductRepository {
     }
 
     async getProductsByCompanyId(companyId: string): Promise<Product[]> {
-        try {
-            const response = await this.client.get<any>(`/api/companies/${companyId}/products`);
-            // Handle different response structures gracefully
-            let items = [];
-            if (response && Array.isArray(response.data)) {
-                items = response.data;
-            } else if (Array.isArray(response)) {
-                items = response;
-            }
-            return items.map((item: any) => this.mapToDomain(item));
-        } catch (error) {
-            console.error(`Error fetching company products`, error);
-            return [];
-        }
+        const result = await this.listByOwnerPaginated(companyId, 'company', 1, 100);
+        return result.data;
     }
 
     async listByOwner(ownerId: string): Promise<Product[]> {
-        return this.getProductsByCompanyId(ownerId);
+        const result = await this.listByOwnerPaginated(ownerId, 'company', 1, 100);
+        return result.data;
+    }
+
+    async listByOwnerPaginated(ownerId: string, ownerType: 'company' | 'user', page: number, perPage: number): Promise<ProductListResponse> {
+        try {
+            const endpoint = ownerType === 'company'
+                ? `/api/companies/${ownerId}/products`
+                : `/api/users/${ownerId}/products`;
+
+            const queryParams = new URLSearchParams();
+            queryParams.append('page', page.toString());
+            queryParams.append('per_page', perPage.toString());
+
+            const response = await this.client.get<any>(`${endpoint}?${queryParams.toString()}`, {
+                headers: this.getAuthHeaders()
+            });
+
+            // Logic to handle nested response structure:
+            // { success: true, data: { total: 6, page: 1, data: [...] } }
+            let items: any[] = [];
+            let total = 0;
+            let currentPage = 1;
+
+            // Check deeply nested structure (response.data.data) common in API wrappers
+            if (response?.data?.data && Array.isArray(response.data.data)) {
+                items = response.data.data;
+                total = response.data.total ?? items.length;
+                currentPage = response.data.page ?? 1;
+            }
+            // Check flat pagination structure (response.data is array, siblings are meta)
+            else if (response?.data && Array.isArray(response.data)) {
+                items = response.data;
+                total = response.total ?? items.length;
+                currentPage = response.page ?? 1;
+            }
+            // Fallback: response is the array itself
+            else if (Array.isArray(response)) {
+                items = response;
+                total = items.length;
+            }
+
+            return {
+                data: items.map((item: any) => this.mapToDomain(item)),
+                total: total,
+                page: currentPage
+            };
+        } catch (error) {
+            console.error(`Error listing products for owner ${ownerId}`, error);
+            return { data: [], total: 0, page: 1 };
+        }
     }
 
     async getProductsByCategoryId(categoryId: string): Promise<Product[]> {
         try {
             const response = await this.client.get<{ data: any[] }>(`/api/categories/${categoryId}/products`);
-            return (response.data || []).map(item => this.mapToDomain(item));
+            // Handle wrapper
+            const data = (response as any).data && Array.isArray((response as any).data)
+                ? (response as any).data
+                : ((response as any).data?.data || []); // try double nested just in case
+
+            return data.map((item: any) => this.mapToDomain(item));
         } catch (error) {
             console.error(`Error fetching category products`, error);
             return [];
@@ -120,7 +172,10 @@ export class ApiProductRepository implements ProductRepository {
             dto,
             { headers: this.getAuthHeaders() }
         );
-        return this.mapToDomain(response);
+
+        // Handle wrapper in create response if exists
+        const responseData = (response as any).data ? (response as any).data : response;
+        return this.mapToDomain(responseData);
     }
 
     async updateProduct(id: string, data: ProductFormData): Promise<Product> {
@@ -164,6 +219,7 @@ export class ApiProductRepository implements ProductRepository {
             thumbnailUrl: primaryImageId ? `${this.baseUrl}/api/media/images/${primaryImageId}/THUMBNAIL` : '',
 
             price: {
+                // Handle different response locations for tiers
                 daily: (apiData.tiers?.[0]?.price_per_day?.amount || 0) / 100,
                 deposit: (apiData.deposit?.amount || 0) / 100,
                 tiers: apiData.tiers?.map((t: any) => ({
@@ -172,13 +228,13 @@ export class ApiProductRepository implements ProductRepository {
                     pricePerDay: (t.price_per_day?.amount || 0) / 100
                 })) || []
             },
-            isRentable: true,
+            isRentable: true, // Assuming all fetched are rentable for now or derived
             isForSale: false,
             productType: 'rental',
 
             company: {
                 id: apiData.company_id || '',
-                name: apiData.company_name || '',
+                name: apiData.company_name || '', // API might not return this, handled in UI or separate fetch
                 slug: apiData.company_slug || ''
             },
             category: {
@@ -195,14 +251,12 @@ export class ApiProductRepository implements ProductRepository {
     }
 
     private mapToDto(data: ProductFormData): any {
-        // Cast to any to access the ID that we merged in the FE
         const product = data as any;
 
         return {
-            product_id: product.id, // Use the UUID we generated in FE
+            product_id: product.id,
             name: data.name,
             slug: data.slug,
-            // API requires internal_id. Use field, or fallback to slug or ID to prevent "not_blank" error
             internal_id: data.internalId || data.slug || product.id,
             description: data.description,
             quantity: 1,

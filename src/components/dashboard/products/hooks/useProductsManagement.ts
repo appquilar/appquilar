@@ -1,10 +1,8 @@
-// src/components/dashboard/products/hooks/useProductsManagement.ts
-
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "@/context/AuthContext";
 import { useDashboardProducts } from "@/application/hooks/useProducts";
-import type { ProductFormData } from "@/domain/models/Product";
+import type { Product } from "@/domain/models/Product";
 
 type UseProductsManagementOptions = {
     initialPage?: number;
@@ -13,6 +11,7 @@ type UseProductsManagementOptions = {
 
 export function useProductsManagement(options: UseProductsManagementOptions = {}) {
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
     const { initialPage = 1, perPage = 10 } = options;
 
     const [searchQuery, setSearchQuery] = useState("");
@@ -23,7 +22,19 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
     const [productToDeleteId, setProductToDeleteId] = useState<string | null>(null);
     const [productToDeleteName, setProductToDeleteName] = useState<string>("");
 
-    const query = useDashboardProducts({ page: currentPage, perPage });
+    // Determine owner ID and Type dynamically
+    // If the user has a companyId, we treat them as a company owner/member.
+    // Otherwise, we treat them as an individual user.
+    const ownerId = currentUser?.companyId || currentUser?.id;
+    const ownerType = currentUser?.companyId ? 'company' : 'user';
+
+    const query = useDashboardProducts({
+        page: currentPage,
+        perPage,
+        ownerId,
+        ownerType
+    });
+
     const products = query.data?.data ?? [];
     const total = query.data?.total ?? 0;
 
@@ -31,10 +42,11 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
         if (!searchQuery) return products;
 
         const q = searchQuery.toLowerCase();
-        return products.filter((p: ProductFormData & { id: string }) => {
+        // Fix: Use the 'Product' domain type here, not ProductFormData
+        return products.filter((p: Product) => {
             const name = (p.name ?? "").toLowerCase();
             const desc = (p.description ?? "").toLowerCase();
-            const internalId = ((p as any).internalId ?? "").toLowerCase();
+            const internalId = (p.internalId ?? "").toLowerCase();
             return name.includes(q) || desc.includes(q) || internalId.includes(q);
         });
     }, [products, searchQuery]);
@@ -55,13 +67,11 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
 
     const handleEditProduct = useCallback(
         (productId: string) => {
-            // ✅ tu routing real: /dashboard/products/:productId
             navigate(`/dashboard/products/${productId}`);
         },
         [navigate]
     );
 
-    // ✅ Ahora openDeleteModal recibe productId y name (coherente con ProductCard)
     const openDeleteModal = useCallback((productId: string, productName: string) => {
         setProductToDeleteId(productId);
         setProductToDeleteName(productName);
@@ -77,8 +87,6 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
     const confirmDeleteProduct = useCallback(async () => {
         if (!productToDeleteId) return;
 
-        // 🔥 Endpoint DELETE aún no implementado en tu código compartido.
-        // De momento: cerramos y refrescamos.
         closeDeleteModal();
         await query.refetch();
     }, [productToDeleteId, closeDeleteModal, query]);

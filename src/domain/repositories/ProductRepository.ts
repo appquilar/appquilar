@@ -26,7 +26,7 @@ export interface ProductRepository {
     search(criteria: ProductSearchCriteria): Promise<ProductListResponse>;
 
     /**
-     * Get all products
+     * Get all products (legacy/simple list)
      */
     getAllProducts(): Promise<Product[]>;
 
@@ -46,14 +46,19 @@ export interface ProductRepository {
     getBySlug(slug: string): Promise<Product | null>;
 
     /**
-     * Get products by company ID
+     * Get products by company ID (Legacy array return)
      */
     getProductsByCompanyId(companyId: string): Promise<Product[]>;
 
     /**
-     * List products by owner (Generic)
+     * List products by owner (Legacy array return)
      */
     listByOwner(ownerId: string): Promise<Product[]>;
+
+    /**
+     * List products by owner with pagination (Dashboard usage)
+     */
+    listByOwnerPaginated(ownerId: string, ownerType: 'company' | 'user', page: number, perPage: number): Promise<ProductListResponse>;
 
     /**
      * Get products by category ID

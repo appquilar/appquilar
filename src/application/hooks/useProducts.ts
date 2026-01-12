@@ -4,15 +4,35 @@ import { Product, ProductFormData } from '@/domain/models/Product';
 import { productService } from '@/compositionRoot';
 import { toast } from 'sonner';
 
+interface UseDashboardProductsParams {
+    page?: number;
+    perPage?: number;
+    ownerId?: string | null;
+    ownerType?: 'company' | 'user';
+}
+
 /**
- * Hook for the Product Dashboard List (Pagination + Search)
+ * Hook for the Product Dashboard List (Pagination + Search + Owner Filter)
  */
-export const useDashboardProducts = ({ page = 1, perPage = 10 }: { page?: number; perPage?: number }) => {
+export const useDashboardProducts = ({
+                                         page = 1,
+                                         perPage = 10,
+                                         ownerId,
+                                         ownerType = 'company'
+                                     }: UseDashboardProductsParams) => {
     return useQuery({
-        queryKey: ['products', 'dashboard', page, perPage],
+        queryKey: ['products', 'dashboard', ownerId, ownerType, page, perPage],
         queryFn: async () => {
+            // If we have an owner ID, we list THEIR products specifically
+            if (ownerId) {
+                return await productService.listByOwnerPaginated(ownerId, ownerType, page, perPage);
+            }
+
+            // Fallback to global search/list if no owner specified (e.g. admin view)
             return await productService.search({ page, per_page: perPage });
         },
+        // Only run query if we have the owner info (if required) or just let it run
+        enabled: true,
         placeholderData: (previousData) => previousData,
     });
 };
@@ -102,8 +122,7 @@ export const useDeleteProduct = () => {
 };
 
 /**
- * Legacy hook for backward compatibility.
- * Composes the individual hooks to maintain the original API.
+ * Legacy hook
  */
 export const useProducts = (ownerId?: string) => {
     const [products, setProducts] = useState<Product[]>([]);
