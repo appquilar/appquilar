@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash } from "lucide-react";
+import { Edit, Trash, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMediaUrl } from "@/application/hooks/useMediaUrl";
 import { Badge } from "@/components/ui/badge";
@@ -16,40 +16,33 @@ interface ProductCardProps {
 const PLACEHOLDER = "/placeholder.svg";
 
 const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
-    // 1) Intentamos primero thumbnailUrl/imageUrl si existe
     const raw = (product.thumbnailUrl || product.imageUrl || "").trim();
 
-    // 2) Si no hay URL, intentamos tirar del primer imageId (media)
     const firstImageId = useMemo(() => {
         const ids = product.image_ids || (product as any).images || [];
         return ids.length > 0 ? ids[0] : null;
     }, [product.image_ids, (product as any).images]);
 
     const { url: mediaThumbUrl } = useMediaUrl(firstImageId, "THUMBNAIL", { enabled: !raw });
-
     const imgSrc = raw.length > 0 ? raw : mediaThumbUrl ?? PLACEHOLDER;
 
-    // Helper para el color y texto del badge (Colores suavizados)
     const getStatusConfig = (status: PublicationStatusType = 'draft') => {
         const baseClasses = "border backdrop-blur-md shadow-sm font-medium";
         switch (status) {
             case 'published':
                 return {
                     label: 'Publicado',
-                    // Verde esmeralda suave con texto oscuro
                     className: `${baseClasses} bg-emerald-100/90 text-emerald-700 border-emerald-200/50`
                 };
             case 'archived':
                 return {
                     label: 'Archivado',
-                    // Gris pizarra suave con texto oscuro
                     className: `${baseClasses} bg-slate-100/90 text-slate-600 border-slate-200/50`
                 };
             case 'draft':
             default:
                 return {
                     label: 'Borrador',
-                    // Ámbar/Naranja suave con texto oscuro (menos agresivo que el amarillo chillón)
                     className: `${baseClasses} bg-amber-100/90 text-amber-700 border-amber-200/50`
                 };
         }
@@ -66,15 +59,11 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                 />
-
-                {/* Badge de estado - Arriba Izquierda (Colores suavizados) */}
                 <div className="absolute top-2 left-2 z-10">
                     <Badge variant="outline" className={`${statusConfig.className} px-2 py-0.5 text-[11px]`}>
                         {statusConfig.label}
                     </Badge>
                 </div>
-
-                {/* Internal ID - Arriba Derecha */}
                 {product.internalId && (
                     <div className="absolute top-2 right-2 z-10">
                         <span className="bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full shadow-sm font-mono">
@@ -110,9 +99,15 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
             </CardContent>
 
             <CardFooter className="p-3 bg-muted/20 flex gap-2 border-t border-border/50">
-                <Link to={`/product/${product.slug}`} className="flex-1">
-                    <Button variant="default" size="sm" className="w-full h-8 text-xs">
+                <Link
+                    to={`/product/${product.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1"
+                >
+                    <Button variant="default" size="sm" className="w-full h-8 text-xs gap-1">
                         Ver
+                        <ExternalLink size={12} className="opacity-70" />
                     </Button>
                 </Link>
 

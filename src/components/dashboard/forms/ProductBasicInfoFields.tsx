@@ -26,7 +26,7 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const result = await categoryService.getAllCategories({ page: 1, per_page: 100 });
+                const result = await categoryService.getAllCategories({ page: 1, perPage: 100 });
                 setCategories(result.categories || []);
             } catch (error) {
                 console.error("Error loading categories:", error);

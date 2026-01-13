@@ -78,7 +78,11 @@ export class ApiProductRepository implements ProductRepository {
 
     async getBySlug(slug: string): Promise<Product | null> {
         try {
-            const response = await this.client.get<any>(`/api/products/${slug}`);
+            // FIXED: Send Auth Headers so backend can identify if user is the owner
+            const response = await this.client.get<any>(
+                `/api/products/${slug}`,
+                { headers: this.getAuthHeaders() }
+            );
             const data = (response as any).data ? (response as any).data : response;
             return this.mapToDomain(data);
         } catch (error) {
@@ -233,11 +237,9 @@ export class ApiProductRepository implements ProductRepository {
     }
 
     private mapToDomain(apiData: any): Product {
-        // Safe extraction of image_ids
         const imageIds = Array.isArray(apiData.image_ids) ? apiData.image_ids : [];
         const primaryImageId = imageIds[0];
 
-        // Safe extraction of status
         let status: PublicationStatusType = 'draft';
         if (apiData.publication_status && typeof apiData.publication_status === 'object') {
             status = apiData.publication_status.status || 'draft';
@@ -254,7 +256,7 @@ export class ApiProductRepository implements ProductRepository {
             imageUrl: primaryImageId ? `${this.baseUrl}/api/media/images/${primaryImageId}/MEDIUM` : '',
             thumbnailUrl: primaryImageId ? `${this.baseUrl}/api/media/images/${primaryImageId}/THUMBNAIL` : '',
 
-            image_ids: imageIds, // Store all IDs
+            image_ids: imageIds,
 
             publicationStatus: status,
 
@@ -303,7 +305,6 @@ export class ApiProductRepository implements ProductRepository {
             category_id: product.category?.id || data.categoryId,
             image_ids: product.images?.map((img: any) => img.id).filter(Boolean) || [],
 
-            // deposit, tiers etc...
             deposit: {
                 amount: Math.round((data.price.deposit || 0) * 100),
                 currency: 'EUR'

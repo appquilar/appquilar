@@ -1,5 +1,3 @@
-// src/components/products/ProductPage.tsx  (ajusta ruta si está en otra carpeta)
-
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -15,9 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useProductBySlug } from "@/application/hooks/useProducts";
 import { mediaService } from "@/compositionRoot";
 
-// ⚠️ Tu ProductPage estaba tipado con Product (modelo viejo).
-// Para no pelear con los 2 Product distintos que tienes en el repo,
-// aquí creamos un VM mínimo que tu UI necesita.
+// Expanded VM to include potential location data
 type ProductPageVm = {
     id: string;
     name: string;
@@ -27,8 +23,15 @@ type ProductPageVm = {
     isForSale: boolean;
     company: { id: string; name: string; slug: string };
     category: { id: string; name: string; slug: string };
-    price: { daily: number; deposit?: number };
+    price: { daily: number; deposit?: number; tiers?: any[] };
     imageIds: string[];
+    rating: number;
+    reviewCount: number;
+    publicationStatus?: string;
+    location?: {
+        name: string;
+        coordinates: [number, number];
+    };
 };
 
 function useFirstProductImageUrl(imageIds: string[], size: "THUMBNAIL" | "MEDIUM" | "LARGE" | "ORIGINAL" = "LARGE") {
@@ -84,21 +87,17 @@ function useFirstProductImageUrl(imageIds: string[], size: "THUMBNAIL" | "MEDIUM
 
 const ProductPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
-    const { isLoggedIn } = useAuth();
+    const { isLoggedIn, user } = useAuth(); // Access user from /me
 
     const [activeTab, setActiveTab] = useState<"rental" | "secondhand">("rental");
     const [contactModalOpen, setContactModalOpen] = useState(false);
 
     const query = useProductBySlug(slug ?? null);
 
-    // Mapeo defensivo a VM (para evitar el choque de tipos Product vs ProductFormData)
     const product: ProductPageVm | null = useMemo(() => {
         const raw: any = query.data;
         if (!raw) return null;
 
-        // Si `getBySlug` te devuelve ProductFormData:
-        // - companyId / categoryId están pero no name/slug => aquí los pondrías cuando los tengas en BE.
-        // Si `getBySlug` ya devuelve un Product "rico", esto también funciona.
         const imageIds: string[] = Array.isArray(raw.image_ids)
             ? raw.image_ids
             : Array.isArray(raw.imageIds)
@@ -106,6 +105,35 @@ const ProductPage: React.FC = () => {
                 : Array.isArray(raw.images)
                     ? raw.images.map((x: any) => x?.id).filter(Boolean)
                     : [];
+
+        // Determine location: Prefer user's location if they are the owner (Draft/Preview context)
+        // or if the API eventually provides it.
+        let location = {
+            name: "Ubicación desconocida",
+            coordinates: [-3.7038, 40.4168] as [number, number] // Default Madrid
+        };
+
+        // If logged in and user is the owner, use their location from /me
+        // This handles the "Draft" view where public data might be incomplete but we have the owner's context
+        if (user && raw.company?.id === user.id && user.location) {
+            location = {
+                name: user.address?.city || user.location.address || "Tu Ubicación",
+                coordinates: [user.location.longitude || 0, user.location.latitude || 0]
+            };
+        }
+        // Fallback: If product/company has location data in the future (raw.location)
+        else if (raw.location) {
+            location = {
+                name: raw.location.name || "Ubicación del producto",
+                coordinates: [raw.location.longitude, raw.location.latitude]
+            };
+        } else {
+            // Temporary fallback if no location data exists
+            location = {
+                name: "Campohermoso (Almería)", // Legacy placeholder
+                coordinates: [-2.4637, 36.8381]
+            };
+        }
 
         return {
             id: raw.id ?? "",
@@ -119,10 +147,15 @@ const ProductPage: React.FC = () => {
             price: {
                 daily: raw.price?.daily ?? 0,
                 deposit: raw.price?.deposit,
+                tiers: raw.price?.tiers || []
             },
             imageIds,
+            rating: raw.rating || 0,
+            reviewCount: raw.reviewCount || 0,
+            publicationStatus: raw.publicationStatus,
+            location: location
         };
-    }, [query.data]);
+    }, [query.data, user]);
 
     const heroImageUrl = useFirstProductImageUrl(product?.imageIds ?? [], "LARGE");
     const thumbImageUrl = useFirstProductImageUrl(product?.imageIds ?? [], "THUMBNAIL");
@@ -175,12 +208,15 @@ const ProductPage: React.FC = () => {
 
                     <div className="mt-8">
                         <h2 className="text-xl font-semibold mb-4">Detalles</h2>
-                        <p className="text-muted-foreground">{product.description}</p>
+                        <p className="text-muted-foreground whitespace-pre-wrap">{product.description}</p>
                     </div>
 
                     <div className="mt-8">
                         <h2 className="text-xl font-semibold mb-4">Ubicación</h2>
-                        <ProductLocationMap location="Campohermoso (Almería)" coordinates={[-2.4637, 36.8381]} />
+                        <ProductLocationMap
+                            location={product.location?.name || "Ubicación"}
+                            coordinates={product.location?.coordinates}
+                        />
                     </div>
                 </div>
 
