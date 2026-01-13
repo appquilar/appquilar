@@ -1,5 +1,5 @@
 import { Product, ProductFormData } from '@/domain/models/Product';
-import { ProductRepository, ProductSearchCriteria, ProductListResponse } from '@/domain/repositories/ProductRepository';
+import { ProductRepository, ProductSearchCriteria, ProductListResponse, ProductFilters } from '@/domain/repositories/ProductRepository';
 import { ApiClient } from '@/infrastructure/http/ApiClient';
 import { AuthSession } from '@/domain/models/AuthSession';
 
@@ -95,7 +95,13 @@ export class ApiProductRepository implements ProductRepository {
         return result.data;
     }
 
-    async listByOwnerPaginated(ownerId: string, ownerType: 'company' | 'user', page: number, perPage: number): Promise<ProductListResponse> {
+    async listByOwnerPaginated(
+        ownerId: string,
+        ownerType: 'company' | 'user',
+        page: number,
+        perPage: number,
+        filters?: ProductFilters
+    ): Promise<ProductListResponse> {
         try {
             const endpoint = ownerType === 'company'
                 ? `/api/companies/${ownerId}/products`
@@ -105,29 +111,31 @@ export class ApiProductRepository implements ProductRepository {
             queryParams.append('page', page.toString());
             queryParams.append('per_page', perPage.toString());
 
+            // Append optional filters
+            if (filters?.name) queryParams.append('name', filters.name);
+            if (filters?.id) queryParams.append('id', filters.id);
+            if (filters?.internalId) queryParams.append('internalId', filters.internalId);
+            if (filters?.categoryId) queryParams.append('categoryId', filters.categoryId);
+
             const response = await this.client.get<any>(`${endpoint}?${queryParams.toString()}`, {
                 headers: this.getAuthHeaders()
             });
 
-            // Logic to handle nested response structure:
-            // { success: true, data: { total: 6, page: 1, data: [...] } }
+            // Logic to handle nested response structure
             let items: any[] = [];
             let total = 0;
             let currentPage = 1;
 
-            // Check deeply nested structure (response.data.data) common in API wrappers
             if (response?.data?.data && Array.isArray(response.data.data)) {
                 items = response.data.data;
                 total = response.data.total ?? items.length;
                 currentPage = response.data.page ?? 1;
             }
-            // Check flat pagination structure (response.data is array, siblings are meta)
             else if (response?.data && Array.isArray(response.data)) {
                 items = response.data;
                 total = response.total ?? items.length;
                 currentPage = response.page ?? 1;
             }
-            // Fallback: response is the array itself
             else if (Array.isArray(response)) {
                 items = response;
                 total = items.length;
@@ -147,10 +155,9 @@ export class ApiProductRepository implements ProductRepository {
     async getProductsByCategoryId(categoryId: string): Promise<Product[]> {
         try {
             const response = await this.client.get<{ data: any[] }>(`/api/categories/${categoryId}/products`);
-            // Handle wrapper
             const data = (response as any).data && Array.isArray((response as any).data)
                 ? (response as any).data
-                : ((response as any).data?.data || []); // try double nested just in case
+                : ((response as any).data?.data || []);
 
             return data.map((item: any) => this.mapToDomain(item));
         } catch (error) {
@@ -162,7 +169,6 @@ export class ApiProductRepository implements ProductRepository {
     async createProduct(data: ProductFormData): Promise<Product> {
         const dto = this.mapToDto(data);
 
-        // Safety check: ensure ID exists
         if (!dto.product_id) {
             dto.product_id = crypto.randomUUID();
         }
@@ -173,7 +179,6 @@ export class ApiProductRepository implements ProductRepository {
             { headers: this.getAuthHeaders() }
         );
 
-        // Handle wrapper in create response if exists
         const responseData = (response as any).data ? (response as any).data : response;
         return this.mapToDomain(responseData);
     }
@@ -219,7 +224,6 @@ export class ApiProductRepository implements ProductRepository {
             thumbnailUrl: primaryImageId ? `${this.baseUrl}/api/media/images/${primaryImageId}/THUMBNAIL` : '',
 
             price: {
-                // Handle different response locations for tiers
                 daily: (apiData.tiers?.[0]?.price_per_day?.amount || 0) / 100,
                 deposit: (apiData.deposit?.amount || 0) / 100,
                 tiers: apiData.tiers?.map((t: any) => ({
@@ -228,13 +232,13 @@ export class ApiProductRepository implements ProductRepository {
                     pricePerDay: (t.price_per_day?.amount || 0) / 100
                 })) || []
             },
-            isRentable: true, // Assuming all fetched are rentable for now or derived
+            isRentable: true,
             isForSale: false,
             productType: 'rental',
 
             company: {
                 id: apiData.company_id || '',
-                name: apiData.company_name || '', // API might not return this, handled in UI or separate fetch
+                name: apiData.company_name || '',
                 slug: apiData.company_slug || ''
             },
             category: {

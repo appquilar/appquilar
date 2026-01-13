@@ -16,6 +16,13 @@ export interface ProductListResponse {
     page: number;
 }
 
+export interface ProductFilters {
+    name?: string;
+    id?: string;
+    internalId?: string;
+    categoryId?: string;
+}
+
 /**
  * Repository interface for accessing and managing Product data
  */
@@ -46,7 +53,7 @@ export interface ProductRepository {
     getBySlug(slug: string): Promise<Product | null>;
 
     /**
-     * Get products by company ID (Legacy array return)
+     * Get products by company ID
      */
     getProductsByCompanyId(companyId: string): Promise<Product[]>;
 
@@ -56,9 +63,15 @@ export interface ProductRepository {
     listByOwner(ownerId: string): Promise<Product[]>;
 
     /**
-     * List products by owner with pagination (Dashboard usage)
+     * List products by owner with pagination and filters
      */
-    listByOwnerPaginated(ownerId: string, ownerType: 'company' | 'user', page: number, perPage: number): Promise<ProductListResponse>;
+    listByOwnerPaginated(
+        ownerId: string,
+        ownerType: 'company' | 'user',
+        page: number,
+        perPage: number,
+        filters?: ProductFilters
+    ): Promise<ProductListResponse>;
 
     /**
      * Get products by category ID

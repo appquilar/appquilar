@@ -3,12 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Product, ProductFormData } from '@/domain/models/Product';
 import { productService } from '@/compositionRoot';
 import { toast } from 'sonner';
+import { ProductFilters } from '@/domain/repositories/ProductRepository';
 
 interface UseDashboardProductsParams {
     page?: number;
     perPage?: number;
     ownerId?: string | null;
     ownerType?: 'company' | 'user';
+    filters?: ProductFilters;
 }
 
 /**
@@ -18,20 +20,20 @@ export const useDashboardProducts = ({
                                          page = 1,
                                          perPage = 10,
                                          ownerId,
-                                         ownerType = 'company'
+                                         ownerType = 'company',
+                                         filters = {}
                                      }: UseDashboardProductsParams) => {
     return useQuery({
-        queryKey: ['products', 'dashboard', ownerId, ownerType, page, perPage],
+        // Add filters to query key so it refetches when they change
+        queryKey: ['products', 'dashboard', ownerId, ownerType, page, perPage, filters],
         queryFn: async () => {
-            // If we have an owner ID, we list THEIR products specifically
             if (ownerId) {
-                return await productService.listByOwnerPaginated(ownerId, ownerType, page, perPage);
+                return await productService.listByOwnerPaginated(ownerId, ownerType, page, perPage, filters);
             }
 
-            // Fallback to global search/list if no owner specified (e.g. admin view)
-            return await productService.search({ page, per_page: perPage });
+            // Fallback
+            return await productService.search({ page, per_page: perPage, text: filters.name });
         },
-        // Only run query if we have the owner info (if required) or just let it run
         enabled: true,
         placeholderData: (previousData) => previousData,
     });

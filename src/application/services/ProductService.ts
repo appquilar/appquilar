@@ -1,5 +1,5 @@
 import { Product, ProductFormData } from '@/domain/models/Product';
-import { ProductRepository, ProductSearchCriteria, ProductListResponse } from '@/domain/repositories/ProductRepository';
+import { ProductRepository, ProductSearchCriteria, ProductListResponse, ProductFilters } from '@/domain/repositories/ProductRepository';
 
 /**
  * Service for managing product data
@@ -31,8 +31,14 @@ export class ProductService {
         return this.repository.listByOwner(ownerId);
     }
 
-    async listByOwnerPaginated(ownerId: string, ownerType: 'company' | 'user', page: number, perPage: number): Promise<ProductListResponse> {
-        return this.repository.listByOwnerPaginated(ownerId, ownerType, page, perPage);
+    async listByOwnerPaginated(
+        ownerId: string,
+        ownerType: 'company' | 'user',
+        page: number,
+        perPage: number,
+        filters?: ProductFilters
+    ): Promise<ProductListResponse> {
+        return this.repository.listByOwnerPaginated(ownerId, ownerType, page, perPage, filters);
     }
 
     async getProductsByCategoryId(categoryId: string): Promise<Product[]> {

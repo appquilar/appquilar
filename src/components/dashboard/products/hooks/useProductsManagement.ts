@@ -1,8 +1,8 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useDashboardProducts } from "@/application/hooks/useProducts";
-import type { Product } from "@/domain/models/Product";
+import type { ProductFilters } from "@/domain/repositories/ProductRepository";
 
 type UseProductsManagementOptions = {
     initialPage?: number;
@@ -14,7 +14,7 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
     const { currentUser } = useAuth();
     const { initialPage = 1, perPage = 10 } = options;
 
-    const [searchQuery, setSearchQuery] = useState("");
+    const [filters, setFilters] = useState<ProductFilters>({});
     const [currentPage, setCurrentPage] = useState(initialPage);
 
     // Delete modal state
@@ -22,34 +22,21 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
     const [productToDeleteId, setProductToDeleteId] = useState<string | null>(null);
     const [productToDeleteName, setProductToDeleteName] = useState<string>("");
 
-    // Determine owner ID and Type dynamically
-    // If the user has a companyId, we treat them as a company owner/member.
-    // Otherwise, we treat them as an individual user.
+    // Determine owner ID and Type
     const ownerId = currentUser?.companyId || currentUser?.id;
     const ownerType = currentUser?.companyId ? 'company' : 'user';
 
+    // Debounce logic could be added here if needed, but for now passing filters directly
     const query = useDashboardProducts({
         page: currentPage,
         perPage,
         ownerId,
-        ownerType
+        ownerType,
+        filters
     });
 
     const products = query.data?.data ?? [];
     const total = query.data?.total ?? 0;
-
-    const filteredProducts = useMemo(() => {
-        if (!searchQuery) return products;
-
-        const q = searchQuery.toLowerCase();
-        // Fix: Use the 'Product' domain type here, not ProductFormData
-        return products.filter((p: Product) => {
-            const name = (p.name ?? "").toLowerCase();
-            const desc = (p.description ?? "").toLowerCase();
-            const internalId = (p.internalId ?? "").toLowerCase();
-            return name.includes(q) || desc.includes(q) || internalId.includes(q);
-        });
-    }, [products, searchQuery]);
 
     const totalPages = useMemo(() => {
         if (!perPage) return 1;
@@ -60,9 +47,15 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
         setCurrentPage(page);
     }, []);
 
+    const handleFilterChange = useCallback((newFilters: ProductFilters) => {
+        setFilters(newFilters);
+        setCurrentPage(1); // Reset to first page on filter change
+    }, []);
+
+    // Helper for legacy SearchToolbar compatibility if needed
     const handleSearch = useCallback((e: React.FormEvent) => {
         e.preventDefault();
-        setCurrentPage(1);
+        // Triggered by form submit in toolbar, no-op if filters handled via onChange
     }, []);
 
     const handleEditProduct = useCallback(
@@ -86,16 +79,20 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
 
     const confirmDeleteProduct = useCallback(async () => {
         if (!productToDeleteId) return;
-
         closeDeleteModal();
         await query.refetch();
     }, [productToDeleteId, closeDeleteModal, query]);
 
     return {
-        searchQuery,
-        setSearchQuery,
+        // Expose filters instead of simple searchQuery
+        filters,
+        handleFilterChange,
 
-        filteredProducts,
+        // Compatibility props for existing UI if it wasn't fully updated yet
+        searchQuery: filters.name || '',
+        setSearchQuery: (val: string) => handleFilterChange({...filters, name: val}),
+
+        filteredProducts: products, // Products are already filtered by server
         currentPage,
         totalPages,
 

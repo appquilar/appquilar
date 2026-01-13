@@ -1,5 +1,3 @@
-// src/components/dashboard/ProductsManagement.tsx
-
 import { useNavigate } from "react-router-dom";
 
 import ProductGrid from "@/components/dashboard/products/ProductGrid";
@@ -14,8 +12,8 @@ const ProductsManagement = () => {
     const navigate = useNavigate();
 
     const {
-        searchQuery,
-        setSearchQuery,
+        filters,
+        handleFilterChange,
         filteredProducts,
         currentPage,
         totalPages,
@@ -57,8 +55,8 @@ const ProductsManagement = () => {
             <ProductsHeader />
 
             <SearchToolbar
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
+                filters={filters}
+                onFilterChange={handleFilterChange}
                 onAddProduct={handleAddProduct}
                 onSearch={handleSearch}
             />
