@@ -3,6 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Product } from '@/domain/models/Product';
+import { mediaService } from '@/compositionRoot';
+import { Uuid } from '@/domain/valueObject/uuidv4';
 import {
     ProductFormValues,
     productFormSchema,
@@ -25,9 +27,9 @@ export const useProductForm = ({ product, onSave, onCancel }: UseProductFormProp
         resolver: zodResolver(productFormSchema),
         defaultValues: {
             ...formValues,
-            productType: 'rental', // Force default
+            // IMPORTANTE: No sobreescribir 'images' aquí con [], usar el valor de formValues
+            productType: 'rental',
             currentTab: 'basic',
-            images: []
         },
         mode: 'onChange',
     });
@@ -40,20 +42,39 @@ export const useProductForm = ({ product, onSave, onCancel }: UseProductFormProp
             values.isForSale = false;
             values.productType = 'rental';
 
-            // Basic validation for rental price presence
-            // Note: Tiers are the main pricing model, but if price.daily is 0 and no tiers, warning?
-            // For now, relying on Schema validation.
+            // 1. Handle Image Uploads with FE-generated UUIDs
+            const processedImages: { id: string }[] = [];
 
-            // Prepare Final DTO
+            if (values.images && values.images.length > 0) {
+                for (const img of values.images) {
+                    // Si tiene propiedad 'file', es nueva y necesita subirse (aunque ya se suben en el componente, esto es un fallback/check)
+                    // El componente ProductImagesField ya gestiona la subida inmediata, así que aquí
+                    // principalmente necesitamos recopilar los IDs.
+
+                    if (img.id) {
+                        // Si ya tiene ID (sea existente o recién subida por el componente), la incluimos
+                        processedImages.push({ id: img.id });
+                    } else if (img.file instanceof File) {
+                        // Fallback por si la subida automática falló o no se usó
+                        try {
+                            const newImageId = Uuid.generate().toString();
+                            await mediaService.uploadImage(img.file, newImageId);
+                            processedImages.push({ id: newImageId });
+                        } catch (err) {
+                            console.error("Failed to upload image fallback", img.file?.name, err);
+                            // Podríamos lanzar error, pero mejor intentar guardar el resto
+                        }
+                    }
+                }
+            }
+
+            // 2. Prepare Final DTO
             const updatedProduct = mapFormValuesToProduct(values, product);
 
-            // Map images to the format expected by the backend
-            const processedImages = values.images?.map((img: any) => ({ id: img.id })) || [];
-
-            // Update DTO with image list
+            // Asignar los IDs de imágenes procesadas al DTO
             (updatedProduct as any).images = processedImages;
 
-            // UI Update for main image
+            // Actualizar URLs de vista previa para feedback inmediato
             if (processedImages.length > 0) {
                 const firstId = processedImages[0].id;
                 const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';

@@ -26,7 +26,7 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const result = await categoryService.getAllCategories({ page: 1, perPage: 500 });
+                const result = await categoryService.getAllCategories({ page: 1, perPage: 100 });
                 setCategories(result.categories || []);
             } catch (error) {
                 console.error("Error loading categories:", error);
@@ -52,6 +52,33 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
 
     return (
         <div className="space-y-4">
+            {/* Publication Status Selector */}
+            <FormField
+                control={control}
+                name="publicationStatus"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Estado</FormLabel>
+                        <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                        >
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecciona estado" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="draft">Borrador</SelectItem>
+                                <SelectItem value="published">Publicado</SelectItem>
+                                <SelectItem value="archived">Archivado</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+
             <FormField
                 control={control}
                 name="internalId"

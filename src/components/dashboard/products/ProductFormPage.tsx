@@ -7,6 +7,7 @@ import ProductEditForm from '@/components/dashboard/ProductEditForm';
 import { toast } from 'sonner';
 import { productService } from '@/compositionRoot';
 import { Uuid } from '@/domain/valueObject/uuidv4';
+import { useCreateProduct, useUpdateProduct } from '@/application/hooks/useProducts';
 
 const ProductFormPage = () => {
     const { productId } = useParams();
@@ -15,12 +16,16 @@ const ProductFormPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const isAddMode = !productId || productId === 'new';
 
+    // Usamos los hooks de mutación que gestionan la invalidación de caché
+    const { mutateAsync: createProduct } = useCreateProduct();
+    const { mutateAsync: updateProduct } = useUpdateProduct();
+
     useEffect(() => {
         const loadProduct = async () => {
             setIsLoading(true);
             try {
                 if (isAddMode) {
-                    // Create new product with a valid UUIDv4 from the start
+                    // Create a new empty product template
                     const newProduct: Product = {
                         id: Uuid.generate().toString(),
                         internalId: '',
@@ -29,33 +34,39 @@ const ProductFormPage = () => {
                         description: '',
                         imageUrl: '',
                         thumbnailUrl: '',
+                        publicationStatus: 'draft',
                         price: {
-                            daily: 0
+                            daily: 0,
+                            deposit: 0,
+                            tiers: []
                         },
                         isRentable: true,
                         isForSale: false,
-                        company: {
-                            id: '',
-                            name: '',
-                            slug: ''
-                        },
-                        category: {
-                            id: '',
-                            name: '',
-                            slug: ''
-                        },
+                        company: { id: '', name: '', slug: '' },
+                        category: { id: '', name: '', slug: '' },
                         rating: 0,
                         reviewCount: 0,
                         productType: 'rental'
                     };
                     setProduct(newProduct);
                 } else {
-                    const foundProduct = await productService.getProductById(productId);
+                    // Find existing product
+                    // Nota: Aquí usamos el servicio directamente para cargar los datos iniciales del formulario,
+                    // lo cual es correcto. La invalidación importa al GUARDAR.
+                    const foundProduct = await productService.getProductById(productId!);
                     if (foundProduct) {
-                        setProduct({
+                        const safeProduct: Product = {
                             ...foundProduct,
-                            productType: 'rental' // Force rental type for the UI
-                        });
+                            category: foundProduct.category || { id: '', name: '', slug: '' },
+                            price: {
+                                daily: foundProduct.price?.daily || 0,
+                                deposit: foundProduct.price?.deposit || 0,
+                                tiers: foundProduct.price?.tiers || []
+                            },
+                            productType: 'rental',
+                            publicationStatus: foundProduct.publicationStatus || 'draft'
+                        };
+                        setProduct(safeProduct);
                     }
                 }
             } catch (error) {
@@ -72,18 +83,22 @@ const ProductFormPage = () => {
     const handleSaveProduct = async (updatedProduct: Partial<Product>) => {
         try {
             if (isAddMode) {
-                await productService.createProduct(updatedProduct as any);
-                toast.success('Producto añadido correctamente');
+                // Al usar mutateAsync, se ejecutará el onSuccess del hook que hace invalidateQueries(['products'])
+                await createProduct(updatedProduct as any);
+                // El hook ya muestra el toast de éxito
             } else {
-                await productService.updateProduct(productId as string, updatedProduct as any);
-                toast.success('Producto actualizado correctamente');
+                await updateProduct({
+                    id: productId as string,
+                    data: updatedProduct as any
+                });
+                // El hook ya muestra el toast de éxito
             }
 
             navigate('/dashboard/products');
         } catch (error) {
             console.error("Error saving product:", error);
-            // Detailed error is usually logged by repo/client, toast generic here
-            toast.error(isAddMode ? 'Error al añadir el producto' : 'Error al actualizar el producto');
+            // El hook ya muestra el toast de error, pero si fallara algo antes de la llamada:
+            // toast.error(...)
         }
     };
 
@@ -104,7 +119,9 @@ const ProductFormPage = () => {
             <div className="p-6">
                 <div className="flex flex-col items-center justify-center p-8 text-center">
                     <h2 className="text-2xl font-bold mb-2">Producto no encontrado</h2>
-                    <Button onClick={() => navigate('/dashboard/products')}>Volver</Button>
+                    <Button onClick={() => navigate('/dashboard/products')}>
+                        Volver a Productos
+                    </Button>
                 </div>
             </div>
         );

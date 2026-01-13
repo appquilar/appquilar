@@ -8,19 +8,19 @@ export const productFormSchema = z.object({
     description: z.string().min(1, { message: 'La descripción es obligatoria' }),
     imageUrl: z.string().optional(),
     thumbnailUrl: z.string().optional(),
+    publicationStatus: z.enum(['draft', 'published', 'archived']).default('draft'),
+
     price: z.object({
         daily: z.coerce.number().default(0),
         deposit: z.coerce.number().optional(),
         tiers: z.array(z.object({
             daysFrom: z.coerce.number().min(1, { message: 'Debe ser al menos 1' }),
-            daysTo: z.coerce.number().optional(),
-            // Use refined validation to ensure it is not NaN (empty input)
+            daysTo: z.coerce.number().nullable().optional(),
             pricePerDay: z.any()
                 .transform((val) => Number(val))
                 .refine((val) => !isNaN(val) && val >= 0, { message: 'Precio obligatorio' }),
         })).optional(),
     }),
-    // Second hand optional and relaxed since we hid it
     secondHand: z.object({
         price: z.coerce.number().optional(),
         negotiable: z.boolean().optional(),
@@ -41,6 +41,22 @@ export const productFormSchema = z.object({
 export type ProductFormValues = z.infer<typeof productFormSchema>;
 
 export const mapProductToFormValues = (product: Product): ProductFormValues => {
+    let initialImages: any[] = [];
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+    if (product.image_ids && Array.isArray(product.image_ids)) {
+        initialImages = product.image_ids.map((id: string) => ({
+            id: id,
+            url: `${baseUrl}/api/media/images/${id}/MEDIUM`,
+            // 'file' no es necesario para imágenes existentes
+        }));
+    } else if (product.imageUrl) {
+        initialImages.push({
+            id: 'main',
+            url: product.imageUrl
+        });
+    }
+
     return {
         internalId: product.internalId || '',
         name: product.name || '',
@@ -48,6 +64,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
         description: product.description || '',
         imageUrl: product.imageUrl || '',
         thumbnailUrl: product.thumbnailUrl || '',
+        publicationStatus: product.publicationStatus || 'draft',
         price: {
             daily: product.price?.daily || 0,
             deposit: product.price?.deposit,
@@ -66,7 +83,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
             name: product.category?.name || '',
             slug: product.category?.slug || '',
         },
-        images: [],
+        images: initialImages,
     };
 };
 
@@ -85,12 +102,13 @@ export const mapFormValuesToProduct = (values: ProductFormValues, originalProduc
         description: values.description,
         imageUrl: values.imageUrl,
         thumbnailUrl: values.thumbnailUrl,
+        publicationStatus: values.publicationStatus,
         price: {
             daily: values.price.daily || 0,
             deposit: values.price.deposit,
             tiers: values.price.tiers?.map(tier => ({
                 daysFrom: tier.daysFrom,
-                daysTo: tier.daysTo,
+                daysTo: tier.daysTo || undefined,
                 pricePerDay: tier.pricePerDay
             })) || [],
         },

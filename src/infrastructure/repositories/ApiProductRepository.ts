@@ -1,4 +1,4 @@
-import { Product, ProductFormData } from '@/domain/models/Product';
+import { Product, ProductFormData, PublicationStatusType } from '@/domain/models/Product';
 import { ProductRepository, ProductSearchCriteria, ProductListResponse, ProductFilters } from '@/domain/repositories/ProductRepository';
 import { ApiClient } from '@/infrastructure/http/ApiClient';
 import { AuthSession } from '@/domain/models/AuthSession';
@@ -36,7 +36,6 @@ export class ApiProductRepository implements ProductRepository {
                 `/api/products/search?${queryParams.toString()}`
             );
 
-            // Handle potential wrapped response { success: true, data: { ... } }
             const payload = (response as any).data && (response as any).success !== undefined
                 ? (response as any).data
                 : response;
@@ -61,7 +60,10 @@ export class ApiProductRepository implements ProductRepository {
 
     async getById(id: string): Promise<Product | null> {
         try {
-            const response = await this.client.get<any>(`/api/products/${id}`);
+            const response = await this.client.get<any>(
+                `/api/products/${id}`,
+                { headers: this.getAuthHeaders() }
+            );
             const data = (response as any).data ? (response as any).data : response;
             return this.mapToDomain(data);
         } catch (error) {
@@ -111,7 +113,6 @@ export class ApiProductRepository implements ProductRepository {
             queryParams.append('page', page.toString());
             queryParams.append('per_page', perPage.toString());
 
-            // Append optional filters
             if (filters?.name) queryParams.append('name', filters.name);
             if (filters?.id) queryParams.append('id', filters.id);
             if (filters?.internalId) queryParams.append('internalId', filters.internalId);
@@ -121,7 +122,6 @@ export class ApiProductRepository implements ProductRepository {
                 headers: this.getAuthHeaders()
             });
 
-            // Logic to handle nested response structure
             let items: any[] = [];
             let total = 0;
             let currentPage = 1;
@@ -186,11 +186,32 @@ export class ApiProductRepository implements ProductRepository {
     async updateProduct(id: string, data: ProductFormData): Promise<Product> {
         const dto = this.mapToDto(data);
 
+        // 1. Update basic data
         await this.client.patch(
             `/api/products/${id}`,
             dto,
             { headers: this.getAuthHeaders() }
         );
+
+        // 2. Handle Status Transition
+        if (data.publicationStatus) {
+            try {
+                let statusEndpoint = '';
+                if (data.publicationStatus === 'published') {
+                    statusEndpoint = `/api/products/${id}/publish`;
+                } else if (data.publicationStatus === 'draft') {
+                    statusEndpoint = `/api/products/${id}/unpublish`;
+                } else if (data.publicationStatus === 'archived') {
+                    statusEndpoint = `/api/products/${id}/archive`;
+                }
+
+                if (statusEndpoint) {
+                    await this.client.patch(statusEndpoint, {}, { headers: this.getAuthHeaders() });
+                }
+            } catch (statusError) {
+                console.error("Failed to update product status", statusError);
+            }
+        }
 
         const updated = await this.getById(id);
         if (!updated) throw new Error('Failed to retrieve updated product');
@@ -212,7 +233,17 @@ export class ApiProductRepository implements ProductRepository {
     }
 
     private mapToDomain(apiData: any): Product {
-        const primaryImageId = apiData.image_ids?.[0];
+        // Safe extraction of image_ids
+        const imageIds = Array.isArray(apiData.image_ids) ? apiData.image_ids : [];
+        const primaryImageId = imageIds[0];
+
+        // Safe extraction of status
+        let status: PublicationStatusType = 'draft';
+        if (apiData.publication_status && typeof apiData.publication_status === 'object') {
+            status = apiData.publication_status.status || 'draft';
+        } else if (typeof apiData.status === 'string') {
+            status = apiData.status as PublicationStatusType;
+        }
 
         return {
             id: apiData.id || apiData.product_id,
@@ -223,14 +254,18 @@ export class ApiProductRepository implements ProductRepository {
             imageUrl: primaryImageId ? `${this.baseUrl}/api/media/images/${primaryImageId}/MEDIUM` : '',
             thumbnailUrl: primaryImageId ? `${this.baseUrl}/api/media/images/${primaryImageId}/THUMBNAIL` : '',
 
+            image_ids: imageIds, // Store all IDs
+
+            publicationStatus: status,
+
             price: {
                 daily: (apiData.tiers?.[0]?.price_per_day?.amount || 0) / 100,
                 deposit: (apiData.deposit?.amount || 0) / 100,
-                tiers: apiData.tiers?.map((t: any) => ({
+                tiers: Array.isArray(apiData.tiers) ? apiData.tiers.map((t: any) => ({
                     daysFrom: t.days_from,
                     daysTo: t.days_to,
                     pricePerDay: (t.price_per_day?.amount || 0) / 100
-                })) || []
+                })) : []
             },
             isRentable: true,
             isForSale: false,
@@ -268,6 +303,7 @@ export class ApiProductRepository implements ProductRepository {
             category_id: product.category?.id || data.categoryId,
             image_ids: product.images?.map((img: any) => img.id).filter(Boolean) || [],
 
+            // deposit, tiers etc...
             deposit: {
                 amount: Math.round((data.price.deposit || 0) * 100),
                 currency: 'EUR'

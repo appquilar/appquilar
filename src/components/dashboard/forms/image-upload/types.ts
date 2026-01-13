@@ -3,9 +3,8 @@ import { ProductFormValues } from "../productFormSchema";
 
 export interface ImageFile {
     id: string;
-    file: File;
+    file?: File; // <-- Ahora es opcional para soportar imágenes ya existentes
     url: string;
-    // isPrimary removed; the first image in the array is always primary
 }
 
 export interface ProductImagesFieldProps {
