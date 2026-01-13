@@ -26,7 +26,7 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const result = await categoryService.getAllCategories({ page: 1, perPage: 100 });
+                const result = await categoryService.getAllCategories({ page: 1, per_page: 100 });
                 setCategories(result.categories || []);
             } catch (error) {
                 console.error("Error loading categories:", error);
@@ -52,32 +52,60 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
 
     return (
         <div className="space-y-4">
-            {/* Publication Status Selector */}
-            <FormField
-                control={control}
-                name="publicationStatus"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Estado</FormLabel>
-                        <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                        >
-                            <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Selecciona estado" />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                <SelectItem value="draft">Borrador</SelectItem>
-                                <SelectItem value="published">Publicado</SelectItem>
-                                <SelectItem value="archived">Archivado</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
+            {/* Primera fila: Nombre (70%) y Estado (30%) */}
+            <div className="flex flex-col sm:flex-row gap-4">
+                <div className="w-full sm:w-[70%]">
+                    <FormField
+                        control={control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Nombre del Producto</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        placeholder="Nombre de Herramienta Profesional"
+                                        {...field}
+                                        onChange={(e) => {
+                                            field.onChange(e);
+                                            const slug = slugify(e.target.value);
+                                            setValue("slug", slug, { shouldValidate: true });
+                                        }}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+
+                <div className="w-full sm:flex-1">
+                    <FormField
+                        control={control}
+                        name="publicationStatus"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Estado</FormLabel>
+                                <Select
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                >
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecciona estado" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="draft">Borrador</SelectItem>
+                                        <SelectItem value="published">Publicado</SelectItem>
+                                        <SelectItem value="archived">Archivado</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+            </div>
 
             <FormField
                 control={control}
@@ -87,28 +115,6 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
                         <FormLabel>ID Interno</FormLabel>
                         <FormControl>
                             <Input placeholder="ID Interno (opcional)" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
-
-            <FormField
-                control={control}
-                name="name"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Nombre del Producto</FormLabel>
-                        <FormControl>
-                            <Input
-                                placeholder="Nombre de Herramienta Profesional"
-                                {...field}
-                                onChange={(e) => {
-                                    field.onChange(e);
-                                    const slug = slugify(e.target.value);
-                                    setValue("slug", slug, { shouldValidate: true });
-                                }}
-                            />
                         </FormControl>
                         <FormMessage />
                     </FormItem>

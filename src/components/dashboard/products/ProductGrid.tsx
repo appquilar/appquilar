@@ -1,11 +1,9 @@
-// src/components/dashboard/products/ProductGrid.tsx
-
 import React from "react";
-import ProductCard from "@/components/products/ProductCard";
+// FIX: Importar desde el directorio local (Dashboard ProductCard) en lugar del genérico
+import ProductCard from "./ProductCard";
 import type { Product } from "@/domain/models/Product";
 
 interface ProductGridProps {
-    // Updated to use the Domain Model instead of Form Data
     products: Product[];
     onEdit?: (productId: string) => void;
     onDelete?: (productId: string, productName: string) => void;
