@@ -24,12 +24,19 @@ function setProperty(property: string, content: string) {
 
 export const useSeo = (context: SeoContext, options?: { noIndex?: boolean }) => {
     useEffect(() => {
+        // Guard against missing context
+        if (!context) return;
+
+        // Use the service to get/merge SEO info
         const seo = seoService.getSeo(context);
+
+        // Guard against service returning null/undefined
+        if (!seo) return;
 
         document.title = seo.title;
 
-        setMeta("description", seo.description);
-        setMeta("keywords", seo.keywords.join(", "));
+        if (seo.description) setMeta("description", seo.description);
+        if (seo.keywords && seo.keywords.length > 0) setMeta("keywords", seo.keywords.join(", "));
 
         if (seo.ogTitle) setProperty("og:title", seo.ogTitle);
         if (seo.ogDescription) setProperty("og:description", seo.ogDescription);

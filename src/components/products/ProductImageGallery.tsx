@@ -11,7 +11,6 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const sliderRef = useRef<HTMLDivElement>(null);
 
-    // Manejar la navegación del slider
     const slideToIndex = (index: number) => {
         if (!sliderRef.current) return;
 
@@ -24,12 +23,19 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
         }
     };
 
+    if (!images || images.length === 0) {
+        return (
+            <div className="aspect-[21/9] bg-muted rounded-xl flex items-center justify-center text-muted-foreground">
+                Sin imágenes
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-4">
-            {/* Imagen principal con slider - Reducido el aspect ratio */}
             <div
                 ref={sliderRef}
-                className="relative aspect-[16/9] md:aspect-[21/9] max-h-[500px] overflow-hidden bg-muted rounded-xl"
+                className="relative aspect-[16/9] md:aspect-[21/9] max-h-[500px] overflow-hidden bg-muted rounded-xl border border-border"
             >
                 <div
                     className="flex transition-transform duration-500 ease-spring h-full"
@@ -40,19 +46,18 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
                             <img
                                 src={image}
                                 alt={`${productName} - Imagen ${index + 1}`}
-                                className="w-full h-full object-contain" // Changed to contain to prevent cropping if ratios mismatch
+                                className="w-full h-full object-contain"
                             />
                         </div>
                     ))}
                 </div>
 
-                {/* Flechas de navegación */}
                 {images.length > 1 && (
                     <>
                         <Button
                             variant="secondary"
                             size="icon"
-                            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100 shadow-md"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100 shadow-md bg-white/90"
                             onClick={() => slideToIndex(currentImageIndex - 1)}
                             aria-label="Imagen anterior"
                         >
@@ -61,7 +66,7 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
                         <Button
                             variant="secondary"
                             size="icon"
-                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100 shadow-md"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100 shadow-md bg-white/90"
                             onClick={() => slideToIndex(currentImageIndex + 1)}
                             aria-label="Siguiente imagen"
                         >
@@ -70,17 +75,16 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
                     </>
                 )}
 
-                {/* Indicadores de paginación */}
                 {images.length > 1 && (
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center space-x-2 p-2 rounded-full bg-black/20 backdrop-blur-sm">
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center space-x-2 p-1.5 rounded-full bg-black/30 backdrop-blur-sm">
                         {images.map((_, index) => (
                             <button
                                 key={index}
                                 onClick={() => slideToIndex(index)}
-                                className={`w-2 h-2 rounded-full transition-all ${
+                                className={`w-1.5 h-1.5 rounded-full transition-all ${
                                     currentImageIndex === index
-                                        ? 'bg-white w-3'
-                                        : 'bg-white/50'
+                                        ? 'bg-white w-2.5 scale-110'
+                                        : 'bg-white/60 hover:bg-white/80'
                                 }`}
                                 aria-label={`Ir a imagen ${index + 1}`}
                             />
@@ -89,7 +93,6 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
                 )}
             </div>
 
-            {/* Miniaturas */}
             {images.length > 1 && (
                 <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
                     {images.map((image, index) => (
@@ -98,8 +101,8 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
                             onClick={() => slideToIndex(index)}
                             className={`relative flex-shrink-0 w-20 h-14 rounded-md overflow-hidden border-2 transition-all ${
                                 currentImageIndex === index
-                                    ? 'border-primary ring-2 ring-primary/20'
-                                    : 'border-transparent hover:border-primary/50'
+                                    ? 'border-primary ring-2 ring-primary/20 opacity-100'
+                                    : 'border-transparent hover:border-primary/50 opacity-70 hover:opacity-100'
                             }`}
                         >
                             <img

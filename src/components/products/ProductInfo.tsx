@@ -45,7 +45,6 @@ const ProductInfo = ({ product, onContact, isLoggedIn }: ProductInfoProps) => {
 
     return (
         <div className="space-y-8">
-            {/* Draft/Archived Disclaimer */}
             {product.publicationStatus && product.publicationStatus !== 'published' && (
                 <Alert variant="warning" className="bg-yellow-50 border-yellow-200">
                     <AlertTriangle className="h-4 w-4 text-yellow-600" />
@@ -57,7 +56,6 @@ const ProductInfo = ({ product, onContact, isLoggedIn }: ProductInfoProps) => {
                 </Alert>
             )}
 
-            {/* Header Info */}
             <div>
                 <div className="flex items-center mb-3 gap-2">
                     {product.category?.name && (
@@ -65,7 +63,6 @@ const ProductInfo = ({ product, onContact, isLoggedIn }: ProductInfoProps) => {
               {product.category.name}
             </span>
                     )}
-                    {/* Review section removed */}
                 </div>
 
                 <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight mb-4 text-foreground">
@@ -88,7 +85,6 @@ const ProductInfo = ({ product, onContact, isLoggedIn }: ProductInfoProps) => {
                 </p>
             </div>
 
-            {/* Pricing Section */}
             <div>
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     Tarifas de Alquiler
@@ -157,7 +153,6 @@ const ProductInfo = ({ product, onContact, isLoggedIn }: ProductInfoProps) => {
                 </div>
             </div>
 
-            {/* Company information */}
             <div className="pt-4 border-t border-border">
                 <CompanyInfo
                     company={product.company}

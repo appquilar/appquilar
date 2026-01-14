@@ -14,6 +14,9 @@ export interface User {
     address: Address | null;
     location: Location | null;
 
+    // Added for location privacy circle
+    circle?: { latitude: number; longitude: number }[];
+
     /**
      * Optional/legacy fields
      */

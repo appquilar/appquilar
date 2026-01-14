@@ -11,9 +11,9 @@ import ContactModal from "./ContactModal";
 
 import { useAuth } from "@/context/AuthContext";
 import { useProductBySlug } from "@/application/hooks/useProducts";
-import { mediaService } from "@/compositionRoot";
+import { useSeo } from "@/hooks/useSeo";
 
-// Expanded VM to include potential location data
+// Simplified VM
 type ProductPageVm = {
     id: string;
     name: string;
@@ -31,63 +31,14 @@ type ProductPageVm = {
     location?: {
         name: string;
         coordinates: [number, number];
+        circle?: { latitude: number; longitude: number }[];
     };
 };
 
-function useFirstProductImageUrl(imageIds: string[], size: "THUMBNAIL" | "MEDIUM" | "LARGE" | "ORIGINAL" = "LARGE") {
-    const [url, setUrl] = useState<string | null>(null);
-
-    useEffect(() => {
-        const first = imageIds?.[0];
-        if (!first) {
-            setUrl((prev) => {
-                if (prev) URL.revokeObjectURL(prev);
-                return null;
-            });
-            return;
-        }
-
-        let isActive = true;
-        let nextObjectUrl: string | null = null;
-
-        const run = async () => {
-            try {
-                const blob = await mediaService.getImage(first, size);
-                nextObjectUrl = URL.createObjectURL(blob);
-
-                if (!isActive) {
-                    URL.revokeObjectURL(nextObjectUrl);
-                    nextObjectUrl = null;
-                    return;
-                }
-
-                setUrl((prev) => {
-                    if (prev) URL.revokeObjectURL(prev);
-                    return nextObjectUrl;
-                });
-            } catch (e) {
-                console.error(e);
-                setUrl((prev) => {
-                    if (prev) URL.revokeObjectURL(prev);
-                    return null;
-                });
-            }
-        };
-
-        void run();
-
-        return () => {
-            isActive = false;
-            if (nextObjectUrl) URL.revokeObjectURL(nextObjectUrl);
-        };
-    }, [imageIds, size]);
-
-    return url;
-}
-
 const ProductPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
-    const { isLoggedIn, user } = useAuth(); // Access user from /me
+    // FIX: AuthContext provides 'currentUser', not 'user'
+    const { isLoggedIn, currentUser: user } = useAuth();
 
     const [activeTab, setActiveTab] = useState<"rental" | "secondhand">("rental");
     const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -100,38 +51,36 @@ const ProductPage: React.FC = () => {
 
         const imageIds: string[] = Array.isArray(raw.image_ids)
             ? raw.image_ids
-            : Array.isArray(raw.imageIds)
-                ? raw.imageIds
-                : Array.isArray(raw.images)
-                    ? raw.images.map((x: any) => x?.id).filter(Boolean)
-                    : [];
+            : Array.isArray(raw.images)
+                ? raw.images.map((x: any) => x?.id).filter(Boolean)
+                : [];
 
-        // Determine location: Prefer user's location if they are the owner (Draft/Preview context)
-        // or if the API eventually provides it.
+        // Determine location
         let location = {
             name: "Ubicación desconocida",
-            coordinates: [-3.7038, 40.4168] as [number, number] // Default Madrid
+            coordinates: [-3.7038, 40.4168] as [number, number], // Default Madrid
+            circle: undefined as { latitude: number; longitude: number }[] | undefined
         };
 
-        // If logged in and user is the owner, use their location from /me
-        // This handles the "Draft" view where public data might be incomplete but we have the owner's context
+        // If logged in and user is the owner, use their location from /me (includes circle)
         if (user && raw.company?.id === user.id && user.location) {
             location = {
-                name: user.address?.city || user.location.address || "Tu Ubicación",
-                coordinates: [user.location.longitude || 0, user.location.latitude || 0]
+                name: user.address?.city || (user.location as any)?.address || "Tu Ubicación",
+                coordinates: [user.location?.longitude || 0, user.location?.latitude || 0],
+                circle: user.circle
             };
         }
-        // Fallback: If product/company has location data in the future (raw.location)
         else if (raw.location) {
             location = {
                 name: raw.location.name || "Ubicación del producto",
-                coordinates: [raw.location.longitude, raw.location.latitude]
+                coordinates: [raw.location.longitude, raw.location.latitude],
+                circle: undefined
             };
         } else {
-            // Temporary fallback if no location data exists
             location = {
-                name: "Campohermoso (Almería)", // Legacy placeholder
-                coordinates: [-2.4637, 36.8381]
+                name: "Campohermoso (Almería)",
+                coordinates: [-2.4637, 36.8381],
+                circle: undefined
             };
         }
 
@@ -157,9 +106,15 @@ const ProductPage: React.FC = () => {
         };
     }, [query.data, user]);
 
-    const heroImageUrl = useFirstProductImageUrl(product?.imageIds ?? [], "LARGE");
-    const thumbImageUrl = useFirstProductImageUrl(product?.imageIds ?? [], "THUMBNAIL");
+    // SEO Hook
+    useSeo({
+        title: product ? `Appquilar | ${product.name}` : "Appquilar",
+        description: product?.description?.substring(0, 160) || "",
+        ogTitle: product?.name,
+        ogImage: product?.imageIds?.[0] ? `${import.meta.env.VITE_API_BASE_URL}/api/media/images/${product.imageIds[0]}/MEDIUM` : undefined
+    });
 
+    // Handle Tab switching
     useEffect(() => {
         if (product?.isForSale && !product?.isRentable) {
             setActiveTab("secondhand");
@@ -167,6 +122,13 @@ const ProductPage: React.FC = () => {
             setActiveTab("rental");
         }
     }, [product?.isForSale, product?.isRentable]);
+
+    // FIX: Construct image URLs directly to avoid duplicates and improve performance
+    const galleryImages = useMemo(() => {
+        if (!product?.imageIds?.length) return [];
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        return product.imageIds.map(id => `${baseUrl}/api/media/images/${id}/LARGE`);
+    }, [product]);
 
     const handleContactRequest = () => {
         if (!isLoggedIn) {
@@ -202,7 +164,7 @@ const ProductPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
                     <ProductImageGallery
-                        images={[heroImageUrl, thumbImageUrl].filter(Boolean) as string[]}
+                        images={galleryImages}
                         productName={product.name}
                     />
 
@@ -216,6 +178,7 @@ const ProductPage: React.FC = () => {
                         <ProductLocationMap
                             location={product.location?.name || "Ubicación"}
                             coordinates={product.location?.coordinates}
+                            polygon={product.location?.circle}
                         />
                     </div>
                 </div>

@@ -1,64 +1,95 @@
 import { useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import { MapPin } from 'lucide-react';
+import { loadGoogleMaps } from '@/infrastructure/google/GoogleMapsLoader';
 
 interface ProductLocationMapProps {
-  location: string;
-  coordinates?: [number, number]; // [longitude, latitude]
+    location: string;
+    coordinates?: [number, number];
+    polygon?: { latitude: number; longitude: number }[];
 }
 
-const ProductLocationMap = ({ location, coordinates = [-2.4637, 36.8381] }: ProductLocationMapProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
+const ProductLocationMap = ({ location, coordinates = [-2.4637, 36.8381], polygon }: ProductLocationMapProps) => {
+    const mapContainer = useRef<HTMLDivElement>(null);
+    const mapInstance = useRef<google.maps.Map | null>(null);
 
-  useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    useEffect(() => {
+        if (!mapContainer.current) return;
 
-    // TODO: Replace with actual Mapbox token
-    // For now, we'll show a placeholder
-    mapboxgl.accessToken = 'YOUR_MAPBOX_TOKEN_HERE';
+        const initMap = async () => {
+            try {
+                const google = await loadGoogleMaps(
+                    import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
+                );
 
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: coordinates,
-        zoom: 12,
-      });
+                // Convert [lng, lat] to { lat, lng }
+                const center = { lat: coordinates[1], lng: coordinates[0] };
 
-      // Add marker
-      new mapboxgl.Marker({ color: '#FF5A1F' })
-        .setLngLat(coordinates)
-        .addTo(map.current);
+                if (!mapInstance.current) {
+                    const { Map } = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
 
-      // Add navigation controls
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
+                    mapInstance.current = new Map(mapContainer.current, {
+                        center: center,
+                        zoom: 13,
+                        mapId: 'DEMO_MAP_ID',
+                        disableDefaultUI: false,
+                        streetViewControl: false,
+                        mapTypeControl: false,
+                    });
+                } else {
+                    mapInstance.current.setCenter(center);
+                }
 
-    return () => {
-      map.current?.remove();
-    };
-  }, [coordinates]);
+                // Simplistic clearing/redrawing logic. In a full implementation, track references to remove.
+                if (polygon && polygon.length > 0) {
+                    const polygonPath = polygon.map(p => ({ lat: p.latitude, lng: p.longitude }));
 
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <MapPin size={18} className="text-primary" />
-        <span className="font-medium">{location}</span>
-      </div>
-      <div 
-        ref={mapContainer} 
-        className="w-full h-64 rounded-lg border border-border overflow-hidden bg-muted"
-        style={{ minHeight: '256px' }}
-      />
-      <p className="text-xs text-muted-foreground">
-        Ubicación aproximada del producto
-      </p>
-    </div>
-  );
+                    new google.maps.Polygon({
+                        paths: polygonPath,
+                        strokeColor: "#FF5A1F",
+                        strokeOpacity: 0.8,
+                        strokeWeight: 2,
+                        fillColor: "#FF5A1F",
+                        fillOpacity: 0.35,
+                        map: mapInstance.current,
+                    });
+
+                    const bounds = new google.maps.LatLngBounds();
+                    polygonPath.forEach(p => bounds.extend(p));
+                    mapInstance.current.fitBounds(bounds);
+
+                } else {
+                    const { Marker } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
+                    new Marker({
+                        position: center,
+                        map: mapInstance.current,
+                        title: location
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error initializing Google Maps:', error);
+            }
+        };
+
+        initMap();
+    }, [coordinates, polygon, location]);
+
+    return (
+        <div className="space-y-3">
+            <div className="flex items-center gap-2 text-muted-foreground">
+                <MapPin size={18} className="text-primary" />
+                <span className="font-medium">{location}</span>
+            </div>
+            <div
+                ref={mapContainer}
+                className="w-full h-64 rounded-lg border border-border overflow-hidden bg-muted"
+                style={{ minHeight: '256px' }}
+            />
+            <p className="text-xs text-muted-foreground">
+                {polygon ? "Zona aproximada de entrega y devolución" : "Ubicación aproximada del producto"}
+            </p>
+        </div>
+    );
 };
 
 export default ProductLocationMap;
