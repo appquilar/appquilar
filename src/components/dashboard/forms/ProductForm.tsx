@@ -12,9 +12,10 @@ interface ProductFormProps {
     product: Product;
     onSave: (product: Partial<Product>) => Promise<void> | void;
     onCancel: () => void;
+    disableSubmit?: boolean;
 }
 
-const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
+const ProductForm = ({ product, onSave, onCancel, disableSubmit = false }: ProductFormProps) => {
     const { form, isSubmitting, onSubmit } = useProductForm({
         product,
         onSave,
@@ -52,7 +53,11 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                     <ProductPriceFields control={form.control} />
                 </div>
 
-                <ProductFormActions isSubmitting={isSubmitting} onCancel={onCancel} />
+                <ProductFormActions
+                    isSubmitting={isSubmitting}
+                    isSubmitDisabled={disableSubmit}
+                    onCancel={onCancel}
+                />
             </form>
         </Form>
     );

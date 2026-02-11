@@ -1,5 +1,11 @@
 import { Product, ProductFormData } from '@/domain/models/Product';
-import { ProductRepository, ProductSearchCriteria, ProductListResponse, ProductFilters } from '@/domain/repositories/ProductRepository';
+import {
+    ProductRepository,
+    ProductSearchCriteria,
+    ProductListResponse,
+    ProductFilters,
+    RentalCostBreakdown
+} from '@/domain/repositories/ProductRepository';
 
 /**
  * Service for managing product data
@@ -55,5 +61,13 @@ export class ProductService {
 
     async deleteProduct(id: string): Promise<boolean> {
         return this.repository.deleteProduct(id);
+    }
+
+    async publishProduct(id: string): Promise<boolean> {
+        return this.repository.publishProduct(id);
+    }
+
+    async calculateRentalCost(id: string, startDate: string, endDate: string): Promise<RentalCostBreakdown> {
+        return this.repository.calculateRentalCost(id, startDate, endDate);
     }
 }

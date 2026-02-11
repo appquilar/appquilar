@@ -3,12 +3,13 @@ import { MapPin } from 'lucide-react';
 import { loadGoogleMaps } from '@/infrastructure/google/GoogleMapsLoader';
 
 interface ProductLocationMapProps {
-    location: string;
+    city: string;
+    state: string;
     coordinates?: [number, number];
     polygon?: { latitude: number; longitude: number }[];
 }
 
-const ProductLocationMap = ({ location, coordinates = [-2.4637, 36.8381], polygon }: ProductLocationMapProps) => {
+const ProductLocationMap = ({ city, state, coordinates = [-2.4637, 36.8381], polygon }: ProductLocationMapProps) => {
     const mapContainer = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<google.maps.Map | null>(null);
 
@@ -21,7 +22,7 @@ const ProductLocationMap = ({ location, coordinates = [-2.4637, 36.8381], polygo
                     import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
                 );
 
-                // Convert [lng, lat] to { lat, lng }
+                // Convert [lng, lat] to Google Maps { lat, lng }
                 const center = { lat: coordinates[1], lng: coordinates[0] };
 
                 if (!mapInstance.current) {
@@ -30,7 +31,7 @@ const ProductLocationMap = ({ location, coordinates = [-2.4637, 36.8381], polygo
                     mapInstance.current = new Map(mapContainer.current, {
                         center: center,
                         zoom: 13,
-                        mapId: 'DEMO_MAP_ID',
+                        mapId: 'DEMO_MAP_ID', // Replace with valid Map ID if available in env
                         disableDefaultUI: false,
                         streetViewControl: false,
                         mapTypeControl: false,
@@ -39,7 +40,7 @@ const ProductLocationMap = ({ location, coordinates = [-2.4637, 36.8381], polygo
                     mapInstance.current.setCenter(center);
                 }
 
-                // Simplistic clearing/redrawing logic. In a full implementation, track references to remove.
+                // Draw Polygon (Circle) if available
                 if (polygon && polygon.length > 0) {
                     const polygonPath = polygon.map(p => ({ lat: p.latitude, lng: p.longitude }));
 
@@ -53,16 +54,18 @@ const ProductLocationMap = ({ location, coordinates = [-2.4637, 36.8381], polygo
                         map: mapInstance.current,
                     });
 
+                    // Fit map to polygon
                     const bounds = new google.maps.LatLngBounds();
                     polygonPath.forEach(p => bounds.extend(p));
                     mapInstance.current.fitBounds(bounds);
 
                 } else {
+                    // Fallback: Draw Marker at exact location
                     const { Marker } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
                     new Marker({
                         position: center,
                         map: mapInstance.current,
-                        title: location
+                        title: city + ", " + state
                     });
                 }
 
@@ -72,22 +75,19 @@ const ProductLocationMap = ({ location, coordinates = [-2.4637, 36.8381], polygo
         };
 
         initMap();
-    }, [coordinates, polygon, location]);
+    }, [coordinates, polygon, city + ', ' + state]);
 
     return (
         <div className="space-y-3">
             <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin size={18} className="text-primary" />
-                <span className="font-medium">{location}</span>
+                <span className="font-medium">{city + ', ' + state}</span>
             </div>
             <div
                 ref={mapContainer}
                 className="w-full h-64 rounded-lg border border-border overflow-hidden bg-muted"
                 style={{ minHeight: '256px' }}
             />
-            <p className="text-xs text-muted-foreground">
-                {polygon ? "Zona aproximada de entrega y devolución" : "Ubicación aproximada del producto"}
-            </p>
         </div>
     );
 };

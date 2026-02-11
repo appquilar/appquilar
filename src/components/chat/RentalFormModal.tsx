@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/context/AuthContext";
 import { useRentalForm } from "@/application/hooks/useRentalForm";
 import { useProductSelection } from "@/application/hooks/useProductSelection";
 import { Form } from "@/components/ui/form";
@@ -33,7 +32,6 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
   conversation
 }) => {
   const isMobile = useIsMobile();
-  const { currentUser } = useAuth();
   const { form, isSubmitting, onSubmit } = useRentalForm();
   const { 
     productSearch, 
@@ -44,14 +42,9 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
     handleProductSelect 
   } = useProductSelection(form);
 
-  // Pre-fill customer information from the conversation and logged-in user
+  // Pre-fill product from the selected conversation
   React.useEffect(() => {
-    if (currentUser && form) {
-      // For user's information
-      form.setValue('customerId', currentUser.id);
-      form.setValue('customerName', currentUser.firstName + ' ' + currentUser.lastName);
-      form.setValue('customerEmail', currentUser.email);
-      
+    if (form) {
       // If we have a product in the conversation, attempt to select it
       if (conversation?.productId) {
         setProductSearch(conversation.productName || "");
@@ -61,7 +54,7 @@ const RentalFormModal: React.FC<RentalFormModalProps> = ({
         }
       }
     }
-  }, [currentUser, form, conversation, filteredProducts]);
+  }, [form, conversation, filteredProducts, setProductSearch, handleProductSelect]);
 
   // Handle form submission
   const handleFormSubmit = async (data: RentalFormValues) => {
@@ -160,7 +153,7 @@ const RentalFormContent: React.FC<RentalFormContentProps> = ({
 
         <Separator className="my-4" />
         
-        <CustomerInfoFields form={form} />
+        <CustomerInfoFields />
 
         <Separator className="my-4" />
 

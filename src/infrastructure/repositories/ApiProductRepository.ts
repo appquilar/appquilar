@@ -1,5 +1,11 @@
 import { Product, ProductFormData, PublicationStatusType } from '@/domain/models/Product';
-import { ProductRepository, ProductSearchCriteria, ProductListResponse, ProductFilters } from '@/domain/repositories/ProductRepository';
+import {
+    ProductRepository,
+    ProductSearchCriteria,
+    ProductListResponse,
+    ProductFilters,
+    RentalCostBreakdown
+} from '@/domain/repositories/ProductRepository';
 import { ApiClient } from '@/infrastructure/http/ApiClient';
 import { AuthSession } from '@/domain/models/AuthSession';
 
@@ -25,6 +31,9 @@ export class ApiProductRepository implements ProductRepository {
     async search(criteria: ProductSearchCriteria): Promise<ProductListResponse> {
         const queryParams = new URLSearchParams();
         if (criteria.text) queryParams.append('text', criteria.text);
+        if (criteria.latitude !== undefined) queryParams.append('latitude', criteria.latitude.toString());
+        if (criteria.longitude !== undefined) queryParams.append('longitude', criteria.longitude.toString());
+        if (criteria.radius !== undefined) queryParams.append('radius', criteria.radius.toString());
         if (criteria.page) queryParams.append('page', criteria.page.toString());
         if (criteria.per_page) queryParams.append('per_page', criteria.per_page.toString());
         if (criteria.categories?.length) {
@@ -78,7 +87,6 @@ export class ApiProductRepository implements ProductRepository {
 
     async getBySlug(slug: string): Promise<Product | null> {
         try {
-            // FIXED: Send Auth Headers so backend can identify if user is the owner
             const response = await this.client.get<any>(
                 `/api/products/${slug}`,
                 { headers: this.getAuthHeaders() }
@@ -121,29 +129,26 @@ export class ApiProductRepository implements ProductRepository {
             if (filters?.id) queryParams.append('id', filters.id);
             if (filters?.internalId) queryParams.append('internalId', filters.internalId);
             if (filters?.categoryId) queryParams.append('categoryId', filters.categoryId);
+            if (filters?.publicationStatus) queryParams.append('publicationStatus', filters.publicationStatus);
 
             const response = await this.client.get<any>(`${endpoint}?${queryParams.toString()}`, {
                 headers: this.getAuthHeaders()
             });
 
-            let items: any[] = [];
-            let total = 0;
-            let currentPage = 1;
+            const payload = (response as any)?.success !== undefined && (response as any)?.data !== undefined
+                ? (response as any).data
+                : response;
 
-            if (response?.data?.data && Array.isArray(response.data.data)) {
-                items = response.data.data;
-                total = response.data.total ?? items.length;
-                currentPage = response.data.page ?? 1;
-            }
-            else if (response?.data && Array.isArray(response.data)) {
-                items = response.data;
-                total = response.total ?? items.length;
-                currentPage = response.page ?? 1;
-            }
-            else if (Array.isArray(response)) {
-                items = response;
-                total = items.length;
-            }
+            const items: any[] = Array.isArray(payload?.data)
+                ? payload.data
+                : Array.isArray(payload?.data?.data)
+                    ? payload.data.data
+                    : Array.isArray(payload)
+                        ? payload
+                        : [];
+
+            const total = payload?.total ?? payload?.data?.total ?? items.length;
+            const currentPage = payload?.page ?? payload?.data?.page ?? 1;
 
             return {
                 data: items.map((item: any) => this.mapToDomain(item)),
@@ -236,12 +241,56 @@ export class ApiProductRepository implements ProductRepository {
         }
     }
 
+    async publishProduct(id: string): Promise<boolean> {
+        try {
+            await this.client.patch(
+                `/api/products/${id}/publish`,
+                {},
+                { headers: this.getAuthHeaders() }
+            );
+            return true;
+        } catch (error) {
+            console.error('Error publishing product', error);
+            return false;
+        }
+    }
+
+    async calculateRentalCost(id: string, startDate: string, endDate: string): Promise<RentalCostBreakdown> {
+        const queryParams = new URLSearchParams();
+        queryParams.append('start_date', startDate);
+        queryParams.append('end_date', endDate);
+
+        const response = await this.client.get<any>(
+            `/api/products/${id}/rental-cost?${queryParams.toString()}`,
+            { headers: this.getAuthHeaders() }
+        );
+
+        const payload = (response as any).data && (response as any).success !== undefined
+            ? (response as any).data
+            : response;
+
+        return {
+            productId: payload.product_id,
+            startDate: payload.start_date,
+            endDate: payload.end_date,
+            days: payload.days,
+            pricePerDay: payload.price_per_day,
+            rentalPrice: payload.rental_price,
+            deposit: payload.deposit,
+            totalPrice: payload.total_price,
+        };
+    }
+
     private mapToDomain(apiData: any): Product {
         const imageIds = Array.isArray(apiData.image_ids) ? apiData.image_ids : [];
         const primaryImageId = imageIds[0];
+        const categories = Array.isArray(apiData.categories) ? apiData.categories : [];
+        const primaryCategory = categories[0];
 
         let status: PublicationStatusType = 'draft';
-        if (apiData.publication_status && typeof apiData.publication_status === 'object') {
+        if (typeof apiData.publication_status === 'string') {
+            status = apiData.publication_status as PublicationStatusType;
+        } else if (apiData.publication_status && typeof apiData.publication_status === 'object') {
             status = apiData.publication_status.status || 'draft';
         } else if (typeof apiData.status === 'string') {
             status = apiData.status as PublicationStatusType;
@@ -261,7 +310,6 @@ export class ApiProductRepository implements ProductRepository {
             publicationStatus: status,
 
             price: {
-                daily: (apiData.tiers?.[0]?.price_per_day?.amount || 0) / 100,
                 deposit: (apiData.deposit?.amount || 0) / 100,
                 tiers: Array.isArray(apiData.tiers) ? apiData.tiers.map((t: any) => ({
                     daysFrom: t.days_from,
@@ -269,25 +317,47 @@ export class ApiProductRepository implements ProductRepository {
                     pricePerDay: (t.price_per_day?.amount || 0) / 100
                 })) : []
             },
-            isRentable: true,
-            isForSale: false,
             productType: 'rental',
-
-            company: {
-                id: apiData.company_id || '',
-                name: apiData.company_name || '',
-                slug: apiData.company_slug || ''
-            },
             category: {
-                id: apiData.category_id || '',
-                name: apiData.category_name || '',
-                slug: apiData.category_slug || ''
+                id: apiData.category_id || primaryCategory?.id || '',
+                name: apiData.category_name || primaryCategory?.name || '',
+                slug: apiData.category_slug || primaryCategory?.slug || ''
             },
 
             rating: apiData.rating || 0,
             reviewCount: apiData.review_count || 0,
             createdAt: apiData.created_at,
-            updatedAt: apiData.updated_at
+            updatedAt: apiData.updated_at,
+            circle: Array.isArray(apiData.circle)
+                ? apiData.circle.map((point: any) => ({
+                    latitude: point.latitude,
+                    longitude: point.longitude,
+                }))
+                : undefined,
+            ownerData: apiData.owner_data
+                ? {
+                    ownerId: apiData.owner_data.owner_id,
+                    type: apiData.owner_data.type,
+                    name: apiData.owner_data.name,
+                    lastName: apiData.owner_data?.last_name,
+                    address: apiData.owner_data.address
+                        ? {
+                            street: apiData.owner_data.address.street,
+                            street2: apiData.owner_data.address.street2,
+                            city: apiData.owner_data.address?.city,
+                            postalCode: apiData.owner_data.address?.postal_code,
+                            state: apiData.owner_data.address?.state,
+                            country: apiData.owner_data.address?.country,
+                        }
+                        : undefined,
+                    geoLocation: apiData.owner_data.geo_location
+                        ? {
+                            latitude: apiData.owner_data.geo_location.latitude,
+                            longitude: apiData.owner_data.geo_location.longitude,
+                            circle: apiData.owner_data.geo_location.circle,
+                        }
+                        : undefined,
+                }: undefined
         };
     }
 

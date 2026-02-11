@@ -16,11 +16,35 @@ export interface ProductListResponse {
     page: number;
 }
 
+export interface RentalCostBreakdown {
+    productId: string;
+    startDate: string;
+    endDate: string;
+    days: number;
+    pricePerDay: {
+        amount: number;
+        currency: string;
+    };
+    rentalPrice: {
+        amount: number;
+        currency: string;
+    };
+    deposit: {
+        amount: number;
+        currency: string;
+    };
+    totalPrice: {
+        amount: number;
+        currency: string;
+    };
+}
+
 export interface ProductFilters {
     name?: string;
     id?: string;
     internalId?: string;
     categoryId?: string;
+    publicationStatus?: 'draft' | 'published' | 'archived';
 }
 
 /**
@@ -92,4 +116,14 @@ export interface ProductRepository {
      * Delete a product
      */
     deleteProduct(id: string): Promise<boolean>;
+
+    /**
+     * Publish a product
+     */
+    publishProduct(id: string): Promise<boolean>;
+
+    /**
+     * Calculate rental cost for a product in a date range
+     */
+    calculateRentalCost(id: string, startDate: string, endDate: string): Promise<RentalCostBreakdown>;
 }

@@ -43,6 +43,11 @@ interface UserDto {
 
     company_id?: string | null;
     company_name?: string | null;
+    company?: {
+        company_id?: string;
+        id?: string;
+        name?: string;
+    } | null;
     status?: string | null;
     date_added?: string | null;
     avatar_url?: string | null;
@@ -110,17 +115,19 @@ function mapUserDtoToDomain(dto: UserDto): User {
     const roles: UserRole[] = Array.isArray(dto.roles)
         ? (dto.roles.filter((r) => typeof r === "string") as UserRole[])
         : [];
+    const companyId = dto.company_id ?? dto.company?.company_id ?? dto.company?.id ?? null;
+    const companyName = dto.company_name ?? dto.company?.name ?? null;
 
     return {
-        id: dto.id || dto.user_id || "",
+        id: dto.user_id || dto.id || "",
         firstName: dto.first_name,
         lastName: dto.last_name,
         email: dto.email,
         roles,
         address: mapAddressDtoToDomain(dto.address),
         location: mapLocationDtoToDomain(dto.location),
-        companyId: dto.company_id ?? null,
-        companyName: dto.company_name ?? null,
+        companyId,
+        companyName,
         status: dto.status ?? null,
         dateAdded: dto.date_added ? new Date(dto.date_added) : null,
         // OpenAPI: profile_picture_id

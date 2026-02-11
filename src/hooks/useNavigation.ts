@@ -2,12 +2,29 @@ import {useLocation} from "react-router-dom";
 import {Calendar, Home, MessageCircle, Package, Settings, Users, Grid2X2Plus, Building2} from "lucide-react";
 import type {NavSection} from "@/domain/services/navigation/types";
 import {UserRole} from "@/domain/models/UserRole";
+import { useAuth } from "@/context/AuthContext";
+import { useUnreadRentMessagesCount } from "@/application/hooks/useRentalMessages";
+import { useOwnedProductsCount } from "@/application/hooks/useProducts";
 
 export const useNavigation = () => {
     const location = useLocation();
+    const { currentUser } = useAuth();
+    const { totalUnread } = useUnreadRentMessagesCount();
+    const ownerId = currentUser?.companyId || currentUser?.id;
+    const ownerType = currentUser?.companyId ? "company" : "user";
+    const ownedProductsCountQuery = useOwnedProductsCount({
+        ownerId,
+        ownerType,
+    });
 
-    // TODO: lógica real cuando conectes con company/planes
-    const canUpgradeToCompany = true;
+    const roles = currentUser?.roles ?? [];
+    const isAdmin = roles.includes(UserRole.ADMIN);
+    const isRegularUser = roles.includes(UserRole.REGULAR_USER);
+    const isCompanyMember = Boolean(currentUser?.companyId);
+    const hasProductsToShow = (ownedProductsCountQuery.data ?? 0) > 0;
+    const shouldShowRentalsItem = hasProductsToShow;
+
+    const canUpgradeToCompany = isRegularUser && !isAdmin && !isCompanyMember;
 
     const navSections: NavSection[] = [
         {
@@ -28,17 +45,20 @@ export const useNavigation = () => {
                     href: "/dashboard/products",
                     icon: Package,
                 },
-                {
-                    id: "rentals",
-                    title: "Alquileres",
-                    href: "/dashboard/rentals",
-                    icon: Calendar,
-                },
+                ...(shouldShowRentalsItem
+                    ? [{
+                        id: "rentals",
+                        title: "Alquileres",
+                        href: "/dashboard/rentals",
+                        icon: Calendar,
+                    }]
+                    : []),
                 {
                     id: "messages",
                     title: "Mensajes",
                     href: "/dashboard/messages",
                     icon: MessageCircle,
+                    badge: totalUnread > 0 ? String(totalUnread) : undefined,
                 },
             ],
         },

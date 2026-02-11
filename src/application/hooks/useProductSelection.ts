@@ -1,26 +1,56 @@
-
-import { useState } from 'react';
-import { useProducts } from './useProducts';
+import { useMemo, useState } from 'react';
 import { Product } from '@/domain/models/Product';
 import { UseFormReturn } from 'react-hook-form';
 import { RentalFormValues } from '@/domain/models/RentalForm';
+import { useCurrentUser } from './useCurrentUser';
+import { useQuery } from '@tanstack/react-query';
+import { productService } from '@/compositionRoot';
 
 export const useProductSelection = (form: UseFormReturn<RentalFormValues>) => {
   const [productSearch, setProductSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const { products, isLoading } = useProducts();
+  const { user } = useCurrentUser();
 
-  // Filter products based on search input
-  const filteredProducts = products.filter(product => 
-    product.name.toLowerCase().includes(productSearch.toLowerCase())
-  );
+  const ownerId = user?.companyId ?? user?.id ?? null;
+  const ownerType: 'company' | 'user' = user?.companyId ? 'company' : 'user';
 
-  // Handle product selection
+  const ownerProductsQuery = useQuery({
+    queryKey: ['owner-products-selector', ownerId, ownerType],
+    queryFn: async () => {
+      if (!ownerId) {
+        return [];
+      }
+
+      const response = await productService.listByOwnerPaginated(ownerId, ownerType, 1, 100, {
+        publicationStatus: 'published',
+      });
+
+      return response.data;
+    },
+    enabled: Boolean(ownerId),
+    placeholderData: (previousData) => previousData,
+  });
+
+  const filteredProducts = useMemo(() => {
+    const products = ownerProductsQuery.data ?? [];
+    const query = productSearch.trim().toLowerCase();
+
+    if (!query) {
+      return products;
+    }
+
+    return products.filter((product) => {
+      const name = (product.name ?? '').toLowerCase();
+      const id = (product.id ?? '').toLowerCase();
+      const internalId = (product.internalId ?? '').toLowerCase();
+
+      return name.includes(query) || id.includes(query) || internalId.includes(query);
+    });
+  }, [ownerProductsQuery.data, productSearch]);
+
   const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
-    form.setValue('product', product.name);
-    // Calculate default rental price (7 days based on daily rate)
-    form.setValue('totalAmount', product.price.daily * 7);
+    form.setValue('productId', product.id, { shouldValidate: true, shouldDirty: true });
     setProductSearch('');
   };
 
@@ -29,7 +59,7 @@ export const useProductSelection = (form: UseFormReturn<RentalFormValues>) => {
     setProductSearch,
     selectedProduct,
     filteredProducts,
-    isLoading,
+    isLoading: ownerProductsQuery.isLoading,
     handleProductSelect
   };
 };

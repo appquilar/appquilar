@@ -1,19 +1,18 @@
-
-/**
- * @fileoverview Modelo de dominio para filtros de alquileres
- */
+export type RentalRoleTab = 'owner' | 'renter';
+export type RentalCategoryTab = 'leads' | 'upcoming' | 'past';
+export type RentalStatusFilter = 'pending' | 'cancelled' | 'completed';
 
 export interface RentalFilters {
   searchQuery: string;
   startDate: Date | undefined;
   endDate: Date | undefined;
   rentalId: string;
-  activeTab: string;
+  statusFilter: RentalStatusFilter;
+  roleTab: RentalRoleTab;
 }
 
 export interface RentalCounts {
-  all: number;
-  active: number;
+  leads: number;
   upcoming: number;
-  completed: number;
+  past: number;
 }

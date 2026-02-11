@@ -6,6 +6,32 @@ import { RentalFilters, RentalCounts } from '../models/RentalFilters';
  * Servicio de dominio para filtrado de alquileres
  */
 export class RentalFilterService {
+  private static readonly CANCELLED_STATUSES = new Set([
+    'cancelled',
+    'rejected',
+    'expired',
+  ]);
+
+  private static readonly COMPLETED_STATUSES = new Set([
+    'rental_completed',
+  ]);
+
+  private static isPendingStatus(status: string): boolean {
+    return !this.CANCELLED_STATUSES.has(status) && !this.COMPLETED_STATUSES.has(status);
+  }
+
+  private static matchesStatusFilter(rental: Rental, statusFilter: RentalFilters['statusFilter']): boolean {
+    if (statusFilter === 'cancelled') {
+      return this.CANCELLED_STATUSES.has(rental.status);
+    }
+
+    if (statusFilter === 'completed') {
+      return this.COMPLETED_STATUSES.has(rental.status);
+    }
+
+    return this.isPendingStatus(rental.status);
+  }
+
   /**
    * Filtra alquileres basados en criterios de búsqueda
    */
@@ -13,14 +39,16 @@ export class RentalFilterService {
     rentals: Rental[],
     filters: RentalFilters
   ): Rental[] {
-    const { searchQuery, rentalId, startDate, endDate, activeTab } = filters;
-    
-    return rentals.filter(rental => {
-      // Filter by search query (name or email)
+    const { searchQuery, rentalId, startDate, endDate, statusFilter } = filters;
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    const filtered = rentals.filter(rental => {
+      // Filter by search query (IDs)
       const nameMatch = searchQuery 
-        ? rental.product.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          rental.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          rental.customer.email.toLowerCase().includes(searchQuery.toLowerCase())
+        ? (rental.productName ?? '').toLowerCase().includes(normalizedQuery) ||
+          (rental.renterName ?? '').toLowerCase().includes(normalizedQuery) ||
+          (rental.ownerName ?? '').toLowerCase().includes(normalizedQuery) ||
+          (rental.ownerLocation?.label ?? '').toLowerCase().includes(normalizedQuery)
         : true;
       
       // Filter by rental ID
@@ -29,8 +57,8 @@ export class RentalFilterService {
         : true;
       
       // Filter by date range
-      const rentalStartDate = new Date(rental.startDate);
-      const rentalEndDate = new Date(rental.endDate);
+      const rentalStartDate = rental.startDate;
+      const rentalEndDate = rental.endDate;
       
       const dateMatch = (startDate && endDate)
         ? (rentalStartDate >= startDate && rentalStartDate <= endDate) ||
@@ -42,24 +70,26 @@ export class RentalFilterService {
             ? rentalStartDate <= endDate || rentalEndDate <= endDate
             : true;
       
-      // Filter by tab/status
-      const statusMatch = activeTab === 'all' 
-        ? true 
-        : rental.status === activeTab;
-      
+      const statusMatch = this.matchesStatusFilter(rental, statusFilter);
+
       return nameMatch && idMatch && dateMatch && statusMatch;
     });
+
+    return [...filtered].sort(
+      (left, right) => left.startDate.getTime() - right.startDate.getTime()
+    );
   }
 
   /**
    * Calcula conteos por estado de los alquileres
    */
   static calculateRentalCounts(rentals: Rental[]): RentalCounts {
+    const now = new Date();
+
     return {
-      all: rentals.length,
-      active: rentals.filter(r => r.status === 'active').length,
-      upcoming: rentals.filter(r => r.status === 'upcoming').length,
-      completed: rentals.filter(r => r.status === 'completed').length,
+      leads: rentals.filter((rental) => rental.isLead).length,
+      upcoming: rentals.filter((rental) => !rental.isLead && rental.endDate >= now).length,
+      past: rentals.filter((rental) => !rental.isLead && rental.endDate < now).length,
     };
   }
   

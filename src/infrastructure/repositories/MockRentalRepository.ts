@@ -1,81 +1,188 @@
-
 import { Rental } from '@/domain/models/Rental';
-import { IRentalRepository } from '@/domain/repositories/IRentalRepository';
+import { RentalMessage } from '@/domain/models/RentalMessage';
+import {
+  RentalRepository,
+  RentListParams,
+  RentListResponse,
+  RentMessageListParams,
+  RentMessageListResponse,
+  RentUnreadMessagesCount,
+  CreateRentData,
+  CreateRentMessageData,
+  UpdateRentData,
+  UpdateRentStatusData
+} from '@/domain/repositories/RentalRepository';
 import { MOCK_RENTALS } from '@/infrastructure/adapters/mockData/rentals/mockRentalsData';
 
-/**
- * Mock implementation of the IRentalRepository interface
- */
-export class MockRentalRepository implements IRentalRepository {
+export class MockRentalRepository implements RentalRepository {
   private rentals: Rental[] = MOCK_RENTALS;
+  private messagesByRentId: Record<string, RentalMessage[]> = {};
+  private lastReadAtByRentId: Record<string, Date> = {};
 
-  async getAllRentals(): Promise<Rental[]> {
-    return Promise.resolve([...this.rentals]);
-  }
+  async listRents(params: RentListParams = {}): Promise<RentListResponse> {
+    let filtered = [...this.rentals];
 
-  async getRentalById(id: string): Promise<Rental | null> {
-    const rental = this.rentals.find(rental => rental.id === id);
-    return Promise.resolve(rental || null);
-  }
-
-  async getRentalsByUserId(userId: string): Promise<Rental[]> {
-    const filtered = this.rentals.filter(rental => rental.customer.id === userId);
-    return Promise.resolve(filtered);
-  }
-
-  async getRentalsByProductId(productId: string): Promise<Rental[]> {
-    const filtered = this.rentals.filter(rental => rental.product === productId);
-    return Promise.resolve(filtered);
-  }
-
-  async getRentalsByDateRange(startDate: Date, endDate: Date): Promise<Rental[]> {
-    const filtered = this.rentals.filter(rental => {
-      const rentalStart = new Date(rental.startDate);
-      const rentalEnd = new Date(rental.endDate);
-      
-      return (
-        (rentalStart >= startDate && rentalStart <= endDate) ||
-        (rentalEnd >= startDate && rentalEnd <= endDate) ||
-        (rentalStart <= startDate && rentalEnd >= endDate)
-      );
-    });
-    
-    return Promise.resolve(filtered);
-  }
-
-  async getRentalsByStatus(status: string): Promise<Rental[]> {
-    const filtered = this.rentals.filter(rental => rental.status === status);
-    return Promise.resolve(filtered);
-  }
-  
-  async createRental(rentalData: Partial<Rental>): Promise<Rental> {
-    const newRental = {
-      id: `${this.rentals.length + 1}`,
-      ...rentalData
-    } as Rental;
-    
-    this.rentals.push(newRental);
-    return Promise.resolve(newRental);
-  }
-  
-  async updateRental(id: string, rentalData: Partial<Rental>): Promise<Rental> {
-    const index = this.rentals.findIndex(rental => rental.id === id);
-    if (index === -1) {
-      throw new Error(`Rental with id ${id} not found`);
+    if (params.productId) {
+      filtered = filtered.filter((rental) => rental.productId === params.productId);
     }
-    
-    const updatedRental = {
-      ...this.rentals[index],
-      ...rentalData
+
+    if (params.status) {
+      filtered = filtered.filter((rental) => rental.status === params.status);
+    }
+
+    if (params.isLead !== undefined) {
+      filtered = filtered.filter((rental) => rental.isLead === params.isLead);
+    }
+
+    if (params.timeline === 'upcoming') {
+      filtered = filtered.filter((rental) => !rental.isLead && rental.endDate >= new Date());
+    }
+
+    if (params.timeline === 'past') {
+      filtered = filtered.filter((rental) => !rental.isLead && rental.endDate < new Date());
+    }
+
+    if (params.role === 'renter') {
+      filtered = filtered.filter((rental) => rental.renterId === params.ownerId);
+    }
+
+    if (params.role !== 'renter' && params.ownerId) {
+      filtered = filtered.filter((rental) => rental.ownerId === params.ownerId);
+    }
+
+    if (params.startDate) {
+      filtered = filtered.filter((rental) => rental.endDate >= params.startDate!);
+    }
+
+    if (params.endDate) {
+      filtered = filtered.filter((rental) => rental.startDate <= params.endDate!);
+    }
+
+    return {
+      data: filtered,
+      total: filtered.length,
+      page: params.page ?? 1,
+      perPage: params.perPage ?? filtered.length,
     };
-    
-    this.rentals[index] = updatedRental;
-    return Promise.resolve(updatedRental);
   }
-  
-  async deleteRental(id: string): Promise<boolean> {
-    const initialLength = this.rentals.length;
-    this.rentals = this.rentals.filter(rental => rental.id !== id);
-    return Promise.resolve(this.rentals.length !== initialLength);
+
+  async getRentById(id: string): Promise<Rental | null> {
+    const rental = this.rentals.find((rental) => rental.id === id);
+    return Promise.resolve(rental ?? null);
+  }
+
+  async listRentMessages(
+    rentId: string,
+    params: RentMessageListParams = {}
+  ): Promise<RentMessageListResponse> {
+    const messages = this.messagesByRentId[rentId] ?? [];
+    const page = params.page ?? 1;
+    const perPage = params.perPage ?? 20;
+    const start = (page - 1) * perPage;
+    const data = messages.slice(start, start + perPage);
+
+    return {
+      data,
+      total: messages.length,
+      page,
+      perPage,
+    };
+  }
+
+  async createRentMessage(rentId: string, data: CreateRentMessageData): Promise<void> {
+    const list = this.messagesByRentId[rentId] ?? [];
+
+    list.push({
+      id: `${rentId}-${list.length + 1}`,
+      rentId,
+      senderRole: 'owner',
+      senderName: 'Usuario demo',
+      content: data.content,
+      createdAt: new Date(),
+      isMine: true,
+    });
+
+    this.messagesByRentId[rentId] = list;
+  }
+
+  async markRentMessagesAsRead(rentId: string): Promise<void> {
+    this.lastReadAtByRentId[rentId] = new Date();
+  }
+
+  async getUnreadRentMessagesCount(): Promise<RentUnreadMessagesCount> {
+    const byRent = Object.entries(this.messagesByRentId).map(([rentId, messages]) => {
+      const lastReadAt = this.lastReadAtByRentId[rentId];
+      const unreadCount = messages.filter((message) => {
+        if (message.isMine) {
+          return false;
+        }
+
+        if (!lastReadAt) {
+          return true;
+        }
+
+        return message.createdAt > lastReadAt;
+      }).length;
+
+      return { rentId, unreadCount };
+    }).filter((item) => item.unreadCount > 0);
+
+    const totalUnread = byRent.reduce((total, item) => total + item.unreadCount, 0);
+
+    return {
+      totalUnread,
+      byRent,
+    };
+  }
+
+  async createRent(data: CreateRentData): Promise<void> {
+    this.rentals = [
+      {
+        id: data.rentId,
+        productId: data.productId,
+        productName: 'Producto',
+        ownerId: 'mock-owner',
+        ownerName: 'Tienda demo',
+        ownerType: 'user',
+        renterId: data.renterEmail ? 'mock-renter' : null,
+        renterName: data.renterName || data.renterEmail || 'Cliente externo',
+        renterEmail: data.renterEmail,
+        ownerLocation: {
+          label: 'Ubicacion no disponible',
+        },
+        startDate: data.startDate,
+        endDate: data.endDate,
+        deposit: data.deposit,
+        price: data.price,
+        depositReturned: null,
+        status: data.isLead ? 'lead_pending' : 'rental_confirmed',
+        isLead: data.isLead ?? false,
+        proposalValidUntil: null,
+      },
+      ...this.rentals,
+    ];
+  }
+
+  async updateRent(id: string, data: UpdateRentData): Promise<void> {
+    this.rentals = this.rentals.map((rental) => {
+      if (rental.id !== id) {
+        return rental;
+      }
+
+      return {
+        ...rental,
+        startDate: data.startDate ?? rental.startDate,
+        endDate: data.endDate ?? rental.endDate,
+        deposit: data.deposit ?? rental.deposit,
+        price: data.price ?? rental.price,
+        depositReturned: data.depositReturned ?? rental.depositReturned,
+        proposalValidUntil: data.proposalValidUntil ?? rental.proposalValidUntil,
+        status: data.status ?? rental.status,
+      };
+    });
+  }
+
+  async updateRentStatus(id: string, data: UpdateRentStatusData): Promise<void> {
+    await this.updateRent(id, { status: data.status });
   }
 }

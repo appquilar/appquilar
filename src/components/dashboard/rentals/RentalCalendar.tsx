@@ -34,8 +34,8 @@ const RentalCalendar = ({
 
   // Get dates that have rentals
   const rentalDates = rentals.flatMap(rental => {
-    const rentalStartDate = new Date(rental.startDate);
-    const rentalEndDate = new Date(rental.endDate);
+    const rentalStartDate = rental.startDate;
+    const rentalEndDate = rental.endDate;
     const dates = [];
     
     // Add all dates between start and end date

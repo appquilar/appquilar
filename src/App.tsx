@@ -8,8 +8,10 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
 import CategoryPage from "./pages/CategoryPage";
+import CategoriesPage from "@/pages/CategoriesPage";
 import Dashboard from "./pages/Dashboard";
 import ResetPassword from "@/pages/ResetPassword";
+import SearchPage from "@/pages/SearchPage";
 
 import AboutPage from "@/pages/AboutPage";
 import ContactPage from "@/pages/ContactPage";
@@ -35,6 +37,8 @@ const App = () => (
                 <BrowserRouter>
                     <Routes>
                         <Route path="/" element={<Index />} />
+                        <Route path="/categories" element={<CategoriesPage />} />
+                        <Route path="/search" element={<SearchPage />} />
                         <Route path="/product/:slug" element={<ProductDetail />} />
                         <Route path="/category/:slug" element={<CategoryPage />} />
 

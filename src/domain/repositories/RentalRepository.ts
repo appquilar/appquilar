@@ -1,52 +1,91 @@
+import { Rental, RentStatus } from '@/domain/models/Rental';
+import { Money } from '@/domain/models/Money';
+import { RentalMessage } from '@/domain/models/RentalMessage';
 
-import { Rental } from '../models/Rental';
+export type RentTimeline = 'upcoming' | 'past';
+export type RentRole = 'owner' | 'renter';
 
-/**
- * Repository interface for accessing and managing Rental data
- */
+export interface RentListParams {
+  productId?: string;
+  startDate?: Date;
+  endDate?: Date;
+  status?: RentStatus;
+  isLead?: boolean;
+  timeline?: RentTimeline;
+  role?: RentRole;
+  ownerId?: string;
+  page?: number;
+  perPage?: number;
+}
+
+export interface RentListResponse {
+  data: Rental[];
+  total: number;
+  page: number;
+  perPage: number;
+}
+
+export interface RentMessageListParams {
+  page?: number;
+  perPage?: number;
+}
+
+export interface RentMessageListResponse {
+  data: RentalMessage[];
+  total: number;
+  page: number;
+  perPage: number;
+}
+
+export interface RentUnreadByRent {
+  rentId: string;
+  unreadCount: number;
+}
+
+export interface RentUnreadMessagesCount {
+  totalUnread: number;
+  byRent: RentUnreadByRent[];
+}
+
+export interface CreateRentData {
+  rentId: string;
+  productId: string;
+  startDate: Date;
+  endDate: Date;
+  deposit: Money;
+  price: Money;
+  renterEmail: string;
+  renterName?: string | null;
+  isLead?: boolean;
+}
+
+export interface UpdateRentData {
+  startDate?: Date | null;
+  endDate?: Date | null;
+  deposit?: Money | null;
+  price?: Money | null;
+  depositReturned?: Money | null;
+  proposalValidUntil?: Date | null;
+  status?: RentStatus | null;
+}
+
+export interface UpdateRentStatusData {
+  status: RentStatus;
+  proposalValidUntil?: Date | null;
+}
+
+export interface CreateRentMessageData {
+  content: string;
+}
+
 export interface RentalRepository {
-  /**
-   * Get all rentals
-   */
-  getAllRentals(): Promise<Rental[]>;
-  
-  /**
-   * Get a rental by ID
-   */
-  getRentalById(id: string): Promise<Rental | null>;
-  
-  /**
-   * Get rentals by user ID
-   */
-  getRentalsByUserId(userId: string): Promise<Rental[]>;
-  
-  /**
-   * Get rentals by product ID
-   */
-  getRentalsByProductId(productId: string): Promise<Rental[]>;
-  
-  /**
-   * Get rentals by date range
-   */
-  getRentalsByDateRange(startDate: Date, endDate: Date): Promise<Rental[]>;
-  
-  /**
-   * Get rentals by status
-   */
-  getRentalsByStatus(status: string): Promise<Rental[]>;
-  
-  /**
-   * Create a new rental
-   */
-  createRental(rentalData: Partial<Rental>): Promise<Rental>;
-  
-  /**
-   * Update a rental
-   */
-  updateRental(id: string, rentalData: Partial<Rental>): Promise<Rental>;
-  
-  /**
-   * Delete a rental
-   */
-  deleteRental(id: string): Promise<boolean>;
+  listRents(params?: RentListParams): Promise<RentListResponse>;
+  getRentById(id: string): Promise<Rental | null>;
+  listRentMessages(rentId: string, params?: RentMessageListParams): Promise<RentMessageListResponse>;
+  createRentMessage(rentId: string, data: CreateRentMessageData): Promise<void>;
+  markRentMessagesAsRead(rentId: string): Promise<void>;
+  getUnreadRentMessagesCount(): Promise<RentUnreadMessagesCount>;
+  createRent(data: CreateRentData): Promise<void>;
+  updateRent(id: string, data: UpdateRentData): Promise<void>;
+  updateRentStatus(id: string, data: UpdateRentStatusData): Promise<void>;
 }

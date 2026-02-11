@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Trash } from 'lucide-react';
+import { Archive } from 'lucide-react';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -30,21 +30,20 @@ const DeleteConfirmationModal = ({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
-            <Trash size={18} className="text-red-500" />
-            Confirmar eliminación
+            <Archive size={18} className="text-amber-600" />
+            Confirmar archivado
           </AlertDialogTitle>
           <AlertDialogDescription>
-            ¿Estás seguro de que deseas eliminar el producto <span className="font-medium">{productName}</span>?
-            Esta acción no se puede deshacer.
+            El producto <span className="font-medium">{productName}</span> se archivará y dejará de estar visible públicamente.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction 
             onClick={onConfirm} 
-            className="bg-red-500 hover:bg-red-600"
+            className="bg-amber-600 hover:bg-amber-700"
           >
-            Eliminar
+            Archivar
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

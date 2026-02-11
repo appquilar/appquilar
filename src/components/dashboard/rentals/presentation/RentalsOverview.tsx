@@ -2,8 +2,9 @@
 import React from 'react';
 import RentalsHeader from '../RentalsHeader';
 import RentalFilters from '../RentalFilters';
-import RentalTabs from '../RentalTabs';
+import RentalsList from '../RentalsList';
 import RentalsContainer from '../RentalsContainer';
+import RentalRoleTabs from '../RentalRoleTabs';
 import { useRentalsManagement } from '../hooks/useRentalsManagement';
 
 /**
@@ -19,12 +20,12 @@ const RentalsOverview = () => {
     setStartDate,
     endDate,
     setEndDate,
-    rentalId,
-    setRentalId,
-    activeTab,
-    setActiveTab,
+    statusFilter,
+    setStatusFilter,
+    roleTab,
+    setRoleTab,
+    showRoleFilter,
     filteredRentals,
-    rentalCounts,
     handleSearch,
     handleCreateRental,
     handleViewDetails,
@@ -38,6 +39,12 @@ const RentalsOverview = () => {
       
       {/* Enhanced Filters - more mobile friendly */}
       <div className="flex flex-col space-y-4">
+        {showRoleFilter && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Tipo de alquiler</p>
+            <RentalRoleTabs roleTab={roleTab} onRoleChange={setRoleTab} />
+          </div>
+        )}
         <RentalFilters 
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -45,20 +52,18 @@ const RentalsOverview = () => {
           endDate={endDate}
           onStartDateChange={setStartDate}
           onEndDateChange={setEndDate}
-          rentalId={rentalId}
-          onRentalIdChange={setRentalId}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
           onSearch={handleSearch}
         />
       </div>
       
       {/* Rental listing with loading and error handling */}
       <RentalsContainer isLoading={isLoading} error={error}>
-        <RentalTabs 
+        <RentalsList
           rentals={filteredRentals}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          rentalCounts={rentalCounts}
           onViewDetails={handleViewDetails}
+          roleTab={roleTab}
         />
       </RentalsContainer>
     </div>

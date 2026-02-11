@@ -1,5 +1,4 @@
-
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { FormField, FormItem, FormControl } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { UseFormReturn } from 'react-hook-form';
 import { Product } from '@/domain/models/Product';
@@ -37,22 +36,36 @@ const ProductInfoFields = ({
           onProductSelect={handleProductSelect}
           isLoading={isLoading}
         />
-        
+
         {selectedProduct && <SelectedProductDisplay product={selectedProduct} />}
-        
+
         <FormField
           control={form.control}
-          name="product"
+          name="rentId"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Producto</FormLabel>
+            <FormItem className="hidden">
               <FormControl>
-                <Input placeholder="Nombre del producto" {...field} readOnly={!!selectedProduct} />
+                <Input type="hidden" {...field} />
               </FormControl>
-              <FormMessage />
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="productId"
+          render={({ field }) => (
+            <FormItem className="hidden">
+              <FormControl>
+                <Input type="hidden" {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        {form.formState.errors.productId?.message && (
+          <p className="mt-2 text-sm text-destructive">{form.formState.errors.productId.message}</p>
+        )}
       </div>
     </>
   );

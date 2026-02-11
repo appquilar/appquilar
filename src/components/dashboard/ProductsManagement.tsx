@@ -7,9 +7,14 @@ import ProductPagination from "@/components/dashboard/products/ProductPagination
 import DeleteConfirmationModal from "@/components/dashboard/products/DeleteConfirmationModal";
 
 import { useProductsManagement } from "@/components/dashboard/products/hooks/useProductsManagement";
+import { useAuth } from "@/context/AuthContext";
+import { hasMinimalAddress } from "@/domain/models/Address";
+import { toast } from "sonner";
 
 const ProductsManagement = () => {
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
+    const canCreateProduct = hasMinimalAddress(currentUser?.address);
 
     const {
         filters,
@@ -28,9 +33,15 @@ const ProductsManagement = () => {
         closeDeleteModal,
         confirmDeleteProduct,
         handleEditProduct,
+        handlePublishProduct,
     } = useProductsManagement();
 
     const handleAddProduct = () => {
+        if (!canCreateProduct) {
+            toast.error("Debes añadir una dirección en tu perfil antes de crear productos.");
+            return;
+        }
+
         navigate("/dashboard/products/new");
     };
 
@@ -59,13 +70,17 @@ const ProductsManagement = () => {
                 onFilterChange={handleFilterChange}
                 onAddProduct={handleAddProduct}
                 onSearch={handleSearch}
+                isAddDisabled={!canCreateProduct}
             />
 
             <ProductGrid
                 products={filteredProducts}
                 onEdit={handleEditProduct}
+                onPublish={handlePublishProduct}
                 onDelete={openDeleteModal}
                 onAdd={handleAddProduct}
+                isAddDisabled={!canCreateProduct}
+                shouldShowMissingAddressMessage={!canCreateProduct}
             />
 
             <ProductPagination

@@ -11,6 +11,13 @@ interface UseDashboardProductsParams {
     ownerId?: string | null;
     ownerType?: 'company' | 'user';
     filters?: ProductFilters;
+    enabled?: boolean;
+}
+
+interface UseOwnedProductsCountParams {
+    ownerId?: string | null;
+    ownerType?: 'company' | 'user';
+    filters?: ProductFilters;
 }
 
 /**
@@ -21,20 +28,52 @@ export const useDashboardProducts = ({
                                          perPage = 10,
                                          ownerId,
                                          ownerType = 'company',
-                                         filters = {}
+                                         filters = {},
+                                         enabled = true,
                                      }: UseDashboardProductsParams) => {
     return useQuery({
         // Add filters to query key so it refetches when they change
         queryKey: ['products', 'dashboard', ownerId, ownerType, page, perPage, filters],
         queryFn: async () => {
-            if (ownerId) {
-                return await productService.listByOwnerPaginated(ownerId, ownerType, page, perPage, filters);
+            if (!ownerId) {
+                return {
+                    data: [],
+                    total: 0,
+                    page,
+                    perPage,
+                };
             }
 
-            // Fallback
-            return await productService.search({ page, per_page: perPage, text: filters.name });
+            return await productService.listByOwnerPaginated(ownerId, ownerType, page, perPage, filters);
         },
-        enabled: true,
+        enabled: enabled && Boolean(ownerId),
+        placeholderData: (previousData) => previousData,
+    });
+};
+
+export const useOwnedProductsCount = ({
+    ownerId,
+    ownerType = 'company',
+    filters,
+}: UseOwnedProductsCountParams) => {
+    return useQuery({
+        queryKey: ['products', 'owned-count', ownerId, ownerType, filters],
+        queryFn: async () => {
+            if (!ownerId) {
+                return 0;
+            }
+
+            const response = await productService.listByOwnerPaginated(
+                ownerId,
+                ownerType,
+                1,
+                1,
+                filters
+            );
+
+            return response.total ?? response.data.length;
+        },
+        enabled: Boolean(ownerId),
         placeholderData: (previousData) => previousData,
     });
 };
@@ -113,12 +152,50 @@ export const useDeleteProduct = () => {
     return useMutation({
         mutationFn: (id: string) => productService.deleteProduct(id),
         onSuccess: () => {
-            toast.success('Producto eliminado correctamente');
+            toast.success('Producto archivado correctamente');
             queryClient.invalidateQueries({ queryKey: ['products'] });
         },
         onError: (error) => {
             console.error('Error deleting product:', error);
-            toast.error('Error al eliminar el producto');
+            toast.error('Error al archivar el producto');
+        }
+    });
+};
+
+export const usePublishProduct = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => productService.publishProduct(id),
+        onSuccess: (published) => {
+            if (published) {
+                toast.success('Producto publicado correctamente');
+                queryClient.invalidateQueries({ queryKey: ['products'] });
+                return;
+            }
+
+            toast.error('No se pudo publicar el producto');
+        },
+        onError: (error) => {
+            console.error('Error publishing product:', error);
+            toast.error('Error al publicar el producto');
+        }
+    });
+};
+
+export const useCalculateRentalCost = () => {
+    return useMutation({
+        mutationFn: ({
+            productId,
+            startDate,
+            endDate,
+        }: {
+            productId: string;
+            startDate: string;
+            endDate: string;
+        }) => productService.calculateRentalCost(productId, startDate, endDate),
+        onError: (error) => {
+            console.error('Error calculating rental cost:', error);
+            toast.error('No se pudo calcular el coste del alquiler');
         }
     });
 };

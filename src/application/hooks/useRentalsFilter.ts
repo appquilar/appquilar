@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Rental } from '@/domain/models/Rental';
-import { RentalCounts, RentalFilters } from '@/domain/models/RentalFilters';
+import { RentalCounts, RentalFilters, RentalRoleTab, RentalStatusFilter } from '@/domain/models/RentalFilters';
 import { RentalFilterService } from '@/domain/services/RentalFilterService';
 
 export interface UseRentalsFilterReturn {
@@ -12,62 +12,58 @@ export interface UseRentalsFilterReturn {
   setEndDate: (date: Date | undefined) => void;
   rentalId: string;
   setRentalId: (id: string) => void;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  statusFilter: RentalStatusFilter;
+  setStatusFilter: (status: RentalStatusFilter) => void;
+  roleTab: RentalRoleTab;
+  setRoleTab: (tab: RentalRoleTab) => void;
   filteredRentals: Rental[];
   rentalCounts: RentalCounts;
   handleSearch: (e: React.FormEvent) => void;
   handleDateSelect: (date: Date) => void;
 }
 
-export const useRentalsFilter = (rentals: Rental[]): UseRentalsFilterReturn => {
-  // State for filter criteria
+export const useRentalsFilter = (
+  rentals: Rental[]
+): UseRentalsFilterReturn => {
   const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [rentalId, setRentalId] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
-  
-  // Filter state object for the domain service
+  const [statusFilter, setStatusFilter] = useState<RentalStatusFilter>('pending');
+  const [roleTab, setRoleTab] = useState<RentalRoleTab>('owner');
+
   const filters: RentalFilters = useMemo(() => ({
     searchQuery,
     startDate,
     endDate,
     rentalId,
-    activeTab
-  }), [searchQuery, startDate, endDate, rentalId, activeTab]);
-  
-  // Calculate counts of rentals by status using the domain service
-  const rentalCounts = useMemo(() => 
-    RentalFilterService.calculateRentalCounts(rentals), 
+    statusFilter,
+    roleTab,
+  }), [searchQuery, startDate, endDate, rentalId, statusFilter, roleTab]);
+
+  const rentalCounts = useMemo(() =>
+    RentalFilterService.calculateRentalCounts(rentals),
     [rentals]
   );
-  
-  // Filter rentals based on all criteria using the domain service
-  const filteredRentals = useMemo(() => 
-    RentalFilterService.filterRentals(rentals, filters), 
+
+  const filteredRentals = useMemo(() =>
+    RentalFilterService.filterRentals(rentals, filters),
     [rentals, filters]
   );
-  
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, we might call an API endpoint here
   };
-  
+
   const handleDateSelect = (date: Date) => {
-    // If we have no start date, or we have both start and end dates, set as start date
     if (!startDate || (startDate && endDate)) {
       setStartDate(date);
       setEndDate(undefined);
-    } 
-    // If we have start date but no end date
-    else if (startDate && !endDate) {
-      // If selected date is before start date, make it the start and the old start the end
+    } else if (startDate && !endDate) {
       if (date < startDate) {
         setEndDate(startDate);
         setStartDate(date);
       } else {
-        // Otherwise set it as end date
         setEndDate(date);
       }
     }
@@ -82,11 +78,13 @@ export const useRentalsFilter = (rentals: Rental[]): UseRentalsFilterReturn => {
     setEndDate,
     rentalId,
     setRentalId,
-    activeTab,
-    setActiveTab,
+    statusFilter,
+    setStatusFilter,
+    roleTab,
+    setRoleTab,
     filteredRentals,
     rentalCounts,
     handleSearch,
-    handleDateSelect
+    handleDateSelect,
   };
 };

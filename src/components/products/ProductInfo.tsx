@@ -1,6 +1,5 @@
 import React from 'react';
-import { Heart, Share, Info, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Info, AlertTriangle } from 'lucide-react';
 import { Product } from '@/domain/models/Product';
 import { toast } from 'sonner';
 import CompanyInfo from './CompanyInfo';
@@ -14,14 +13,30 @@ import {
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import ProductRentalCostCalculator from './ProductRentalCostCalculator';
+import { RentalCostBreakdown } from '@/domain/repositories/ProductRepository';
 
 interface ProductInfoProps {
     product: Product;
     onContact: () => void;
     isLoggedIn: boolean;
+    leadStartDate: string;
+    leadEndDate: string;
+    onLeadStartDateChange: (value: string) => void;
+    onLeadEndDateChange: (value: string) => void;
+    onLeadCalculationChange: (value: RentalCostBreakdown | null) => void;
 }
 
-const ProductInfo = ({ product, onContact, isLoggedIn }: ProductInfoProps) => {
+const ProductInfo = ({
+    product,
+    onContact,
+    isLoggedIn,
+    leadStartDate,
+    leadEndDate,
+    onLeadStartDateChange,
+    onLeadEndDateChange,
+    onLeadCalculationChange,
+}: ProductInfoProps) => {
 
     const handleContact = () => {
         if (!isLoggedIn) {
@@ -29,6 +44,7 @@ const ProductInfo = ({ product, onContact, isLoggedIn }: ProductInfoProps) => {
                 action: {
                     label: "Iniciar sesión",
                     onClick: () => {
+                        // Trigger login via event or DOM (fallback)
                         const loginBtn = document.querySelector('[data-trigger-login]') as HTMLElement;
                         if (loginBtn) loginBtn.click();
                     }
@@ -45,6 +61,7 @@ const ProductInfo = ({ product, onContact, isLoggedIn }: ProductInfoProps) => {
 
     return (
         <div className="space-y-8">
+            {/* Draft/Archived Disclaimer */}
             {product.publicationStatus && product.publicationStatus !== 'published' && (
                 <Alert variant="warning" className="bg-yellow-50 border-yellow-200">
                     <AlertTriangle className="h-4 w-4 text-yellow-600" />
@@ -56,6 +73,7 @@ const ProductInfo = ({ product, onContact, isLoggedIn }: ProductInfoProps) => {
                 </Alert>
             )}
 
+            {/* Header Info */}
             <div>
                 <div className="flex items-center mb-3 gap-2">
                     {product.category?.name && (
@@ -68,23 +86,9 @@ const ProductInfo = ({ product, onContact, isLoggedIn }: ProductInfoProps) => {
                 <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight mb-4 text-foreground">
                     {product.name}
                 </h1>
-
-                <div className="flex space-x-3 mb-6">
-                    <Button variant="outline" size="sm" className="gap-2 rounded-full">
-                        <Heart size={16} />
-                        <span className="sr-only sm:not-sr-only">Guardar</span>
-                    </Button>
-                    <Button variant="outline" size="sm" className="gap-2 rounded-full">
-                        <Share size={16} />
-                        <span className="sr-only sm:not-sr-only">Compartir</span>
-                    </Button>
-                </div>
-
-                <p className="text-muted-foreground leading-relaxed text-base whitespace-pre-wrap">
-                    {product.description}
-                </p>
             </div>
 
+            {/* Pricing Section */}
             <div>
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     Tarifas de Alquiler
@@ -94,7 +98,7 @@ const ProductInfo = ({ product, onContact, isLoggedIn }: ProductInfoProps) => {
                     <div className="p-5 border-b border-border bg-muted/30 flex items-center justify-between">
                         <div>
                             <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Precio Base</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">Tarifa por día suelto</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Precio del primer tier disponible</p>
                         </div>
                         <div className="text-right">
                     <span className="text-3xl font-bold text-foreground">
@@ -152,6 +156,15 @@ const ProductInfo = ({ product, onContact, isLoggedIn }: ProductInfoProps) => {
                     )}
                 </div>
             </div>
+
+            <ProductRentalCostCalculator
+                productId={product.id}
+                startDate={leadStartDate}
+                endDate={leadEndDate}
+                onStartDateChange={onLeadStartDateChange}
+                onEndDateChange={onLeadEndDateChange}
+                onCalculationChange={onLeadCalculationChange}
+            />
 
             <div className="pt-4 border-t border-border">
                 <CompanyInfo

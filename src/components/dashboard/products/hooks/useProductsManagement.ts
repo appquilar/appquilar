@@ -1,7 +1,7 @@
 import { useCallback, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { useDashboardProducts } from "@/application/hooks/useProducts";
+import { useDashboardProducts, useDeleteProduct, usePublishProduct } from "@/application/hooks/useProducts";
 import type { ProductFilters } from "@/domain/repositories/ProductRepository";
 
 type UseProductsManagementOptions = {
@@ -11,7 +11,7 @@ type UseProductsManagementOptions = {
 
 export function useProductsManagement(options: UseProductsManagementOptions = {}) {
     const navigate = useNavigate();
-    const { currentUser } = useAuth();
+    const { currentUser, isLoading: isAuthLoading } = useAuth();
     const { initialPage = 1, perPage = 10 } = options;
 
     const [filters, setFilters] = useState<ProductFilters>({});
@@ -23,8 +23,14 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
     const [productToDeleteName, setProductToDeleteName] = useState<string>("");
 
     // Determine owner ID and Type
-    const ownerId = currentUser?.companyId || currentUser?.id;
-    const ownerType = currentUser?.companyId ? 'company' : 'user';
+    const normalizedUser = currentUser as (typeof currentUser & {
+        company_id?: string | null;
+        user_id?: string;
+    }) | null;
+    const companyId = normalizedUser?.companyId ?? normalizedUser?.company_id ?? null;
+    const userId = normalizedUser?.id ?? normalizedUser?.user_id ?? null;
+    const ownerId = companyId ?? userId;
+    const ownerType = companyId ? 'company' : 'user';
 
     // Debounce logic could be added here if needed, but for now passing filters directly
     const query = useDashboardProducts({
@@ -32,8 +38,11 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
         perPage,
         ownerId,
         ownerType,
-        filters
+        filters,
+        enabled: !isAuthLoading,
     });
+    const deleteProductMutation = useDeleteProduct();
+    const publishProductMutation = usePublishProduct();
 
     const products = query.data?.data ?? [];
     const total = query.data?.total ?? 0;
@@ -79,9 +88,15 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
 
     const confirmDeleteProduct = useCallback(async () => {
         if (!productToDeleteId) return;
+        await deleteProductMutation.mutateAsync(productToDeleteId);
         closeDeleteModal();
         await query.refetch();
-    }, [productToDeleteId, closeDeleteModal, query]);
+    }, [productToDeleteId, closeDeleteModal, query, deleteProductMutation]);
+
+    const handlePublishProduct = useCallback(async (productId: string) => {
+        await publishProductMutation.mutateAsync(productId);
+        await query.refetch();
+    }, [publishProductMutation, query]);
 
     return {
         // Expose filters instead of simple searchQuery
@@ -103,6 +118,7 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
         handlePageChange,
         handleSearch,
         handleEditProduct,
+        handlePublishProduct,
 
         isDeleteModalOpen,
         productToDeleteId,

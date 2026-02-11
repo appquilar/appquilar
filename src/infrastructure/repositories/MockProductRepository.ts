@@ -183,4 +183,16 @@ export class MockProductRepository implements ProductRepository {
     this.products = this.products.filter(product => product.id !== id);
     return Promise.resolve(this.products.length !== initialLength);
   }
+
+  async publishProduct(id: string): Promise<boolean> {
+    const product = this.products.find((item) => item.id === id);
+    if (!product) {
+      return Promise.resolve(false);
+    }
+
+    (product as Product).publicationStatus = 'published';
+    product.updatedAt = new Date().toISOString();
+
+    return Promise.resolve(true);
+  }
 }

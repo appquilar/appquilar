@@ -4,7 +4,14 @@ import { Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SearchField from './filters/SearchField';
 import DateRangePicker from './filters/DateRangePicker';
-import RentalIdField from './filters/RentalIdField';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { RentalStatusFilter } from '@/domain/models/RentalFilters';
 
 interface RentalFiltersProps {
   searchQuery: string;
@@ -13,8 +20,8 @@ interface RentalFiltersProps {
   endDate: Date | undefined;
   onStartDateChange: (date: Date | undefined) => void;
   onEndDateChange: (date: Date | undefined) => void;
-  rentalId: string;
-  onRentalIdChange: (value: string) => void;
+  statusFilter: RentalStatusFilter;
+  onStatusFilterChange: (status: RentalStatusFilter) => void;
   onSearch: (e: React.FormEvent) => void;
 }
 
@@ -25,8 +32,8 @@ const RentalFilters = ({
   endDate,
   onStartDateChange,
   onEndDateChange,
-  rentalId,
-  onRentalIdChange,
+  statusFilter,
+  onStatusFilterChange,
   onSearch
 }: RentalFiltersProps) => {
   return (
@@ -46,12 +53,17 @@ const RentalFilters = ({
             onEndDateChange={onEndDateChange}
             className="w-full sm:w-auto"
           />
-          
-          <RentalIdField 
-            value={rentalId}
-            onChange={onRentalIdChange}
-            className="w-full sm:w-auto"
-          />
+
+          <Select value={statusFilter} onValueChange={(value) => onStatusFilterChange(value as RentalStatusFilter)}>
+            <SelectTrigger className="h-10 w-full sm:w-[220px]">
+              <SelectValue placeholder="Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pending">Pendiente</SelectItem>
+              <SelectItem value="cancelled">Cancelado</SelectItem>
+              <SelectItem value="completed">Completado</SelectItem>
+            </SelectContent>
+          </Select>
           
           <Button onClick={(e) => onSearch(e)} className="h-10 w-full sm:w-auto">
             <Filter className="h-4 w-4 mr-2" />

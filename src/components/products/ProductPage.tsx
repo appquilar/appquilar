@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 
-import CompanyInfo from "./CompanyInfo";
 import ProductImageGallery from "./ProductImageGallery";
 import ProductInfo from "./ProductInfo";
 import SecondHandInfo from "./SecondHandInfo";
@@ -12,8 +11,9 @@ import ContactModal from "./ContactModal";
 import { useAuth } from "@/context/AuthContext";
 import { useProductBySlug } from "@/application/hooks/useProducts";
 import { useSeo } from "@/hooks/useSeo";
+import { RentalCostBreakdown } from "@/domain/repositories/ProductRepository";
 
-// Simplified VM
+// ViewModel simplificado para la vista
 type ProductPageVm = {
     id: string;
     name: string;
@@ -29,19 +29,33 @@ type ProductPageVm = {
     reviewCount: number;
     publicationStatus?: string;
     location?: {
-        name: string;
-        coordinates: [number, number];
+        city: string;
+        state: string;
+        coordinates?: [number, number];
         circle?: { latitude: number; longitude: number }[];
     };
+    providerLocationLabel?: string;
+};
+
+const getBaseTierDailyPrice = (tiers: Array<{ pricePerDay?: number }> | undefined, fallback: number): number => {
+    if (!Array.isArray(tiers) || tiers.length === 0) {
+        return fallback;
+    }
+
+    const firstTierPrice = Number(tiers[0]?.pricePerDay ?? 0);
+    return Number.isFinite(firstTierPrice) ? firstTierPrice : fallback;
 };
 
 const ProductPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
-    // FIX: AuthContext provides 'currentUser', not 'user'
-    const { isLoggedIn, currentUser: user } = useAuth();
+
+    const { isLoggedIn } = useAuth();
 
     const [activeTab, setActiveTab] = useState<"rental" | "secondhand">("rental");
     const [contactModalOpen, setContactModalOpen] = useState(false);
+    const [leadStartDate, setLeadStartDate] = useState('');
+    const [leadEndDate, setLeadEndDate] = useState('');
+    const [leadCalculation, setLeadCalculation] = useState<RentalCostBreakdown | null>(null);
 
     const query = useProductBySlug(slug ?? null);
 
@@ -51,38 +65,36 @@ const ProductPage: React.FC = () => {
 
         const imageIds: string[] = Array.isArray(raw.image_ids)
             ? raw.image_ids
-            : Array.isArray(raw.images)
-                ? raw.images.map((x: any) => x?.id).filter(Boolean)
-                : [];
+            : Array.isArray(raw.imageIds)
+                ? raw.imageIds
+                : Array.isArray(raw.images)
+                    ? raw.images.map((x: any) => x?.id).filter(Boolean)
+                    : [];
 
-        // Determine location
-        let location = {
-            name: "Ubicación desconocida",
-            coordinates: [-3.7038, 40.4168] as [number, number], // Default Madrid
-            circle: undefined as { latitude: number; longitude: number }[] | undefined
+        const ownerAddress = raw.ownerData?.address;
+        const ownerGeo = raw.ownerData?.geoLocation;
+        const ownerName = [raw.ownerData?.name, raw.ownerData?.lastName]
+            .filter(Boolean)
+            .join(" ")
+            .trim();
+        const ownerCircle = Array.isArray(ownerGeo?.circle) ? ownerGeo.circle : undefined;
+        const hasOwnerCoordinates =
+            typeof ownerGeo?.latitude === "number" &&
+            typeof ownerGeo?.longitude === "number";
+        const locationParts = [
+            ownerAddress?.city,
+            ownerAddress?.state,
+            ownerAddress?.country,
+        ].filter(Boolean);
+
+        const location = {
+            city: ownerAddress?.city || "Ubicación desconocida",
+            state: ownerAddress?.state || ownerAddress?.country || "",
+            coordinates: hasOwnerCoordinates
+                ? ([ownerGeo.longitude, ownerGeo.latitude] as [number, number])
+                : undefined,
+            circle: ownerCircle,
         };
-
-        // If logged in and user is the owner, use their location from /me (includes circle)
-        if (user && raw.company?.id === user.id && user.location) {
-            location = {
-                name: user.address?.city || (user.location as any)?.address || "Tu Ubicación",
-                coordinates: [user.location?.longitude || 0, user.location?.latitude || 0],
-                circle: user.circle
-            };
-        }
-        else if (raw.location) {
-            location = {
-                name: raw.location.name || "Ubicación del producto",
-                coordinates: [raw.location.longitude, raw.location.latitude],
-                circle: undefined
-            };
-        } else {
-            location = {
-                name: "Campohermoso (Almería)",
-                coordinates: [-2.4637, 36.8381],
-                circle: undefined
-            };
-        }
 
         return {
             id: raw.id ?? "",
@@ -91,30 +103,33 @@ const ProductPage: React.FC = () => {
             description: raw.description ?? "",
             isRentable: raw.isRentable ?? true,
             isForSale: raw.isForSale ?? false,
-            company: raw.company ?? { id: raw.companyId ?? "", name: raw.companyName ?? "—", slug: raw.companySlug ?? "" },
+            company: {
+                id: raw.ownerData?.ownerId ?? raw.companyId ?? "",
+                name: ownerName || raw.companyName || "—",
+                slug: raw.ownerData?.slug ?? raw.companySlug ?? "",
+            },
             category: raw.category ?? { id: raw.categoryId ?? "", name: raw.categoryName ?? "—", slug: raw.categorySlug ?? "" },
             price: {
-                daily: raw.price?.daily ?? 0,
+                daily: getBaseTierDailyPrice(raw.price?.tiers, raw.price?.daily ?? 0),
                 deposit: raw.price?.deposit,
                 tiers: raw.price?.tiers || []
             },
             imageIds,
             rating: raw.rating || 0,
             reviewCount: raw.reviewCount || 0,
-            publicationStatus: raw.publicationStatus,
-            location: location
+            publicationStatus: raw.publication_status?.status || raw.publicationStatus || 'draft',
+            location: location,
+            providerLocationLabel: locationParts.join(", "),
         };
-    }, [query.data, user]);
+    }, [query.data]); // Eliminada dependencia de currentUser para el cálculo del producto
 
-    // SEO Hook
-    useSeo({
-        title: product ? `Appquilar | ${product.name}` : "Appquilar",
-        description: product?.description?.substring(0, 160) || "",
-        ogTitle: product?.name,
-        ogImage: product?.imageIds?.[0] ? `${import.meta.env.VITE_API_BASE_URL}/api/media/images/${product.imageIds[0]}/MEDIUM` : undefined
-    });
+    // SEO Hook - Objeto seguro para evitar crashes
+    useSeo(
+        product
+            ? { type: "product", name: product.name, slug: product.slug }
+            : { type: "home" }
+    );
 
-    // Handle Tab switching
     useEffect(() => {
         if (product?.isForSale && !product?.isRentable) {
             setActiveTab("secondhand");
@@ -123,7 +138,27 @@ const ProductPage: React.FC = () => {
         }
     }, [product?.isForSale, product?.isRentable]);
 
-    // FIX: Construct image URLs directly to avoid duplicates and improve performance
+    useEffect(() => {
+        if (!product) {
+            return;
+        }
+
+        if (!leadStartDate || !leadEndDate) {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
+            const toInput = (date: Date) => {
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            };
+            setLeadStartDate(toInput(today));
+            setLeadEndDate(toInput(tomorrow));
+        }
+    }, [product, leadStartDate, leadEndDate]);
+
+    // Construir URLs de imágenes
     const galleryImages = useMemo(() => {
         if (!product?.imageIds?.length) return [];
         const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -176,7 +211,8 @@ const ProductPage: React.FC = () => {
                     <div className="mt-8">
                         <h2 className="text-xl font-semibold mb-4">Ubicación</h2>
                         <ProductLocationMap
-                            location={product.location?.name || "Ubicación"}
+                            city={product.location?.city || "Ubicación desconocida"}
+                            state={product.location?.state || ""}
                             coordinates={product.location?.coordinates}
                             polygon={product.location?.circle}
                         />
@@ -184,7 +220,16 @@ const ProductPage: React.FC = () => {
                 </div>
 
                 <div className="lg:col-span-1 space-y-6">
-                    <ProductInfo product={product as any} onContact={handleContactRequest} isLoggedIn={isLoggedIn} />
+                    <ProductInfo
+                        product={product as any}
+                        onContact={handleContactRequest}
+                        isLoggedIn={isLoggedIn}
+                        leadStartDate={leadStartDate}
+                        leadEndDate={leadEndDate}
+                        onLeadStartDateChange={setLeadStartDate}
+                        onLeadEndDateChange={setLeadEndDate}
+                        onLeadCalculationChange={setLeadCalculation}
+                    />
 
                     {product.isForSale && (
                         <SecondHandInfo product={product as any} onContactClick={handleContactRequest} />
@@ -192,15 +237,15 @@ const ProductPage: React.FC = () => {
                 </div>
             </div>
 
-            <div className="mt-12">
-                <CompanyInfo company={product.company} onContact={handleContactRequest} isLoggedIn={isLoggedIn} />
-            </div>
-
             <ContactModal
                 isOpen={contactModalOpen}
                 onClose={() => setContactModalOpen(false)}
+                productId={product.id}
                 productName={product.name}
                 ownerName={product.company.name}
+                initialStartDate={leadStartDate}
+                initialEndDate={leadEndDate}
+                initialCalculation={leadCalculation}
             />
         </div>
     );

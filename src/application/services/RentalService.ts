@@ -1,105 +1,57 @@
-
+import {
+  CreateRentMessageData,
+  CreateRentData,
+  RentListParams,
+  RentMessageListParams,
+  RentMessageListResponse,
+  RentUnreadMessagesCount,
+  RentListResponse,
+  RentalRepository,
+  UpdateRentData,
+  UpdateRentStatusData
+} from '@/domain/repositories/RentalRepository';
 import { Rental } from '@/domain/models/Rental';
-import { IRentalRepository } from '@/domain/repositories/IRentalRepository';
-import { RepositoryFactory } from '@/infrastructure/repositories/RepositoryFactory';
 
-/**
- * Service for managing rental data
- */
 export class RentalService {
-  private static instance: RentalService;
-  private repository: IRentalRepository;
+  private repository: RentalRepository;
 
-  private constructor(repository: IRentalRepository) {
+  constructor(repository: RentalRepository) {
     this.repository = repository;
   }
 
-  /**
-   * Get the singleton instance
-   */
-  public static getInstance(): RentalService {
-    if (!RentalService.instance) {
-      // Get the repository from the factory
-      const repository = RepositoryFactory.getRentalRepository();
-      RentalService.instance = new RentalService(repository);
-    }
-    return RentalService.instance;
+  listRents(params?: RentListParams): Promise<RentListResponse> {
+    return this.repository.listRents(params);
   }
 
-  /**
-   * Set a custom repository implementation
-   */
-  public static setRepository(repository: IRentalRepository): void {
-    // Update the repository in the factory and in the service instance
-    RepositoryFactory.setRentalRepository(repository);
-    
-    if (RentalService.instance) {
-      RentalService.instance.repository = repository;
-    } else {
-      RentalService.instance = new RentalService(repository);
-    }
+  getRentById(id: string): Promise<Rental | null> {
+    return this.repository.getRentById(id);
   }
 
-  /**
-   * Get all rentals
-   */
-  async getAllRentals(): Promise<Rental[]> {
-    return this.repository.getAllRentals();
+  listRentMessages(rentId: string, params?: RentMessageListParams): Promise<RentMessageListResponse> {
+    return this.repository.listRentMessages(rentId, params);
   }
 
-  /**
-   * Get a rental by ID
-   */
-  async getRentalById(id: string): Promise<Rental | null> {
-    return this.repository.getRentalById(id);
+  createRentMessage(rentId: string, data: CreateRentMessageData): Promise<void> {
+    return this.repository.createRentMessage(rentId, data);
   }
 
-  /**
-   * Get rentals by user ID
-   */
-  async getRentalsByUserId(userId: string): Promise<Rental[]> {
-    return this.repository.getRentalsByUserId(userId);
+  markRentMessagesAsRead(rentId: string): Promise<void> {
+    return this.repository.markRentMessagesAsRead(rentId);
   }
 
-  /**
-   * Get rentals by product ID
-   */
-  async getRentalsByProductId(productId: string): Promise<Rental[]> {
-    return this.repository.getRentalsByProductId(productId);
+  getUnreadRentMessagesCount(): Promise<RentUnreadMessagesCount> {
+    return this.repository.getUnreadRentMessagesCount();
   }
 
-  /**
-   * Get rentals by date range
-   */
-  async getRentalsByDateRange(startDate: Date, endDate: Date): Promise<Rental[]> {
-    return this.repository.getRentalsByDateRange(startDate, endDate);
+  createRent(data: CreateRentData): Promise<void> {
+    return this.repository.createRent(data);
   }
 
-  /**
-   * Get rentals by status
-   */
-  async getRentalsByStatus(status: string): Promise<Rental[]> {
-    return this.repository.getRentalsByStatus(status);
+  updateRent(id: string, data: UpdateRentData): Promise<void> {
+    return this.repository.updateRent(id, data);
   }
-  
-  /**
-   * Create a new rental
-   */
-  async createRental(rentalData: Partial<Rental>): Promise<Rental> {
-    return this.repository.createRental(rentalData);
-  }
-  
-  /**
-   * Update a rental
-   */
-  async updateRental(id: string, rentalData: Partial<Rental>): Promise<Rental> {
-    return this.repository.updateRental(id, rentalData);
-  }
-  
-  /**
-   * Delete a rental
-   */
-  async deleteRental(id: string): Promise<boolean> {
-    return this.repository.deleteRental(id);
+
+  updateRentStatus(id: string, data: UpdateRentStatusData): Promise<void> {
+    return this.repository.updateRentStatus(id, data);
   }
 }

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash, ExternalLink } from "lucide-react";
+import { Edit, Trash, ExternalLink, Rocket } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMediaUrl } from "@/application/hooks/useMediaUrl";
 import { Badge } from "@/components/ui/badge";
@@ -9,13 +9,14 @@ import type { Product, PublicationStatusType } from "@/domain/models/Product";
 
 interface ProductCardProps {
     product: Product;
-    onEdit?: (productId: string) => void;
-    onDelete?: (productId: string) => void;
+    onEdit?: () => void;
+    onPublish?: () => void;
+    onDelete?: () => void;
 }
 
 const PLACEHOLDER = "/placeholder.svg";
 
-const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
+const ProductCard = ({ product, onEdit, onPublish, onDelete }: ProductCardProps) => {
     const raw = (product.thumbnailUrl || product.imageUrl || "").trim();
 
     const firstImageId = useMemo(() => {
@@ -49,6 +50,24 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
     };
 
     const statusConfig = getStatusConfig(product.publicationStatus);
+    const firstTierPrice = useMemo(() => {
+        const tiers = Array.isArray(product.price?.tiers) ? product.price.tiers : [];
+        if (tiers.length === 0) return 0;
+
+        const sortedTiers = [...tiers].sort((a, b) => a.daysFrom - b.daysFrom);
+        return sortedTiers[0]?.pricePerDay ?? 0;
+    }, [product.price?.tiers]);
+    const formattedBasePrice = new Intl.NumberFormat("es-ES", {
+        minimumFractionDigits: firstTierPrice % 1 === 0 ? 0 : 2,
+        maximumFractionDigits: 2,
+    }).format(firstTierPrice);
+    const formattedDeposit = new Intl.NumberFormat("es-ES", {
+        minimumFractionDigits: product.price?.deposit && product.price.deposit % 1 !== 0 ? 2 : 0,
+        maximumFractionDigits: 2,
+    }).format(product.price?.deposit ?? 0);
+    const canPublish = product.publicationStatus === "draft";
+    const canArchive = product.publicationStatus !== "archived";
+    const hasSecondaryActions = (canPublish && Boolean(onPublish)) || (canArchive && Boolean(onDelete));
 
     return (
         <Card className="overflow-hidden hover:shadow-md transition-all duration-200 group border-border/60">
@@ -87,10 +106,10 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
                         </span>
                     )}
                     <span className="font-medium text-foreground">
-                        {product.price?.daily ?? 0}€/día
+                        Desde {formattedBasePrice}€/día
                     </span>
                     {product.price?.deposit != null && (
-                        <span>• {product.price.deposit}€ fianza</span>
+                        <span>• {formattedDeposit}€ fianza</span>
                     )}
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
@@ -98,45 +117,62 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
                 </p>
             </CardContent>
 
-            <CardFooter className="p-3 bg-muted/20 flex gap-2 border-t border-border/50">
-                <Link
-                    to={`/product/${product.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1"
-                >
-                    <Button variant="default" size="sm" className="w-full h-8 text-xs gap-1">
-                        Ver
-                        <ExternalLink size={12} className="opacity-70" />
-                    </Button>
-                </Link>
+            <CardFooter className="p-3 bg-muted/20 border-t border-border/50">
+                <div className="w-full space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 text-xs gap-1.5"
+                            onClick={onEdit}
+                            disabled={!onEdit}
+                            title="Editar producto"
+                        >
+                            <Edit size={14} />
+                            Editar
+                        </Button>
+                        <Link
+                            to={`/product/${product.slug || product.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block"
+                        >
+                            <Button variant="default" size="sm" className="h-9 w-full text-xs gap-1.5">
+                                Ver producto
+                                <ExternalLink size={13} className="opacity-80" />
+                            </Button>
+                        </Link>
+                    </div>
 
-                {(onEdit || onDelete) && (
-                    <>
-                        {onEdit && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                                onClick={() => onEdit(product.id)}
-                                title="Editar"
-                            >
-                                <Edit size={14} />
-                            </Button>
-                        )}
-                        {onDelete && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => onDelete(product.id)}
-                                title="Eliminar"
-                            >
-                                <Trash size={14} />
-                            </Button>
-                        )}
-                    </>
-                )}
+                    {hasSecondaryActions && (
+                        <div className={`grid gap-2 ${canPublish && onPublish && canArchive && onDelete ? "grid-cols-2" : "grid-cols-1"}`}>
+                            {canPublish && onPublish && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 text-xs gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                                    onClick={onPublish}
+                                    title="Publicar para que el producto sea visible"
+                                >
+                                    <Rocket size={14} />
+                                    Publicar (hacer visible)
+                                </Button>
+                            )}
+                            {canArchive && onDelete && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 text-xs gap-1.5 border-red-300 text-red-700 hover:bg-red-50"
+                                    onClick={onDelete}
+                                    title="Archivar para ocultar este producto del catálogo"
+                                >
+                                    <Trash size={14} />
+                                    Archivar (ocultar)
+                                </Button>
+                            )}
+                        </div>
+                    )}
+                </div>
             </CardFooter>
         </Card>
     );

@@ -6,14 +6,16 @@ interface ProductEditFormProps {
   product: Product;
   onSave: (product: Partial<Product>) => void;
   onCancel: () => void;
+  disableSubmit?: boolean;
 }
 
-const ProductEditForm = ({ product, onSave, onCancel }: ProductEditFormProps) => {
+const ProductEditForm = ({ product, onSave, onCancel, disableSubmit = false }: ProductEditFormProps) => {
   return (
     <ProductForm 
       product={product}
       onSave={onSave}
       onCancel={onCancel}
+      disableSubmit={disableSubmit}
     />
   );
 };

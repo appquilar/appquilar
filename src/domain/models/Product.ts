@@ -11,10 +11,8 @@ export interface Product {
     description: string;
     imageUrl: string;
     thumbnailUrl: string;
-    // Added publication status
     publicationStatus: PublicationStatusType;
     price: {
-        daily: number;
         deposit?: number;
         tiers?: {
             daysFrom: number;
@@ -22,19 +20,7 @@ export interface Product {
             pricePerDay: number;
         }[];
     };
-    secondHand?: {
-        price: number;
-        negotiable: boolean;
-        additionalInfo?: string;
-    };
-    isRentable: boolean;
-    isForSale: boolean;
     productType?: 'rental' | 'sale';
-    company: {
-        id: string;
-        name: string;
-        slug: string;
-    };
     category: {
         id: string;
         name: string;
@@ -46,6 +32,26 @@ export interface Product {
     updatedAt?: string;
     // Explicitly add image_ids to the domain model for editing
     image_ids?: string[];
+    circle?: { latitude: number; longitude: number }[];
+    ownerData: {
+        ownerId: string;
+        type: string;
+        name: string;
+        lastName?: string;
+        address?: {
+            street: string;
+            street2?: string;
+            city?: string;
+            postalCode?: string;
+            state?: string;
+            country?: string
+        },
+        geoLocation?: {
+            latitude: number;
+            longitude: number;
+            circle: { latitude: number; longitude: number }[];
+        }
+    }
 }
 
 /**

@@ -1,4 +1,4 @@
-import {IRentalRepository} from "@/domain/repositories/IRentalRepository";
+import {RentalRepository} from "@/domain/repositories/RentalRepository";
 import {IConversationRepository} from "@/domain/repositories/IConversationRepository";
 
 import {MockRentalRepository} from "./MockRentalRepository";
@@ -13,7 +13,7 @@ import {ApiProductRepository} from "@/infrastructure/repositories/ApiProductRepo
  */
 export class RepositoryFactory {
     // Existing repositories
-    private static rentalRepository: IRentalRepository;
+    private static rentalRepository: RentalRepository;
     private static productRepository: ProductRepository;
     private static conversationRepository: IConversationRepository;
 
@@ -24,14 +24,14 @@ export class RepositoryFactory {
     // RENTAL
     // --------------------------------------------------------------------------
 
-    public static getRentalRepository(): IRentalRepository {
+    public static getRentalRepository(): RentalRepository {
         if (!this.rentalRepository) {
             this.rentalRepository = new MockRentalRepository();
         }
         return this.rentalRepository;
     }
 
-    public static setRentalRepository(repository: IRentalRepository): void {
+    public static setRentalRepository(repository: RentalRepository): void {
         this.rentalRepository = repository;
     }
 

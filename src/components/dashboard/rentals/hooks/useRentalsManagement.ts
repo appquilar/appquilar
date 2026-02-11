@@ -1,11 +1,9 @@
-
 import { useNavigate } from 'react-router-dom';
 import { useRentalsData } from './useRentalsData';
 
 export const useRentalsManagement = () => {
   const navigate = useNavigate();
-  
-  // Use our rentals data hook for fetching and filtering
+
   const {
     rentals,
     isLoading,
@@ -18,15 +16,16 @@ export const useRentalsManagement = () => {
     setEndDate,
     rentalId,
     setRentalId,
-    activeTab,
-    setActiveTab,
+    statusFilter,
+    setStatusFilter,
+    roleTab,
+    setRoleTab,
+    showRoleFilter,
     filteredRentals,
-    rentalCounts,
     handleSearch,
-    handleDateSelect
+    handleDateSelect,
   } = useRentalsData();
 
-  // Navigation handlers
   const handleCreateRental = () => {
     navigate('/dashboard/rentals/new');
   };
@@ -34,14 +33,11 @@ export const useRentalsManagement = () => {
   const handleViewDetails = (rentalId: string) => {
     navigate(`/dashboard/rentals/${rentalId}`);
   };
-  
+
   return {
-    // Data and loading states
     rentals,
     isLoading,
     error,
-    
-    // Filter states
     searchQuery,
     setSearchQuery,
     startDate,
@@ -50,15 +46,15 @@ export const useRentalsManagement = () => {
     setEndDate,
     rentalId,
     setRentalId,
-    activeTab,
-    setActiveTab,
+    statusFilter,
+    setStatusFilter,
+    roleTab,
+    setRoleTab,
+    showRoleFilter,
     filteredRentals,
-    rentalCounts,
-    
-    // Event handlers
     handleSearch,
     handleCreateRental,
     handleViewDetails,
-    handleDateSelect
+    handleDateSelect,
   };
 };

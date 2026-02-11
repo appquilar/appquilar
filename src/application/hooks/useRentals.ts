@@ -1,45 +1,91 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { v4 as uuidv4 } from 'uuid';
+import { rentalService } from '@/compositionRoot';
+import { RentListParams } from '@/domain/repositories/RentalRepository';
+import { Money } from '@/domain/models/Money';
+import { useCurrentUser } from '@/application/hooks/useCurrentUser';
 
-import { useEffect, useState } from 'react';
-import { Rental } from '@/domain/models/Rental';
-import { RentalService } from '@/application/services/RentalService';
+interface UseRentalsOptions {
+  enabled?: boolean;
+}
 
-export const useRentals = () => {
-  const [rentals, setRentals] = useState<Rental[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const rentalService = RentalService.getInstance();
+export const useRentals = (params: RentListParams = {}, options: UseRentalsOptions = {}) => {
+  const enabled = options.enabled ?? true;
 
-  useEffect(() => {
-    const loadRentals = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const allRentals = await rentalService.getAllRentals();
-        setRentals(allRentals);
-      } catch (err) {
-        console.error('Error loading rentals:', err);
-        setError('Error al cargar alquileres');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadRentals();
-  }, []);
-
-  // Function to handle filtering
-  const getRentalsByStatus = (status: string | null) => {
-    if (!status || status === 'all') {
-      return rentals;
-    }
-    return rentals.filter(rental => rental.status === status);
-  };
+  const query = useQuery({
+    queryKey: ['rents', params],
+    queryFn: () => rentalService.listRents(params),
+    enabled,
+    placeholderData: (previousData) => previousData,
+  });
 
   return {
-    rentals,
-    isLoading,
-    error,
-    getRentalsByStatus
+    rentals: query.data?.data ?? [],
+    total: query.data?.total ?? 0,
+    page: query.data?.page ?? 1,
+    perPage: query.data?.perPage ?? params.perPage ?? 0,
+    isLoading: query.isLoading,
+    error: query.error ? 'Error al cargar alquileres' : null,
   };
+};
+
+export const useCreateLead = () => {
+  const queryClient = useQueryClient();
+  const { user } = useCurrentUser();
+
+  const toDateAtTime = (value: string, endOfDay: boolean): Date => {
+    const [year, month, day] = value.split('-').map((part) => Number(part));
+    return endOfDay
+      ? new Date(year, month - 1, day, 23, 59, 59)
+      : new Date(year, month - 1, day, 0, 0, 0);
+  };
+
+  return useMutation({
+    mutationFn: async ({
+      productId,
+      startDate,
+      endDate,
+      deposit,
+      price,
+      message,
+      renterEmail,
+      renterName,
+    }: {
+      productId: string;
+      startDate: string;
+      endDate: string;
+      deposit: Money;
+      price: Money;
+      message: string;
+      renterEmail?: string;
+      renterName?: string;
+    }) => {
+      const rentId = uuidv4();
+      const resolvedRenterEmail = (renterEmail ?? user?.email ?? '').trim();
+
+      if (!resolvedRenterEmail) {
+        throw new Error('renter_email_required');
+      }
+
+      await rentalService.createRent({
+        rentId,
+        productId,
+        renterEmail: resolvedRenterEmail,
+        renterName: renterName?.trim() || undefined,
+        startDate: toDateAtTime(startDate, false),
+        endDate: toDateAtTime(endDate, true),
+        deposit,
+        price,
+        isLead: true,
+      });
+
+      const firstMessage = message.trim();
+      if (firstMessage) {
+        await rentalService.createRentMessage(rentId, { content: firstMessage });
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['rents'] });
+    },
+  });
 };

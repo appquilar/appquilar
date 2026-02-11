@@ -6,11 +6,14 @@ import { ProductCompany } from './ProductCard';
 
 interface CompanyInfoProps {
   company: ProductCompany;
+  locationLabel?: string;
   onContact: () => void;
   isLoggedIn: boolean;
 }
 
-const CompanyInfo = ({ company, onContact, isLoggedIn }: CompanyInfoProps) => {
+const CompanyInfo = ({ company, locationLabel, onContact, isLoggedIn }: CompanyInfoProps) => {
+  const hasLocation = Boolean(locationLabel && locationLabel.trim().length > 0);
+
   return (
     <div className="bg-secondary rounded-lg p-4">
       <h3 className="text-sm font-medium uppercase tracking-wider mb-3">
@@ -22,10 +25,12 @@ const CompanyInfo = ({ company, onContact, isLoggedIn }: CompanyInfoProps) => {
         </div>
         <div>
           <h4 className="font-medium">{company.name}</h4>
-          <div className="flex items-center text-sm text-muted-foreground mt-1">
-            <MapPin size={14} className="mr-1" />
-            <span>Madrid, España</span>
-          </div>
+          {hasLocation && (
+            <div className="flex items-center text-sm text-muted-foreground mt-1">
+              <MapPin size={14} className="mr-1" />
+              <span>{locationLabel}</span>
+            </div>
+          )}
         </div>
       </div>
       <div className="border-t border-border mt-4 pt-4">

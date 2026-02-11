@@ -1,125 +1,76 @@
-
 import { Rental } from '@/domain/models/Rental';
 
 export const MOCK_RENTALS: Rental[] = [
   {
-    id: '1',
-    product: 'Hammer Drill 20V',
-    customer: {
-      id: 'c1',
-      name: 'John Smith',
-      email: 'john@example.com',
-      phone: '123-456-7890'
+    id: '550e8400-e29b-41d4-a716-446655440010',
+    productId: '550e8400-e29b-41d4-a716-446655440101',
+    productName: 'Taladro profesional',
+    productInternalId: 'TLD-001',
+    ownerId: '550e8400-e29b-41d4-a716-446655440201',
+    ownerName: 'Ferreteria Centro',
+    ownerType: 'user',
+    renterId: '550e8400-e29b-41d4-a716-446655440301',
+    renterName: 'Maria Gomez',
+    ownerLocation: {
+      city: 'Madrid',
+      country: 'Spain',
+      label: 'Madrid, Spain',
     },
-    startDate: '2025-04-03',
-    endDate: '2025-04-08',
-    status: 'active',
-    totalAmount: 75.00,
-    returned: false
+    startDate: new Date('2025-04-03T10:00:00'),
+    endDate: new Date('2025-04-08T10:00:00'),
+    deposit: { amount: 5000, currency: 'EUR' },
+    price: { amount: 7500, currency: 'EUR' },
+    depositReturned: null,
+    status: 'rental_confirmed',
+    isLead: false,
+    proposalValidUntil: null,
   },
   {
-    id: '2',
-    product: 'Table Saw with Stand',
-    customer: {
-      id: 'c2',
-      name: 'Sarah Johnson',
-      email: 'sarah@example.com',
-      phone: '234-567-8901'
+    id: '550e8400-e29b-41d4-a716-446655440011',
+    productId: '550e8400-e29b-41d4-a716-446655440102',
+    productName: 'Pulidora orbital',
+    productInternalId: 'PLD-777',
+    ownerId: '550e8400-e29b-41d4-a716-446655440202',
+    ownerName: 'Herramientas Norte',
+    ownerType: 'company',
+    renterId: '550e8400-e29b-41d4-a716-446655440302',
+    renterName: 'Javier Ruiz',
+    ownerLocation: {
+      city: 'Bilbao',
+      country: 'Spain',
+      label: 'Bilbao, Spain',
     },
-    startDate: '2025-04-01',
-    endDate: '2025-04-09',
-    status: 'active',
-    totalAmount: 245.00,
-    returned: false
+    startDate: new Date('2025-04-01T10:00:00'),
+    endDate: new Date('2025-04-09T10:00:00'),
+    deposit: { amount: 12000, currency: 'EUR' },
+    price: { amount: 24500, currency: 'EUR' },
+    depositReturned: null,
+    status: 'lead_pending',
+    isLead: true,
+    proposalValidUntil: null,
   },
   {
-    id: '3',
-    product: 'Landscaping Tool Set',
-    customer: {
-      id: 'c3',
-      name: 'Michael Brown',
-      email: 'michael@example.com',
-      phone: '345-678-9012'
+    id: '550e8400-e29b-41d4-a716-446655440012',
+    productId: '550e8400-e29b-41d4-a716-446655440103',
+    productName: 'Escalera telescopica',
+    productInternalId: 'ESC-332',
+    ownerId: '550e8400-e29b-41d4-a716-446655440201',
+    ownerName: 'Ferreteria Centro',
+    ownerType: 'user',
+    renterId: '550e8400-e29b-41d4-a716-446655440303',
+    renterName: 'Carlos Perez',
+    ownerLocation: {
+      city: 'Madrid',
+      country: 'Spain',
+      label: 'Madrid, Spain',
     },
-    startDate: '2025-03-30',
-    endDate: '2025-04-02',
-    status: 'completed',
-    totalAmount: 40.00,
-    returned: true
-  },
-  {
-    id: '4',
-    product: '48" Concrete Bull Float',
-    customer: {
-      id: 'c4',
-      name: 'Emily Wilson',
-      email: 'emily@example.com',
-      phone: '456-789-0123'
-    },
-    startDate: '2025-04-10',
-    endDate: '2025-04-15',
-    status: 'upcoming',
-    totalAmount: 56.00,
-    returned: false
-  },
-  {
-    id: '5',
-    product: 'Folding Banquet Tables',
-    customer: {
-      id: 'c5',
-      name: 'David Thompson',
-      email: 'david@example.com',
-      phone: '567-890-1234'
-    },
-    startDate: '2025-04-04',
-    endDate: '2025-04-07',
-    status: 'active',
-    totalAmount: 80.00,
-    returned: false
-  },
-  {
-    id: '6',
-    product: 'Commercial Carpet Cleaner',
-    customer: {
-      id: 'c6',
-      name: 'Lisa Anderson',
-      email: 'lisa@example.com',
-      phone: '678-901-2345'
-    },
-    startDate: '2025-03-25',
-    endDate: '2025-03-30',
-    status: 'completed',
-    totalAmount: 225.00,
-    returned: true
-  },
-  {
-    id: '7',
-    product: 'Electric Chainsaw',
-    customer: {
-      id: 'c7',
-      name: 'Robert Garcia',
-      email: 'robert@example.com',
-      phone: '789-012-3456'
-    },
-    startDate: '2025-04-15',
-    endDate: '2025-04-18',
-    status: 'upcoming',
-    totalAmount: 65.00,
-    returned: false
-  },
-  {
-    id: '8',
-    product: 'Portable Generator',
-    customer: {
-      id: 'c8',
-      name: 'Jennifer Lee',
-      email: 'jennifer@example.com',
-      phone: '890-123-4567'
-    },
-    startDate: '2025-04-06',
-    endDate: '2025-04-12',
-    status: 'active',
-    totalAmount: 120.00,
-    returned: false
+    startDate: new Date('2025-03-30T10:00:00'),
+    endDate: new Date('2025-04-02T10:00:00'),
+    deposit: { amount: 2000, currency: 'EUR' },
+    price: { amount: 4000, currency: 'EUR' },
+    depositReturned: { amount: 2000, currency: 'EUR' },
+    status: 'rental_completed',
+    isLead: false,
+    proposalValidUntil: null,
   }
 ];

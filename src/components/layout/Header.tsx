@@ -24,7 +24,8 @@ import { CategoryDrawerTree } from "@/components/layout/CategoryDrawerTree";
 const Header = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [authModalOpen, setAuthModalOpen] = useState(false);
-    const [categoriesOpen, setCategoriesOpen] = useState(false);
+    const [desktopCategoriesOpen, setDesktopCategoriesOpen] = useState(false);
+    const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
 
     const { user: currentUser, isAuthenticated } = useCurrentUser();
     const { logout } = useAuth();
@@ -111,7 +112,7 @@ const Header = () => {
                             ))}
                         </nav>
 
-                        <Sheet open={categoriesOpen} onOpenChange={setCategoriesOpen}>
+                        <Sheet open={desktopCategoriesOpen} onOpenChange={setDesktopCategoriesOpen}>
                             <SheetTrigger asChild>
                                 <Button variant="outline" size="sm" className="gap-2">
                                     <Menu size={18} />
@@ -140,8 +141,8 @@ const Header = () => {
                                     ) : (
                                         <CategoryDrawerTree
                                             categories={drawerCategories}
-                                            isOpen={categoriesOpen}
-                                            onNavigate={() => setCategoriesOpen(false)}
+                                            isOpen={desktopCategoriesOpen}
+                                            onNavigate={() => setDesktopCategoriesOpen(false)}
                                         />
                                     )}
                                 </div>
@@ -210,7 +211,7 @@ const Header = () => {
 
                         {/* MOBILE */}
                         <div className="md:hidden">
-                            <Sheet open={categoriesOpen} onOpenChange={setCategoriesOpen}>
+                            <Sheet open={mobileCategoriesOpen} onOpenChange={setMobileCategoriesOpen}>
                                 <SheetTrigger asChild>
                                     <Button variant="ghost" size="icon">
                                         <Menu size={24} />
@@ -235,8 +236,8 @@ const Header = () => {
                                         ) : (
                                             <CategoryDrawerTree
                                                 categories={drawerCategories}
-                                                isOpen={categoriesOpen}
-                                                onNavigate={() => setCategoriesOpen(false)}
+                                                isOpen={mobileCategoriesOpen}
+                                                onNavigate={() => setMobileCategoriesOpen(false)}
                                             />
                                         )}
                                     </div>

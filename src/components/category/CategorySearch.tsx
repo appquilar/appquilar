@@ -10,7 +10,7 @@ interface Props {
 
 const CategorySearch = ({ searchQuery, categoryName, onSearchChange, onSearch }: Props) => {
     return (
-        <form onSubmit={onSearch} className="mt-6">
+        <form onSubmit={onSearch} className="mt-6 mb-6">
             <div className="relative w-full">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                 <input

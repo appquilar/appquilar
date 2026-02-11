@@ -3,7 +3,7 @@
  * @fileoverview Servicio de dominio para operaciones con estados de alquileres
  */
 
-import { Rental } from '../models/Rental';
+import { Rental, RentStatus } from '../models/Rental';
 
 export class RentalStatusService {
   /**
@@ -14,15 +14,11 @@ export class RentalStatusService {
    */
   static updateRentalStatus(
     rental: Rental, 
-    newStatus: 'active' | 'upcoming' | 'completed'
+    newStatus: RentStatus
   ): Rental {
-    // Para "completed" status, marcar como devuelto
-    const returned = newStatus === 'completed' ? true : rental.returned;
-    
     return {
       ...rental,
-      status: newStatus,
-      returned: returned || rental.returned // Mantener devuelto true si ya era true
+      status: newStatus
     };
   }
 
@@ -31,9 +27,14 @@ export class RentalStatusService {
    */
   static getStatusLabel(status: string): string {
     switch (status) {
-      case 'active': return 'Activo';
-      case 'upcoming': return 'Próximo';
-      case 'completed': return 'Completado';
+      case 'lead_pending': return 'Propuesta';
+      case 'proposal_pending_renter': return 'Pendiente de aceptacion';
+      case 'rental_confirmed': return 'Oferta';
+      case 'rental_active': return 'Producto recogido';
+      case 'rental_completed': return 'Producto devuelto';
+      case 'cancelled': return 'Cancelado';
+      case 'rejected': return 'Rechazado';
+      case 'expired': return 'Expirado';
       default: return status;
     }
   }
@@ -43,14 +44,28 @@ export class RentalStatusService {
    */
   static getStatusBadgeClasses(status: string): string {
     switch (status) {
-      case 'active': 
+      case 'lead_pending':
+        return 'bg-amber-100 text-amber-800 hover:bg-amber-100';
+      case 'proposal_pending_renter':
+        return 'bg-amber-100 text-amber-800 hover:bg-amber-100';
+      case 'rental_confirmed':
+        return 'bg-cyan-100 text-cyan-800 hover:bg-cyan-100';
+      case 'rental_active':
         return 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100';
-      case 'upcoming': 
-        return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
-      case 'completed': 
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
+      case 'rental_completed':
+        return 'bg-slate-100 text-slate-800 hover:bg-slate-100';
+      case 'cancelled':
+        return 'bg-rose-100 text-rose-800 hover:bg-rose-100';
+      case 'rejected':
+        return 'bg-orange-100 text-orange-800 hover:bg-orange-100';
+      case 'expired':
+        return 'bg-zinc-100 text-zinc-800 hover:bg-zinc-100';
       default: 
         return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
     }
+  }
+
+  static isTerminalStatus(status: RentStatus): boolean {
+    return ['rental_completed', 'cancelled', 'rejected', 'expired'].includes(status);
   }
 }

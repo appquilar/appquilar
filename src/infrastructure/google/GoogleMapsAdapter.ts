@@ -64,7 +64,9 @@ async function getAppquilarMarkerIcon(
     if (markerIconPromise) return markerIconPromise;
 
     markerIconPromise = new Promise((resolve) => {
-        const size = 110; // más grande y definido
+        // Renderizamos en alta resolución y luego escalamos a un tamaño visual
+        // más natural para que no se vea "forzado" en el mapa.
+        const size = 128;
         const canvas = document.createElement("canvas");
         canvas.width = size;
         canvas.height = size;
@@ -78,14 +80,14 @@ async function getAppquilarMarkerIcon(
         ctx.clearRect(0, 0, size, size);
 
         const centerX = size / 2;
-        const circleRadius = size * 0.30; // círculo grande y redondo
-        const circleCenterY = size * 0.30;
-        const tipY = size * 0.90;
+        const circleRadius = size * 0.245;
+        const circleCenterY = size * 0.295;
+        const tipY = size * 0.85;
 
         // === SOMBRA (suave, circular) ===
         ctx.save();
         ctx.beginPath();
-        ctx.ellipse(centerX, tipY - 5, circleRadius * 1.1, circleRadius * 0.4, 0, 0, Math.PI * 2);
+        ctx.ellipse(centerX, tipY - 3, circleRadius * 0.78, circleRadius * 0.28, 0, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(0,0,0,0.25)";
         ctx.fill();
         ctx.restore();
@@ -100,14 +102,14 @@ async function getAppquilarMarkerIcon(
 
         // 2. Punta inferior bien unida (triángulo proporcionado)
         ctx.beginPath();
-        ctx.moveTo(centerX - circleRadius * 0.75, circleCenterY + circleRadius * 0.5);
-        ctx.lineTo(centerX + circleRadius * 0.75, circleCenterY + circleRadius * 0.5);
+        ctx.moveTo(centerX - circleRadius * 0.60, circleCenterY + circleRadius * 0.56);
+        ctx.lineTo(centerX + circleRadius * 0.60, circleCenterY + circleRadius * 0.56);
         ctx.lineTo(centerX, tipY);
         ctx.closePath();
         ctx.fill();
 
         // === CÍRCULO INTERIOR BLANCO (para logo) ===
-        const innerRadius = circleRadius * 0.8;
+        const innerRadius = circleRadius * 0.84;
 
         ctx.save();
         ctx.beginPath();
@@ -120,7 +122,7 @@ async function getAppquilarMarkerIcon(
         // === LOGO BLANCO ===
         const img = new Image();
         img.onload = () => {
-            const logoSize = innerRadius * 2.3; // más grande
+            const logoSize = innerRadius * 2.22;
             ctx.drawImage(
                 img,
                 centerX - logoSize / 2,
@@ -135,8 +137,10 @@ async function getAppquilarMarkerIcon(
 
             const icon: google.maps.Icon = {
                 url,
-                scaledSize: new google.maps.Size(52, 80), // proporción perfecta
-                anchor: new google.maps.Point(26, 78), // la punta del pin toca el punto real
+                // Tamaño final más discreto y proporcionado al mapa.
+                scaledSize: new google.maps.Size(38, 54),
+                // La punta del marcador queda exactamente en la coordenada.
+                anchor: new google.maps.Point(19, 52),
             };
 
             resolve(icon);

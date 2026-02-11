@@ -47,7 +47,7 @@ const CreateRental = () => {
 
             <Separator className="my-4" />
 
-            <RentalDetailsFields form={form} />
+            <RentalDetailsFields form={form} selectedProduct={selectedProduct} />
 
             <FormActions 
               isSubmitting={isSubmitting} 

@@ -23,6 +23,9 @@ import {SeoService} from "@/core/application/SeoService.ts";
 import {ProductRepository} from "@/domain/repositories/ProductRepository.ts";
 import {ApiProductRepository} from "@/infrastructure/repositories/ApiProductRepository.ts";
 import {ProductService} from "@/application/services/ProductService.ts";
+import {RentalRepository} from "@/domain/repositories/RentalRepository.ts";
+import {ApiRentalRepository} from "@/infrastructure/repositories/ApiRentalRepository.ts";
+import {RentalService} from "@/application/services/RentalService.ts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -47,6 +50,7 @@ export const mediaRepository: MediaRepository = new ApiMediaRepository(apiClient
 export const categoryRepository: CategoryRepository = new ApiCategoryRepository(apiClient, session);
 export const siteRepository: SiteRepository = new ApiSiteRepository(apiClient, session);
 export const productRepository: ProductRepository = new ApiProductRepository(apiClient, session);
+export const rentalRepository: RentalRepository = new ApiRentalRepository(apiClient, session);
 
 export const seoService = new SeoService();
 export const authService = new AuthService(authRepository, userRepository);
@@ -55,6 +59,7 @@ export const mediaService = new MediaService(mediaRepository);
 export const categoryService = new CategoryService(categoryRepository);
 export const siteService = new SiteService(siteRepository);
 export const productService = new ProductService(productRepository);
+export const rentalService = new RentalService(rentalRepository);
 
 export const compositionRoot = {
     queryClient,
@@ -69,6 +74,7 @@ export const compositionRoot = {
     categoryRepository,
     siteRepository,
     productRepository,
+    rentalRepository,
 
     authService,
     userService,
@@ -76,6 +82,7 @@ export const compositionRoot = {
     categoryService,
     siteService,
     productService,
+    rentalService,
 };
 
 export type CompositionRoot = typeof compositionRoot;
