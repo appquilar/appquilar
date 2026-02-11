@@ -20,6 +20,8 @@ import CreateRental from "@/pages/dashboard/rentals/CreateRental";
 import RentalDetails from "@/pages/dashboard/rentals/RentalDetails";
 import UserProductsPage from "./users/UserProductsPage";
 import SiteSettingsPage from "./sites/SiteSettingsPage";
+import BlogManagementPage from "@/components/dashboard/blog/BlogManagementPage";
+import BlogEditorPage from "@/components/dashboard/blog/BlogEditorPage";
 
 import RoleGuard from "@/components/auth/RoleGuard";
 import { UserRole } from "@/domain/models/UserRole";
@@ -75,6 +77,32 @@ const DashboardRoutes = () => {
                 element={
                     <RoleGuard requiredRoles={[UserRole.ADMIN]}>
                         <CategoryFormPage />
+                    </RoleGuard>
+                }
+            />
+
+            {/* Blog (🔒 sólo ADMIN) */}
+            <Route
+                path="blog"
+                element={
+                    <RoleGuard requiredRoles={[UserRole.ADMIN]}>
+                        <BlogManagementPage />
+                    </RoleGuard>
+                }
+            />
+            <Route
+                path="blog/new"
+                element={
+                    <RoleGuard requiredRoles={[UserRole.ADMIN]}>
+                        <BlogEditorPage />
+                    </RoleGuard>
+                }
+            />
+            <Route
+                path="blog/:postId"
+                element={
+                    <RoleGuard requiredRoles={[UserRole.ADMIN]}>
+                        <BlogEditorPage />
                     </RoleGuard>
                 }
             />

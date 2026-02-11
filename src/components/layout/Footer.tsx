@@ -32,7 +32,7 @@ const SOCIAL_LINKS: SocialLink[] = [
 const COMPANY_LINKS: FooterLink[] = [
     { key: "about", label: "Quiénes somos", to: "/about" },
     { key: "partners", label: "Colabora con nosotros", to: "/partners" },
-    { key: "blog", label: "Blog", href: "https://blog.appquilar.com", external: true },
+    { key: "blog", label: "Blog", to: "/blog" },
     { key: "contact", label: "Contacto", to: "/contact" },
 ];
 

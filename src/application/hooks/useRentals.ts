@@ -29,6 +29,34 @@ export const useRentals = (params: RentListParams = {}, options: UseRentalsOptio
   };
 };
 
+interface UseOwnerRentalsCountParams {
+  ownerId?: string | null;
+}
+
+export const useOwnerRentalsCount = ({
+  ownerId,
+}: UseOwnerRentalsCountParams) => {
+  return useQuery({
+    queryKey: ['rents', 'owner-count', ownerId],
+    queryFn: async () => {
+      if (!ownerId) {
+        return 0;
+      }
+
+      const response = await rentalService.listRents({
+        role: 'owner',
+        ownerId,
+        page: 1,
+        perPage: 1,
+      });
+
+      return response.total ?? response.data.length;
+    },
+    enabled: Boolean(ownerId),
+    placeholderData: (previousData) => previousData,
+  });
+};
+
 export const useCreateLead = () => {
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();

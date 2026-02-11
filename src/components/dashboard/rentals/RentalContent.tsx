@@ -13,6 +13,14 @@ const formatMoneyFromCents = (amount: number, currency: string): string => {
   return `${value.toFixed(2)} ${currency}`;
 };
 
+const formatDate = (date: Date): string => {
+  return date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
+
 const RentalContent = ({ rentals }: RentalsListProps) => {
   if (rentals.length === 0) {
     return (
@@ -52,7 +60,7 @@ const RentalContent = ({ rentals }: RentalsListProps) => {
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Período de alquiler</p>
                 <p className="font-medium">
-                  {rental.startDate.toLocaleDateString()} a {rental.endDate.toLocaleDateString()}
+                  {formatDate(rental.startDate)} a {formatDate(rental.endDate)}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {Math.ceil((rental.endDate.getTime() - rental.startDate.getTime()) / (1000 * 60 * 60 * 24))} días

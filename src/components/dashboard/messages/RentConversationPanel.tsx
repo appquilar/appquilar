@@ -29,20 +29,27 @@ interface MessageFormValues {
   content: string;
 }
 
-const formatTimestamp = (date: Date, includeTime: boolean = true): string =>
-  includeTime
-    ? date.toLocaleString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : date.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      });
+const WIZARD_STEPS: RentStatus[] = [
+  'proposal_pending_renter',
+  'rental_confirmed',
+  'rental_active',
+  'rental_completed',
+];
+
+const getWizardStepLabel = (status: RentStatus): string => {
+  if (status === 'proposal_pending_renter') {
+    return 'Oferta / Propuesta';
+  }
+
+  return RentalStatusService.getStatusLabel(status);
+};
+
+const formatTimestamp = (date: Date): string =>
+  date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 
 const roleLabel: Record<'owner' | 'renter' | 'system', string> = {
   owner: 'Tienda',
@@ -76,9 +83,9 @@ const RentConversationPanel = ({
   );
   const [statusActionError, setStatusActionError] = useState<string | null>(null);
 
-  const workflowSteps = useMemo(() => RentalStateMachineService.getWorkflowSteps(rental), [rental]);
+  const workflowSteps = WIZARD_STEPS;
   const effectiveCurrentStatus: RentStatus =
-    rental.status === 'proposal_pending_renter' ? 'rental_confirmed' : rental.status;
+    rental.status === 'lead_pending' ? 'proposal_pending_renter' : rental.status;
   const currentStepIndex = workflowSteps.findIndex((step) => step === effectiveCurrentStatus);
   const availableStatusTransitions = useMemo(
     () => RentalStateMachineService.getNextTransitions(rental, viewerRole, new Date()),
@@ -222,9 +229,10 @@ const RentConversationPanel = ({
       <div className="mt-3 space-y-2">
         {requiresProposalValidUntil && (
           <div className="space-y-1">
-            <p className="text-xs font-medium text-slate-600">Valida hasta (opcional)</p>
+            <p className="text-xs font-medium text-slate-600">Propuesta válida hasta (opcional)</p>
             <Input
               type="date"
+              lang="es-ES"
               value={proposalValidUntil}
               onChange={(event) => setProposalValidUntil(event.target.value)}
               disabled={updateStatusMutation.isPending}
@@ -232,12 +240,13 @@ const RentConversationPanel = ({
             />
           </div>
         )}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           {nonCancelStatusTransitions.map((transition) => (
             <Button
               key={transition.to}
               size="sm"
               variant="default"
+              className="w-full sm:w-auto"
               disabled={updateStatusMutation.isPending}
               onClick={() => handleStatusTransition(transition.to, transition.requiresProposalValidUntil)}
             >
@@ -284,7 +293,7 @@ const RentConversationPanel = ({
                       : 'border-border'
                   }`}
                 >
-                  <p className="font-medium">{RentalStatusService.getStatusLabel(step)}</p>
+                  <p className="font-medium">{getWizardStepLabel(step)}</p>
                 </div>
               );
             })}
@@ -346,7 +355,7 @@ const RentConversationPanel = ({
                     )}
                     <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                     <p className="text-[11px] opacity-75 mt-1">
-                      {formatTimestamp(message.createdAt, !isSystemMessage)}
+                      {formatTimestamp(message.createdAt)}
                     </p>
                     {isSystemMessage && isLatestSystemMessage && renderStatusActions()}
                   </div>

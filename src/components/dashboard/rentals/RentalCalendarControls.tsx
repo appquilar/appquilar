@@ -12,6 +12,9 @@ interface RentalCalendarControlsProps {
   endDate?: Date;
 }
 
+const formatMonthYear = (date: Date): string =>
+  `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+
 const RentalCalendarControls = ({ onCreateRental, startDate, endDate }: RentalCalendarControlsProps) => {
   const { rentals } = useRentals();
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -53,7 +56,7 @@ const RentalCalendarControls = ({ onCreateRental, startDate, endDate }: RentalCa
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-sm font-medium min-w-[120px] text-center">
-              {currentMonth.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+              {formatMonthYear(currentMonth)}
             </span>
             <Button variant="ghost" size="sm" onClick={handleNextMonth} className="h-8 w-8 p-0">
               <ChevronRight className="h-4 w-4" />

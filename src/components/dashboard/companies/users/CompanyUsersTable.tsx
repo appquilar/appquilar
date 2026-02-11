@@ -99,7 +99,11 @@ export const CompanyUsersTable = ({ users, onUsersChange }: CompanyUsersTablePro
                   </span>
                 </TableCell>
                 <TableCell>
-                  {new Date(user.dateAdded).toLocaleDateString('es-ES')}
+                  {new Date(user.dateAdded).toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                  })}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">

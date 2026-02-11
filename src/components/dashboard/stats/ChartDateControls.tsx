@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -17,6 +16,9 @@ interface ChartDateControlsProps {
   setCalendarOpen: (open: boolean) => void;
   isMobile: boolean;
 }
+
+const formatMonthYear = (date: Date): string =>
+  `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
 
 const ChartDateControls: React.FC<ChartDateControlsProps> = ({
   currentDate,
@@ -42,7 +44,7 @@ const ChartDateControls: React.FC<ChartDateControlsProps> = ({
         <PopoverTrigger asChild>
           <Button variant="outline" className="flex items-center gap-2">
             <CalendarIcon className="h-4 w-4" />
-            <span>{format(currentDate, 'MMMM yyyy', { locale: es })}</span>
+            <span>{formatMonthYear(currentDate)}</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="center">

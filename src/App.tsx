@@ -16,6 +16,8 @@ import SearchPage from "@/pages/SearchPage";
 import AboutPage from "@/pages/AboutPage";
 import ContactPage from "@/pages/ContactPage";
 import PartnersPage from "@/pages/PartnersPage";
+import BlogPage from "@/pages/BlogPage";
+import BlogPostPage from "@/pages/BlogPostPage";
 
 import LegalNoticePage from "@/pages/legal/LegalNoticePage";
 import TermsPage from "@/pages/legal/TermsPage";
@@ -46,6 +48,8 @@ const App = () => (
                         <Route path="/about" element={<AboutPage />} />
                         <Route path="/contact" element={<ContactPage />} />
                         <Route path="/partners" element={<PartnersPage />} />
+                        <Route path="/blog" element={<BlogPage />} />
+                        <Route path="/blog/*" element={<BlogPostPage />} />
 
                         {/* Legales */}
                         <Route path="/legal/aviso-legal" element={<LegalNoticePage />} />

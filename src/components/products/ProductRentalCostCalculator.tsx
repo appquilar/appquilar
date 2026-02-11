@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useCalculateRentalCost } from "@/application/hooks/useProducts";
 import { RentalCostBreakdown } from "@/domain/repositories/ProductRepository";
+import SpanishDateInput from "./SpanishDateInput";
 
 type ProductRentalCostCalculatorProps = {
     productId: string;
@@ -64,12 +64,10 @@ const ProductRentalCostCalculator = ({
                     <label htmlFor="rental-start-date" className="text-sm text-muted-foreground">
                         Fecha de inicio
                     </label>
-                    <Input
+                    <SpanishDateInput
                         id="rental-start-date"
-                        type="date"
                         value={startDate}
-                        onChange={(event) => {
-                            const value = event.target.value;
+                        onChange={(value) => {
                             setLastCalculation(null);
                             onCalculationChange?.(null);
                             if (controlledStartDate === undefined) {
@@ -84,12 +82,10 @@ const ProductRentalCostCalculator = ({
                     <label htmlFor="rental-end-date" className="text-sm text-muted-foreground">
                         Fecha de fin
                     </label>
-                    <Input
+                    <SpanishDateInput
                         id="rental-end-date"
-                        type="date"
                         value={endDate}
-                        onChange={(event) => {
-                            const value = event.target.value;
+                        onChange={(value) => {
                             setLastCalculation(null);
                             onCalculationChange?.(null);
                             if (controlledEndDate === undefined) {

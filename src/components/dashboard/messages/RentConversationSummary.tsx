@@ -47,11 +47,11 @@ const RentConversationSummary = ({ conversation }: RentConversationSummaryProps)
   };
 
   return (
-    <Card className="h-full">
+    <Card className="flex h-full min-h-0 flex-col overflow-hidden">
       <CardHeader>
         <CardTitle className="text-base">Resumen del alquiler</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 text-sm">
+      <CardContent className="flex-1 min-h-0 space-y-3 overflow-y-auto text-sm">
         <div>
           <p className="text-muted-foreground">Producto</p>
           <p className="font-medium">{conversation.productName}</p>
@@ -99,7 +99,7 @@ const RentConversationSummary = ({ conversation }: RentConversationSummaryProps)
           <p className="text-sm text-muted-foreground">{ownerAddress}</p>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 pt-1">
           {conversation.role === 'renter' ? (
             <Button asChild variant="outline" className="w-full">
               <a href={publicProductHref} target="_blank" rel="noopener noreferrer">
@@ -115,12 +115,11 @@ const RentConversationSummary = ({ conversation }: RentConversationSummaryProps)
           )}
 
           {canCancel && (
-            <div className="rounded-md border border-border bg-muted/30 p-2">
+            <div className="rounded-md border border-border bg-muted/30 p-3">
               <p className="mb-2 text-xs font-medium text-muted-foreground">Acciones</p>
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
                 className="w-full border-border bg-background text-foreground hover:bg-muted"
                 onClick={handleCancelRent}
                 disabled={updateStatusMutation.isPending}

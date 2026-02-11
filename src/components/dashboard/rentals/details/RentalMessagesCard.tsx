@@ -22,20 +22,12 @@ interface RentalMessageFormValues {
   content: string;
 }
 
-const formatTimestamp = (date: Date, includeTime: boolean = true): string =>
-  includeTime
-    ? date.toLocaleString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : date.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      });
+const formatTimestamp = (date: Date): string =>
+  date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 
 const senderRoleLabel: Record<'owner' | 'renter', string> = {
   owner: 'Tienda',
@@ -127,7 +119,7 @@ const RentalMessagesCard = ({ rentId }: RentalMessagesCardProps) => {
                     </p>
                     <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                     <p className="text-[11px] opacity-75 mt-1">
-                      {formatTimestamp(message.createdAt, message.senderRole !== 'system')}
+                      {formatTimestamp(message.createdAt)}
                     </p>
                   </div>
                 </div>

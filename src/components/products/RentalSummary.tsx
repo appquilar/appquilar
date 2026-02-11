@@ -1,4 +1,3 @@
-
 import { format, differenceInDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Product } from './ProductCard';
@@ -34,7 +33,7 @@ const RentalSummary = ({
           <div className="flex justify-between py-2 border-b">
             <span>Periodo:</span>
             <span className="font-medium">
-              {format(selectedStartDate, 'PP')} - {format(selectedEndDate, 'PP')}
+              {format(selectedStartDate, 'dd/MM/yyyy')} - {format(selectedEndDate, 'dd/MM/yyyy')}
             </span>
           </div>
           

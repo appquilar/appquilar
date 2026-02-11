@@ -7,10 +7,10 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateLead } from '@/application/hooks/useRentals';
-import { Input } from '@/components/ui/input';
 import { useCalculateRentalCost } from '@/application/hooks/useProducts';
 import { RentalCostBreakdown } from '@/domain/repositories/ProductRepository';
 import { useEffect, useState } from 'react';
+import SpanishDateInput from './SpanishDateInput';
 
 const messageSchema = z.object({
   message: z.string()
@@ -122,7 +122,7 @@ const ContactModal = ({
         message: data.message,
       });
 
-      toast.success('Lead enviado correctamente', {
+      toast.success('Propuesta de alquiler enviada correctamente', {
         description: `${ownerName} recibirá tu solicitud pronto`
       });
 
@@ -138,6 +138,8 @@ const ContactModal = ({
   };
 
   const message = form.watch('message') || '';
+  const startDate = form.watch('startDate') || '';
+  const endDate = form.watch('endDate') || '';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -153,12 +155,14 @@ const ContactModal = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="lead-start-date">Fecha de inicio</Label>
-              <Input
+              <SpanishDateInput
                 id="lead-start-date"
-                type="date"
-                {...form.register('startDate', {
-                  onChange: () => setCalculation(null),
-                })}
+                value={startDate}
+                onChange={(value) => {
+                  setCalculation(null);
+                  form.setValue('startDate', value, { shouldDirty: true, shouldValidate: true });
+                }}
+                invalid={Boolean(form.formState.errors.startDate)}
               />
               {form.formState.errors.startDate?.message && (
                 <p className="text-sm text-destructive">{form.formState.errors.startDate.message}</p>
@@ -166,12 +170,14 @@ const ContactModal = ({
             </div>
             <div className="space-y-1">
               <Label htmlFor="lead-end-date">Fecha de fin</Label>
-              <Input
+              <SpanishDateInput
                 id="lead-end-date"
-                type="date"
-                {...form.register('endDate', {
-                  onChange: () => setCalculation(null),
-                })}
+                value={endDate}
+                onChange={(value) => {
+                  setCalculation(null);
+                  form.setValue('endDate', value, { shouldDirty: true, shouldValidate: true });
+                }}
+                invalid={Boolean(form.formState.errors.endDate)}
               />
               {form.formState.errors.endDate?.message && (
                 <p className="text-sm text-destructive">{form.formState.errors.endDate.message}</p>

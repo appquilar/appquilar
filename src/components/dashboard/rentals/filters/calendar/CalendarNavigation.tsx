@@ -1,8 +1,6 @@
 
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -38,10 +36,9 @@ const CalendarNavigation = ({
   // Generate array of months for selection
   const generateMonthOptions = () => {
     return Array.from({ length: 12 }, (_, i) => {
-      const date = new Date(2021, i, 1);
       return {
         value: i.toString(),
-        label: format(date, 'MMMM', { locale: es })
+        label: String(i + 1).padStart(2, '0'),
       };
     });
   };

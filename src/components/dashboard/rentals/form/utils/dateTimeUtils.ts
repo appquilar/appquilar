@@ -1,19 +1,18 @@
 
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 /**
  * Formats a date for display
  */
 export const formatDate = (date: Date): string => {
-  return format(date, "PPP", { locale: es });
+  return format(date, 'dd/MM/yyyy');
 };
 
 /**
  * Formats a time for display
  */
 export const formatTime = (date: Date): string => {
-  return format(date, "HH:mm", { locale: es });
+  return format(date, 'HH:mm');
 };
 
 /**

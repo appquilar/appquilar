@@ -8,7 +8,13 @@ export interface RentTransitionOption {
   requiresProposalValidUntil?: boolean;
 }
 
-const LEAD_WORKFLOW: RentStatus[] = ['lead_pending', 'rental_confirmed', 'rental_active', 'rental_completed'];
+const LEAD_WORKFLOW: RentStatus[] = [
+  'lead_pending',
+  'proposal_pending_renter',
+  'rental_confirmed',
+  'rental_active',
+  'rental_completed',
+];
 
 const RENTAL_WORKFLOW: RentStatus[] = [
   'rental_confirmed',

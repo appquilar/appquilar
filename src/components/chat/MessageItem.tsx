@@ -6,7 +6,6 @@
 
 import { Message } from '@/core/domain/Message';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 interface MessageItemProps {
   message: Message;
@@ -17,7 +16,7 @@ interface MessageItemProps {
  * Renderiza un mensaje individual dentro de una conversación
  */
 const MessageItem = ({ message, isUserMessage }: MessageItemProps) => {
-  const formattedTime = format(message.timestamp, 'HH:mm - d MMM', { locale: es });
+  const formattedTime = format(message.timestamp, 'dd/MM/yyyy');
   
   return (
     <div className={`flex ${isUserMessage ? 'justify-end' : 'justify-start'}`}>

@@ -108,7 +108,7 @@ const MessagesDashboard = () => {
     <div
       ref={containerRef}
       className="flex min-h-0 flex-col gap-4"
-      style={availableHeight ? { height: `${availableHeight}px` } : undefined}
+      style={!isMobile && availableHeight ? { height: `${availableHeight}px` } : undefined}
     >
       <div className="space-y-2">
         <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -126,8 +126,8 @@ const MessagesDashboard = () => {
         </div>
       )}
 
-      <div className="grid flex-1 min-h-0 grid-cols-1 lg:grid-cols-12 gap-4">
-        <div className={`${isMobile && showConversation ? 'hidden' : 'block'} h-full min-h-0 lg:block lg:col-span-4 xl:col-span-3 border rounded-lg overflow-hidden flex flex-col`}>
+      <div className="grid flex-1 min-h-0 grid-cols-1 gap-4 lg:grid-cols-12">
+        <div className={`${isMobile && showConversation ? 'hidden' : 'block'} min-h-[50dvh] lg:min-h-0 h-full lg:block lg:col-span-4 xl:col-span-3 border rounded-lg overflow-hidden flex flex-col`}>
           <RentConversationList
             conversations={filteredConversations}
             selectedRentId={selectedRentId}
@@ -138,7 +138,7 @@ const MessagesDashboard = () => {
           />
         </div>
 
-        <div className={`${isMobile && !showConversation ? 'hidden' : 'block'} h-full min-h-0 lg:block lg:col-span-8 xl:col-span-6 border rounded-lg overflow-hidden flex flex-col`}>
+        <div className={`${isMobile && !showConversation ? 'hidden' : 'block'} min-h-[60dvh] lg:min-h-0 h-full lg:block lg:col-span-8 xl:col-span-6 border rounded-lg overflow-hidden flex flex-col`}>
           {selectedConversation ? (
             <>
               {isMobile && (
@@ -168,6 +168,12 @@ const MessagesDashboard = () => {
           )}
         </div>
       </div>
+
+      {isMobile && selectedConversation && (
+        <div className="min-h-[36dvh] rounded-lg border overflow-hidden">
+          <RentConversationSummary conversation={selectedConversation} />
+        </div>
+      )}
     </div>
   );
 };

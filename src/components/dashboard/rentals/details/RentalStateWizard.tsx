@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Rental } from '@/domain/models/Rental';
 import { RentStatus } from '@/domain/models/Rental';
-import { RentalStateMachineService, RentActorRole, RentTransitionOption } from '@/domain/services/RentalStateMachineService';
+import { RentActorRole, RentTransitionOption } from '@/domain/services/RentalStateMachineService';
 import { RentalStatusService } from '@/domain/services/RentalStatusService';
 
 interface RentalStateWizardProps {
@@ -14,6 +14,21 @@ interface RentalStateWizardProps {
   isUpdatingStatus: boolean;
   onTransition: (input: { status: RentStatus; proposalValidUntil?: Date | null }) => Promise<void>;
 }
+
+const WIZARD_STEPS: RentStatus[] = [
+  'proposal_pending_renter',
+  'rental_confirmed',
+  'rental_active',
+  'rental_completed',
+];
+
+const getWizardStepLabel = (status: RentStatus): string => {
+  if (status === 'proposal_pending_renter') {
+    return 'Oferta / Propuesta';
+  }
+
+  return RentalStatusService.getStatusLabel(status);
+};
 
 const toDateInput = (date: Date): string => {
   const pad = (value: number) => String(value).padStart(2, '0');
@@ -36,9 +51,9 @@ const RentalStateWizard = ({
     rental.proposalValidUntil ? toDateInput(rental.proposalValidUntil) : ''
   );
 
-  const steps = useMemo(() => RentalStateMachineService.getWorkflowSteps(rental), [rental]);
+  const steps = WIZARD_STEPS;
   const effectiveCurrentStatus: RentStatus =
-    rental.status === 'proposal_pending_renter' ? 'rental_confirmed' : rental.status;
+    rental.status === 'lead_pending' ? 'proposal_pending_renter' : rental.status;
   const currentIndex = steps.findIndex((step) => step === effectiveCurrentStatus);
   const cancelTransition = transitions.find((transition) => transition.to === 'cancelled');
   const nonCancelTransitions = transitions.filter((transition) => transition.to !== 'cancelled');
@@ -68,7 +83,7 @@ const RentalStateWizard = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-5">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
           {steps.map((step, index) => {
             const isCurrent = step === effectiveCurrentStatus;
             const isCompleted = currentIndex > -1 && index < currentIndex;
@@ -79,7 +94,7 @@ const RentalStateWizard = ({
                   isCurrent ? 'border-primary bg-primary/5' : isCompleted ? 'border-emerald-200 bg-emerald-50' : 'border-border'
                 }`}
               >
-                <p className="font-medium">{RentalStatusService.getStatusLabel(step)}</p>
+                <p className="font-medium">{getWizardStepLabel(step)}</p>
                 {isCurrent && <p className="text-muted-foreground mt-1">Estado actual</p>}
                 {isCompleted && <p className="text-emerald-700 mt-1">Completado</p>}
               </div>
@@ -90,11 +105,12 @@ const RentalStateWizard = ({
         {transitions.some((item) => item.requiresProposalValidUntil) && (
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="proposal-valid-until">
-              Válida hasta (opcional)
+              Propuesta válida hasta (opcional)
             </label>
             <Input
               id="proposal-valid-until"
               type="date"
+              lang="es-ES"
               value={proposalValidUntil}
               onChange={(event) => setProposalValidUntil(event.target.value)}
               disabled={isUpdatingStatus}

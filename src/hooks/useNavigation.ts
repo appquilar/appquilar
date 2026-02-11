@@ -1,10 +1,11 @@
 import {useLocation} from "react-router-dom";
-import {Calendar, Home, MessageCircle, Package, Settings, Users, Grid2X2Plus, Building2} from "lucide-react";
+import {Calendar, Home, MessageCircle, Package, Settings, Users, Grid2X2Plus, Building2, Newspaper} from "lucide-react";
 import type {NavSection} from "@/domain/services/navigation/types";
 import {UserRole} from "@/domain/models/UserRole";
 import { useAuth } from "@/context/AuthContext";
 import { useUnreadRentMessagesCount } from "@/application/hooks/useRentalMessages";
 import { useOwnedProductsCount } from "@/application/hooks/useProducts";
+import { useOwnerRentalsCount } from "@/application/hooks/useRentals";
 
 export const useNavigation = () => {
     const location = useLocation();
@@ -12,17 +13,22 @@ export const useNavigation = () => {
     const { totalUnread } = useUnreadRentMessagesCount();
     const ownerId = currentUser?.companyId || currentUser?.id;
     const ownerType = currentUser?.companyId ? "company" : "user";
-    const ownedProductsCountQuery = useOwnedProductsCount({
+    const ownedPublishedProductsCountQuery = useOwnedProductsCount({
         ownerId,
         ownerType,
+        filters: {
+            publicationStatus: "published",
+        },
     });
+    const ownerRentalsCountQuery = useOwnerRentalsCount({ ownerId });
 
     const roles = currentUser?.roles ?? [];
     const isAdmin = roles.includes(UserRole.ADMIN);
     const isRegularUser = roles.includes(UserRole.REGULAR_USER);
     const isCompanyMember = Boolean(currentUser?.companyId);
-    const hasProductsToShow = (ownedProductsCountQuery.data ?? 0) > 0;
-    const shouldShowRentalsItem = hasProductsToShow;
+    const hasPublishedProductsToRent = (ownedPublishedProductsCountQuery.data ?? 0) > 0;
+    const hasRentalsAsOwner = (ownerRentalsCountQuery.data ?? 0) > 0;
+    const shouldShowRentalsItem = hasPublishedProductsToRent || hasRentalsAsOwner;
 
     const canUpgradeToCompany = isRegularUser && !isAdmin && !isCompanyMember;
 
@@ -78,6 +84,13 @@ export const useNavigation = () => {
                     title: "Categorías",
                     href: "/dashboard/categories",
                     icon: Grid2X2Plus,
+                    requiredRoles: [UserRole.ADMIN],
+                },
+                {
+                    id: "blog",
+                    title: "Blog",
+                    href: "/dashboard/blog",
+                    icon: Newspaper,
                     requiredRoles: [UserRole.ADMIN],
                 },
             ],

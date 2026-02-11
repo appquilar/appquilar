@@ -6,6 +6,7 @@ import {SeoInfo} from "@/core/domain/SeoInfo.ts";
 export interface SeoContext {
     title?: string;
     description?: string;
+    keywords?: string[];
     ogTitle?: string;
     ogDescription?: string;
     ogImage?: string;

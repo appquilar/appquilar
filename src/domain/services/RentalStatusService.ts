@@ -28,8 +28,8 @@ export class RentalStatusService {
   static getStatusLabel(status: string): string {
     switch (status) {
       case 'lead_pending': return 'Propuesta';
-      case 'proposal_pending_renter': return 'Pendiente de aceptacion';
-      case 'rental_confirmed': return 'Oferta';
+      case 'proposal_pending_renter': return 'Oferta';
+      case 'rental_confirmed': return 'Oferta aceptada';
       case 'rental_active': return 'Producto recogido';
       case 'rental_completed': return 'Producto devuelto';
       case 'cancelled': return 'Cancelado';

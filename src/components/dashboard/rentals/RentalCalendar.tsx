@@ -140,7 +140,7 @@ const RentalCalendar = ({
     return (
       <div className="calendar-month">
         <div className="text-center py-2 font-medium">
-          {format(month, 'MMMM yyyy', { locale: es })}
+          {format(month, 'MM/yyyy')}
         </div>
         <div className="grid gap-y-2">
           {rows}

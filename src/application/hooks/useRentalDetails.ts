@@ -152,8 +152,8 @@ export const useRentalDetails = (id: string | undefined): UseRentalDetailsReturn
   const formatDate = (date: Date): string => {
     return date.toLocaleDateString('es-ES', {
       year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
     });
   };
 

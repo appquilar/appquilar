@@ -140,14 +140,14 @@ const RentalEditableCard = ({ rental, viewerRole, isSaving, onSave }: RentalEdit
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="edit-start-date">Fecha de inicio</Label>
-              <Input id="edit-start-date" type="date" {...form.register('startDate')} />
+              <Input id="edit-start-date" type="date" lang="es-ES" {...form.register('startDate')} />
               {form.formState.errors.startDate?.message && (
                 <p className="text-sm text-destructive">{form.formState.errors.startDate.message}</p>
               )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="edit-end-date">Fecha de fin</Label>
-              <Input id="edit-end-date" type="date" {...form.register('endDate')} />
+              <Input id="edit-end-date" type="date" lang="es-ES" {...form.register('endDate')} />
               {form.formState.errors.endDate?.message && (
                 <p className="text-sm text-destructive">{form.formState.errors.endDate.message}</p>
               )}
