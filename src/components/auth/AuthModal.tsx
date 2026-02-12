@@ -35,13 +35,14 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             // Siempre abrimos en login
             setActiveTab("signin");
 
-            // Leer mensaje de cambio de contraseña (si existe)
-            const postChangePasswordMessage = sessionStorage.getItem(
-                "auth:postChangePasswordMessage",
-            );
+            // Leer mensaje informativo (si existe)
+            const infoMessageFromSession =
+                sessionStorage.getItem("auth:infoMessage") ??
+                sessionStorage.getItem("auth:postChangePasswordMessage");
 
-            if (postChangePasswordMessage) {
-                setInfoMessage(postChangePasswordMessage);
+            if (infoMessageFromSession) {
+                setInfoMessage(infoMessageFromSession);
+                sessionStorage.removeItem("auth:infoMessage");
                 sessionStorage.removeItem("auth:postChangePasswordMessage");
             } else {
                 // Si abrimos "normal", limpiamos cualquier mensaje anterior

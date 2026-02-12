@@ -203,6 +203,7 @@ const Header = () => {
                             <Button
                                 variant="outline"
                                 size="sm"
+                                data-trigger-login
                                 onClick={() => setAuthModalOpen(true)}
                             >
                                 Iniciar sesión

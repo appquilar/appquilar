@@ -24,6 +24,7 @@ interface RegisterUserDto {
     last_name: string;
     email: string;
     password: string;
+    captcha_token: string;
 }
 
 interface ChangePasswordRequestDto {
@@ -93,6 +94,7 @@ export class ApiAuthRepository implements AuthRepository {
             last_name: data.lastName,
             email: data.email,
             password: data.password,
+            captcha_token: data.captchaToken,
         };
 
         await this.apiClient.post<void>("/api/auth/register", payload, {

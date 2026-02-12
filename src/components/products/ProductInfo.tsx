@@ -1,7 +1,6 @@
 import React from 'react';
 import { Info, AlertTriangle } from 'lucide-react';
 import { Product } from '@/domain/models/Product';
-import { toast } from 'sonner';
 import CompanyInfo from './CompanyInfo';
 import {
     Table,
@@ -40,16 +39,12 @@ const ProductInfo = ({
 
     const handleContact = () => {
         if (!isLoggedIn) {
-            toast.error("Debes iniciar sesión para contactar con el propietario.", {
-                action: {
-                    label: "Iniciar sesión",
-                    onClick: () => {
-                        // Trigger login via event or DOM (fallback)
-                        const loginBtn = document.querySelector('[data-trigger-login]') as HTMLElement;
-                        if (loginBtn) loginBtn.click();
-                    }
-                }
-            });
+            sessionStorage.setItem(
+                "auth:infoMessage",
+                "Debes iniciar sesión para contactar con el propietario.",
+            );
+            const loginBtn = document.querySelector('[data-trigger-login]') as HTMLElement | null;
+            loginBtn?.click();
             return;
         }
 
@@ -159,6 +154,7 @@ const ProductInfo = ({
 
             <ProductRentalCostCalculator
                 productId={product.id}
+                isLoggedIn={isLoggedIn}
                 startDate={leadStartDate}
                 endDate={leadEndDate}
                 onStartDateChange={onLeadStartDateChange}

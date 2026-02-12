@@ -29,6 +29,12 @@ import {RentalService} from "@/application/services/RentalService.ts";
 import { BlogRepository } from "@/domain/repositories/BlogRepository.ts";
 import { ApiBlogRepository } from "@/infrastructure/repositories/ApiBlogRepository.ts";
 import { BlogService } from "@/application/services/BlogService.ts";
+import { CaptchaRepository } from "@/domain/repositories/CaptchaRepository.ts";
+import { ApiCaptchaRepository } from "@/infrastructure/repositories/ApiCaptchaRepository.ts";
+import { CaptchaService } from "@/application/services/CaptchaService.ts";
+import { ContactRepository } from "@/domain/repositories/ContactRepository.ts";
+import { ApiContactRepository } from "@/infrastructure/repositories/ApiContactRepository.ts";
+import { ContactService } from "@/application/services/ContactService.ts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -55,6 +61,8 @@ export const siteRepository: SiteRepository = new ApiSiteRepository(apiClient, s
 export const productRepository: ProductRepository = new ApiProductRepository(apiClient, session);
 export const rentalRepository: RentalRepository = new ApiRentalRepository(apiClient, session);
 export const blogRepository: BlogRepository = new ApiBlogRepository(apiClient, session);
+export const captchaRepository: CaptchaRepository = new ApiCaptchaRepository(apiClient);
+export const contactRepository: ContactRepository = new ApiContactRepository(apiClient);
 
 export const seoService = new SeoService();
 export const authService = new AuthService(authRepository, userRepository);
@@ -65,6 +73,8 @@ export const siteService = new SiteService(siteRepository);
 export const productService = new ProductService(productRepository);
 export const rentalService = new RentalService(rentalRepository);
 export const blogService = new BlogService(blogRepository);
+export const captchaService = new CaptchaService(captchaRepository);
+export const contactService = new ContactService(contactRepository);
 
 export const compositionRoot = {
     queryClient,
@@ -81,6 +91,8 @@ export const compositionRoot = {
     productRepository,
     rentalRepository,
     blogRepository,
+    captchaRepository,
+    contactRepository,
 
     authService,
     userService,
@@ -90,6 +102,8 @@ export const compositionRoot = {
     productService,
     rentalService,
     blogService,
+    captchaService,
+    contactService,
 };
 
 export type CompositionRoot = typeof compositionRoot;

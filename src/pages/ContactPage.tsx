@@ -1,14 +1,41 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import {useSeo} from "@/hooks/useSeo.ts";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSeo } from "@/hooks/useSeo.ts";
+import { useSendContactMessage } from "@/application/hooks/useContact";
+import { useRecaptchaToken } from "@/application/hooks/useCaptcha";
 
 const CONTACT_EMAIL = "appquilar.contacto@gmail.com";
 
-type Topic = "Soporte" | "Colaboración" | "Legal" | "Prensa" | "Otro";
+const CONTACT_TOPICS = ["Soporte", "Colaboración", "Legal", "Prensa", "Otro"] as const;
 
-const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+const contactSchema = z.object({
+    topic: z.enum(CONTACT_TOPICS),
+    name: z.string().trim().min(1, "Indica tu nombre.").max(120, "Nombre demasiado largo."),
+    email: z.string().trim().email("Email no válido."),
+    message: z
+        .string()
+        .trim()
+        .min(10, "Cuéntanos un poco más (mín. 10 caracteres).")
+        .max(5000, "El mensaje no puede superar 5000 caracteres."),
+});
+
+type ContactFormValues = z.infer<typeof contactSchema>;
 
 const ContactPage = () => {
     useSeo({
@@ -16,39 +43,66 @@ const ContactPage = () => {
         title: "Contacto · Appquilar",
         description: "Contacta con el equipo de Appquilar.",
     });
-    const [topic, setTopic] = useState<Topic>("Soporte");
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [message, setMessage] = useState("");
 
-    const [touched, setTouched] = useState({
-        name: false,
-        email: false,
-        message: false,
+    const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const { mutateAsync: sendContactMessage, isPending } = useSendContactMessage();
+    const { execute, isLoadingConfig } = useRecaptchaToken();
+
+    const form = useForm<ContactFormValues>({
+        resolver: zodResolver(contactSchema),
+        defaultValues: {
+            topic: "Soporte",
+            name: "",
+            email: "",
+            message: "",
+        },
     });
 
-    const errors = useMemo(() => {
-        const e: Record<string, string> = {};
-        if (!name.trim()) e.name = "Indica tu nombre.";
-        if (!email.trim()) e.email = "Indica tu email.";
-        else if (!isEmail(email)) e.email = "Email no válido.";
-        if (!message.trim() || message.trim().length < 10)
-            e.message = "Cuéntanos un poco más (mín. 10 caracteres).";
-        return e;
-    }, [name, email, message]);
+    const handleSubmit = async (values: ContactFormValues) => {
+        setSubmitSuccess(null);
+        setSubmitError(null);
 
-    const isValid = Object.keys(errors).length === 0;
+        try {
+            const captchaToken = await execute("contact_form");
 
-    const mailtoHref = useMemo(() => {
-        const subject = encodeURIComponent(`[Contacto - ${topic}] ${name || "Usuario"}`);
-        const body = encodeURIComponent(
-            `Tema: ${topic}\nNombre: ${name}\nEmail: ${email}\n\nMensaje:\n${message}\n`
-        );
-        return `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
-    }, [topic, name, email, message]);
+            await sendContactMessage({
+                topic: values.topic,
+                name: values.name,
+                email: values.email,
+                message: values.message,
+                captchaToken,
+            });
 
-    const markAllTouched = () =>
-        setTouched({ name: true, email: true, message: true });
+            setSubmitSuccess("Mensaje enviado correctamente. Te responderemos lo antes posible.");
+            form.reset({
+                topic: "Soporte",
+                name: "",
+                email: "",
+                message: "",
+            });
+        } catch (error) {
+            const errors = (error as { payload?: { errors?: Record<string, string[]> } })?.payload?.errors;
+            if (errors) {
+
+                if (errors.name?.[0]) form.setError("name", { type: "server", message: errors.name[0] });
+                if (errors.email?.[0]) form.setError("email", { type: "server", message: errors.email[0] });
+                if (errors.topic?.[0]) form.setError("topic", { type: "server", message: errors.topic[0] });
+                if (errors.message?.[0]) form.setError("message", { type: "server", message: errors.message[0] });
+
+                if (errors.captchaToken?.[0]) {
+                    setSubmitError("No se pudo validar reCAPTCHA. Por favor, inténtalo de nuevo.");
+                    return;
+                }
+            }
+
+            setSubmitError(
+                error instanceof Error
+                    ? error.message
+                    : "No se pudo enviar el formulario en este momento."
+            );
+        }
+    };
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -64,92 +118,108 @@ const ContactPage = () => {
                     </p>
 
                     <div className="mt-10 rounded-xl border border-border bg-background p-6 md:p-8 shadow-sm">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Tema */}
-                            <div className="md:col-span-2">
-                                <label className="text-sm font-medium">Tema</label>
-                                <select
-                                    value={topic}
-                                    onChange={(e) => setTopic(e.target.value as Topic)}
-                                    className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-                                >
-                                    <option>Soporte</option>
-                                    <option>Colaboración</option>
-                                    <option>Legal</option>
-                                    <option>Prensa</option>
-                                    <option>Otro</option>
-                                </select>
-                            </div>
-
-                            {/* Nombre */}
-                            <div>
-                                <label className="text-sm font-medium">Nombre</label>
-                                <input
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    onBlur={() => setTouched((p) => ({ ...p, name: true }))}
-                                    className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-                                    placeholder="Tu nombre"
-                                />
-                                {touched.name && errors.name ? (
-                                    <p className="mt-2 text-xs text-destructive">{errors.name}</p>
-                                ) : null}
-                            </div>
-
-                            {/* Email */}
-                            <div>
-                                <label className="text-sm font-medium">Email</label>
-                                <input
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    onBlur={() => setTouched((p) => ({ ...p, email: true }))}
-                                    className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-                                    placeholder="tu@email.com"
-                                    type="email"
-                                />
-                                {touched.email && errors.email ? (
-                                    <p className="mt-2 text-xs text-destructive">{errors.email}</p>
-                                ) : null}
-                            </div>
-
-                            {/* Mensaje */}
-                            <div className="md:col-span-2">
-                                <label className="text-sm font-medium">Mensaje</label>
-                                <textarea
-                                    value={message}
-                                    onChange={(e) => setMessage(e.target.value)}
-                                    onBlur={() => setTouched((p) => ({ ...p, message: true }))}
-                                    className="mt-2 w-full min-h-[160px] rounded-md border border-border bg-background px-3 py-2 text-sm"
-                                    placeholder="¿En qué podemos ayudarte?"
-                                />
-                                {touched.message && errors.message ? (
-                                    <p className="mt-2 text-xs text-destructive">{errors.message}</p>
-                                ) : (
-                                    <p className="mt-2 text-xs text-muted-foreground">
-                                        Mínimo 10 caracteres.
-                                    </p>
+                        <Form {...form}>
+                            <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
+                                {submitSuccess && (
+                                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                                        {submitSuccess}
+                                    </div>
                                 )}
-                            </div>
 
-                            {/* CTA */}
-                            <div className="md:col-span-2 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between pt-2">
-                                <div className="text-xs text-muted-foreground">
-                                    En esta versión MVP el envío abre tu app de email.
+                                {submitError && (
+                                    <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                                        {submitError}
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="md:col-span-2">
+                                        <FormField
+                                            control={form.control}
+                                            name="topic"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Tema</FormLabel>
+                                                    <Select value={field.value} onValueChange={field.onChange}>
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Selecciona un tema" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {CONTACT_TOPICS.map((topic) => (
+                                                                <SelectItem key={topic} value={topic}>
+                                                                    {topic}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+
+                                    <FormField
+                                        control={form.control}
+                                        name="name"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Nombre</FormLabel>
+                                                <FormControl>
+                                                    <Input {...field} placeholder="Tu nombre" />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="email"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Email</FormLabel>
+                                                <FormControl>
+                                                    <Input {...field} type="email" placeholder="tu@email.com" />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <div className="md:col-span-2">
+                                        <FormField
+                                            control={form.control}
+                                            name="message"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Mensaje</FormLabel>
+                                                    <FormControl>
+                                                        <Textarea
+                                                            {...field}
+                                                            className="min-h-[180px]"
+                                                            placeholder="¿En qué podemos ayudarte?"
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
                                 </div>
 
-                                <a
-                                    href={isValid ? mailtoHref : undefined}
-                                    onClick={(e) => {
-                                        if (!isValid) {
-                                            e.preventDefault();
-                                            markAllTouched();
-                                        }
-                                    }}
-                                >
-                                    <Button disabled={!isValid}>Enviar</Button>
-                                </a>
-                            </div>
-                        </div>
+                                <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between pt-2">
+                                    <div className="text-xs text-muted-foreground">
+                                        Este formulario está protegido por reCAPTCHA.
+                                    </div>
+
+                                    <Button type="submit" disabled={isPending || isLoadingConfig}>
+                                        {isPending ? "Enviando..." : "Enviar"}
+                                    </Button>
+                                </div>
+                            </form>
+                        </Form>
                     </div>
 
                     <p className="mt-6 text-sm text-muted-foreground">

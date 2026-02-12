@@ -7,6 +7,7 @@ import SpanishDateInput from "./SpanishDateInput";
 
 type ProductRentalCostCalculatorProps = {
     productId: string;
+    isLoggedIn: boolean;
     startDate?: string;
     endDate?: string;
     onStartDateChange?: (value: string) => void;
@@ -21,6 +22,7 @@ const formatMoneyFromCents = (amount: number, currency: string): string => {
 
 const ProductRentalCostCalculator = ({
     productId,
+    isLoggedIn,
     startDate: controlledStartDate,
     endDate: controlledEndDate,
     onStartDateChange,
@@ -41,6 +43,15 @@ const ProductRentalCostCalculator = ({
 
     const handleCalculate = async () => {
         if (!canCalculate) return;
+        if (!isLoggedIn) {
+            sessionStorage.setItem(
+                "auth:infoMessage",
+                "Debes iniciar sesión para calcular el coste del alquiler.",
+            );
+            const loginBtn = document.querySelector('[data-trigger-login]') as HTMLElement | null;
+            loginBtn?.click();
+            return;
+        }
 
         const result = await calculateRentalCost({
             productId,

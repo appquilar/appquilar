@@ -35,7 +35,8 @@ interface AuthContextType {
         firstName: string,
         lastName: string,
         email: string,
-        password: string
+        password: string,
+        captchaToken: string,
     ) => Promise<void>;
     requestPasswordReset: (email: string) => Promise<void>;
     resetPassword: (
@@ -123,7 +124,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         firstName: string,
         lastName: string,
         email: string,
-        password: string
+        password: string,
+        captchaToken: string,
     ): Promise<void> => {
         setIsLoading(true);
 
@@ -133,6 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 lastName,
                 email,
                 password,
+                captchaToken,
             };
 
             await authService.register(data);
