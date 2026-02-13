@@ -42,7 +42,7 @@ const Hero = () => {
           </span>
                 </div>
 
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-semibold tracking-tight mb-6 animate-slide-down">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-semibold tracking-tight mb-6 animate-slide-down">
                     La Forma Inteligente de Alquilar{' '}
                     <span
                         className={`inline-block text-primary transition-opacity duration-500 ${

@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Bold, Italic, Send, Smile } from 'lucide-react';
+import { Bold, Check, Clock, Italic, Send, Smile } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   useCreateRentalMessage,
@@ -17,12 +17,15 @@ import { Rental, RentStatus } from '@/domain/models/Rental';
 import { RentalStatusService } from '@/domain/services/RentalStatusService';
 import { RentalStateMachineService } from '@/domain/services/RentalStateMachineService';
 import { RentConversationRole } from '@/domain/models/RentConversation';
+import type { RentalMessage } from '@/domain/models/RentalMessage';
 
 interface RentConversationPanelProps {
   rentId: string;
   rental: Rental;
   viewerRole: RentConversationRole;
   unreadCount: number;
+  isSummaryOpen: boolean;
+  onToggleSummary: () => void;
 }
 
 interface MessageFormValues {
@@ -69,11 +72,22 @@ const parseDateInput = (value: string): Date => {
   return new Date(year, month - 1, day, 0, 0, 0);
 };
 
+type DeliveryStatus = 'sending' | 'sent' | 'failed';
+
+type MessageWithStatus = RentalMessage & {
+  localId?: string;
+  isOptimistic?: boolean;
+  deliveryStatus?: DeliveryStatus;
+  sequence?: number;
+};
+
 const RentConversationPanel = ({
   rentId,
   rental,
   viewerRole,
   unreadCount,
+  isSummaryOpen,
+  onToggleSummary,
 }: RentConversationPanelProps) => {
   const rentalStatus: RentStatus = rental.status;
   const isCancelled = rentalStatus === 'cancelled';
@@ -106,6 +120,10 @@ const RentConversationPanel = ({
   const updateStatusMutation = useUpdateRentStatusFromMessages(rentId);
   const editorRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const sendQueueRef = useRef<MessageWithStatus[]>([]);
+  const isSendingRef = useRef(false);
+  const sequenceRef = useRef(0);
+  const [optimisticMessages, setOptimisticMessages] = useState<MessageWithStatus[]>([]);
 
   const form = useForm<MessageFormValues>({
     defaultValues: {
@@ -114,7 +132,7 @@ const RentConversationPanel = ({
   });
 
   const contentValue = form.watch('content') ?? '';
-  const isInputDisabled = isCancelled || createMessageMutation.isPending;
+  const isInputDisabled = isCancelled;
   const latestSystemMessageId = useMemo(() => {
     const latestSystemMessage = [...messages].reverse().find((message) => message.senderRole === 'system');
     return latestSystemMessage?.id ?? null;
@@ -140,7 +158,36 @@ const RentConversationPanel = ({
     }
 
     bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [rentId, messages.length, isLoading]);
+  }, [rentId, messages.length, optimisticMessages.length, isLoading]);
+
+  useEffect(() => {
+    if (optimisticMessages.length === 0) {
+      return;
+    }
+
+    setOptimisticMessages((previous) =>
+      previous.filter((optimistic) => {
+        if (!optimistic.isOptimistic || optimistic.deliveryStatus !== 'sent') {
+          return true;
+        }
+
+        const match = messages.some((message) => {
+          if (!message.isMine) {
+            return false;
+          }
+
+          if (message.content.trim() !== optimistic.content.trim()) {
+            return false;
+          }
+
+          const diff = Math.abs(message.createdAt.getTime() - optimistic.createdAt.getTime());
+          return diff <= 60000;
+        });
+
+        return !match;
+      })
+    );
+  }, [messages, optimisticMessages.length]);
 
   const syncFormContent = () => {
     const nextValue = editorRef.current?.innerText ?? '';
@@ -170,6 +217,59 @@ const RentConversationPanel = ({
     syncFormContent();
   };
 
+  const processQueue = async () => {
+    if (isSendingRef.current) {
+      return;
+    }
+
+    isSendingRef.current = true;
+
+    while (sendQueueRef.current.length > 0) {
+      const nextMessage = sendQueueRef.current[0];
+
+      try {
+        await createMessageMutation.mutateAsync(nextMessage.content);
+        setOptimisticMessages((previous) =>
+          previous.map((message) =>
+            message.localId === nextMessage.localId
+              ? { ...message, deliveryStatus: 'sent' }
+              : message
+          )
+        );
+      } catch (_error) {
+        setOptimisticMessages((previous) =>
+          previous.map((message) =>
+            message.localId === nextMessage.localId
+              ? { ...message, deliveryStatus: 'failed' }
+              : message
+          )
+        );
+      } finally {
+        sendQueueRef.current.shift();
+      }
+    }
+
+    isSendingRef.current = false;
+  };
+
+  const retryMessage = (messageId: string) => {
+    const target = optimisticMessages.find((message) => message.localId === messageId);
+    if (!target) {
+      return;
+    }
+
+    setOptimisticMessages((previous) =>
+      previous.map((message) =>
+        message.localId === messageId
+          ? { ...message, deliveryStatus: 'sending' }
+          : message
+      )
+    );
+
+    sendQueueRef.current = [...sendQueueRef.current, { ...target, deliveryStatus: 'sending' }];
+    void processQueue();
+  };
+
   const onSubmit = async (values: MessageFormValues) => {
     if (isCancelled) {
       form.setError('content', {
@@ -189,17 +289,34 @@ const RentConversationPanel = ({
       return;
     }
 
-    try {
-      await createMessageMutation.mutateAsync(content);
-      form.reset({ content: '' });
-      if (editorRef.current) {
-        editorRef.current.innerHTML = '';
-      }
-    } catch (_error) {
-      form.setError('content', {
-        type: 'server',
-        message: 'No se pudo enviar el mensaje. Intentalo de nuevo.',
-      });
+    const senderName =
+      viewerRole === 'owner'
+        ? rental.ownerName ?? 'Tienda'
+        : rental.renterName ?? 'Cliente';
+
+    const localId = `local-${Date.now()}-${sequenceRef.current}`;
+    const newMessage: MessageWithStatus = {
+      id: localId,
+      localId,
+      isOptimistic: true,
+      deliveryStatus: 'sending',
+      sequence: sequenceRef.current,
+      rentId,
+      senderRole: viewerRole,
+      senderName,
+      content,
+      createdAt: new Date(),
+      isMine: true,
+    };
+
+    sequenceRef.current += 1;
+    setOptimisticMessages((previous) => [...previous, newMessage]);
+    sendQueueRef.current = [...sendQueueRef.current, newMessage];
+    void processQueue();
+
+    form.reset({ content: '' });
+    if (editorRef.current) {
+      editorRef.current.innerHTML = '';
     }
   };
 
@@ -266,9 +383,20 @@ const RentConversationPanel = ({
       <div className="border-b px-4 py-3">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold">Conversacion del alquiler</h2>
-          <Badge className={RentalStatusService.getStatusBadgeClasses(rentalStatus)}>
-            {RentalStatusService.getStatusLabel(rentalStatus)}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onToggleSummary}
+              className="h-7 px-2 text-xs"
+            >
+              {isSummaryOpen ? 'Ocultar detalles' : 'Ver detalles'}
+            </Button>
+            <Badge className={RentalStatusService.getStatusBadgeClasses(rentalStatus)}>
+              {RentalStatusService.getStatusLabel(rentalStatus)}
+            </Badge>
+          </div>
         </div>
       </div>
 
@@ -314,7 +442,7 @@ const RentConversationPanel = ({
           </div>
         )}
 
-        {!isLoading && !error && messages.length === 0 && (
+        {!isLoading && !error && messages.length === 0 && optimisticMessages.length === 0 && (
           <div className="space-y-3">
             <div className="h-full min-h-24 flex items-center justify-center text-sm text-muted-foreground">
               No hay mensajes todavia.
@@ -328,11 +456,24 @@ const RentConversationPanel = ({
           </div>
         )}
 
-        {!isLoading && !error && messages.length > 0 && (
+        {!isLoading && !error && (messages.length > 0 || optimisticMessages.length > 0) && (
           <div className="space-y-3">
-            {messages.map((message) => {
+            {[...messages, ...optimisticMessages]
+              .sort((a, b) => {
+                const timeDiff = a.createdAt.getTime() - b.createdAt.getTime();
+                if (timeDiff !== 0) return timeDiff;
+                return (a.sequence ?? 0) - (b.sequence ?? 0);
+              })
+              .map((message) => {
               const isSystemMessage = message.senderRole === 'system';
               const isLatestSystemMessage = latestSystemMessageId === message.id;
+              const isMine = message.isMine;
+              const deliveryStatus: DeliveryStatus | 'sent' =
+                message.isOptimistic
+                  ? message.deliveryStatus ?? 'sending'
+                  : isMine
+                  ? 'sent'
+                  : 'sent';
 
               return (
                 <div
@@ -354,9 +495,35 @@ const RentConversationPanel = ({
                       </p>
                     )}
                     <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                    <p className="text-[11px] opacity-75 mt-1">
-                      {formatTimestamp(message.createdAt)}
-                    </p>
+                    <div className="mt-1 flex items-center gap-2 text-[11px] opacity-75">
+                      <span>{formatTimestamp(message.createdAt)}</span>
+                      {!isSystemMessage && isMine && (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                          {deliveryStatus === 'sending' ? (
+                            <>
+                              <Clock className="h-3 w-3" />
+                              Enviando
+                            </>
+                          ) : deliveryStatus === 'failed' ? (
+                            <>
+                              Error al enviar
+                              <button
+                                type="button"
+                                className="ml-1 text-xs font-medium text-primary hover:underline"
+                                onClick={() => retryMessage(message.localId ?? '')}
+                              >
+                                Reintentar
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <Check className="h-3 w-3" />
+                              Enviado
+                            </>
+                          )}
+                        </span>
+                      )}
+                    </div>
                     {isSystemMessage && isLatestSystemMessage && renderStatusActions()}
                   </div>
                 </div>
@@ -476,7 +643,7 @@ const RentConversationPanel = ({
                 className="absolute bottom-2 right-2 h-8 gap-2 px-3"
               >
                 <Send className="h-4 w-4" />
-                {createMessageMutation.isPending ? 'Enviando...' : 'Enviar'}
+                Enviar
               </Button>
             </div>
           </div>

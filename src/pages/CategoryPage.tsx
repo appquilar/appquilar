@@ -214,7 +214,7 @@ const CategoryPage = () => {
             <Header />
             <main className="flex-1 pt-20 px-4 sm:px-6 md:px-8 animate-fade-in">
                 <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
-                    <aside className="h-fit lg:pr-6 lg:border-r border-border/60">
+                    <aside className="h-fit lg:pr-6 lg:border-r border-border/60 mb-8 lg:mb-0">
                         <h2 className="text-base font-medium mb-1">Filtros</h2>
                         <p className="text-sm text-muted-foreground mb-4">Refina tu búsqueda</p>
 

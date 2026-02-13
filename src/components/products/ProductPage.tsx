@@ -195,7 +195,7 @@ const ProductPage: React.FC = () => {
     }
 
     return (
-        <div className="container mx-auto pt-24 pb-8 px-4">
+        <div className="container mx-auto pt-24 pb-8 px-4 sm:px-6 md:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
                     <ProductImageGallery

@@ -37,53 +37,55 @@ const ResetPasswordPage = () => {
         <>
             <Header />
 
-            <div className="max-w-md mx-auto mt-24 mb-16 p-6 bg-white shadow rounded-lg space-y-6">
-                <h1 className="text-2xl font-bold text-center">Restablecer Contraseña</h1>
+            <div className="w-full max-w-md mx-auto mt-24 mb-16 px-4">
+                <div className="p-6 bg-white shadow rounded-lg space-y-6">
+                    <h1 className="text-2xl font-bold text-center">Restablecer Contraseña</h1>
 
-                {error && (
-                    <div className="rounded-lg p-4 bg-[#FFF9DB] text-[#8B4513]">
-                        <p className="font-semibold uppercase text-sm mb-1">Importante</p>
-                        <p className="text-sm">{error}</p>
-                    </div>
-                )}
-
-                {success ? (
-                    <div className="rounded-lg p-4 bg-green-100 text-green-800 text-center">
-                        <p className="font-semibold">Contraseña actualizada correctamente</p>
-                        <p className="text-sm mt-1">Ya puedes iniciar sesión con tu nueva contraseña.</p>
-                    </div>
-                ) : (
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                            <label className="font-medium">Nueva contraseña</label>
-                            <input
-                                type="password"
-                                className="w-full border p-2 rounded"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
+                    {error && (
+                        <div className="rounded-lg p-4 bg-[#FFF9DB] text-[#8B4513]">
+                            <p className="font-semibold uppercase text-sm mb-1">Importante</p>
+                            <p className="text-sm">{error}</p>
                         </div>
+                    )}
 
-                        <div className="space-y-2">
-                            <label className="font-medium">Repetir contraseña</label>
-                            <input
-                                type="password"
-                                className="w-full border p-2 rounded"
-                                value={repeatPassword}
-                                onChange={(e) => setRepeatPassword(e.target.value)}
-                                required
-                            />
+                    {success ? (
+                        <div className="rounded-lg p-4 bg-green-100 text-green-800 text-center">
+                            <p className="font-semibold">Contraseña actualizada correctamente</p>
+                            <p className="text-sm mt-1">Ya puedes iniciar sesión con tu nueva contraseña.</p>
                         </div>
+                    ) : (
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="font-medium">Nueva contraseña</label>
+                                <input
+                                    type="password"
+                                    className="w-full border p-2 rounded"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
 
-                        <button
-                            type="submit"
-                            className="w-full bg-primary text-white p-2 rounded font-medium"
-                        >
-                            Cambiar contraseña
-                        </button>
-                    </form>
-                )}
+                            <div className="space-y-2">
+                                <label className="font-medium">Repetir contraseña</label>
+                                <input
+                                    type="password"
+                                    className="w-full border p-2 rounded"
+                                    value={repeatPassword}
+                                    onChange={(e) => setRepeatPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="w-full bg-primary text-white p-2 rounded font-medium"
+                            >
+                                Cambiar contraseña
+                            </button>
+                        </form>
+                    )}
+                </div>
             </div>
 
             <Footer />

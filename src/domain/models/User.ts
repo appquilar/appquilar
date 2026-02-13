@@ -22,6 +22,7 @@ export interface User {
      */
     companyId?: string | null;
     companyName?: string | null;
+    isCompanyOwner?: boolean | null;
     status?: string | null;
     dateAdded?: Date | null;
 
@@ -42,6 +43,7 @@ export function createUser(params: {
     location?: Location | null;
     companyId?: string | null;
     companyName?: string | null;
+    isCompanyOwner?: boolean | null;
     status?: string | null;
     dateAdded?: Date | null;
     profilePictureId?: string | null;
@@ -56,6 +58,7 @@ export function createUser(params: {
         location: params.location ?? null,
         companyId: params.companyId ?? null,
         companyName: params.companyName ?? null,
+        isCompanyOwner: params.isCompanyOwner ?? null,
         status: params.status ?? null,
         dateAdded: params.dateAdded ?? null,
         profilePictureId: params.profilePictureId ?? null,

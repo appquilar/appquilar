@@ -70,9 +70,9 @@ const CompanyProductsPage = () => {
         backUrl="/dashboard/companies"
       />
       
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <h2 className="text-lg font-medium">Listado de productos</h2>
-        <Button onClick={handleAddProduct} className="gap-2">
+        <Button onClick={handleAddProduct} className="gap-2 w-full sm:w-auto">
           <Plus size={16} />
           Añadir Producto
         </Button>

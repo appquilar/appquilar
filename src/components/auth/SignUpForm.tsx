@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/context/AuthContext";
+import { authPasswordSchema } from "@/domain/schemas/authSchema";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,7 @@ const schema = z.object({
     firstName: z.string().min(2),
     lastName: z.string().min(1),
     email: z.string().email(),
-    password: z.string().min(8),
+    password: authPasswordSchema,
 });
 
 type FormValues = z.infer<typeof schema>;

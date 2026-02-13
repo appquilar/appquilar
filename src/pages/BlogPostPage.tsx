@@ -83,7 +83,7 @@ const BlogPostPage = () => {
                                         {publishedLabel}
                                     </p>
                                 )}
-                                <h1 className="text-4xl font-bold tracking-tight">{post.title}</h1>
+                                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{post.title}</h1>
                                 {post.category && (
                                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                                         {post.category.name}
@@ -94,7 +94,7 @@ const BlogPostPage = () => {
                             <BlogMediaImage
                                 mediaId={post.heroImageId || post.headerImageId}
                                 alt={post.title}
-                                className="h-80 rounded-lg"
+                                className="h-56 sm:h-80 rounded-lg"
                                 size="LARGE"
                                 fallbackText=""
                             />

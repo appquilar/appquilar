@@ -43,6 +43,8 @@ interface UserDto {
 
     company_id?: string | null;
     company_name?: string | null;
+    company_role?: string | null;
+    is_company_owner?: boolean | null;
     company?: {
         company_id?: string;
         id?: string;
@@ -128,6 +130,7 @@ function mapUserDtoToDomain(dto: UserDto): User {
         location: mapLocationDtoToDomain(dto.location),
         companyId,
         companyName,
+        isCompanyOwner: dto.is_company_owner ?? null,
         status: dto.status ?? null,
         dateAdded: dto.date_added ? new Date(dto.date_added) : null,
         // OpenAPI: profile_picture_id

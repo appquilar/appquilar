@@ -295,7 +295,7 @@ const SearchPage = () => {
             <Header />
             <main className="flex-1 pt-24 px-4 sm:px-6 md:px-8">
                 <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
-                    <aside className="h-fit lg:pr-6 lg:border-r border-border/60">
+                    <aside className="h-fit lg:pr-6 lg:border-r border-border/60 mb-8 lg:mb-0">
                         <button
                             type="button"
                             onClick={applyFilters}
@@ -330,7 +330,7 @@ const SearchPage = () => {
                             <p className="mb-3 text-xs text-destructive">{locationError}</p>
                         )}
 
-                        <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                        <div className="space-y-2 max-h-[45vh] sm:max-h-[60vh] overflow-y-auto pr-1">
                             {categoryTree.map((node) => {
                                 const renderNode = (
                                     currentNode: CategoryTreeNode,

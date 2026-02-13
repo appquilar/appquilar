@@ -7,9 +7,10 @@ import NavSection from "./NavSection";
 import UpgradeLink from "./UpgradeLink";
 import {useNavigation} from "@/hooks/useNavigation";
 import {Alert, AlertDescription} from "@/components/ui/alert";
-import {MapPin} from "lucide-react";
+import {Building2, MapPin} from "lucide-react";
 import {useAuth} from "@/context/AuthContext";
 import {UserRole} from "@/domain/models/UserRole";
+import { useSidebar } from "@/components/ui/sidebar";
 
 /**
  * Contenido principal de la navegación del panel de control
@@ -22,10 +23,12 @@ const DashboardNavigationContent = ({
     const isMobile = useIsMobile();
     const navigate = useNavigate();
     const { navSections, canUpgradeToCompany, isActive } = useNavigation();
+    const { setOpenMobile } = useSidebar();
 
     const { currentUser } = useAuth();
     const roles = currentUser?.roles ?? [];
     const isAdmin = roles.includes(UserRole.ADMIN);
+    const hasCompany = Boolean(currentUser?.companyId);
 
     // El usuario se considera "con dirección" si tiene address
     // y al menos uno de los campos básicos relleno.
@@ -44,6 +47,9 @@ const DashboardNavigationContent = ({
 
         if (onTabChange) onTabChange(tabName);
         if (onNavigate) onNavigate();
+        if (isMobile) {
+            setOpenMobile(false);
+        }
     };
 
     /**
@@ -100,6 +106,20 @@ const DashboardNavigationContent = ({
                         <MapPin className="h-4 w-4" />
                         <AlertDescription className="text-xs">
                             Añade tu dirección en Configuración
+                        </AlertDescription>
+                    </Alert>
+                </div>
+            )}
+
+            {!hasCompany && (
+                <div className="px-2 mb-2">
+                    <Alert
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => navigate("/dashboard/upgrade")}
+                    >
+                        <Building2 className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                            Completa la configuración de empresa para alquilar como tienda
                         </AlertDescription>
                     </Alert>
                 </div>

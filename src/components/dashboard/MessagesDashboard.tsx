@@ -18,6 +18,8 @@ const MessagesDashboard = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [availableHeight, setAvailableHeight] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<ConversationStatusFilter>('open_only');
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const suppressAutoSelectRef = useRef(false);
 
   const { conversations, isLoading, error } = useRentConversations();
 
@@ -41,7 +43,9 @@ const MessagesDashboard = () => {
       }
 
       const top = containerRef.current.getBoundingClientRect().top;
-      const nextHeight = Math.max(420, Math.floor(window.innerHeight - top - 8));
+      const rawHeight = Math.floor(window.innerHeight - top - 8);
+      const minHeight = isMobile ? 0 : 420;
+      const nextHeight = minHeight > 0 ? Math.max(minHeight, rawHeight) : Math.max(0, rawHeight);
       setAvailableHeight(nextHeight);
     };
 
@@ -51,7 +55,11 @@ const MessagesDashboard = () => {
     return () => {
       window.removeEventListener('resize', updateAvailableHeight);
     };
-  }, []);
+  }, [isMobile]);
+
+  useEffect(() => {
+    setIsSummaryOpen(!isMobile);
+  }, [isMobile]);
 
   const filteredConversations = useMemo(() => {
     if (statusFilter === 'open_only') {
@@ -63,10 +71,12 @@ const MessagesDashboard = () => {
 
   useEffect(() => {
     if (filteredConversations.length === 0) {
+      setSelectedRentId(null);
       return;
     }
 
-    if (selectedRentId && filteredConversations.some((conversation) => conversation.rentId === selectedRentId)) {
+    if (suppressAutoSelectRef.current) {
+      suppressAutoSelectRef.current = false;
       return;
     }
 
@@ -76,7 +86,11 @@ const MessagesDashboard = () => {
       return;
     }
 
-    setSelectedRentId(filteredConversations[0].rentId);
+    if (selectedRentId && filteredConversations.some((conversation) => conversation.rentId === selectedRentId)) {
+      return;
+    }
+
+    setSelectedRentId(null);
   }, [filteredConversations, selectedRentId, searchParams]);
 
   const selectedConversation = useMemo(
@@ -86,6 +100,7 @@ const MessagesDashboard = () => {
 
   const handleSelectConversation = (rentId: string) => {
     setSelectedRentId(rentId);
+    setIsSummaryOpen(!isMobile);
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.set('rent_id', rentId);
@@ -97,6 +112,8 @@ const MessagesDashboard = () => {
 
   const handleBackToList = () => {
     setSelectedRentId(null);
+    setIsSummaryOpen(false);
+    suppressAutoSelectRef.current = true;
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.delete('rent_id');
@@ -107,8 +124,8 @@ const MessagesDashboard = () => {
   return (
     <div
       ref={containerRef}
-      className="flex min-h-0 flex-col gap-4"
-      style={!isMobile && availableHeight ? { height: `${availableHeight}px` } : undefined}
+      className="flex min-h-0 flex-col gap-4 overflow-y-auto lg:overflow-hidden"
+      style={availableHeight ? { height: `${availableHeight}px` } : undefined}
     >
       <div className="space-y-2">
         <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -127,7 +144,7 @@ const MessagesDashboard = () => {
       )}
 
       <div className="grid flex-1 min-h-0 grid-cols-1 gap-4 lg:grid-cols-12">
-        <div className={`${isMobile && showConversation ? 'hidden' : 'block'} min-h-[50dvh] lg:min-h-0 h-full lg:block lg:col-span-4 xl:col-span-3 border rounded-lg overflow-hidden flex flex-col`}>
+        <div className={`${isMobile && showConversation ? 'hidden' : 'block'} min-h-0 h-full lg:block lg:col-span-4 xl:col-span-3 border rounded-lg overflow-hidden flex flex-col`}>
           <RentConversationList
             conversations={filteredConversations}
             selectedRentId={selectedRentId}
@@ -138,7 +155,7 @@ const MessagesDashboard = () => {
           />
         </div>
 
-        <div className={`${isMobile && !showConversation ? 'hidden' : 'block'} min-h-[60dvh] lg:min-h-0 h-full lg:block lg:col-span-8 xl:col-span-6 border rounded-lg overflow-hidden flex flex-col`}>
+        <div className={`${isMobile && !showConversation ? 'hidden' : 'block'} min-h-0 h-full lg:block lg:col-span-8 xl:col-span-6 border rounded-lg overflow-hidden flex flex-col`}>
           {selectedConversation ? (
             <>
               {isMobile && (
@@ -153,6 +170,8 @@ const MessagesDashboard = () => {
                 rental={selectedConversation.rental}
                 viewerRole={selectedConversation.role}
                 unreadCount={selectedConversation.unreadCount}
+                isSummaryOpen={isSummaryOpen}
+                onToggleSummary={() => setIsSummaryOpen((prev) => !prev)}
               />
             </>
           ) : (
@@ -162,16 +181,22 @@ const MessagesDashboard = () => {
           )}
         </div>
 
-        <div className={`${isMobile || !selectedConversation ? 'hidden' : 'block'} h-full min-h-0 lg:block lg:col-span-12 xl:col-span-3`}>
+        <div className={`${isMobile || !selectedConversation || !isSummaryOpen ? 'hidden' : 'block'} h-full min-h-0 lg:block lg:col-span-12 xl:col-span-3`}>
           {selectedConversation && (
-            <RentConversationSummary conversation={selectedConversation} />
+            <RentConversationSummary
+              conversation={selectedConversation}
+              onBackToConversation={() => setIsSummaryOpen(false)}
+            />
           )}
         </div>
       </div>
 
-      {isMobile && selectedConversation && (
+      {isMobile && selectedConversation && isSummaryOpen && (
         <div className="min-h-[36dvh] rounded-lg border overflow-hidden">
-          <RentConversationSummary conversation={selectedConversation} />
+          <RentConversationSummary
+            conversation={selectedConversation}
+            onBackToConversation={() => setIsSummaryOpen(false)}
+          />
         </div>
       )}
     </div>

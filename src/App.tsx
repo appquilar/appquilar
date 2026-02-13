@@ -18,6 +18,7 @@ import ContactPage from "@/pages/ContactPage";
 import PartnersPage from "@/pages/PartnersPage";
 import BlogPage from "@/pages/BlogPage";
 import BlogPostPage from "@/pages/BlogPostPage";
+import CompanyInvitationPage from "@/pages/CompanyInvitationPage";
 
 import LegalNoticePage from "@/pages/legal/LegalNoticePage";
 import TermsPage from "@/pages/legal/TermsPage";
@@ -59,6 +60,7 @@ const App = () => (
 
                         {/* Ruta de reset de contraseña */}
                         <Route path="/reset-password" element={<ResetPassword />} />
+                        <Route path="/company-invitation" element={<CompanyInvitationPage />} />
 
                         {/* 🔐 Dashboard protegido */}
                         <Route

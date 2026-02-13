@@ -64,6 +64,9 @@ export const useRentConversations = () => {
         }),
       ]);
 
+      const ownerScopedRents = ownerRents.data.filter((rental) => rental.ownerId === ownerId);
+      const renterScopedRents = renterRents.data.filter((rental) => rental.renterId === user.id);
+
       const unreadByRent = unread.byRent.reduce<Record<string, number>>((acc, entry) => {
         acc[entry.rentId] = entry.unreadCount;
         return acc;
@@ -71,7 +74,7 @@ export const useRentConversations = () => {
 
       const map = new Map<string, RentConversation>();
 
-      ownerRents.data.forEach((rental) => {
+      ownerScopedRents.forEach((rental) => {
         map.set(rental.id, {
           rentId: rental.id,
           role: 'owner',
@@ -83,7 +86,7 @@ export const useRentConversations = () => {
         });
       });
 
-      renterRents.data.forEach((rental) => {
+      renterScopedRents.forEach((rental) => {
         if (map.has(rental.id)) {
           const existing = map.get(rental.id);
 

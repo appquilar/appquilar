@@ -1,106 +1,160 @@
+import { useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Mail } from "lucide-react";
+import { toast } from "sonner";
 
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Mail } from 'lucide-react';
-import { toast } from 'sonner';
-
-import { Button } from '@/components/ui/button';
-import FormHeader from '../common/FormHeader';
-import { Company } from '@/domain/models/Company';
-import { User } from '@/domain/models/User.ts';
-import { MOCK_COMPANIES } from './data/mockCompanies';
-import { UserService } from '@/application/services/UserService';
-import { CompanyUsersTable } from './users/CompanyUsersTable';
-import { InviteUserDialog } from './users/InviteUserDialog';
+import { Button } from "@/components/ui/button";
+import FormHeader from "../common/FormHeader";
+import { CompanyUsersTable } from "./users/CompanyUsersTable";
+import { InviteUserDialog } from "./users/InviteUserDialog";
+import { useAuth } from "@/context/AuthContext";
+import {
+    useCompanyUsers,
+    useInviteCompanyUser,
+    useRemoveCompanyUser,
+    useUpdateCompanyUserRole,
+} from "@/application/hooks/useCompanyMembership";
+import type { CompanyUserRole } from "@/domain/models/CompanyMembership";
+import { UserRole } from "@/domain/models/UserRole";
 
 const CompanyUsersPage = () => {
-  const { companyId } = useParams();
-  const navigate = useNavigate();
-  const [company, setCompany] = useState<Company | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
-  const userService = UserService.getInstance();
+    const { companyId: routeCompanyId } = useParams();
+    const { currentUser } = useAuth();
+    const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
-  useEffect(() => {
-    if (!companyId) {
-      navigate('/dashboard/companies');
-      return;
+    const effectiveCompanyId = routeCompanyId ?? currentUser?.companyId ?? null;
+    const isPlatformAdmin = currentUser?.roles?.includes(UserRole.ADMIN) ?? false;
+    const isCompanyOwner = currentUser?.isCompanyOwner === true;
+    const canManage = isPlatformAdmin || isCompanyOwner;
+
+    const usersQuery = useCompanyUsers(effectiveCompanyId);
+    const inviteMutation = useInviteCompanyUser();
+    const removeMutation = useRemoveCompanyUser();
+    const updateRoleMutation = useUpdateCompanyUserRole();
+
+    const companyName = useMemo(() => {
+        return currentUser?.companyName ?? "Empresa";
+    }, [currentUser?.companyName]);
+
+    if (!effectiveCompanyId) {
+        return (
+            <div className="p-6">
+                <p className="text-sm text-muted-foreground">
+                    No hay empresa asociada a tu usuario.
+                </p>
+            </div>
+        );
     }
 
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        const foundCompany = MOCK_COMPANIES.find(c => c.id === companyId);
-        if (!foundCompany) {
-          navigate('/dashboard/companies');
-          return;
+    if (currentUser?.companyId && currentUser.companyId !== effectiveCompanyId && !isPlatformAdmin) {
+        return (
+            <div className="p-6">
+                <p className="text-sm text-muted-foreground">
+                    No tienes permisos para gestionar esta empresa.
+                </p>
+            </div>
+        );
+    }
+
+    const handleInviteUser = async (data: { email: string; role: CompanyUserRole }) => {
+        try {
+            await inviteMutation.mutateAsync({
+                companyId: effectiveCompanyId,
+                email: data.email,
+                role: data.role,
+            });
+            toast.success("Invitación enviada correctamente.");
+            setInviteDialogOpen(false);
+        } catch (error) {
+            console.error("Error inviting company user", error);
+            toast.error("No se pudo enviar la invitación.");
         }
-        setCompany(foundCompany);
-        
-        const companyUsers = await userService.getUsersByCompanyId(companyId);
-        setUsers(companyUsers);
-      } catch (error) {
-        console.error('Error loading company users:', error);
-        toast.error('Error al cargar los usuarios');
-      } finally {
-        setIsLoading(false);
-      }
     };
 
-    loadData();
-  }, [companyId, navigate]);
+    const handleRoleChange = async (userId: string, role: CompanyUserRole) => {
+        try {
+            await updateRoleMutation.mutateAsync({
+                companyId: effectiveCompanyId,
+                userId,
+                role,
+            });
+            toast.success("Rol actualizado correctamente.");
+        } catch (error) {
+            console.error("Error updating user role", error);
+            toast.error("No se pudo actualizar el rol.");
+        }
+    };
 
-  const handleSendInvite = async (data: { email: string; role: string; companyId: string; message?: string }) => {
-    try {
-      const newUser = await userService.createUser({
-        email: data.email,
-        role: data.role as 'company_admin' | 'company_user',
-        companyId: data.companyId
-      });
-      
-      setUsers(prev => [...prev, newUser]);
-      setInviteDialogOpen(false);
-      toast.success('Invitación enviada correctamente');
-    } catch (error) {
-      console.error('Error sending invitation:', error);
-      toast.error('Error al enviar la invitación');
-    }
-  };
+    const handleRemoveUser = async (userId: string) => {
+        try {
+            await removeMutation.mutateAsync({
+                companyId: effectiveCompanyId,
+                userId,
+            });
+            toast.success("Usuario eliminado de la empresa.");
+        } catch (error) {
+            console.error("Error removing company user", error);
+            toast.error("No se pudo eliminar el usuario.");
+        }
+    };
 
-  if (isLoading) {
     return (
-      <div className="p-6 flex justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+        <div className="p-6 max-w-5xl mx-auto">
+            <FormHeader
+                title={`Gestión de usuarios - ${companyName}`}
+                backUrl="/dashboard/companies"
+            />
 
-  return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <FormHeader
-        title={`Gestión de Usuarios - ${company?.name}`}
-        backUrl="/dashboard/companies"
-      />
-      
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-medium">Usuarios de la empresa</h2>
-        <Button onClick={() => setInviteDialogOpen(true)} className="gap-2">
-          <Mail size={16} />
-          Invitar Usuario
-        </Button>
-      </div>
-      
-      <CompanyUsersTable users={users} onUsersChange={setUsers} />
-      
-      <InviteUserDialog
-        open={inviteDialogOpen}
-        onOpenChange={setInviteDialogOpen}
-        onSubmit={handleSendInvite}
-        companyId={companyId || ''}
-      />
-    </div>
-  );
+            {!canManage && (
+                <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                    Solo el propietario de la empresa puede gestionar usuarios.
+                </div>
+            )}
+
+            <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-lg font-medium">Usuarios de la empresa</h2>
+                {canManage && (
+                    <Button
+                        onClick={() => setInviteDialogOpen(true)}
+                        className="gap-2"
+                        disabled={inviteMutation.isPending}
+                    >
+                        <Mail size={16} />
+                        Invitar usuario
+                    </Button>
+                )}
+            </div>
+
+            {usersQuery.isLoading && (
+                <div className="flex justify-center py-8">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+            )}
+
+            {usersQuery.isError && (
+                <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                    No se pudieron cargar los usuarios de empresa.
+                </div>
+            )}
+
+            {!usersQuery.isLoading && !usersQuery.isError && (
+                <CompanyUsersTable
+                    users={usersQuery.data ?? []}
+                    canManage={canManage}
+                    onRoleChange={handleRoleChange}
+                    onRemoveUser={handleRemoveUser}
+                    isMutating={removeMutation.isPending || updateRoleMutation.isPending}
+                />
+            )}
+
+            <InviteUserDialog
+                open={inviteDialogOpen}
+                onOpenChange={setInviteDialogOpen}
+                onSubmit={handleInviteUser}
+                disabled={!canManage || inviteMutation.isPending}
+            />
+        </div>
+    );
 };
 
 export default CompanyUsersPage;

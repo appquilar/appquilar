@@ -35,6 +35,15 @@ import { CaptchaService } from "@/application/services/CaptchaService.ts";
 import { ContactRepository } from "@/domain/repositories/ContactRepository.ts";
 import { ApiContactRepository } from "@/infrastructure/repositories/ApiContactRepository.ts";
 import { ContactService } from "@/application/services/ContactService.ts";
+import { CompanyMembershipRepository } from "@/domain/repositories/CompanyMembershipRepository.ts";
+import { ApiCompanyMembershipRepository } from "@/infrastructure/repositories/ApiCompanyMembershipRepository.ts";
+import { CompanyMembershipService } from "@/application/services/CompanyMembershipService.ts";
+import { CompanyProfileRepository } from "@/domain/repositories/CompanyProfileRepository.ts";
+import { ApiCompanyProfileRepository } from "@/infrastructure/repositories/ApiCompanyProfileRepository.ts";
+import { CompanyProfileService } from "@/application/services/CompanyProfileService.ts";
+import { CompanyInvitationRepository } from "@/domain/repositories/CompanyInvitationRepository.ts";
+import { ApiCompanyInvitationRepository } from "@/infrastructure/repositories/ApiCompanyInvitationRepository.ts";
+import { CompanyInvitationService } from "@/application/services/CompanyInvitationService.ts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -63,6 +72,9 @@ export const rentalRepository: RentalRepository = new ApiRentalRepository(apiCli
 export const blogRepository: BlogRepository = new ApiBlogRepository(apiClient, session);
 export const captchaRepository: CaptchaRepository = new ApiCaptchaRepository(apiClient);
 export const contactRepository: ContactRepository = new ApiContactRepository(apiClient);
+export const companyMembershipRepository: CompanyMembershipRepository = new ApiCompanyMembershipRepository(apiClient, session);
+export const companyProfileRepository: CompanyProfileRepository = new ApiCompanyProfileRepository(apiClient, session);
+export const companyInvitationRepository: CompanyInvitationRepository = new ApiCompanyInvitationRepository(apiClient, session);
 
 export const seoService = new SeoService();
 export const authService = new AuthService(authRepository, userRepository);
@@ -75,6 +87,9 @@ export const rentalService = new RentalService(rentalRepository);
 export const blogService = new BlogService(blogRepository);
 export const captchaService = new CaptchaService(captchaRepository);
 export const contactService = new ContactService(contactRepository);
+export const companyMembershipService = new CompanyMembershipService(companyMembershipRepository);
+export const companyProfileService = new CompanyProfileService(companyProfileRepository);
+export const companyInvitationService = new CompanyInvitationService(companyInvitationRepository);
 
 export const compositionRoot = {
     queryClient,
@@ -93,6 +108,9 @@ export const compositionRoot = {
     blogRepository,
     captchaRepository,
     contactRepository,
+    companyMembershipRepository,
+    companyProfileRepository,
+    companyInvitationRepository,
 
     authService,
     userService,
@@ -104,6 +122,9 @@ export const compositionRoot = {
     blogService,
     captchaService,
     contactService,
+    companyMembershipService,
+    companyProfileService,
+    companyInvitationService,
 };
 
 export type CompositionRoot = typeof compositionRoot;

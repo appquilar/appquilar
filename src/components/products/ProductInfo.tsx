@@ -90,12 +90,12 @@ const ProductInfo = ({
                 </h3>
 
                 <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-                    <div className="p-5 border-b border-border bg-muted/30 flex items-center justify-between">
+                    <div className="p-5 border-b border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Precio Base</p>
                             <p className="text-xs text-muted-foreground mt-0.5">Precio del primer tier disponible</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-left sm:text-right">
                     <span className="text-3xl font-bold text-foreground">
                         {(price.daily || 0).toFixed(2)}€
                     </span>
@@ -104,7 +104,7 @@ const ProductInfo = ({
                     </div>
 
                     {price.deposit !== undefined && price.deposit > 0 && (
-                        <div className="px-5 py-3 border-b border-border flex items-center justify-between bg-white">
+                        <div className="px-5 py-3 border-b border-border flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-white">
                             <div className="flex items-center gap-2">
                                 <span className="text-sm font-medium">Fianza</span>
                                 <TooltipProvider>

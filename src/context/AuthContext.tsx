@@ -17,8 +17,11 @@ import type {
 import { compositionRoot, queryClient } from "@/compositionRoot";
 import { UserRole } from "@/domain/models/UserRole";
 import type { AuthSession } from "@/domain/models/AuthSession";
+import { Uuid } from "@/domain/valueObject/uuidv4";
+import type { CreateCompanyInput } from "@/domain/models/CompanyMembership";
 
 const authService = compositionRoot.authService;
+const companyMembershipService = compositionRoot.companyMembershipService;
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -47,6 +50,9 @@ interface AuthContextType {
     changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
     refreshCurrentUser: () => Promise<User | null>;
     getCurrentSession: () => Promise<AuthSession | null>;
+    upgradeToCompany: (
+        input: string | Omit<CreateCompanyInput, "companyId" | "ownerId">
+    ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -201,6 +207,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await queryClient.invalidateQueries();
     };
 
+    const upgradeToCompany = async (
+        input: string | Omit<CreateCompanyInput, "companyId" | "ownerId">
+    ): Promise<void> => {
+        if (!currentUser) {
+            throw new Error("Not authenticated");
+        }
+
+        const payload =
+            typeof input === "string"
+                ? { name: input }
+                : input;
+
+        const trimmedName = payload.name.trim();
+        if (!trimmedName) {
+            throw new Error("El nombre de la empresa es obligatorio.");
+        }
+
+        await companyMembershipService.createCompany({
+            companyId: Uuid.generate().toString(),
+            ownerId: currentUser.id,
+            name: trimmedName,
+            description: payload.description?.trim() || null,
+            fiscalIdentifier: payload.fiscalIdentifier?.trim() || null,
+            contactEmail: payload.contactEmail?.trim() || null,
+            phoneNumber: payload.phoneNumber ?? null,
+            address: payload.address ?? null,
+            location: payload.location ?? null,
+        });
+
+        await refreshCurrentUser();
+        await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    };
+
     //
     // ROLES
     //
@@ -231,6 +270,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 hasRole,
                 canAccess,
                 changePassword,
+                upgradeToCompany,
             }}
         >
             {children}

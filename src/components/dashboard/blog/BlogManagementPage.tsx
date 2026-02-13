@@ -107,60 +107,6 @@ const BlogManagementPage = () => {
                 </Link>
             </div>
 
-            <div className="rounded-lg border bg-card p-4 space-y-4">
-                <div>
-                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Categorías del blog</h2>
-                </div>
-
-                <div className="flex flex-col gap-2 sm:flex-row">
-                    <Input
-                        value={newCategoryName}
-                        onChange={(event) => setNewCategoryName(event.target.value)}
-                        placeholder="Nombre de categoría"
-                        onKeyDown={(event) => {
-                            if (event.key === 'Enter') {
-                                event.preventDefault();
-                                void handleCreateCategory();
-                            }
-                        }}
-                    />
-                    <Button
-                        type="button"
-                        className="gap-2"
-                        onClick={() => void handleCreateCategory()}
-                        disabled={isCreatingCategory}
-                    >
-                        <Plus size={14} />
-                        Añadir categoría
-                    </Button>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                    {isLoadingCategories && (
-                        <p className="text-sm text-muted-foreground">Cargando categorías...</p>
-                    )}
-
-                    {!isLoadingCategories && categories.length === 0 && (
-                        <p className="text-sm text-muted-foreground">Todavía no hay categorías.</p>
-                    )}
-
-                    {!isLoadingCategories && categories.map((category) => (
-                        <div key={category.categoryId} className="inline-flex items-center gap-2 rounded-full border bg-muted px-3 py-1 text-sm">
-                            <span>{category.name}</span>
-                            <button
-                                type="button"
-                                className="rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted-foreground/15 hover:text-foreground"
-                                onClick={() => void deleteCategory(category.categoryId)}
-                                disabled={isDeletingCategory}
-                                aria-label={`Eliminar categoría ${category.name}`}
-                            >
-                                <Trash2 size={13} />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
             <div className="rounded-lg border bg-card p-4">
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                     <Input
@@ -303,6 +249,60 @@ const BlogManagementPage = () => {
                 >
                     Siguiente
                 </Button>
+            </div>
+
+            <div className="rounded-lg border bg-card p-4 space-y-4">
+                <div>
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Categorías del blog</h2>
+                </div>
+
+                <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input
+                        value={newCategoryName}
+                        onChange={(event) => setNewCategoryName(event.target.value)}
+                        placeholder="Nombre de categoría"
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                void handleCreateCategory();
+                            }
+                        }}
+                    />
+                    <Button
+                        type="button"
+                        className="gap-2"
+                        onClick={() => void handleCreateCategory()}
+                        disabled={isCreatingCategory}
+                    >
+                        <Plus size={14} />
+                        Añadir categoría
+                    </Button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                    {isLoadingCategories && (
+                        <p className="text-sm text-muted-foreground">Cargando categorías...</p>
+                    )}
+
+                    {!isLoadingCategories && categories.length === 0 && (
+                        <p className="text-sm text-muted-foreground">Todavía no hay categorías.</p>
+                    )}
+
+                    {!isLoadingCategories && categories.map((category) => (
+                        <div key={category.categoryId} className="inline-flex items-center gap-2 rounded-full border bg-muted px-3 py-1 text-sm">
+                            <span>{category.name}</span>
+                            <button
+                                type="button"
+                                className="rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted-foreground/15 hover:text-foreground"
+                                onClick={() => void deleteCategory(category.categoryId)}
+                                disabled={isDeletingCategory}
+                                aria-label={`Eliminar categoría ${category.name}`}
+                            >
+                                <Trash2 size={13} />
+                            </button>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );

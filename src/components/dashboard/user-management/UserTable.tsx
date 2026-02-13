@@ -60,7 +60,7 @@ const UserTable: React.FC<UserTableProps> = ({
     return (
         <div className="border rounded-md overflow-hidden">
             <TooltipProvider>
-                <Table>
+                <Table className="min-w-[760px]">
                     <TableHeader>
                         <TableRow>
                             <TableHead>Nombre</TableHead>

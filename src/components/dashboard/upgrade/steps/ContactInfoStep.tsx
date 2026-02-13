@@ -9,9 +9,16 @@ import { CompanyFormData } from '../UpgradePage';
 
 // Validation schema for contact info
 const contactInfoSchema = z.object({
-  address: z.string().min(5, { message: 'La dirección debe tener al menos 5 caracteres' }),
+  street: z.string().min(2, { message: 'La calle debe tener al menos 2 caracteres' }),
+  street2: z.string().optional(),
+  city: z.string().min(1, { message: 'La ciudad es obligatoria' }),
+  state: z.string().min(1, { message: 'La provincia/estado es obligatoria' }),
+  country: z.string().min(1, { message: 'El país es obligatorio' }),
+  postalCode: z.string().min(1, { message: 'El código postal es obligatorio' }),
   contactEmail: z.string().email({ message: 'Debe ser un email válido' }),
-  contactPhone: z.string().min(9, { message: 'Debe ser un número de teléfono válido' })
+  contactPhoneCountryCode: z.string().min(2, { message: 'País obligatorio' }),
+  contactPhonePrefix: z.string().min(2, { message: 'Prefijo obligatorio' }),
+  contactPhoneNumber: z.string().min(6, { message: 'Debe ser un número de teléfono válido' })
 });
 
 interface ContactInfoStepProps {
@@ -25,9 +32,16 @@ const ContactInfoStep = ({ formData, onUpdateFormData, onNext, onBack }: Contact
   const form = useForm<z.infer<typeof contactInfoSchema>>({
     resolver: zodResolver(contactInfoSchema),
     defaultValues: {
-      address: formData.address,
+      street: formData.street,
+      street2: formData.street2,
+      city: formData.city,
+      state: formData.state,
+      country: formData.country,
+      postalCode: formData.postalCode,
       contactEmail: formData.contactEmail,
-      contactPhone: formData.contactPhone
+      contactPhoneCountryCode: formData.contactPhoneCountryCode,
+      contactPhonePrefix: formData.contactPhonePrefix,
+      contactPhoneNumber: formData.contactPhoneNumber,
     }
   });
 
@@ -47,12 +61,12 @@ const ContactInfoStep = ({ formData, onUpdateFormData, onNext, onBack }: Contact
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="address"
+            name="street"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Dirección</FormLabel>
+                <FormLabel>Calle y número</FormLabel>
                 <FormControl>
-                  <Input placeholder="Calle, Número, Ciudad, Código Postal" {...field} />
+                  <Input placeholder="Calle y número" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -62,12 +76,12 @@ const ContactInfoStep = ({ formData, onUpdateFormData, onNext, onBack }: Contact
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="contactEmail"
+              name="street2"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email de Contacto</FormLabel>
+                  <FormLabel>Dirección adicional (opcional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="contacto@miempresa.com" type="email" {...field} />
+                    <Input placeholder="Piso, puerta, escalera..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -76,10 +90,112 @@ const ContactInfoStep = ({ formData, onUpdateFormData, onNext, onBack }: Contact
 
             <FormField
               control={form.control}
-              name="contactPhone"
+              name="city"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Teléfono de Contacto</FormLabel>
+                  <FormLabel>Ciudad</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ciudad" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Provincia / Estado</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Provincia o estado" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>País</FormLabel>
+                  <FormControl>
+                    <Input placeholder="País" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="postalCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Código postal</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Código postal" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="contactEmail"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email de Contacto</FormLabel>
+                <FormControl>
+                  <Input placeholder="contacto@miempresa.com" type="email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="contactPhoneCountryCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>País teléfono</FormLabel>
+                  <FormControl>
+                    <Input placeholder="ES" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="contactPhonePrefix"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Prefijo</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+34" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="contactPhoneNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número</FormLabel>
                   <FormControl>
                     <Input placeholder="612345678" {...field} />
                   </FormControl>

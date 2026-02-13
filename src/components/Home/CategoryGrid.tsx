@@ -122,20 +122,28 @@ const CategoryGrid = () => {
     return (
         <section className="py-16 px-4 sm:px-6 md:px-8">
             <div className="max-w-7xl mx-auto">
-                <div className="flex justify-between items-end mb-10">
-                    <div>
-                        <h2 className="text-3xl font-display font-semibold tracking-tight">Explorar</h2>
+                <div className="max-w-3xl mx-auto text-center">
+                    <div className="inline-flex items-center justify-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary">
+                        Categorías destacadas
                     </div>
+                    <h2 className="mt-4 text-3xl font-display font-semibold tracking-tight">
+                        Explora por categorías
+                    </h2>
+                    <p className="mt-3 text-muted-foreground">
+                        Encuentra rápido lo que necesitas según el tipo de producto.
+                    </p>
+                </div>
 
+                <div className="mt-5 flex justify-center">
                     <Link
                         to="/categories"
-                        className="text-sm font-medium hover:underline"
+                        className="inline-flex items-center rounded-full border border-border/70 bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
                     >
                         Ver todas las categorías
                     </Link>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {featuredVM.map((category, index) => (
                         <Link
                             key={category.id}

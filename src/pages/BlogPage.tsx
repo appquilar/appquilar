@@ -84,16 +84,17 @@ const BlogPage = () => {
                                 ))}
                             </div>
 
-                            <div className="flex items-center justify-between rounded-lg border bg-card p-3">
+                            <div className="flex flex-col gap-3 rounded-lg border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
                                 <Button
                                     variant="outline"
                                     onClick={() => setPage(page - 1)}
                                     disabled={page <= 1}
+                                    className="w-full sm:w-auto"
                                 >
                                     Anterior
                                 </Button>
 
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-muted-foreground text-center">
                                     Página {page} de {totalPages}
                                 </p>
 
@@ -101,6 +102,7 @@ const BlogPage = () => {
                                     variant="outline"
                                     onClick={() => setPage(page + 1)}
                                     disabled={page >= totalPages}
+                                    className="w-full sm:w-auto"
                                 >
                                     Siguiente
                                 </Button>

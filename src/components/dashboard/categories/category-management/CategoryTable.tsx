@@ -40,7 +40,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
     return (
         <div className="border rounded-md overflow-hidden">
             <TooltipProvider>
-                <Table>
+                <Table className="min-w-[720px]">
                     <TableHeader>
                         <TableRow>
                             <TableHead>Nombre</TableHead>

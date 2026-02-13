@@ -23,9 +23,9 @@ const TableHeader = ({
 }: TableHeaderProps) => {
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">{title}</h1>
-        <Button onClick={onAddNew} className="gap-2">
+        <Button onClick={onAddNew} className="gap-2 w-full sm:w-auto">
           <Plus size={16} />
           {addButtonText}
         </Button>
@@ -37,7 +37,7 @@ const TableHeader = ({
           placeholder={`Buscar por nombre...`}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-9 w-full max-w-md"
+          className="pl-9 w-full max-w-full sm:max-w-md"
         />
       </form>
     </div>

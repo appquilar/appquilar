@@ -1,109 +1,125 @@
+import { useForm } from "react-hook-form";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { UserInvitationFormData } from '@/domain/models/User.ts';
-import { useForm } from 'react-hook-form';
-import { Textarea } from '@/components/ui/textarea';
-
-interface InviteUserFormData extends UserInvitationFormData {
-  message?: string;
-}
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { COMPANY_USER_ROLES } from "@/application/hooks/useCompanyMembership";
+import type { CompanyUserRole } from "@/domain/models/CompanyMembership";
 
 interface InviteUserDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSubmit: (data: InviteUserFormData) => Promise<void>;
-  companyId: string;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSubmit: (data: { email: string; role: CompanyUserRole }) => Promise<void>;
+    disabled?: boolean;
 }
 
-export const InviteUserDialog = ({ open, onOpenChange, onSubmit, companyId }: InviteUserDialogProps) => {
-  const form = useForm<InviteUserFormData>({
-    defaultValues: {
-      email: '',
-      role: 'company_user',
-      companyId: companyId,
-      message: ''
-    }
-  });
+interface InviteUserFormData {
+    email: string;
+    role: CompanyUserRole;
+}
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Invitar Nuevo Usuario</DialogTitle>
-        </DialogHeader>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="usuario@ejemplo.com" type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rol</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar rol" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="company_admin">Administrador</SelectItem>
-                      <SelectItem value="company_user">Usuario</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+export const InviteUserDialog = ({
+    open,
+    onOpenChange,
+    onSubmit,
+    disabled = false,
+}: InviteUserDialogProps) => {
+    const form = useForm<InviteUserFormData>({
+        defaultValues: {
+            email: "",
+            role: "ROLE_CONTRIBUTOR",
+        },
+    });
 
-            <FormField
-              control={form.control}
-              name="message"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mensaje personalizado (opcional)</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Escribe un mensaje personalizado para el usuario..." 
-                      className="min-h-[100px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit">Enviar Invitación</Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
+    const handleSubmit = async (data: InviteUserFormData) => {
+        await onSubmit(data);
+        form.reset({
+            email: "",
+            role: "ROLE_CONTRIBUTOR",
+        });
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Invitar usuario</DialogTitle>
+                </DialogHeader>
+
+                <Form {...form}>
+                    <form
+                        className="space-y-4"
+                        onSubmit={form.handleSubmit(handleSubmit)}
+                    >
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            rules={{
+                                required: "El email es obligatorio",
+                                pattern: {
+                                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                    message: "Introduce un email válido",
+                                },
+                            }}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            {...field}
+                                            type="email"
+                                            placeholder="usuario@ejemplo.com"
+                                            disabled={disabled}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="role"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Rol</FormLabel>
+                                    <Select
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                        disabled={disabled}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecciona rol" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {COMPANY_USER_ROLES.map((role) => (
+                                                <SelectItem key={role.value} value={role.value}>
+                                                    {role.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <DialogFooter className="mt-6">
+                            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                                Cancelar
+                            </Button>
+                            <Button type="submit" disabled={disabled}>
+                                Enviar invitación
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    );
 };
+

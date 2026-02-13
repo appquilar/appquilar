@@ -9,6 +9,7 @@ import { useState } from 'react';
 
 interface RentConversationSummaryProps {
   conversation: RentConversation;
+  onBackToConversation?: () => void;
 }
 
 const formatMoney = (amount: number, currency: string): string => {
@@ -24,7 +25,7 @@ const formatDate = (date: Date): string => {
   });
 };
 
-const RentConversationSummary = ({ conversation }: RentConversationSummaryProps) => {
+const RentConversationSummary = ({ conversation, onBackToConversation }: RentConversationSummaryProps) => {
   const rental = conversation.rental;
   const publicProductHref = `/product/${rental.productSlug ?? rental.productId}`;
   const estimatedTotal = rental.price.amount + rental.deposit.amount;
@@ -52,6 +53,17 @@ const RentConversationSummary = ({ conversation }: RentConversationSummaryProps)
         <CardTitle className="text-base">Resumen del alquiler</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 min-h-0 space-y-3 overflow-y-auto text-sm">
+        <div>
+          <Button
+            type="button"
+            variant="default"
+            className="w-full"
+            onClick={onBackToConversation}
+          >
+            Volver a la conversación
+          </Button>
+        </div>
+
         <div>
           <p className="text-muted-foreground">Producto</p>
           <p className="font-medium">{conversation.productName}</p>

@@ -16,9 +16,16 @@ const companyFormSchema = z.object({
   description: z.string().min(10),
   fiscalId: z.string().min(5),
   slug: z.string().min(3),
-  address: z.string().min(5),
+  street: z.string().min(2),
+  street2: z.string().optional(),
+  city: z.string().min(1),
+  state: z.string().min(1),
+  country: z.string().min(1),
+  postalCode: z.string().min(1),
   contactEmail: z.string().email(),
-  contactPhone: z.string().min(9),
+  contactPhoneCountryCode: z.string().min(2),
+  contactPhonePrefix: z.string().min(2),
+  contactPhoneNumber: z.string().min(6),
   selectedPlan: z.enum(['basic', 'professional', 'premium'])
 });
 
@@ -36,9 +43,16 @@ const UpgradePage = () => {
     description: '',
     fiscalId: '',
     slug: '',
-    address: '',
+    street: '',
+    street2: '',
+    city: '',
+    state: '',
+    country: '',
+    postalCode: '',
     contactEmail: '',
-    contactPhone: '',
+    contactPhoneCountryCode: 'ES',
+    contactPhonePrefix: '+34',
+    contactPhoneNumber: '',
     selectedPlan: 'basic'
   });
 
@@ -53,7 +67,25 @@ const UpgradePage = () => {
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
-      await upgradeToCompany(formData.name);
+      await upgradeToCompany({
+        name: formData.name,
+        description: formData.description,
+        fiscalIdentifier: formData.fiscalId,
+        contactEmail: formData.contactEmail,
+        phoneNumber: {
+          countryCode: formData.contactPhoneCountryCode.trim(),
+          prefix: formData.contactPhonePrefix.trim(),
+          number: formData.contactPhoneNumber.trim()
+        },
+        address: {
+          street: formData.street.trim(),
+          street2: formData.street2?.trim() || null,
+          city: formData.city.trim(),
+          postalCode: formData.postalCode.trim(),
+          state: formData.state.trim(),
+          country: formData.country.trim()
+        }
+      });
       setCurrentStep('success');
     } catch (error) {
       console.error('Error upgrading to company:', error);

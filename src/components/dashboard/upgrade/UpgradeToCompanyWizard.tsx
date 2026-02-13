@@ -33,9 +33,16 @@ export interface CompanyUpgradeFormData {
   fiscalId: string;
   slug: string;
   // Contact Info
-  address: string;
+  street: string;
+  street2: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
   contactEmail: string;
-  contactPhone: string;
+  contactPhoneCountryCode: string;
+  contactPhonePrefix: string;
+  contactPhoneNumber: string;
   // Plan
   selectedPlan: 'basic' | 'professional' | 'premium';
 }
@@ -54,9 +61,16 @@ const UpgradeToCompanyWizard = ({ open, onOpenChange }: UpgradeToCompanyWizardPr
     description: '',
     fiscalId: '',
     slug: '',
-    address: '',
+    street: '',
+    street2: '',
+    city: '',
+    state: '',
+    country: '',
+    postalCode: '',
     contactEmail: '',
-    contactPhone: '',
+    contactPhoneCountryCode: 'ES',
+    contactPhonePrefix: '+34',
+    contactPhoneNumber: '',
     selectedPlan: 'basic'
   });
 
@@ -110,9 +124,16 @@ const UpgradeToCompanyWizard = ({ open, onOpenChange }: UpgradeToCompanyWizardPr
         description: '',
         fiscalId: '',
         slug: '',
-        address: '',
+        street: '',
+        street2: '',
+        city: '',
+        state: '',
+        country: '',
+        postalCode: '',
         contactEmail: '',
-        contactPhone: '',
+        contactPhoneCountryCode: 'ES',
+        contactPhonePrefix: '+34',
+        contactPhoneNumber: '',
         selectedPlan: 'basic'
       });
     }

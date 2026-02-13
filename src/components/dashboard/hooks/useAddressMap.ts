@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
-import type { AddressFormValues } from "@/domain/schemas/userConfigSchema";
 
 import {
     attachAutocomplete,
@@ -18,7 +17,21 @@ import {
  * - autocomplete para buscar dirección
  * - sincronización con el formulario RHF
  */
-export function useAddressMap(addressForm: UseFormReturn<AddressFormValues>) {
+type AddressMapFormValues = {
+    street?: string;
+    street2?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postalCode?: string;
+    latitude?: number;
+    longitude?: number;
+};
+
+export function useAddressMap<T extends AddressMapFormValues>(
+    addressForm: UseFormReturn<T>,
+    enabled: boolean = true
+) {
     const searchInputRef = useRef<HTMLInputElement | null>(null);
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -30,14 +43,14 @@ export function useAddressMap(addressForm: UseFormReturn<AddressFormValues>) {
         let map: google.maps.Map | null = null;
         let isMounted = true;
 
-        if (!mapContainerRef.current) return;
+        if (!enabled || !mapContainerRef.current) return;
 
         const init = async () => {
             try {
                 setIsMapsLoading(true);
 
-                const latFromForm = addressForm.getValues("latitude");
-                const lngFromForm = addressForm.getValues("longitude");
+                const latFromForm = addressForm.getValues("latitude" as any) as number | undefined;
+                const lngFromForm = addressForm.getValues("longitude" as any) as number | undefined;
 
                 const hasCoords =
                     typeof latFromForm === "number" && typeof lngFromForm === "number";
@@ -60,8 +73,8 @@ export function useAddressMap(addressForm: UseFormReturn<AddressFormValues>) {
                 marker = createdMarker;
 
                 // Aseguramos que el form tiene coords iniciales
-                addressForm.setValue("latitude", initialPosition.lat);
-                addressForm.setValue("longitude", initialPosition.lng);
+                addressForm.setValue("latitude" as any, initialPosition.lat as any);
+                addressForm.setValue("longitude" as any, initialPosition.lng as any);
 
                 // Cuando se suelta el marker -> coords + reverse geocode
                 marker.addListener("dragend", async () => {
@@ -74,25 +87,25 @@ export function useAddressMap(addressForm: UseFormReturn<AddressFormValues>) {
                         lng: pos.lng(),
                     };
 
-                    addressForm.setValue("latitude", coords.lat, { shouldValidate: true });
-                    addressForm.setValue("longitude", coords.lng, { shouldValidate: true });
+                    addressForm.setValue("latitude" as any, coords.lat as any, { shouldValidate: true });
+                    addressForm.setValue("longitude" as any, coords.lng as any, { shouldValidate: true });
 
                     const addr = await reverseGeocode(coords);
 
                     if (addr.street) {
-                        addressForm.setValue("street", addr.street, { shouldValidate: true });
+                        addressForm.setValue("street" as any, addr.street as any, { shouldValidate: true });
                     }
                     if (addr.city) {
-                        addressForm.setValue("city", addr.city, { shouldValidate: true });
+                        addressForm.setValue("city" as any, addr.city as any, { shouldValidate: true });
                     }
                     if (addr.state) {
-                        addressForm.setValue("state", addr.state, { shouldValidate: true });
+                        addressForm.setValue("state" as any, addr.state as any, { shouldValidate: true });
                     }
                     if (addr.country) {
-                        addressForm.setValue("country", addr.country, { shouldValidate: true });
+                        addressForm.setValue("country" as any, addr.country as any, { shouldValidate: true });
                     }
                     if (addr.postalCode) {
-                        addressForm.setValue("postalCode", addr.postalCode, {
+                        addressForm.setValue("postalCode" as any, addr.postalCode as any, {
                             shouldValidate: true,
                         });
                     }
@@ -129,13 +142,13 @@ export function useAddressMap(addressForm: UseFormReturn<AddressFormValues>) {
 
                             const fullStreet = streetNumber ? `${street} ${streetNumber}` : street;
 
-                            addressForm.setValue("street", fullStreet, {
+                            addressForm.setValue("street" as any, fullStreet as any, {
                                 shouldValidate: true,
                             });
-                            addressForm.setValue("city", city, { shouldValidate: true });
-                            addressForm.setValue("state", state, { shouldValidate: true });
-                            addressForm.setValue("country", country, { shouldValidate: true });
-                            addressForm.setValue("postalCode", postalCode, {
+                            addressForm.setValue("city" as any, city as any, { shouldValidate: true });
+                            addressForm.setValue("state" as any, state as any, { shouldValidate: true });
+                            addressForm.setValue("country" as any, country as any, { shouldValidate: true });
+                            addressForm.setValue("postalCode" as any, postalCode as any, {
                                 shouldValidate: true,
                             });
 
@@ -145,10 +158,10 @@ export function useAddressMap(addressForm: UseFormReturn<AddressFormValues>) {
                                     lng: place.geometry.location.lng(),
                                 };
 
-                                addressForm.setValue("latitude", coords.lat, {
+                                addressForm.setValue("latitude" as any, coords.lat as any, {
                                     shouldValidate: true,
                                 });
-                                addressForm.setValue("longitude", coords.lng, {
+                                addressForm.setValue("longitude" as any, coords.lng as any, {
                                     shouldValidate: true,
                                 });
 
@@ -174,7 +187,7 @@ export function useAddressMap(addressForm: UseFormReturn<AddressFormValues>) {
                 (window as any).google.maps.event.clearInstanceListeners(autocomplete);
             }
         };
-    }, [addressForm]);
+    }, [addressForm, enabled]);
 
     return {
         searchInputRef,

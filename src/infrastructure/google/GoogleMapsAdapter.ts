@@ -6,6 +6,25 @@ const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const APPQUILAR_ORANGE = "#F19D70";
 const MARKER_LOGO_PATH = "/appquilar-marker-logo-white.png";
 
+async function ensurePlacesLibrary(g: typeof google): Promise<void> {
+    if (g.maps.places) {
+        return;
+    }
+
+    const mapsAny = g.maps as unknown as {
+        importLibrary?: (name: string) => Promise<unknown>;
+        places?: unknown;
+    };
+
+    if (typeof mapsAny.importLibrary === "function") {
+        try {
+            await mapsAny.importLibrary("places");
+        } catch (error) {
+            console.warn("No se pudo cargar la librería places con importLibrary", error);
+        }
+    }
+}
+
 async function loadGoogleMaps(): Promise<typeof google> {
     if (mapsApiPromise) return mapsApiPromise;
 
@@ -16,7 +35,8 @@ async function loadGoogleMaps(): Promise<typeof google> {
     mapsApiPromise = new Promise((resolve, reject) => {
         // Ya cargado
         if ((window as any).google?.maps) {
-            resolve((window as any).google);
+            const googleLoaded = (window as any).google as typeof google;
+            void ensurePlacesLibrary(googleLoaded).finally(() => resolve(googleLoaded));
             return;
         }
 
@@ -206,6 +226,7 @@ export async function attachAutocomplete(
     input: HTMLInputElement,
 ): Promise<google.maps.places.Autocomplete | null> {
     const g = await loadGoogleMaps();
+    await ensurePlacesLibrary(g);
 
     if (!g.maps.places) {
         console.warn(
