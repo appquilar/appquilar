@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Globe } from "lucide-react";
 import LoadingSpinner from "@/components/dashboard/common/LoadingSpinner";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import { compositionRoot } from "@/compositionRoot";
 import { Uuid } from "@/domain/valueObject/uuidv4";
 import { useSiteSettings } from "./hooks/useSiteSettings";
 import { toast } from "sonner";
+import DashboardSectionHeader from "@/components/dashboard/common/DashboardSectionHeader";
 
 const SiteSettingsPage = () => {
     const { site, setSite, categories, isLoading, error } = useSiteSettings();
@@ -143,19 +144,17 @@ const SiteSettingsPage = () => {
      * ===================== */
 
     return (
-        <div className="space-y-6 p-6 max-w-5xl mx-auto">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-xl font-semibold">Configuración del Sitio</h1>
-                    <p className="text-sm text-muted-foreground">
-                        Edita solo los campos permitidos.
-                    </p>
-                </div>
-
-                <Button onClick={save} disabled={isSaving}>
-                    {isSaving ? "Guardando..." : "Guardar"}
-                </Button>
-            </div>
+        <div className="mx-auto max-w-5xl space-y-6">
+            <DashboardSectionHeader
+                title="Sitio"
+                description="Edita solo los campos permitidos."
+                icon={Globe}
+                actions={(
+                    <Button onClick={save} disabled={isSaving}>
+                        {isSaving ? "Guardando..." : "Guardar"}
+                    </Button>
+                )}
+            />
 
             {/* Descripción */}
             <div className="bg-card border border-border rounded-lg p-4 space-y-2">

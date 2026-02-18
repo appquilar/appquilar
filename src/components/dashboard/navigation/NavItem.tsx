@@ -17,21 +17,21 @@ const NavItem = ({ link, isActive, onClick }: NavItemProps) => {
     <li key={link.href}>
       <Link
         to={link.href}
-        className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors ${
+        className={`group/nav-item flex items-center justify-between px-4 py-2.5 rounded-xl border transition-all ${
           isActive
-            ? 'bg-secondary text-primary font-medium'
-            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            ? 'border-[#F19D70]/40 bg-[#F19D70]/12 text-[#0F172A] shadow-sm'
+            : 'border-transparent text-muted-foreground hover:border-slate-200/80 hover:bg-white/70 hover:text-[#0F172A]'
         }`}
         onClick={() => onClick(link.href)}
       >
-        <div className="flex items-center">
-          <span className="mr-3">
-            <Icon size={20} />
+        <div className="flex items-center min-w-0">
+          <span className={`mr-3 transition-colors ${isActive ? 'text-[#F19D70]' : 'text-slate-400 group-hover/nav-item:text-[#F19D70]'}`}>
+            <Icon size={18} />
           </span>
-          <span>{link.title}</span>
+          <span className="truncate">{link.title}</span>
         </div>
         {link.badge && (
-          <span className="bg-primary text-primary-foreground text-xs font-medium px-1.5 py-0.5 rounded-full">
+          <span className="bg-[#F19D70]/20 text-[#C86A35] text-xs font-medium px-2 py-0.5 rounded-md">
             {link.badge}
           </span>
         )}

@@ -433,7 +433,7 @@ const CompanyFormPage = () => {
                                 )}
                             </div>
 
-                            <CardFooter className="px-0 pb-0 pt-4 border-t mt-4 flex items-center justify-between">
+                            <CardFooter className="!px-0 !pb-0 !pt-4 border-t mt-4 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Button
                                         type="submit"

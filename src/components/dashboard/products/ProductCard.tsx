@@ -11,18 +11,48 @@ interface ProductCardProps {
     product: Product;
     onEdit?: () => void;
     onPublish?: () => void;
+    publicationLimitCtaLabel?: string | null;
+    isPublicationLimitReached?: boolean;
+    onPublicationLimitCta?: () => void;
+    isProcessingPublicationLimitCta?: boolean;
     onDelete?: () => void;
 }
 
 const PLACEHOLDER = "/placeholder.svg";
+type ProductWithLegacyImages = Product & {
+    images?: Array<string | { id?: string | null }>;
+};
 
-const ProductCard = ({ product, onEdit, onPublish, onDelete }: ProductCardProps) => {
+const ProductCard = ({
+    product,
+    onEdit,
+    onPublish,
+    publicationLimitCtaLabel = null,
+    isPublicationLimitReached = false,
+    onPublicationLimitCta,
+    isProcessingPublicationLimitCta = false,
+    onDelete,
+}: ProductCardProps) => {
     const raw = (product.thumbnailUrl || product.imageUrl || "").trim();
 
     const firstImageId = useMemo(() => {
-        const ids = product.image_ids || (product as any).images || [];
-        return ids.length > 0 ? ids[0] : null;
-    }, [product.image_ids, (product as any).images]);
+        const legacyImages = (product as ProductWithLegacyImages).images ?? [];
+        const legacyImageIds = legacyImages
+            .map((image) => {
+                if (typeof image === "string") {
+                    return image;
+                }
+
+                return image?.id ?? null;
+            })
+            .filter((id): id is string => typeof id === "string" && id.length > 0);
+
+        const imageIds = product.image_ids && product.image_ids.length > 0
+            ? product.image_ids
+            : legacyImageIds;
+
+        return imageIds[0] ?? null;
+    }, [product]);
 
     const { url: mediaThumbUrl } = useMediaUrl(firstImageId, "THUMBNAIL", { enabled: !raw });
     const imgSrc = raw.length > 0 ? raw : mediaThumbUrl ?? PLACEHOLDER;
@@ -67,7 +97,14 @@ const ProductCard = ({ product, onEdit, onPublish, onDelete }: ProductCardProps)
     }).format(product.price?.deposit ?? 0);
     const canPublish = product.publicationStatus === "draft";
     const canArchive = product.publicationStatus !== "archived";
-    const hasSecondaryActions = (canPublish && Boolean(onPublish)) || (canArchive && Boolean(onDelete));
+    const isPublishBlockedByPlan = canPublish && isPublicationLimitReached;
+    const showPublishButton = canPublish && Boolean(onPublish) && !isPublishBlockedByPlan;
+    const showUpgradeButton = canPublish
+        && Boolean(onPublicationLimitCta)
+        && Boolean(publicationLimitCtaLabel)
+        && isPublishBlockedByPlan;
+    const showLimitReachedButton = canPublish && isPublishBlockedByPlan && !showUpgradeButton;
+    const hasSecondaryActions = showPublishButton || showUpgradeButton || showLimitReachedButton || (canArchive && Boolean(onDelete));
 
     return (
         <Card className="overflow-hidden hover:shadow-md transition-all duration-200 group border-border/60">
@@ -117,7 +154,7 @@ const ProductCard = ({ product, onEdit, onPublish, onDelete }: ProductCardProps)
                 </p>
             </CardContent>
 
-            <CardFooter className="p-3 bg-muted/20 border-t border-border/50">
+            <CardFooter className="!p-3 bg-muted/20 border-t border-border/50">
                 <div className="w-full space-y-2">
                     <div className="grid grid-cols-2 gap-2">
                         <Button
@@ -146,7 +183,7 @@ const ProductCard = ({ product, onEdit, onPublish, onDelete }: ProductCardProps)
 
                     {hasSecondaryActions && (
                         <div className={`grid gap-2 ${canPublish && onPublish && canArchive && onDelete ? "grid-cols-2" : "grid-cols-1"}`}>
-                            {canPublish && onPublish && (
+                            {showPublishButton && (
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -156,6 +193,31 @@ const ProductCard = ({ product, onEdit, onPublish, onDelete }: ProductCardProps)
                                 >
                                     <Rocket size={14} />
                                     Publicar (hacer visible)
+                                </Button>
+                            )}
+                            {showUpgradeButton && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 text-xs gap-1.5 border-[#F19D70]/60 text-[#D9743F] hover:bg-[#F19D70]/10"
+                                    onClick={onPublicationLimitCta}
+                                    disabled={isProcessingPublicationLimitCta}
+                                    title="Has alcanzado el límite de productos activos"
+                                >
+                                    <Rocket size={14} />
+                                    {isProcessingPublicationLimitCta ? "Redirigiendo..." : publicationLimitCtaLabel}
+                                </Button>
+                            )}
+                            {showLimitReachedButton && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 text-xs gap-1.5 border-slate-300 text-slate-500"
+                                    disabled
+                                    title="Has alcanzado el límite de productos activos para tu plan"
+                                >
+                                    <Rocket size={14} />
+                                    Límite alcanzado
                                 </Button>
                             )}
                             {canArchive && onDelete && (

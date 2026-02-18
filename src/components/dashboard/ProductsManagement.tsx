@@ -34,6 +34,10 @@ const ProductsManagement = () => {
         confirmDeleteProduct,
         handleEditProduct,
         handlePublishProduct,
+        publicationLimitCtaLabel,
+        hasReachedProductPublicationLimit,
+        handlePublicationLimitCta,
+        isProcessingPublicationLimitCta,
     } = useProductsManagement();
 
     const handleAddProduct = () => {
@@ -62,7 +66,7 @@ const ProductsManagement = () => {
     }
 
     return (
-        <div className="space-y-6 p-6">
+        <div className="space-y-6">
             <ProductsHeader />
 
             <SearchToolbar
@@ -77,6 +81,10 @@ const ProductsManagement = () => {
                 products={filteredProducts}
                 onEdit={handleEditProduct}
                 onPublish={handlePublishProduct}
+                publicationLimitCtaLabel={publicationLimitCtaLabel}
+                isPublicationLimitReached={hasReachedProductPublicationLimit}
+                onPublicationLimitCta={handlePublicationLimitCta}
+                isProcessingPublicationLimitCta={isProcessingPublicationLimitCta}
                 onDelete={openDeleteModal}
                 onAdd={handleAddProduct}
                 isAddDisabled={!canCreateProduct}

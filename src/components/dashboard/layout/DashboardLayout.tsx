@@ -16,22 +16,30 @@ interface DashboardLayoutProps {
 const DashboardLayoutContent = ({ sidebar, content }: DashboardLayoutProps) => {
     const { toggleSidebar, isMobile } = useSidebar();
 
+    React.useEffect(() => {
+        document.body.classList.add("dashboard-premium-active");
+
+        return () => {
+            document.body.classList.remove("dashboard-premium-active");
+        };
+    }, []);
+
     return (
-        <div className="flex min-h-svh w-full">
+        <div className="dashboard-premium flex min-h-svh w-full font-sans text-[#0F172A]">
             {/* The Sidebar component (passed as prop) will handle its own rendering/state */}
             {sidebar}
 
             {/* Main Content Area */}
-            <SidebarInset className="flex flex-col flex-1 w-full overflow-hidden">
+            <SidebarInset className="dashboard-main-shell flex flex-col flex-1 w-full overflow-hidden">
 
                 {/* Mobile Header / Trigger */}
                 {isMobile && (
-                    <header className="flex items-center border-b px-4 h-14 shrink-0 bg-background gap-2">
+                    <header className="flex items-center border-b border-slate-200/80 px-4 h-16 shrink-0 bg-white/75 backdrop-blur-md gap-2">
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={toggleSidebar}
-                            className="-ml-2"
+                            className="-ml-1 rounded-lg border border-slate-200/80 bg-white/80 shadow-sm"
                             aria-label="Abrir/cerrar menú"
                         >
                             <Menu size={20} />
@@ -51,7 +59,7 @@ const DashboardLayoutContent = ({ sidebar, content }: DashboardLayoutProps) => {
                 )}
 
                 {/* Page Content */}
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+                <main className="dashboard-main-content flex-1 overflow-y-auto p-3 sm:p-4 lg:p-5">
                     {content}
                 </main>
             </SidebarInset>
@@ -64,7 +72,7 @@ const DashboardLayoutContent = ({ sidebar, content }: DashboardLayoutProps) => {
  */
 const DashboardLayout = (props: DashboardLayoutProps) => {
     return (
-        <SidebarProvider defaultOpen={true}>
+        <SidebarProvider defaultOpen={true} className="dashboard-sidebar-provider">
             <DashboardLayoutContent {...props} />
         </SidebarProvider>
     );

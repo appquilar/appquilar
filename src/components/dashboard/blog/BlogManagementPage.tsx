@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit3, FilePlus2, Plus, Trash2 } from 'lucide-react';
+import { Edit3, FilePlus2, Newspaper, Plus, Trash2 } from 'lucide-react';
 import {
     useAdminBlogCategories,
     useAdminBlogPosts,
@@ -21,6 +21,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import DashboardSectionHeader from '@/components/dashboard/common/DashboardSectionHeader';
 
 const statusLabels: Record<BlogPostStatus, string> = {
     draft: 'Borrador',
@@ -92,20 +93,20 @@ const BlogManagementPage = () => {
     };
 
     return (
-        <div className="space-y-6 p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl font-bold">Blog</h1>
-                    <p className="text-muted-foreground">Gestiona posts, publicación y categorías del blog.</p>
-                </div>
-
-                <Link to="/dashboard/blog/new">
-                    <Button className="gap-2">
-                        <FilePlus2 size={16} />
-                        Nuevo post
-                    </Button>
-                </Link>
-            </div>
+        <div className="space-y-6">
+            <DashboardSectionHeader
+                title="Blog"
+                description="Gestiona posts, publicación y categorías del blog."
+                icon={Newspaper}
+                actions={(
+                    <Link to="/dashboard/blog/new">
+                        <Button className="gap-2">
+                            <FilePlus2 size={16} />
+                            Nuevo post
+                        </Button>
+                    </Link>
+                )}
+            />
 
             <div className="rounded-lg border bg-card p-4">
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">

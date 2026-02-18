@@ -9,6 +9,7 @@ import RentConversationPanel from '@/components/dashboard/messages/RentConversat
 import RentConversationSummary from '@/components/dashboard/messages/RentConversationSummary';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
+import DashboardSectionHeader from '@/components/dashboard/common/DashboardSectionHeader';
 
 const OPEN_EXCLUDED_STATUSES: RentStatus[] = ['rental_completed', 'cancelled'];
 
@@ -127,15 +128,11 @@ const MessagesDashboard = () => {
       className="flex min-h-0 flex-col gap-4 overflow-y-auto lg:overflow-hidden"
       style={availableHeight ? { height: `${availableHeight}px` } : undefined}
     >
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <MessageCircle className="text-primary" size={24} />
-          Mensajes
-        </h1>
-        <p className="text-muted-foreground">
-          Conversaciones de alquiler entre tienda y cliente.
-        </p>
-      </div>
+      <DashboardSectionHeader
+        title="Mensajes"
+        description="Conversaciones de alquiler entre tienda y cliente."
+        icon={MessageCircle}
+      />
 
       {error && (
         <div className="p-4 rounded-md bg-destructive/10 text-destructive border border-destructive/20">

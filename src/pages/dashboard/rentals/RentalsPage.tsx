@@ -7,7 +7,7 @@ import RentalsOverview from '@/components/dashboard/rentals/presentation/Rentals
  */
 const RentalsPage = () => {
   return (
-    <div className="container px-2 sm:px-4 py-4 sm:py-6 mx-auto pb-20 sm:pb-4">
+    <div className="space-y-6 pb-20 sm:pb-4">
       <RentalsOverview />
     </div>
   );

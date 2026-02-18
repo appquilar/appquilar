@@ -94,24 +94,15 @@ export const useActiveProductsCount = ({
                 return 0;
             }
 
-            const [published, draft] = await Promise.all([
-                productService.listByOwnerPaginated(
-                    ownerId,
-                    ownerType,
-                    1,
-                    1,
-                    { publicationStatus: 'published' }
-                ),
-                productService.listByOwnerPaginated(
-                    ownerId,
-                    ownerType,
-                    1,
-                    1,
-                    { publicationStatus: 'draft' }
-                ),
-            ]);
+            const published = await productService.listByOwnerPaginated(
+                ownerId,
+                ownerType,
+                1,
+                1,
+                { publicationStatus: 'published' }
+            );
 
-            return (published.total ?? 0) + (draft.total ?? 0);
+            return published.total ?? 0;
         },
         enabled: Boolean(ownerId),
         placeholderData: (previousData) => previousData,

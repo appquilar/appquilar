@@ -16,8 +16,8 @@ const NavSection = ({ title, items, isActive, onTabChange }: NavSectionProps) =>
     <>
       {/* Render section title if provided */}
       {title && (
-        <li className="mt-6 mb-2 px-3">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        <li className="mt-6 mb-2 px-4">
+          <p className="text-[0.68rem] font-semibold text-slate-500/80 uppercase tracking-[0.2em]">
             {title}
           </p>
         </li>

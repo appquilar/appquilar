@@ -1,17 +1,13 @@
-import React from "react";
+import { Users } from "lucide-react";
+import DashboardSectionHeader from "@/components/dashboard/common/DashboardSectionHeader";
 
 const UserManagementHeader: React.FC = () => {
     return (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-                <h1 className="text-2xl font-display font-semibold">
-                    Gestión de usuarios
-                </h1>
-                <p className="text-muted-foreground">
-                    Consulta y administra los usuarios de la plataforma.
-                </p>
-            </div>
-        </div>
+        <DashboardSectionHeader
+            title="Usuarios"
+            description="Consulta y administra los usuarios de la plataforma."
+            icon={Users}
+        />
     );
 };
 

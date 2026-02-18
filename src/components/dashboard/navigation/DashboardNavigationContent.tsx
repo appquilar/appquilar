@@ -84,10 +84,10 @@ const DashboardNavigationContent = ({
         .filter((section) => section.items.length > 0);
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full px-2 pb-3">
             {/* Enlaces de navegación */}
             <nav className={`p-2 flex-grow ${isMobile ? "py-4" : ""}`}>
-                <ul className="space-y-1">
+                <ul className="space-y-1.5">
                     {filteredSections.map((section) => (
                         <NavSection
                             key={section.id}
@@ -104,7 +104,7 @@ const DashboardNavigationContent = ({
             {!hasAddress && (
                 <div className="px-2 mb-2">
                     <Alert
-                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        className="cursor-pointer rounded-2xl border border-slate-200/80 bg-white/80 hover:bg-white transition-colors shadow-sm"
                         onClick={() => {
                             navigate("/dashboard/config?tab=address");
                             if (isMobile) {
@@ -146,7 +146,7 @@ const DashboardNavigationContent = ({
             )}
 
             {/* Información del usuario/empresa en la parte inferior */}
-            <div className="mt-auto">
+            <div className="mt-auto pt-2">
                 <UserProfile />
             </div>
         </div>

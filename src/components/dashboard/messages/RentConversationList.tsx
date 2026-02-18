@@ -47,7 +47,7 @@ const RentConversationList = ({
           value={statusFilter}
           onValueChange={(value) => onStatusFilterChange(value as ConversationStatusFilter)}
         >
-          <SelectTrigger className="h-8 text-xs">
+          <SelectTrigger className="h-9 rounded-md px-3 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

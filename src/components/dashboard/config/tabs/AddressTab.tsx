@@ -177,7 +177,7 @@ const AddressTab: React.FC<AddressTabProps> = ({
                                 )}
                         </div>
 
-                        <CardFooter className="px-0 pb-0 pt-4 border-t mt-4">
+                        <CardFooter className="!px-0 !pb-0 !pt-4 border-t mt-4">
                             <Button
                                 type="submit"
                                 disabled={addressForm.formState.isSubmitting}

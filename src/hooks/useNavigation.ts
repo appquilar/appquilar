@@ -1,4 +1,5 @@
 import {useLocation} from "react-router-dom";
+import { useMemo } from "react";
 import {Calendar, Home, MessageCircle, Package, Settings, Users, Grid2X2Plus, Building2, Newspaper} from "lucide-react";
 import type {NavSection} from "@/domain/services/navigation/types";
 import {UserRole} from "@/domain/models/UserRole";
@@ -149,14 +150,47 @@ export const useNavigation = () => {
         },
     ];
 
+    const normalizePath = (path: string): string => {
+        if (path.length > 1 && path.endsWith("/")) {
+            return path.slice(0, -1);
+        }
+
+        return path;
+    };
+
+    const pathname = normalizePath(location.pathname);
+    const allNavItems = navSections.flatMap((section) => section.items);
+
+    const activeItemHref = useMemo(() => {
+        const matchingItems = allNavItems
+            .filter((item) => {
+                const itemHref = normalizePath(item.href);
+
+                if (item.exact) {
+                    return pathname === itemHref;
+                }
+
+                return pathname === itemHref || pathname.startsWith(`${itemHref}/`);
+            })
+            .sort((a, b) => b.href.length - a.href.length);
+
+        return matchingItems[0]?.href ?? null;
+    }, [allNavItems, pathname]);
+
     const isActive = (href: string, exact = false): boolean => {
+        const normalizedHref = normalizePath(href);
+
+        if (activeItemHref) {
+            return normalizePath(activeItemHref) === normalizedHref;
+        }
+
         if (exact) {
-            return location.pathname === href;
+            return pathname === normalizedHref;
         }
 
         return (
-            location.pathname === href ||
-            location.pathname.startsWith(`${href}/`)
+            pathname === normalizedHref ||
+            pathname.startsWith(`${normalizedHref}/`)
         );
     };
 

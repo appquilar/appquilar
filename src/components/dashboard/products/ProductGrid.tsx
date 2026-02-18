@@ -11,6 +11,10 @@ interface ProductGridProps {
     products: Product[];
     onEdit?: (productId: string) => void;
     onPublish?: (productId: string) => void;
+    publicationLimitCtaLabel?: string | null;
+    isPublicationLimitReached?: boolean;
+    onPublicationLimitCta?: () => void;
+    isProcessingPublicationLimitCta?: boolean;
     onDelete?: (productId: string, productName: string) => void;
     onAdd?: () => void;
     isAddDisabled?: boolean;
@@ -21,6 +25,10 @@ const ProductGrid = ({
     products,
     onEdit,
     onPublish,
+    publicationLimitCtaLabel = null,
+    isPublicationLimitReached = false,
+    onPublicationLimitCta,
+    isProcessingPublicationLimitCta = false,
     onDelete,
     onAdd,
     isAddDisabled = false,
@@ -67,6 +75,10 @@ const ProductGrid = ({
                     product={product}
                     onEdit={onEdit ? () => onEdit(product.id) : undefined}
                     onPublish={onPublish ? () => onPublish(product.id) : undefined}
+                    publicationLimitCtaLabel={publicationLimitCtaLabel}
+                    isPublicationLimitReached={isPublicationLimitReached}
+                    onPublicationLimitCta={onPublicationLimitCta}
+                    isProcessingPublicationLimitCta={isProcessingPublicationLimitCta}
                     onDelete={onDelete ? () => onDelete(product.id, product.name) : undefined}
                 />
             ))}

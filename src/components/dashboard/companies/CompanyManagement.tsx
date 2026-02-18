@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Edit, RotateCcw, Search, Users } from "lucide-react";
+import { Building2, Edit, RotateCcw, Search, Users } from "lucide-react";
 
 import DataTable from "../common/DataTable";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { useAdminCompanies } from "@/application/hooks/useAdminCompanies";
 import type { CompanyAdminSummary } from "@/domain/models/CompanyAdminSummary";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/domain/models/UserRole";
+import DashboardSectionHeader from "@/components/dashboard/common/DashboardSectionHeader";
 
 const PLAN_LABELS: Record<CompanyAdminSummary["planType"], string> = {
     starter: "Starter",
@@ -128,7 +129,7 @@ const CompanyManagement = () => {
     ];
 
     return (
-        <div className="space-y-6 p-6">
+        <div className="space-y-6">
             {isAuthLoading && (
                 <div className="p-6 flex justify-center">
                     <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -145,24 +146,23 @@ const CompanyManagement = () => {
 
             {!isAuthLoading && isAdmin && (
                 <div className="space-y-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <h1 className="text-2xl font-bold">Empresas y suscripciones</h1>
-                            <p className="text-sm text-muted-foreground">
-                                {total} empresas registradas en la plataforma.
-                            </p>
-                        </div>
-                        <Button
-                            variant="outline"
-                            className="gap-2 w-full sm:w-auto"
-                            onClick={() => {
-                                void reload();
-                            }}
-                        >
-                            <RotateCcw size={16} />
-                            Recargar
-                        </Button>
-                    </div>
+                    <DashboardSectionHeader
+                        title="Empresas"
+                        description={`${total} empresas registradas en la plataforma.`}
+                        icon={Building2}
+                        actions={(
+                            <Button
+                                variant="outline"
+                                className="gap-2 w-full sm:w-auto"
+                                onClick={() => {
+                                    void reload();
+                                }}
+                            >
+                                <RotateCcw size={16} />
+                                Recargar
+                            </Button>
+                        )}
+                    />
 
                     <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
                         <div className="relative flex-1">

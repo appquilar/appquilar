@@ -10,8 +10,8 @@ import AppLogo from '@/components/common/AppLogo';
  */
 const DashboardNavigation = (props: DashboardNavigationProps) => {
     return (
-        <Sidebar collapsible="icon" className="border-r">
-            <SidebarHeader className="h-16 flex justify-center px-4 border-b">
+        <Sidebar collapsible="icon" variant="floating" className="dashboard-sidebar-shell">
+            <SidebarHeader className="h-20 flex justify-center px-5 border-b border-slate-200/60">
                 <Link
                     to="/"
                     aria-label="Ir a inicio"
@@ -23,7 +23,7 @@ const DashboardNavigation = (props: DashboardNavigationProps) => {
           */}
                     <div className="group-data-[collapsible=icon]:hidden">
                         <AppLogo
-                            imageClassName="h-8 w-auto"
+                            imageClassName="h-9 w-auto"
                             textClassName="text-2xl font-display font-semibold tracking-tight text-primary"
                         />
                     </div>

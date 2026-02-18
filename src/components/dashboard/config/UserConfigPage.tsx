@@ -1,6 +1,7 @@
 // src/components/dashboard/config/UserConfigPage.tsx
 
 import React from "react";
+import { Settings } from "lucide-react";
 import { TabsContent } from "@/components/ui/tabs";
 import { useUserConfig } from "./hooks/useUserConfig";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -11,6 +12,7 @@ import MobileConfigLayout from "./layout/MobileConfigLayout";
 import DesktopConfigLayout from "./layout/DesktopConfigLayout";
 import {useSeo} from "@/hooks/useSeo.ts";
 import UserSubscriptionSettingsCard from "@/components/dashboard/config/UserSubscriptionSettingsCard";
+import DashboardSectionHeader from "@/components/dashboard/common/DashboardSectionHeader";
 
 const UserConfigPage: React.FC = () => {
     useSeo(
@@ -65,15 +67,12 @@ const UserConfigPage: React.FC = () => {
     );
 
     return (
-        <div className="container mx-auto py-6 space-y-8 max-w-5xl">
-            <div>
-                <h1 className="text-2xl font-display font-semibold">
-                    Configuración
-                </h1>
-                <p className="text-muted-foreground">
-                    Gestiona tus preferencias y datos personales
-                </p>
-            </div>
+        <div className="space-y-6">
+            <DashboardSectionHeader
+                title="Configuración"
+                description="Gestiona tus preferencias y datos personales."
+                icon={Settings}
+            />
 
             <UserSubscriptionSettingsCard />
 

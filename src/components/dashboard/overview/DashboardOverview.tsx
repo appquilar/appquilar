@@ -5,11 +5,13 @@ import {
     eachDayOfInterval,
     endOfDay,
     format,
+    isSameDay,
+    parseISO,
     startOfDay,
     subDays,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarRange, Eye, MessageCircle, Repeat, Timer } from "lucide-react";
+import { CalendarRange, Eye, Home, MessageCircle, Repeat, Timer, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,12 +34,14 @@ import { useUserEngagementStats } from "@/application/hooks/useUserEngagementSta
 import { useCreateCheckoutSession } from "@/application/hooks/useBilling";
 import { useActiveProductsCount } from "@/application/hooks/useProducts";
 import EngagementLineChart, { EngagementLineChartPoint } from "@/components/dashboard/stats/EngagementLineChart";
+import SpanishDateInput from "@/components/products/SpanishDateInput";
 import { ApiError } from "@/infrastructure/http/ApiClient";
 import {
     getCompanyPlanProductLimit,
     getUserPlanProductLimit,
     isCompanyAdvancedAnalyticsEnabled,
 } from "@/domain/models/Subscription";
+import DashboardSectionHeader from "@/components/dashboard/common/DashboardSectionHeader";
 
 const MAX_RANGE_DAYS = 30;
 
@@ -52,6 +56,9 @@ const formatRangeLabel = (range: DateRange): string => {
     const toLabel = format(range.to, "dd/MM/yyyy");
     return `${fromLabel} - ${toLabel}`;
 };
+
+const toIsoDateValue = (date: Date | undefined): string =>
+    date ? format(date, "yyyy-MM-dd") : "";
 
 const normalizeSeries = (
     range: DateRange,
@@ -128,6 +135,7 @@ const DashboardOverview = () => {
         to: today,
     });
     const [rangeError, setRangeError] = useState<string | null>(null);
+    const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
 
     const period = useMemo(() => {
         if (!range.from || !range.to) {
@@ -225,6 +233,33 @@ const DashboardOverview = () => {
         setRangeError(null);
     };
 
+    const selectedRangeDays = range.from && range.to
+        ? differenceInCalendarDays(range.to, range.from) + 1
+        : 0;
+
+    const isPresetRange = (days: number): boolean =>
+        Boolean(range.from && range.to && selectedRangeDays === days && isSameDay(range.to, today));
+
+    const updateFromIsoDate = (nextIsoDate: string) => {
+        if (!nextIsoDate) {
+            return;
+        }
+
+        const nextFrom = startOfDay(parseISO(nextIsoDate));
+        const nextTo = range.to && range.to >= nextFrom ? range.to : nextFrom;
+        handleRangeChange({ from: nextFrom, to: nextTo });
+    };
+
+    const updateToIsoDate = (nextIsoDate: string) => {
+        if (!nextIsoDate) {
+            return;
+        }
+
+        const nextTo = startOfDay(parseISO(nextIsoDate));
+        const nextFrom = range.from && range.from <= nextTo ? range.from : nextTo;
+        handleRangeChange({ from: nextFrom, to: nextTo });
+    };
+
     const currentUrl = typeof window !== "undefined" ? window.location.href : "";
     const handleUpgradeToUserPro = async () => {
         try {
@@ -251,101 +286,159 @@ const DashboardOverview = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 className="text-xl sm:text-2xl font-bold">Resumen</h1>
-                    <p className="text-sm text-muted-foreground">{overviewTitle}</p>
-                </div>
+            <div className="grid gap-3 xl:grid-cols-[1fr_auto] xl:items-end">
+                <DashboardSectionHeader
+                    title="Resumen"
+                    description={overviewTitle}
+                    icon={Home}
+                />
                 {!isExplorerScope && (
-                    <div className="flex flex-col items-start gap-2 sm:items-end">
-                        <div className="flex items-center gap-2">
+                    <div className="dashboard-toolbar rounded-xl border border-slate-200/80 bg-white/80 p-2.5 shadow-sm backdrop-blur-md">
+                        <div className="flex flex-wrap items-center gap-2">
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
+                                className={`border-slate-200 bg-white px-4 ${isPresetRange(7) ? "border-[#F19D70]/50 bg-[#F19D70]/10 text-[#C86A35]" : ""}`}
                                 onClick={() => applyLastDays(7)}
                             >
-                                Últimos 7 días
+                                7D
                             </Button>
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
+                                className={`border-slate-200 bg-white px-4 ${isPresetRange(30) ? "border-[#F19D70]/50 bg-[#F19D70]/10 text-[#C86A35]" : ""}`}
                                 onClick={() => applyLastDays(30)}
                             >
-                                Últimos 30 días
+                                30D
                             </Button>
-                            <Popover>
+                            <Popover open={isDatePopoverOpen} onOpenChange={setIsDatePopoverOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" size="sm" className="gap-2">
-                                        <CalendarRange className="h-4 w-4" />
-                                        {formatRangeLabel(range)}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="border-slate-200 bg-white px-4 text-[#0F172A] hover:bg-slate-50"
+                                    >
+                                        <CalendarRange className="h-4 w-4 text-[#F19D70]" />
+                                        Fechas
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="end">
-                                    <Calendar
-                                        mode="range"
-                                        selected={range}
-                                        onSelect={handleRangeChange}
-                                        numberOfMonths={2}
-                                        locale={es}
-                                    />
+                                <PopoverContent className="w-[92vw] max-w-[700px] p-4 sm:p-5" align="end">
+                                    <div className="space-y-4">
+                                        <div className="grid gap-3 sm:grid-cols-2">
+                                            <div className="space-y-1.5">
+                                                <p className="text-xs font-medium uppercase tracking-[0.12em] text-[#0F172A]/55">
+                                                    Desde
+                                                </p>
+                                                <SpanishDateInput
+                                                    value={toIsoDateValue(range.from)}
+                                                    onChange={updateFromIsoDate}
+                                                    className="h-11 border-slate-200 bg-white"
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <p className="text-xs font-medium uppercase tracking-[0.12em] text-[#0F172A]/55">
+                                                    Hasta
+                                                </p>
+                                                <SpanishDateInput
+                                                    value={toIsoDateValue(range.to)}
+                                                    onChange={updateToIsoDate}
+                                                    className="h-11 border-slate-200 bg-white"
+                                                />
+                                            </div>
+                                        </div>
+                                        <Calendar
+                                            mode="range"
+                                            selected={range}
+                                            onSelect={handleRangeChange}
+                                            numberOfMonths={2}
+                                            locale={es}
+                                            className="rounded-3xl border border-slate-200/70 bg-white p-3"
+                                        />
+                                        <div className="flex justify-end">
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                className="px-5"
+                                                onClick={() => setIsDatePopoverOpen(false)}
+                                            >
+                                                Aplicar
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </PopoverContent>
                             </Popover>
                         </div>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-[#0F172A]/70">
+                                {selectedRangeDays} días
+                            </span>
+                            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-[#0F172A]/70">
+                                {formatRangeLabel(range)}
+                                <button
+                                    type="button"
+                                    className="rounded-md p-0.5 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+                                    onClick={() => applyLastDays(MAX_RANGE_DAYS)}
+                                    aria-label="Restablecer rango"
+                                >
+                                    <X className="h-3 w-3" />
+                                </button>
+                            </span>
+                        </div>
                         {rangeError && (
-                            <p className="text-xs text-destructive">{rangeError}</p>
+                            <p className="mt-2 text-xs text-destructive">{rangeError}</p>
                         )}
                     </div>
                 )}
             </div>
 
             <Card>
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Capacidad de catálogo</CardTitle>
+                <CardHeader className="pb-1">
+                    <CardTitle className="text-sm font-semibold text-[#0F172A]">Capacidad de catálogo</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-muted-foreground">{slotUsageText}</p>
+                    <p className="text-sm text-[#0F172A]/55">{slotUsageText}</p>
                 </CardContent>
             </Card>
 
             {isExplorerScope && (
-                <Card className="overflow-hidden">
-                    <CardContent className="relative p-4 sm:p-6">
-                        <div className="grid gap-3 grid-cols-1 lg:grid-cols-2">
-                            <Card className="w-full overflow-hidden border-dashed">
-                                <CardHeader>
-                                    <CardTitle className="text-sm">Visitas diarias (preview)</CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-0 h-[260px] blur-[4px] opacity-65 pointer-events-none">
+                <Card className="mt-1 overflow-hidden">
+                    <CardContent className="relative !px-4 !pb-5 !pt-5 sm:!px-6 sm:!pb-6 sm:!pt-6">
+                        <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+                            <div className="w-full overflow-hidden rounded-xl border border-slate-200/55 bg-white/45">
+                                <div className="px-4 pt-3 pb-1">
+                                    <p className="text-sm font-semibold text-[#0F172A]">Visitas diarias</p>
+                                </div>
+                                <div className="h-[248px] p-0 blur-[4px] opacity-75 pointer-events-none">
                                     <EngagementLineChart
                                         data={explorerPreviewViews}
-                                        color="#0ea5e9"
+                                        color="#F19D70"
                                         label="Visitas"
                                     />
-                                </CardContent>
-                            </Card>
+                                </div>
+                            </div>
 
-                            <Card className="w-full overflow-hidden border-dashed">
-                                <CardHeader>
-                                    <CardTitle className="text-sm">Mensajes diarios (preview)</CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-0 h-[260px] blur-[4px] opacity-65 pointer-events-none">
+                            <div className="w-full overflow-hidden rounded-xl border border-slate-200/55 bg-white/45">
+                                <div className="px-4 pt-3 pb-1">
+                                    <p className="text-sm font-semibold text-[#0F172A]">Mensajes diarios</p>
+                                </div>
+                                <div className="h-[248px] p-0 blur-[4px] opacity-75 pointer-events-none">
                                     <EngagementLineChart
                                         data={explorerPreviewMessages}
-                                        color="#10b981"
+                                        color="#E59A73"
                                         label="Mensajes"
                                     />
-                                </CardContent>
-                            </Card>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-4">
-                            <div className="pointer-events-auto w-full max-w-md rounded-md border bg-background/95 p-4 shadow-lg backdrop-blur-sm">
-                                <p className="text-sm font-semibold">
+                        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4 py-5 sm:px-6 sm:py-6">
+                            <div className="pointer-events-auto w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+                                <p className="text-sm font-semibold text-[#0F172A]">
                                     Ventajas de User Pro
                                 </p>
-                                <ul className="mt-2 space-y-1 text-sm text-muted-foreground list-disc pl-5">
+                                <ul className="mt-2 space-y-1 text-sm leading-relaxed text-[#0F172A]/60 list-disc pl-5">
                                     <li>Amplia tu límite de 2 a 5 productos activos.</li>
                                     <li>Consulta visitas y mensajes reales por producto.</li>
                                     <li>Detecta qué productos convierten mejor.</li>
@@ -377,11 +470,11 @@ const DashboardOverview = () => {
 
             {(isCompanyScope || isUserProScope) && (
                 <>
-                    <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Visitas únicas</CardTitle>
-                                <Eye className="h-4 w-4 text-muted-foreground" />
+                                <CardTitle className="text-sm font-medium text-[#0F172A]">Visitas únicas</CardTitle>
+                                <Eye className="h-4 w-4 text-[#F19D70]" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
@@ -391,7 +484,7 @@ const DashboardOverview = () => {
                                             ? companyStatsQuery.data?.summary.uniqueVisitors ?? 0
                                             : userStatsQuery.data?.summary.uniqueVisitors ?? 0}
                                 </div>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-[#0F172A]/55">
                                     {isLoading
                                         ? "..."
                                         : `${isCompanyScope ? companyStatsQuery.data?.summary.totalViews ?? 0 : userStatsQuery.data?.summary.totalViews ?? 0} visitas totales`}
@@ -401,8 +494,8 @@ const DashboardOverview = () => {
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Mensajes</CardTitle>
-                                <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                                <CardTitle className="text-sm font-medium text-[#0F172A]">Mensajes</CardTitle>
+                                <MessageCircle className="h-4 w-4 text-[#F19D70]" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
@@ -412,7 +505,7 @@ const DashboardOverview = () => {
                                             ? companyStatsQuery.data?.summary.messagesTotal ?? 0
                                             : userStatsQuery.data?.summary.messagesTotal ?? 0}
                                 </div>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-[#0F172A]/55">
                                     {isLoading
                                         ? "..."
                                         : `${isCompanyScope ? companyStatsQuery.data?.summary.messageThreads ?? 0 : userStatsQuery.data?.summary.messageThreads ?? 0} conversaciones`}
@@ -427,9 +520,9 @@ const DashboardOverview = () => {
                                 fallback={
                                     <Card>
                                         <CardHeader className="pb-2">
-                                            <CardTitle className="text-sm font-medium">Analítica avanzada</CardTitle>
+                                            <CardTitle className="text-sm font-medium text-[#0F172A]">Analítica avanzada</CardTitle>
                                         </CardHeader>
-                                        <CardContent className="text-xs text-muted-foreground">
+                                        <CardContent className="text-xs text-[#0F172A]/55">
                                             Disponible en plan Empresa Pro o superior.
                                         </CardContent>
                                     </Card>
@@ -437,14 +530,14 @@ const DashboardOverview = () => {
                             >
                                 <Card>
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">Repetición de visitantes</CardTitle>
-                                        <Repeat className="h-4 w-4 text-muted-foreground" />
+                                        <CardTitle className="text-sm font-medium text-[#0F172A]">Repetición de visitantes</CardTitle>
+                                        <Repeat className="h-4 w-4 text-[#F19D70]" />
                                     </CardHeader>
                                     <CardContent>
                                         <div className="text-2xl font-bold">
                                             {isLoading ? "..." : formatPercent(companyStatsQuery.data?.summary.repeatVisitorRatio ?? 0)}
                                         </div>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-xs text-[#0F172A]/55">
                                             {isLoading ? "..." : `${companyStatsQuery.data?.summary.repeatVisitors ?? 0} visitantes recurrentes`}
                                         </p>
                                     </CardContent>
@@ -452,8 +545,8 @@ const DashboardOverview = () => {
 
                                 <Card>
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">1ª respuesta media</CardTitle>
-                                        <Timer className="h-4 w-4 text-muted-foreground" />
+                                        <CardTitle className="text-sm font-medium text-[#0F172A]">1ª respuesta media</CardTitle>
+                                        <Timer className="h-4 w-4 text-[#F19D70]" />
                                     </CardHeader>
                                     <CardContent>
                                         <div className="text-2xl font-bold">
@@ -463,7 +556,7 @@ const DashboardOverview = () => {
                                                     ? `${companyStatsQuery.data.summary.averageFirstResponseMinutes} min`
                                                     : "N/D"}
                                         </div>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-xs text-[#0F172A]/55">
                                             Ratio mensaje a alquiler:{" "}
                                             {isLoading ? "..." : formatPercent(companyStatsQuery.data?.summary.messageToRentalRatio ?? 0)}
                                         </p>
@@ -473,7 +566,7 @@ const DashboardOverview = () => {
                         )}
                     </div>
 
-                    <div className="grid gap-3 grid-cols-1 lg:grid-cols-2">
+                    <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
                         <Card className="w-full overflow-hidden">
                             <CardHeader>
                                 <CardTitle>Visitas diarias</CardTitle>
@@ -481,7 +574,7 @@ const DashboardOverview = () => {
                             <CardContent className="p-0 h-[320px] sm:h-[380px]">
                                 <EngagementLineChart
                                     data={viewsChartData}
-                                    color="#0ea5e9"
+                                    color="#F19D70"
                                     label="Visitas"
                                 />
                             </CardContent>
@@ -494,14 +587,14 @@ const DashboardOverview = () => {
                             <CardContent className="p-0 h-[320px] sm:h-[380px]">
                                 <EngagementLineChart
                                     data={messagesChartData}
-                                    color="#10b981"
+                                    color="#E59A73"
                                     label="Mensajes"
                                 />
                             </CardContent>
                         </Card>
                     </div>
 
-                    <div className="grid gap-3 grid-cols-1 xl:grid-cols-3">
+                    <div className="grid gap-4 grid-cols-1 xl:grid-cols-3">
                         <Card className="xl:col-span-2 overflow-hidden">
                             <CardHeader>
                                 <CardTitle>Desglose por producto</CardTitle>
@@ -527,14 +620,14 @@ const DashboardOverview = () => {
                                     <TableBody>
                                         {!isLoading && isCompanyScope && (companyStatsQuery.data?.byProduct.length ?? 0) === 0 && (
                                             <TableRow>
-                                                <TableCell colSpan={isAdvancedCompanyAnalytics ? 8 : 4} className="text-center text-muted-foreground">
+                                                <TableCell colSpan={isAdvancedCompanyAnalytics ? 8 : 4} className="text-center text-[#0F172A]/55">
                                                     Sin datos de productos para el período.
                                                 </TableCell>
                                             </TableRow>
                                         )}
                                         {!isLoading && !isCompanyScope && (userStatsQuery.data?.byProduct.length ?? 0) === 0 && (
                                             <TableRow>
-                                                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                                                <TableCell colSpan={4} className="text-center text-[#0F172A]/55">
                                                     Sin datos de productos para el período.
                                                 </TableCell>
                                             </TableRow>
@@ -579,7 +672,7 @@ const DashboardOverview = () => {
                                         <CardHeader>
                                             <CardTitle>Origen de visitas</CardTitle>
                                         </CardHeader>
-                                        <CardContent className="text-sm text-muted-foreground">
+                                        <CardContent className="text-sm text-[#0F172A]/55">
                                             Disponible en plan Empresa Pro o superior.
                                         </CardContent>
                                     </Card>
@@ -591,7 +684,7 @@ const DashboardOverview = () => {
                                     </CardHeader>
                                     <CardContent className="space-y-3 text-sm">
                                         {!isLoading && (companyStatsQuery.data?.topLocations.length ?? 0) === 0 && (
-                                            <p className="text-muted-foreground">Sin ubicación disponible todavía.</p>
+                                            <p className="text-[#0F172A]/55">Sin ubicación disponible todavía.</p>
                                         )}
                                         {(companyStatsQuery.data?.topLocations ?? []).slice(0, 8).map((location, index) => (
                                             <div
@@ -602,7 +695,7 @@ const DashboardOverview = () => {
                                                     <p className="font-medium truncate">
                                                         {[location.city, location.region, location.country].filter(Boolean).join(", ")}
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground">
+                                                    <p className="text-xs text-[#0F172A]/55">
                                                         {location.uniqueVisitors} únicos
                                                     </p>
                                                 </div>
@@ -620,7 +713,7 @@ const DashboardOverview = () => {
                             <CardHeader>
                                 <CardTitle>Oportunidad detectada</CardTitle>
                             </CardHeader>
-                            <CardContent className="text-sm text-muted-foreground">
+                            <CardContent className="text-sm text-[#0F172A]/55">
                                 <span className="font-medium text-foreground">
                                     {companyStatsQuery.data.opportunities.highInterestLowConversion.productName}
                                 </span>{" "}

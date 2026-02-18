@@ -33,7 +33,7 @@ const RentalsOverview = () => {
   } = useRentalsManagement();
   
   return (
-    <div className="space-y-4 max-w-full px-2 sm:px-0">
+    <div className="space-y-6 max-w-full">
       {/* Header with create button */}
       <RentalsHeader onCreateRental={handleCreateRental} />
       
