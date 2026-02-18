@@ -3,12 +3,15 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { z } from 'zod';
+import { toast } from "sonner";
 
 // Import steps
 import CompanyInfoStep from './steps/CompanyInfoStep';
 import ContactInfoStep from './steps/ContactInfoStep';
 import SelectPlanStep from './steps/SelectPlanStep';
-import SuccessStep from './steps/SuccessStep';
+import { useCreateCheckoutSession } from "@/application/hooks/useBilling";
+import { ApiError } from "@/infrastructure/http/ApiClient";
+import type { CompanyBillingPlanType } from "@/domain/models/Billing";
 
 // Form schema
 const companyFormSchema = z.object({
@@ -26,16 +29,17 @@ const companyFormSchema = z.object({
   contactPhoneCountryCode: z.string().min(2),
   contactPhonePrefix: z.string().min(2),
   contactPhoneNumber: z.string().min(6),
-  selectedPlan: z.enum(['basic', 'professional', 'premium'])
+  selectedPlan: z.enum(['starter', 'pro', 'enterprise'])
 });
 
 export type CompanyFormData = z.infer<typeof companyFormSchema>;
 
-type Step = 'info' | 'contact' | 'plan' | 'success';
+type Step = 'info' | 'contact' | 'plan';
 
 const UpgradePage = () => {
   const navigate = useNavigate();
-  const { upgradeToCompany } = useAuth();
+  const { upgradeToCompany, refreshCurrentUser } = useAuth();
+  const createCheckoutMutation = useCreateCheckoutSession();
   const [currentStep, setCurrentStep] = useState<Step>('info');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<CompanyFormData>({
@@ -53,7 +57,7 @@ const UpgradePage = () => {
     contactPhoneCountryCode: 'ES',
     contactPhonePrefix: '+34',
     contactPhoneNumber: '',
-    selectedPlan: 'basic'
+    selectedPlan: 'starter'
   });
 
   const handleUpdateFormData = (data: Partial<CompanyFormData>) => {
@@ -86,9 +90,28 @@ const UpgradePage = () => {
           country: formData.country.trim()
         }
       });
-      setCurrentStep('success');
+
+      const refreshedUser = await refreshCurrentUser();
+      const companyId = refreshedUser?.companyContext?.companyId ?? refreshedUser?.companyId ?? null;
+      if (!companyId) {
+        throw new Error("No se pudo recuperar la empresa para iniciar el checkout.");
+      }
+
+      const companySettingsUrl = `${window.location.origin}/dashboard/companies/${companyId}`;
+      const checkoutSession = await createCheckoutMutation.mutateAsync({
+        scope: "company",
+        planType: formData.selectedPlan as CompanyBillingPlanType,
+        successUrl: companySettingsUrl,
+        cancelUrl: companySettingsUrl,
+      });
+
+      window.location.assign(checkoutSession.url);
     } catch (error) {
       console.error('Error upgrading to company:', error);
+      const backendError = extractBackendErrorMessage(error);
+      toast.error(
+          backendError ?? "No se pudo iniciar el checkout de Stripe para la empresa."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -99,16 +122,9 @@ const UpgradePage = () => {
       setCurrentStep('info');
     } else if (currentStep === 'plan') {
       setCurrentStep('contact');
-    } else if (currentStep === 'success') {
-      // If on success page, go to dashboard
-      navigate('/dashboard');
     } else {
       navigate('/dashboard');
     }
-  };
-
-  const handleClose = () => {
-    navigate('/dashboard');
   };
 
   return (
@@ -121,34 +137,31 @@ const UpgradePage = () => {
           </p>
         </div>
 
-        {/* Progress bar (only show if not on success step) */}
-        {currentStep !== 'success' && (
-          <div className="w-full">
-            <div className="flex justify-between mb-2 px-1 text-xs sm:text-sm">
-              <div className={`font-medium ${currentStep === 'info' ? 'text-primary' : ''}`}>
-                Información
-              </div>
-              <div className={`font-medium ${currentStep === 'contact' ? 'text-primary' : ''}`}>
-                Contacto
-              </div>
-              <div className={`font-medium ${currentStep === 'plan' ? 'text-primary' : ''}`}>
-                Plan
-              </div>
+        <div className="w-full">
+          <div className="flex justify-between mb-2 px-1 text-xs sm:text-sm">
+            <div className={`font-medium ${currentStep === 'info' ? 'text-primary' : ''}`}>
+              Información
             </div>
-            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-              <div 
-                className="bg-primary h-full transition-all" 
-                style={{ 
-                  width: currentStep === 'info' 
-                    ? '33.3%' 
-                    : currentStep === 'contact' 
-                      ? '66.6%' 
-                      : '100%' 
-                }}
-              />
+            <div className={`font-medium ${currentStep === 'contact' ? 'text-primary' : ''}`}>
+              Contacto
+            </div>
+            <div className={`font-medium ${currentStep === 'plan' ? 'text-primary' : ''}`}>
+              Plan
             </div>
           </div>
-        )}
+          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+            <div
+              className="bg-primary h-full transition-all"
+              style={{
+                width: currentStep === 'info'
+                  ? '33.3%'
+                  : currentStep === 'contact'
+                    ? '66.6%'
+                    : '100%'
+              }}
+            />
+          </div>
+        </div>
 
         <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
           {currentStep === 'info' && (
@@ -178,23 +191,29 @@ const UpgradePage = () => {
               isSubmitting={isSubmitting}
             />
           )}
-
-          {currentStep === 'success' && (
-            <SuccessStep 
-              planName={formData.selectedPlan === 'basic' 
-                ? 'Básico' 
-                : formData.selectedPlan === 'professional' 
-                  ? 'Profesional' 
-                  : 'Premium'
-              } 
-              companyName={formData.name} 
-              onClose={handleClose} 
-            />
-          )}
         </div>
       </div>
     </div>
   );
+};
+
+const extractBackendErrorMessage = (error: unknown): string | null => {
+  if (!(error instanceof ApiError)) {
+    return null;
+  }
+
+  const payload = error.payload as { error?: unknown } | undefined;
+  const backendError = payload?.error;
+
+  if (Array.isArray(backendError) && typeof backendError[0] === "string") {
+    return backendError[0];
+  }
+
+  if (typeof backendError === "string") {
+    return backendError;
+  }
+
+  return null;
 };
 
 export default UpgradePage;

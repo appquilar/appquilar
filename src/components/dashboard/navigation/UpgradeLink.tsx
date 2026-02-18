@@ -5,20 +5,32 @@ import { ChevronRight } from 'lucide-react';
 /**
  * Componente para el enlace de actualización a cuenta de empresa
  */
-const UpgradeLink = () => {
+interface UpgradeLinkProps {
+  onAfterNavigate?: () => void;
+}
+
+const UpgradeLink = ({ onAfterNavigate }: UpgradeLinkProps) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
+    onAfterNavigate?.();
     navigate('/dashboard/upgrade');
   };
 
   return (
     <button
       onClick={handleClick}
-      className="flex items-center justify-between w-full px-3 py-3 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+      className="w-full rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-left transition-colors hover:bg-orange-100"
     >
-      <span className="text-sm font-medium">Actualizar a Empresa</span>
-      <ChevronRight size={16} />
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-orange-600">Actualizar a Empresa</p>
+          <p className="text-xs text-zinc-600">
+            Completa la configuracion de empresa para alquilar como tienda.
+          </p>
+        </div>
+        <ChevronRight size={16} className="mt-1 shrink-0 text-orange-500" />
+      </div>
     </button>
   );
 };

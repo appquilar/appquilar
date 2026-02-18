@@ -44,6 +44,18 @@ import { CompanyProfileService } from "@/application/services/CompanyProfileServ
 import { CompanyInvitationRepository } from "@/domain/repositories/CompanyInvitationRepository.ts";
 import { ApiCompanyInvitationRepository } from "@/infrastructure/repositories/ApiCompanyInvitationRepository.ts";
 import { CompanyInvitationService } from "@/application/services/CompanyInvitationService.ts";
+import { CompanyEngagementRepository } from "@/domain/repositories/CompanyEngagementRepository.ts";
+import { ApiCompanyEngagementRepository } from "@/infrastructure/repositories/ApiCompanyEngagementRepository.ts";
+import { CompanyEngagementService } from "@/application/services/CompanyEngagementService.ts";
+import { UserEngagementRepository } from "@/domain/repositories/UserEngagementRepository.ts";
+import { ApiUserEngagementRepository } from "@/infrastructure/repositories/ApiUserEngagementRepository.ts";
+import { UserEngagementService } from "@/application/services/UserEngagementService.ts";
+import { CompanyAdminRepository } from "@/domain/repositories/CompanyAdminRepository.ts";
+import { ApiCompanyAdminRepository } from "@/infrastructure/repositories/ApiCompanyAdminRepository.ts";
+import { CompanyAdminService } from "@/application/services/CompanyAdminService.ts";
+import { BillingRepository } from "@/domain/repositories/BillingRepository.ts";
+import { ApiBillingRepository } from "@/infrastructure/repositories/ApiBillingRepository.ts";
+import { BillingService } from "@/application/services/BillingService.ts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -75,6 +87,10 @@ export const contactRepository: ContactRepository = new ApiContactRepository(api
 export const companyMembershipRepository: CompanyMembershipRepository = new ApiCompanyMembershipRepository(apiClient, session);
 export const companyProfileRepository: CompanyProfileRepository = new ApiCompanyProfileRepository(apiClient, session);
 export const companyInvitationRepository: CompanyInvitationRepository = new ApiCompanyInvitationRepository(apiClient, session);
+export const companyEngagementRepository: CompanyEngagementRepository = new ApiCompanyEngagementRepository(apiClient, session);
+export const userEngagementRepository: UserEngagementRepository = new ApiUserEngagementRepository(apiClient, session);
+export const companyAdminRepository: CompanyAdminRepository = new ApiCompanyAdminRepository(apiClient, session);
+export const billingRepository: BillingRepository = new ApiBillingRepository(apiClient, session);
 
 export const seoService = new SeoService();
 export const authService = new AuthService(authRepository, userRepository);
@@ -90,6 +106,10 @@ export const contactService = new ContactService(contactRepository);
 export const companyMembershipService = new CompanyMembershipService(companyMembershipRepository);
 export const companyProfileService = new CompanyProfileService(companyProfileRepository);
 export const companyInvitationService = new CompanyInvitationService(companyInvitationRepository);
+export const companyEngagementService = new CompanyEngagementService(companyEngagementRepository);
+export const userEngagementService = new UserEngagementService(userEngagementRepository);
+export const companyAdminService = new CompanyAdminService(companyAdminRepository);
+export const billingService = new BillingService(billingRepository);
 
 export const compositionRoot = {
     queryClient,
@@ -111,6 +131,10 @@ export const compositionRoot = {
     companyMembershipRepository,
     companyProfileRepository,
     companyInvitationRepository,
+    companyEngagementRepository,
+    userEngagementRepository,
+    companyAdminRepository,
+    billingRepository,
 
     authService,
     userService,
@@ -125,6 +149,10 @@ export const compositionRoot = {
     companyMembershipService,
     companyProfileService,
     companyInvitationService,
+    companyEngagementService,
+    userEngagementService,
+    companyAdminService,
+    billingService,
 };
 
 export type CompositionRoot = typeof compositionRoot;

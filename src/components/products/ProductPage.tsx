@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useProductBySlug } from "@/application/hooks/useProducts";
 import { useSeo } from "@/hooks/useSeo";
 import { RentalCostBreakdown } from "@/domain/repositories/ProductRepository";
+import { useTrackProductView } from "@/application/hooks/useTrackProductView";
 
 // ViewModel simplificado para la vista
 type ProductPageVm = {
@@ -122,6 +123,8 @@ const ProductPage: React.FC = () => {
             providerLocationLabel: locationParts.join(", "),
         };
     }, [query.data]); // Eliminada dependencia de currentUser para el cálculo del producto
+
+    useTrackProductView(product?.id ?? null);
 
     // SEO Hook - Objeto seguro para evitar crashes
     useSeo(

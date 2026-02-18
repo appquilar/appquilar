@@ -10,6 +10,13 @@ import { UserRole } from "@/domain/models/UserRole";
 import { ApiClient } from "@/infrastructure/http/ApiClient";
 import type { AuthSession } from "@/domain/models/AuthSession";
 import { toAuthorizationHeader } from "@/domain/models/AuthSession";
+import type {
+    CompanyContext,
+    CompanyPlanType,
+    CompanyUserRoleType,
+    SubscriptionStatus,
+    UserPlanType,
+} from "@/domain/models/Subscription";
 
 interface ApiResponse<T> {
     success: boolean;
@@ -45,6 +52,20 @@ interface UserDto {
     company_name?: string | null;
     company_role?: string | null;
     is_company_owner?: boolean | null;
+    plan_type?: UserPlanType | null;
+    subscription_status?: SubscriptionStatus | null;
+    company_plan_type?: CompanyPlanType | null;
+    company_subscription_status?: SubscriptionStatus | null;
+    company_is_founding_account?: boolean | null;
+    company_context?: {
+        company_id: string;
+        company_name: string;
+        company_role: CompanyUserRoleType;
+        is_company_owner: boolean;
+        plan_type: CompanyPlanType;
+        subscription_status: SubscriptionStatus;
+        is_founding_account: boolean;
+    } | null;
     company?: {
         company_id?: string;
         id?: string;
@@ -119,6 +140,28 @@ function mapUserDtoToDomain(dto: UserDto): User {
         : [];
     const companyId = dto.company_id ?? dto.company?.company_id ?? dto.company?.id ?? null;
     const companyName = dto.company_name ?? dto.company?.name ?? null;
+    const companyRole = (dto.company_role as CompanyUserRoleType | null | undefined) ?? null;
+    const companyContext: CompanyContext | null = dto.company_context
+        ? {
+            companyId: dto.company_context.company_id,
+            companyName: dto.company_context.company_name,
+            companyRole: dto.company_context.company_role,
+            isCompanyOwner: dto.company_context.is_company_owner,
+            planType: dto.company_context.plan_type,
+            subscriptionStatus: dto.company_context.subscription_status,
+            isFoundingAccount: dto.company_context.is_founding_account,
+        }
+        : companyId
+            ? {
+                companyId,
+                companyName: companyName ?? "",
+                companyRole: companyRole ?? "ROLE_CONTRIBUTOR",
+                isCompanyOwner: dto.is_company_owner === true,
+                planType: dto.company_plan_type ?? "starter",
+                subscriptionStatus: dto.company_subscription_status ?? "active",
+                isFoundingAccount: dto.company_is_founding_account === true,
+            }
+            : null;
 
     return {
         id: dto.user_id || dto.id || "",
@@ -130,7 +173,11 @@ function mapUserDtoToDomain(dto: UserDto): User {
         location: mapLocationDtoToDomain(dto.location),
         companyId,
         companyName,
+        companyRole,
         isCompanyOwner: dto.is_company_owner ?? null,
+        companyContext,
+        planType: dto.plan_type ?? "explorer",
+        subscriptionStatus: dto.subscription_status ?? "active",
         status: dto.status ?? null,
         dateAdded: dto.date_added ? new Date(dto.date_added) : null,
         // OpenAPI: profile_picture_id

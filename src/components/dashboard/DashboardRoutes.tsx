@@ -43,7 +43,6 @@ const DashboardRoutes = () => {
             <Route path="rentals/new" element={<CreateRental />} />
             <Route path="rentals/:id" element={<RentalDetails />} />
 
-            {/* Companies (de momento abiertas a cualquier usuario autenticado) */}
             <Route path="companies" element={<CompanyManagement />} />
             <Route path="companies/new" element={<CompanyFormPage />} />
             <Route path="companies/:id" element={<CompanyFormPage />} />

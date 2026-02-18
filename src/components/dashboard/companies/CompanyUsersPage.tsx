@@ -25,7 +25,8 @@ const CompanyUsersPage = () => {
     const effectiveCompanyId = routeCompanyId ?? currentUser?.companyId ?? null;
     const isPlatformAdmin = currentUser?.roles?.includes(UserRole.ADMIN) ?? false;
     const isCompanyOwner = currentUser?.isCompanyOwner === true;
-    const canManage = isPlatformAdmin || isCompanyOwner;
+    const isCompanyAdmin = currentUser?.companyRole === "ROLE_ADMIN";
+    const canManage = isPlatformAdmin || isCompanyOwner || isCompanyAdmin;
 
     const usersQuery = useCompanyUsers(effectiveCompanyId);
     const inviteMutation = useInviteCompanyUser();
@@ -107,7 +108,7 @@ const CompanyUsersPage = () => {
 
             {!canManage && (
                 <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-                    Solo el propietario de la empresa puede gestionar usuarios.
+                    Solo admins de empresa o de plataforma pueden gestionar usuarios.
                 </div>
             )}
 

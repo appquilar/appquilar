@@ -20,6 +20,11 @@ interface UseOwnedProductsCountParams {
     filters?: ProductFilters;
 }
 
+interface UseActiveProductsCountParams {
+    ownerId?: string | null;
+    ownerType?: 'company' | 'user';
+}
+
 /**
  * Hook for the Product Dashboard List (Pagination + Search + Owner Filter)
  */
@@ -72,6 +77,41 @@ export const useOwnedProductsCount = ({
             );
 
             return response.total ?? response.data.length;
+        },
+        enabled: Boolean(ownerId),
+        placeholderData: (previousData) => previousData,
+    });
+};
+
+export const useActiveProductsCount = ({
+    ownerId,
+    ownerType = 'company',
+}: UseActiveProductsCountParams) => {
+    return useQuery({
+        queryKey: ['products', 'active-count', ownerId, ownerType],
+        queryFn: async () => {
+            if (!ownerId) {
+                return 0;
+            }
+
+            const [published, draft] = await Promise.all([
+                productService.listByOwnerPaginated(
+                    ownerId,
+                    ownerType,
+                    1,
+                    1,
+                    { publicationStatus: 'published' }
+                ),
+                productService.listByOwnerPaginated(
+                    ownerId,
+                    ownerType,
+                    1,
+                    1,
+                    { publicationStatus: 'draft' }
+                ),
+            ]);
+
+            return (published.total ?? 0) + (draft.total ?? 0);
         },
         enabled: Boolean(ownerId),
         placeholderData: (previousData) => previousData,

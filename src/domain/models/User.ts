@@ -1,6 +1,12 @@
 import type {Location} from "./Location";
 import type {UserRole} from "./UserRole";
 import type {Address} from "./Address";
+import type {
+    CompanyContext,
+    CompanyUserRoleType,
+    SubscriptionStatus,
+    UserPlanType,
+} from "./Subscription";
 
 export interface User {
     id: string;
@@ -22,7 +28,11 @@ export interface User {
      */
     companyId?: string | null;
     companyName?: string | null;
+    companyRole?: CompanyUserRoleType | null;
     isCompanyOwner?: boolean | null;
+    companyContext?: CompanyContext | null;
+    planType?: UserPlanType | null;
+    subscriptionStatus?: SubscriptionStatus | null;
     status?: string | null;
     dateAdded?: Date | null;
 
@@ -43,7 +53,11 @@ export function createUser(params: {
     location?: Location | null;
     companyId?: string | null;
     companyName?: string | null;
+    companyRole?: CompanyUserRoleType | null;
     isCompanyOwner?: boolean | null;
+    companyContext?: CompanyContext | null;
+    planType?: UserPlanType | null;
+    subscriptionStatus?: SubscriptionStatus | null;
     status?: string | null;
     dateAdded?: Date | null;
     profilePictureId?: string | null;
@@ -58,7 +72,11 @@ export function createUser(params: {
         location: params.location ?? null,
         companyId: params.companyId ?? null,
         companyName: params.companyName ?? null,
+        companyRole: params.companyRole ?? null,
         isCompanyOwner: params.isCompanyOwner ?? null,
+        companyContext: params.companyContext ?? null,
+        planType: params.planType ?? null,
+        subscriptionStatus: params.subscriptionStatus ?? null,
         status: params.status ?? null,
         dateAdded: params.dateAdded ?? null,
         profilePictureId: params.profilePictureId ?? null,

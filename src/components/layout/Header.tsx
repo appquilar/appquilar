@@ -227,6 +227,7 @@ const Header = () => {
                                         <SheetHeader>
                                             <SheetTitle>Categorías</SheetTitle>
                                         </SheetHeader>
+
                                     </div>
 
                                     <div className="flex-1 overflow-y-auto p-6">

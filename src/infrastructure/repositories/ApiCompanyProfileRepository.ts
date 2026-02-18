@@ -38,6 +38,9 @@ type CompanyProfileDto = {
     phone_number?: CompanyPhoneNumberDto;
     address?: AddressDto;
     location?: LocationDto;
+    plan_type?: "starter" | "pro" | "enterprise";
+    subscription_status?: "active" | "paused" | "canceled";
+    is_founding_account?: boolean;
 };
 
 type WrappedCompanyResponse = {
@@ -91,6 +94,9 @@ export class ApiCompanyProfileRepository implements CompanyProfileRepository {
                     longitude: dto.location.longitude ?? null,
                 }
                 : null,
+            planType: dto.plan_type ?? null,
+            subscriptionStatus: dto.subscription_status ?? null,
+            isFoundingAccount: dto.is_founding_account ?? null,
         };
     }
 

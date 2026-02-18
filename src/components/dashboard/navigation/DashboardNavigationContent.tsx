@@ -5,9 +5,10 @@ import {DashboardNavigationProps} from "./types";
 import UserProfile from "./UserProfile";
 import NavSection from "./NavSection";
 import UpgradeLink from "./UpgradeLink";
+import UpgradeToProLink from "./UpgradeToProLink";
 import {useNavigation} from "@/hooks/useNavigation";
 import {Alert, AlertDescription} from "@/components/ui/alert";
-import {Building2, MapPin} from "lucide-react";
+import {MapPin} from "lucide-react";
 import {useAuth} from "@/context/AuthContext";
 import {UserRole} from "@/domain/models/UserRole";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -28,7 +29,10 @@ const DashboardNavigationContent = ({
     const { currentUser } = useAuth();
     const roles = currentUser?.roles ?? [];
     const isAdmin = roles.includes(UserRole.ADMIN);
-    const hasCompany = Boolean(currentUser?.companyId);
+    const isRegularUser = roles.includes(UserRole.REGULAR_USER);
+    const hasCompany = Boolean(currentUser?.companyContext?.companyId ?? currentUser?.companyId);
+    const isUserPro = currentUser?.planType === "user_pro";
+    const canUpgradeToUserPro = isRegularUser && !isAdmin && !hasCompany && !isUserPro;
 
     // El usuario se considera "con dirección" si tiene address
     // y al menos uno de los campos básicos relleno.
@@ -101,7 +105,12 @@ const DashboardNavigationContent = ({
                 <div className="px-2 mb-2">
                     <Alert
                         className="cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => navigate("/dashboard/config?tab=address")}
+                        onClick={() => {
+                            navigate("/dashboard/config?tab=address");
+                            if (isMobile) {
+                                setOpenMobile(false);
+                            }
+                        }}
                     >
                         <MapPin className="h-4 w-4" />
                         <AlertDescription className="text-xs">
@@ -111,24 +120,28 @@ const DashboardNavigationContent = ({
                 </div>
             )}
 
-            {!hasCompany && (
+            {canUpgradeToUserPro && (
                 <div className="px-2 mb-2">
-                    <Alert
-                        className="cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => navigate("/dashboard/upgrade")}
-                    >
-                        <Building2 className="h-4 w-4" />
-                        <AlertDescription className="text-xs">
-                            Completa la configuración de empresa para alquilar como tienda
-                        </AlertDescription>
-                    </Alert>
+                    <UpgradeToProLink
+                        onAfterNavigate={() => {
+                            if (isMobile) {
+                                setOpenMobile(false);
+                            }
+                        }}
+                    />
                 </div>
             )}
 
             {/* Enlace para actualizar a cuenta de empresa (justo antes del perfil) */}
             {canUpgradeToCompany && (
                 <div className="px-2 mb-2">
-                    <UpgradeLink />
+                    <UpgradeLink
+                        onAfterNavigate={() => {
+                            if (isMobile) {
+                                setOpenMobile(false);
+                            }
+                        }}
+                    />
                 </div>
             )}
 

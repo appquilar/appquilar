@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { CompanyFormData } from '../UpgradePage';
 import { cn } from '@/lib/utils';
+import type { CompanyBillingPlanType } from "@/domain/models/Billing";
 
 interface PlanOption {
-  id: 'basic' | 'professional' | 'premium';
+  id: CompanyBillingPlanType;
   title: string;
   subtitle: string;
   price: string;
@@ -26,49 +27,46 @@ interface SelectPlanStepProps {
 
 const plans: PlanOption[] = [
   {
-    id: 'basic',
-    title: 'Plan Básico',
-    subtitle: 'Ideal para pequeños negocios',
-    price: '€29',
+    id: 'starter',
+    title: 'Starter',
+    subtitle: 'Para empezar con tu negocio de alquiler',
+    price: '€39',
     priceUnit: '/mes',
     features: [
-      'Hasta 20 productos en catálogo',
-      'Dashboard básico de gestión',
-      'Soporte por email'
+      'Hasta 10 productos activos',
+      'Analítica básica',
+      'Subdominio empresa.appquilar.com'
     ],
-    buttonText: 'Comenzar Ahora'
+    buttonText: 'Elegir Starter'
   },
   {
-    id: 'professional',
-    title: 'Plan Profesional',
-    subtitle: 'Para empresas en crecimiento',
-    price: '€79',
+    id: 'pro',
+    title: 'Pro',
+    subtitle: 'Para equipos y mayor conversión',
+    price: '€99',
     priceUnit: '/mes',
     features: [
       'Hasta 50 productos en catálogo',
-      'Dashboard completo con estadísticas',
-      'Soporte por email y teléfono',
-      'Sistema de reservas avanzado',
-      'Instalación de buscador de productos en tu propia web'
+      'Hasta 5 miembros de equipo',
+      'Analítica avanzada y origen geográfico',
+      'Dominio personalizado y branding'
     ],
     popular: true,
-    buttonText: 'Elegir Profesional'
+    buttonText: 'Elegir Pro'
   },
   {
-    id: 'premium',
-    title: 'Plan Premium',
-    subtitle: 'Para grandes empresas',
-    price: '€149',
+    id: 'enterprise',
+    title: 'Enterprise',
+    subtitle: 'Escalado completo y API externa',
+    price: '€249',
     priceUnit: '/mes',
     features: [
       'Productos ilimitados en catálogo',
-      'Dashboard completo con estadísticas',
-      'Soporte prioritario',
-      'Sistema de reservas avanzado',
-      'Múltiples usuarios y perfiles',
-      'Creación y mantenimiento de tu propia web'
+      'Equipo ilimitado',
+      'Analítica avanzada',
+      'Soporte prioritario y acceso API'
     ],
-    buttonText: 'Elegir Premium'
+    buttonText: 'Elegir Enterprise'
   }
 ];
 
@@ -79,11 +77,11 @@ const SelectPlanStep = ({
   onBack,
   isSubmitting 
 }: SelectPlanStepProps) => {
-  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'professional' | 'premium'>(
+  const [selectedPlan, setSelectedPlan] = useState<CompanyBillingPlanType>(
     formData.selectedPlan
   );
 
-  const handleSelectPlan = (planId: 'basic' | 'professional' | 'premium') => {
+  const handleSelectPlan = (planId: CompanyBillingPlanType) => {
     setSelectedPlan(planId);
     onUpdateFormData({ selectedPlan: planId });
   };
@@ -152,7 +150,7 @@ const SelectPlanStep = ({
           Volver
         </Button>
         <Button onClick={onComplete} disabled={isSubmitting}>
-          {isSubmitting ? 'Procesando...' : 'Completar Registro'}
+          {isSubmitting ? 'Procesando...' : 'Continuar al pago seguro'}
         </Button>
       </div>
     </div>

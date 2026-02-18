@@ -10,6 +10,7 @@ import AddressTab from "./tabs/AddressTab";
 import MobileConfigLayout from "./layout/MobileConfigLayout";
 import DesktopConfigLayout from "./layout/DesktopConfigLayout";
 import {useSeo} from "@/hooks/useSeo.ts";
+import UserSubscriptionSettingsCard from "@/components/dashboard/config/UserSubscriptionSettingsCard";
 
 const UserConfigPage: React.FC = () => {
     useSeo(
@@ -73,6 +74,8 @@ const UserConfigPage: React.FC = () => {
                     Gestiona tus preferencias y datos personales
                 </p>
             </div>
+
+            <UserSubscriptionSettingsCard />
 
             {isMobile ? (
                 <MobileConfigLayout

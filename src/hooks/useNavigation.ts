@@ -27,6 +27,7 @@ export const useNavigation = () => {
     const isRegularUser = roles.includes(UserRole.REGULAR_USER);
     const isCompanyMember = Boolean(currentUser?.companyId);
     const isCompanyOwner = currentUser?.isCompanyOwner === true;
+    const isCompanyAdmin = currentUser?.companyRole === "ROLE_ADMIN";
     const companyId = currentUser?.companyId ?? null;
     const hasPublishedProductsToRent = (ownedPublishedProductsCountQuery.data ?? 0) > 0;
     const hasRentalsAsOwner = (ownerRentalsCountQuery.data ?? 0) > 0;
@@ -82,7 +83,7 @@ export const useNavigation = () => {
                         icon: Building2,
                         exact: true,
                     },
-                    ...(isCompanyOwner
+                    ...((isCompanyOwner || isCompanyAdmin)
                         ? [{
                             id: "company-users",
                             title: "Usuarios empresa",
@@ -102,6 +103,13 @@ export const useNavigation = () => {
                     title: "Usuarios",
                     href: "/dashboard/users",
                     icon: Users,
+                    requiredRoles: [UserRole.ADMIN],
+                },
+                {
+                    id: "companies",
+                    title: "Empresas",
+                    href: "/dashboard/companies",
+                    icon: Building2,
                     requiredRoles: [UserRole.ADMIN],
                 },
                 {

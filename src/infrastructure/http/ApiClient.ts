@@ -70,6 +70,29 @@ export class ApiClient {
         return this.request<T>("POST", path, body, options);
     }
 
+    postBackground(
+        path: string,
+        body?: unknown,
+        options?: RequestOptions
+    ): void {
+        const url = `${this.baseUrl}${path}`;
+
+        const headers: Record<string, string> = {
+            ...this.defaultHeaders,
+            ...(options?.headers ?? {}),
+            "Content-Type": "application/json",
+        };
+
+        const payload = body === undefined ? undefined : JSON.stringify(body);
+
+        void fetch(url, {
+            method: "POST",
+            headers,
+            body: payload,
+            keepalive: true,
+        }).catch(() => undefined);
+    }
+
     async patch<T>(
         path: string,
         body?: unknown,

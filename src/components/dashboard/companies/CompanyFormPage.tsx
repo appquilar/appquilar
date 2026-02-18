@@ -22,6 +22,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAddressMap } from "@/components/dashboard/hooks/useAddressMap";
+import CompanySubscriptionSettingsCard from "./CompanySubscriptionSettingsCard";
 
 const companyProfileSchema = z.object({
     name: z.string().min(2, { message: "El nombre debe tener al menos 2 caracteres" }),
@@ -188,6 +189,8 @@ const CompanyFormPage = () => {
                 title="Mi empresa"
                 backUrl="/dashboard"
             />
+
+            <CompanySubscriptionSettingsCard />
 
             <Card>
                 <CardHeader>

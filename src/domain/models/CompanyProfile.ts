@@ -1,5 +1,6 @@
 import type { Address } from "@/domain/models/Address";
 import type { Location } from "@/domain/models/Location";
+import type { CompanyPlanType, SubscriptionStatus } from "@/domain/models/Subscription";
 
 export interface CompanyPhoneNumber {
     countryCode: string;
@@ -18,6 +19,9 @@ export interface CompanyProfile {
     phoneNumber: CompanyPhoneNumber | null;
     address: Address | null;
     location: Location | null;
+    planType?: CompanyPlanType | null;
+    subscriptionStatus?: SubscriptionStatus | null;
+    isFoundingAccount?: boolean | null;
 }
 
 export interface UpdateCompanyProfileInput {
