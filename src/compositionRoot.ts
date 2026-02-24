@@ -56,6 +56,9 @@ import { CompanyAdminService } from "@/application/services/CompanyAdminService.
 import { BillingRepository } from "@/domain/repositories/BillingRepository.ts";
 import { ApiBillingRepository } from "@/infrastructure/repositories/ApiBillingRepository.ts";
 import { BillingService } from "@/application/services/BillingService.ts";
+import { PublicCompanyProfileRepository } from "@/domain/repositories/PublicCompanyProfileRepository.ts";
+import { ApiPublicCompanyProfileRepository } from "@/infrastructure/repositories/ApiPublicCompanyProfileRepository.ts";
+import { PublicCompanyProfileService } from "@/application/services/PublicCompanyProfileService.ts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -91,6 +94,7 @@ export const companyEngagementRepository: CompanyEngagementRepository = new ApiC
 export const userEngagementRepository: UserEngagementRepository = new ApiUserEngagementRepository(apiClient, session);
 export const companyAdminRepository: CompanyAdminRepository = new ApiCompanyAdminRepository(apiClient, session);
 export const billingRepository: BillingRepository = new ApiBillingRepository(apiClient, session);
+export const publicCompanyProfileRepository: PublicCompanyProfileRepository = new ApiPublicCompanyProfileRepository(apiClient);
 
 export const seoService = new SeoService();
 export const authService = new AuthService(authRepository, userRepository);
@@ -110,6 +114,7 @@ export const companyEngagementService = new CompanyEngagementService(companyEnga
 export const userEngagementService = new UserEngagementService(userEngagementRepository);
 export const companyAdminService = new CompanyAdminService(companyAdminRepository);
 export const billingService = new BillingService(billingRepository);
+export const publicCompanyProfileService = new PublicCompanyProfileService(publicCompanyProfileRepository);
 
 export const compositionRoot = {
     queryClient,
@@ -135,6 +140,7 @@ export const compositionRoot = {
     userEngagementRepository,
     companyAdminRepository,
     billingRepository,
+    publicCompanyProfileRepository,
 
     authService,
     userService,
@@ -153,6 +159,7 @@ export const compositionRoot = {
     userEngagementService,
     companyAdminService,
     billingService,
+    publicCompanyProfileService,
 };
 
 export type CompositionRoot = typeof compositionRoot;

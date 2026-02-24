@@ -220,6 +220,11 @@
     @apply mt-2 text-sm text-muted-foreground;
   }
 
+  body:has(.auth-modal-content[data-state="open"]) .ui-dialog-overlay {
+    background: rgba(15, 23, 42, 0.36);
+    backdrop-filter: blur(6px);
+  }
+
   .dashboard-premium {
     --background: 220 33% 98%;
     --foreground: 215 28% 11%;

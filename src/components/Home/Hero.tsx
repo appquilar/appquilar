@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import SearchBar from './SearchBar';
+import TrustDifferentiators from './TrustDifferentiators';
 import { usePublicSiteCategories } from "@/application/hooks/usePublicSiteCategories";
 
 /**
@@ -63,6 +64,10 @@ const Hero = () => {
                 <div className="animate-slide-down" style={{ animationDelay: '100ms' }}>
                     <SearchBar />
                 </div>
+            </div>
+
+            <div className="mt-8 -mx-4 sm:-mx-6 md:-mx-8">
+                <TrustDifferentiators />
             </div>
         </section>
     );

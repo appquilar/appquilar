@@ -82,6 +82,7 @@ const CompanySubscriptionSettingsCard = () => {
     const currentUrl = typeof window !== "undefined" ? window.location.href : "";
     const currentPlan: CompanyPlanType = companyContext.planType;
     const isSubscriptionInactive = companyContext.subscriptionStatus !== "active";
+    const isPaused = companyContext.subscriptionStatus === "paused";
 
     const handleOpenCompanyPortal = async () => {
         const newTab = window.open("", "_blank");
@@ -193,10 +194,14 @@ const CompanySubscriptionSettingsCard = () => {
                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                         <div className="space-y-2 text-sm">
                             <p className="font-semibold">
-                                La suscripcion de empresa esta inactiva
+                                {isPaused
+                                    ? "Hay un problema con el cobro de la suscripcion"
+                                    : "La suscripcion de empresa esta cancelada"}
                             </p>
                             <p>
-                                Puedes migrar a un perfil de usuario Explorador. Esta accion movera productos y alquileres a un unico administrador y eliminara la empresa. No se puede deshacer.
+                                {isPaused
+                                    ? "Stripe esta reintentando el cobro. Puedes resolver el pago desde el portal o migrar a un perfil Explorador."
+                                    : "Puedes migrar a un perfil de usuario Explorador. Esta accion movera productos y alquileres a un unico administrador y eliminara la empresa. No se puede deshacer."}
                             </p>
                         </div>
                     </div>

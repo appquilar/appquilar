@@ -37,45 +37,22 @@ const DIFFERENTIATORS = [
 
 const TrustDifferentiators = () => {
   return (
-    <section className="public-section bg-muted/20">
-      <div className="public-container">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center justify-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary">
-            Diferenciadores clave
-          </div>
-          <h2 className="mt-4 text-2xl md:text-3xl font-display font-semibold tracking-tight">
-            La confianza reduce la fricción en los alquileres
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Por eso Appquilar está construido para dar seguridad y claridad en cada reserva.
-          </p>
-        </div>
-
-        <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {DIFFERENTIATORS.map(({ title, description, Icon, accent, border }) => (
-            <div
-              key={title}
-              className={`rounded-xl border ${border} bg-gradient-to-br ${accent} p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md`}
-            >
-              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Icon className="h-4 w-4" strokeWidth={2} />
-              </div>
-              <h3 className="text-base font-semibold">{title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+    <div className="w-full rounded-none border-y border-border/60 bg-muted/10">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+        {DIFFERENTIATORS.map(({ title, description, Icon, accent, border }) => (
+          <div
+            key={title}
+            className={`border-b md:border-b border-border/50 xl:border-b-0 xl:border-r last:border-r-0 ${border} bg-gradient-to-br ${accent} p-5 md:p-6 transition-colors`}
+          >
+            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Icon className="h-4 w-4" strokeWidth={2} />
             </div>
-          ))}
-        </div>
-
-        <div className="mt-10 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-border/60 bg-white/70 p-5">
-          <p className="text-sm text-muted-foreground">
-            ¿Tienes productos que no están generando ingresos?
-          </p>
-          <button className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
-            Publica gratis en Appquilar
-          </button>
-        </div>
+            <h3 className="text-base font-semibold">{title}</h3>
+            <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+          </div>
+        ))}
       </div>
-    </section>
+    </div>
   );
 };
 

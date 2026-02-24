@@ -53,6 +53,7 @@ const ProductInfo = ({
 
     const price = product.price || { daily: 0, deposit: 0, tiers: [] };
     const tiers = price.tiers || [];
+    const providerLocationLabel = (product as Product & { providerLocationLabel?: string }).providerLocationLabel;
 
     return (
         <div className="space-y-8">
@@ -165,6 +166,7 @@ const ProductInfo = ({
             <div className="pt-4 border-t border-border">
                 <CompanyInfo
                     company={product.company}
+                    locationLabel={providerLocationLabel}
                     onContact={handleContact}
                     isLoggedIn={isLoggedIn}
                 />

@@ -1,6 +1,6 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, LogOut, Menu, Search, User } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, Search, User, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import AuthModal from "../auth/AuthModal";
@@ -21,11 +21,18 @@ import {
 
 import { CategoryDrawerTree } from "@/components/layout/CategoryDrawerTree";
 
+type DesktopCategoriesMode = "top" | "side";
+
+// Keep both implementations available. "top" disables the side drawer in desktop.
+const DESKTOP_CATEGORIES_MODE: DesktopCategoriesMode = "top";
+
 const Header = () => {
     const [authModalOpen, setAuthModalOpen] = useState(false);
     const [desktopCategoriesOpen, setDesktopCategoriesOpen] = useState(false);
     const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
+    const [mobileSessionOpen, setMobileSessionOpen] = useState(false);
     const [searchValue, setSearchValue] = useState("");
+    const desktopTopPanelRef = useRef<HTMLDivElement | null>(null);
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -54,6 +61,39 @@ const Header = () => {
         const params = new URLSearchParams(location.search);
         setSearchValue(params.get("q") ?? "");
     }, [location.search]);
+
+    useEffect(() => {
+        setDesktopCategoriesOpen(false);
+        setMobileCategoriesOpen(false);
+        setMobileSessionOpen(false);
+    }, [location.pathname, location.search]);
+
+    useEffect(() => {
+        if (DESKTOP_CATEGORIES_MODE !== "top" || !desktopCategoriesOpen) return;
+
+        const handlePointerDown = (event: MouseEvent) => {
+            const target = event.target as Node | null;
+            if (!target) return;
+            if (desktopTopPanelRef.current?.contains(target)) return;
+
+            const trigger = document.querySelector("[data-desktop-categories-trigger]");
+            if (trigger?.contains(target)) return;
+
+            setDesktopCategoriesOpen(false);
+        };
+
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key === "Escape") setDesktopCategoriesOpen(false);
+        };
+
+        document.addEventListener("mousedown", handlePointerDown);
+        document.addEventListener("keydown", handleEscape);
+
+        return () => {
+            document.removeEventListener("mousedown", handlePointerDown);
+            document.removeEventListener("keydown", handleEscape);
+        };
+    }, [desktopCategoriesOpen]);
 
     const handleLogout = async () => {
         await logout();
@@ -100,7 +140,117 @@ const Header = () => {
     return (
         <>
             <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/70 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90">
-                <div className="mx-auto flex h-[70px] w-full max-w-[1320px] items-center gap-3 px-4 sm:px-6 md:px-8">
+                <div className="md:hidden">
+                    <div className="mx-auto relative flex h-[70px] w-full max-w-[1320px] items-center px-4 sm:px-6">
+                        <Sheet open={mobileCategoriesOpen} onOpenChange={setMobileCategoriesOpen}>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full">
+                                    <Menu size={20} />
+                                </Button>
+                            </SheetTrigger>
+
+                            <SheetContent
+                                side="left"
+                                className="p-0 w-[320px] flex flex-col"
+                            >
+                                <div className="sticky top-0 z-10 bg-background border-b p-6">
+                                    <SheetHeader>
+                                        <SheetTitle>Categorías</SheetTitle>
+                                    </SheetHeader>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto p-6">
+                                    {drawerCategories.length === 0 ? (
+                                        <div className="text-sm text-muted-foreground">
+                                            Cargando categorías…
+                                        </div>
+                                    ) : (
+                                        <CategoryDrawerTree
+                                            categories={drawerCategories}
+                                            isOpen={mobileCategoriesOpen}
+                                            onNavigate={() => setMobileCategoriesOpen(false)}
+                                        />
+                                    )}
+                                </div>
+                            </SheetContent>
+                        </Sheet>
+
+                        <Link
+                            to="/"
+                            className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center hover:opacity-90 transition-opacity"
+                            aria-label="Ir a inicio"
+                        >
+                            <AppLogo
+                                imageClassName="h-8 w-auto"
+                                textClassName="text-[1.35rem] font-display font-semibold tracking-tight text-primary"
+                            />
+                        </Link>
+
+                        <div className="ml-auto">
+                            {isAuthenticated && currentUser ? (
+                                <Sheet open={mobileSessionOpen} onOpenChange={setMobileSessionOpen}>
+                                    <SheetTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-10 w-10 rounded-full border-border/80 text-foreground"
+                                        >
+                                            <User size={16} />
+                                        </Button>
+                                    </SheetTrigger>
+
+                                    <SheetContent
+                                        side="right"
+                                        className="w-full max-w-full p-0 sm:max-w-full"
+                                    >
+                                        <div className="flex h-full flex-col">
+                                            <div className="border-b border-border/70 px-6 py-6 pr-12">
+                                                <p className="text-sm text-muted-foreground">Sesión</p>
+                                                <p className="mt-1 text-lg font-semibold text-foreground">Hola, {displayName}</p>
+                                            </div>
+
+                                            <div className="flex-1 space-y-3 p-6">
+                                                <Link
+                                                    to="/dashboard"
+                                                    className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border/80 bg-white text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                                                    onClick={() => setMobileSessionOpen(false)}
+                                                >
+                                                    <LayoutDashboard size={16} />
+                                                    Ir al dashboard
+                                                </Link>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        setMobileSessionOpen(false);
+                                                        await handleLogout();
+                                                    }}
+                                                    className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+                                                >
+                                                    <LogOut size={16} />
+                                                    Cerrar sesión
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </SheetContent>
+                                </Sheet>
+                            ) : (
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    data-trigger-login
+                                    onClick={() => setAuthModalOpen(true)}
+                                    className="h-10 w-10 rounded-full border-primary/60 text-foreground"
+                                    aria-label="Iniciar sesión"
+                                >
+                                    <User size={16} />
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mx-auto hidden h-[70px] w-full max-w-[1320px] items-center gap-3 px-4 sm:px-6 md:flex md:px-8">
                     <Link
                         to="/"
                         className="flex items-center hover:opacity-90 transition-opacity shrink-0"
@@ -112,7 +262,7 @@ const Header = () => {
                         />
                     </Link>
 
-                    <form onSubmit={handleSearchSubmit} className="hidden md:flex min-w-0 flex-1 max-w-3xl">
+                    <form onSubmit={handleSearchSubmit} className="flex min-w-0 flex-1 max-w-3xl">
                         <div className="relative w-full">
                             <Search
                                 size={18}
@@ -127,15 +277,7 @@ const Header = () => {
                         </div>
                     </form>
 
-                    <div className="ml-auto flex items-center gap-2 sm:gap-3">
-                        <Link
-                            to="/search"
-                            className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 text-muted-foreground transition-colors hover:text-primary"
-                            aria-label="Buscar"
-                        >
-                            <Search size={18} />
-                        </Link>
-
+                    <div className="ml-auto flex items-center gap-3">
                         {isAuthenticated && currentUser ? (
                             <Popover>
                                 <PopoverTrigger asChild>
@@ -174,27 +316,15 @@ const Header = () => {
                                 </PopoverContent>
                             </Popover>
                         ) : (
-                            <>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    data-trigger-login
-                                    onClick={() => setAuthModalOpen(true)}
-                                    className="hidden sm:inline-flex h-10 rounded-full border-primary/70 px-5 text-sm text-foreground hover:bg-primary/5"
-                                >
-                                    Regístrate o inicia sesión
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    data-trigger-login
-                                    onClick={() => setAuthModalOpen(true)}
-                                    className="sm:hidden h-10 w-10 rounded-full border-primary/60 text-foreground"
-                                    aria-label="Iniciar sesión"
-                                >
-                                    <User size={16} />
-                                </Button>
-                            </>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                data-trigger-login
+                                onClick={() => setAuthModalOpen(true)}
+                                className="h-10 rounded-full border-primary/70 px-5 text-sm text-foreground hover:bg-primary/5"
+                            >
+                                Regístrate o inicia sesión
+                            </Button>
                         )}
 
                         <Button
@@ -204,22 +334,34 @@ const Header = () => {
                         >
                             Vender
                         </Button>
+                    </div>
+                </div>
 
-                        <div className="md:hidden">
-                            <Sheet open={mobileCategoriesOpen} onOpenChange={setMobileCategoriesOpen}>
+                <div className="hidden md:block border-t border-border/60">
+                    <div className="mx-auto flex h-12 w-full max-w-[1320px] items-center gap-2 overflow-x-auto px-4 sm:px-6 md:px-8 [&::-webkit-scrollbar]:hidden">
+                        {DESKTOP_CATEGORIES_MODE === "side" ? (
+                            <Sheet open={desktopCategoriesOpen} onOpenChange={setDesktopCategoriesOpen}>
                                 <SheetTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full">
-                                        <Menu size={20} />
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="shrink-0 h-9 gap-2 rounded-full px-4 text-sm text-foreground hover:bg-secondary"
+                                    >
+                                        <Menu size={16} />
+                                        Todas las categorías
                                     </Button>
                                 </SheetTrigger>
 
                                 <SheetContent
                                     side="left"
-                                    className="p-0 w-[320px] flex flex-col"
+                                    className="p-0 w-[360px] sm:w-[420px] flex flex-col"
                                 >
                                     <div className="sticky top-0 z-10 bg-background border-b p-6">
-                                        <SheetHeader>
+                                        <SheetHeader className="space-y-1">
                                             <SheetTitle>Categorías</SheetTitle>
+                                            <p className="text-sm text-muted-foreground">
+                                                Explora el catálogo por familia
+                                            </p>
                                         </SheetHeader>
                                     </div>
 
@@ -231,59 +373,26 @@ const Header = () => {
                                         ) : (
                                             <CategoryDrawerTree
                                                 categories={drawerCategories}
-                                                isOpen={mobileCategoriesOpen}
-                                                onNavigate={() => setMobileCategoriesOpen(false)}
+                                                isOpen={desktopCategoriesOpen}
+                                                onNavigate={() => setDesktopCategoriesOpen(false)}
                                             />
                                         )}
                                     </div>
                                 </SheetContent>
                             </Sheet>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="hidden md:block border-t border-border/60">
-                    <div className="mx-auto flex h-12 w-full max-w-[1320px] items-center gap-2 overflow-x-auto px-4 sm:px-6 md:px-8 [&::-webkit-scrollbar]:hidden">
-                        <Sheet open={desktopCategoriesOpen} onOpenChange={setDesktopCategoriesOpen}>
-                            <SheetTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="shrink-0 h-9 gap-2 rounded-full px-4 text-sm text-foreground hover:bg-secondary"
-                                >
-                                    <Menu size={16} />
-                                    Todas las categorías
-                                </Button>
-                            </SheetTrigger>
-
-                            <SheetContent
-                                side="left"
-                                className="p-0 w-[360px] sm:w-[420px] flex flex-col"
+                        ) : (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                data-desktop-categories-trigger
+                                onClick={() => setDesktopCategoriesOpen((prev) => !prev)}
+                                className="shrink-0 h-9 gap-2 rounded-full px-4 text-sm text-foreground hover:bg-secondary"
                             >
-                                <div className="sticky top-0 z-10 bg-background border-b p-6">
-                                    <SheetHeader className="space-y-1">
-                                        <SheetTitle>Categorías</SheetTitle>
-                                        <p className="text-sm text-muted-foreground">
-                                            Explora el catálogo por familia
-                                        </p>
-                                    </SheetHeader>
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto p-6">
-                                    {drawerCategories.length === 0 ? (
-                                        <div className="text-sm text-muted-foreground">
-                                            Cargando categorías…
-                                        </div>
-                                    ) : (
-                                        <CategoryDrawerTree
-                                            categories={drawerCategories}
-                                            isOpen={desktopCategoriesOpen}
-                                            onNavigate={() => setDesktopCategoriesOpen(false)}
-                                        />
-                                    )}
-                                </div>
-                            </SheetContent>
-                        </Sheet>
+                                <Menu size={16} />
+                                Todas las categorías
+                            </Button>
+                        )}
 
                         <nav className="flex items-center gap-1">
                             {menuTop.map((category) => (
@@ -298,6 +407,46 @@ const Header = () => {
                         </nav>
                     </div>
                 </div>
+
+                {DESKTOP_CATEGORIES_MODE === "top" && desktopCategoriesOpen ? (
+                    <div className="hidden md:block border-t border-b border-border/60 bg-white">
+                        <div
+                            ref={desktopTopPanelRef}
+                            className="max-h-[68vh] w-full overflow-y-auto px-4 py-5 sm:px-6 md:px-8"
+                        >
+                            <div className="mx-auto w-full max-w-[1320px]">
+                                <div className="mb-4 flex items-start justify-between gap-4">
+                                    <div>
+                                        <h3 className="text-base font-semibold text-foreground">Categorías</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Explora el catálogo por familia
+                                        </p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setDesktopCategoriesOpen(false)}
+                                        className="h-8 gap-1 rounded-md px-2 text-xs text-muted-foreground hover:text-foreground"
+                                    >
+                                        <X size={14} />
+                                        Cerrar
+                                    </Button>
+                                </div>
+
+                                {drawerCategories.length === 0 ? (
+                                    <div className="text-sm text-muted-foreground">Cargando categorías…</div>
+                                ) : (
+                                    <CategoryDrawerTree
+                                        categories={drawerCategories}
+                                        isOpen={desktopCategoriesOpen}
+                                        onNavigate={() => setDesktopCategoriesOpen(false)}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                ) : null}
             </header>
 
             <AuthModal

@@ -57,7 +57,8 @@ const UserSubscriptionSettingsCard = () => {
     const currentStatus = currentUser.subscriptionStatus ?? "active";
     const currentPlan: UserPlanType = getEffectiveUserPlan(rawPlan, currentStatus);
     const isUserPro = currentPlan === "user_pro";
-    const hasInactivePaidUserPlan = rawPlan === "user_pro" && !isSubscriptionActive(currentStatus);
+    const isSubscriptionInactive = !isSubscriptionActive(currentStatus);
+    const displayedPlan: UserPlanType = isSubscriptionInactive ? "user_pro" : currentPlan;
 
     const handleOpenUserPortal = async () => {
         const newTab = window.open("", "_blank");
@@ -117,7 +118,7 @@ const UserSubscriptionSettingsCard = () => {
                             variant="outline"
                             className="cursor-default bg-orange-200 text-orange-600 border-transparent"
                         >
-                            {USER_PLAN_LABELS[currentPlan] ?? currentPlan}
+                            {USER_PLAN_LABELS[displayedPlan] ?? displayedPlan}
                         </Badge>
                         {isUserPro ? (
                             <Badge
@@ -126,7 +127,7 @@ const UserSubscriptionSettingsCard = () => {
                             >
                                 {STATUS_LABELS[currentStatus] ?? currentStatus}
                             </Badge>
-                        ) : hasInactivePaidUserPlan ? (
+                        ) : isSubscriptionInactive ? (
                             <Badge
                                 variant="outline"
                                 className={`cursor-default ${statusBadgeClass(currentStatus)}`}
@@ -144,14 +145,14 @@ const UserSubscriptionSettingsCard = () => {
                     </div>
                     {!isUserPro && (
                         <p className="text-xs text-muted-foreground">
-                            {hasInactivePaidUserPlan
-                                ? "Tu suscripcion no esta activa. Reactiva User Pro para recuperar metricas y beneficios."
+                            {isSubscriptionInactive
+                                ? "Tu suscripcion no esta activa. Revisa Stripe para reactivar User Pro y recuperar metricas."
                                 : "Activa User Pro para ver metricas y gestionar tu suscripcion desde Stripe."}
                         </p>
                     )}
                 </div>
 
-                {isUserPro ? (
+                {isUserPro || isSubscriptionInactive ? (
                     <Button
                         type="button"
                         variant="outline"

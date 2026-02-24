@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import AppLogo from "@/components/common/AppLogo";
 import CompanySubscriptionStatusNotice from "@/components/dashboard/layout/CompanySubscriptionStatusNotice";
+import UserSubscriptionStatusNotice from "@/components/dashboard/layout/UserSubscriptionStatusNotice";
 
 interface DashboardLayoutProps {
     sidebar: React.ReactNode;
@@ -62,6 +63,7 @@ const DashboardLayoutContent = ({ sidebar, content }: DashboardLayoutProps) => {
                 {/* Page Content */}
                 <main className="dashboard-main-content flex-1 overflow-y-auto px-3 pb-3 pt-4 sm:px-4 sm:pb-4 sm:pt-5 lg:px-5 lg:pb-5 lg:pt-6">
                     <CompanySubscriptionStatusNotice />
+                    <UserSubscriptionStatusNotice />
                     {content}
                 </main>
             </SidebarInset>

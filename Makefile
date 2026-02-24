@@ -2,6 +2,7 @@
 PROJECT_NAME = appquilar
 DOCKER_COMPOSE = docker-compose
 NPM = npm
+PLAYWRIGHT = npx playwright
 CONTAINER_FE = $(PROJECT_NAME)-web-dev
 
 # Colors
@@ -12,7 +13,7 @@ NC = \033[0m # No color
 
 NETWORK_NAME = appquilar
 
-.PHONY: help install dev build up down restart logs clean test start start-prod exec destroy rebuild network check-be shell
+.PHONY: help install dev build up down restart logs clean test test-unit test-integration test-e2e test-ci ensure-playwright start start-prod exec destroy rebuild network check-be shell
 
 # Help
 help:
@@ -30,7 +31,11 @@ help:
 	@echo "  make destroy     - Remove containers, images and volumes"
 	@echo "  make rebuild     - Equivalent to clean + build + up"
 	@echo "  make shell       - Enter the FE container to execute npm or other commands"
-	@echo "  make test        - Run tests"
+	@echo "  make test        - Run all FE tests (unit + integration + e2e)"
+	@echo "  make test-unit   - Run FE unit tests"
+	@echo "  make test-integration - Run FE integration tests"
+	@echo "  make test-e2e    - Run FE end-to-end tests"
+	@echo "  make test-ci     - Run FE CI test suite"
 	@echo "  make check-be    - Check if the FE can reach the BE inside Docker"
 
 # Create network only if it doesn't exist
@@ -115,8 +120,30 @@ rebuild: clean build up
 
 # Run tests
 test:
-	@echo "${GREEN}Running tests...${NC}"
+	@echo "${GREEN}Ensuring Playwright Chromium is installed...${NC}"
+	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
+	@echo "${GREEN}Running all FE tests...${NC}"
 	$(NPM) test
+
+test-unit:
+	@echo "${GREEN}Running FE unit tests...${NC}"
+	$(NPM) run test:unit
+
+test-integration:
+	@echo "${GREEN}Running FE integration tests...${NC}"
+	$(NPM) run test:integration
+
+test-e2e:
+	@echo "${GREEN}Ensuring Playwright Chromium is installed...${NC}"
+	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
+	@echo "${GREEN}Running FE E2E tests...${NC}"
+	$(NPM) run test:e2e
+
+test-ci:
+	@echo "${GREEN}Ensuring Playwright Chromium is installed...${NC}"
+	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
+	@echo "${GREEN}Running FE CI test suite...${NC}"
+	$(NPM) run test:ci
 
 # Check connectivity FE → BE inside Docker (production container name)
 check-be:

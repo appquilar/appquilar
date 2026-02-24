@@ -1,7 +1,6 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Hero from '@/components/Home/Hero';
-import TrustDifferentiators from '@/components/Home/TrustDifferentiators';
 import CategoryGrid from '@/components/Home/CategoryGrid';
 import FeaturedProducts from '@/components/Home/FeaturedProducts';
 import FaqSection from '@/components/Home/FaqSection';
@@ -26,7 +25,6 @@ const Index = () => {
             <Header />
             <main className="flex-1 public-main">
                 <Hero />
-                <TrustDifferentiators />
                 <CategoryGrid />
                 <SectionDivider />
                 <FeaturedProducts />

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Lock, Mail, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { authPasswordSchema } from "@/domain/schemas/authSchema";
 
@@ -84,9 +85,9 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
 
     return (
         <Form {...form}>
-            <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
+            <form className="space-y-3" onSubmit={form.handleSubmit(handleSubmit)}>
                 {submitError && (
-                    <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                    <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                         {submitError}
                     </div>
                 )}
@@ -95,12 +96,22 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                     name="firstName"
                     control={form.control}
                     render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Nombre</FormLabel>
+                        <FormItem className="space-y-1.5">
+                            <FormLabel className="text-[12px] font-medium text-muted-foreground">Nombre</FormLabel>
                             <FormControl>
-                                <Input {...field} placeholder="Tu nombre" />
+                                <div className="relative">
+                                    <User
+                                        size={16}
+                                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                                    />
+                                    <Input
+                                        {...field}
+                                        placeholder="Tu nombre"
+                                        className="h-11 rounded-lg border-border/80 pl-10"
+                                    />
+                                </div>
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage className="text-xs" />
                         </FormItem>
                     )}
                 />
@@ -109,12 +120,22 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                     name="lastName"
                     control={form.control}
                     render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Apellido</FormLabel>
+                        <FormItem className="space-y-1.5">
+                            <FormLabel className="text-[12px] font-medium text-muted-foreground">Apellido</FormLabel>
                             <FormControl>
-                                <Input {...field} placeholder="Tus apellidos" />
+                                <div className="relative">
+                                    <User
+                                        size={16}
+                                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                                    />
+                                    <Input
+                                        {...field}
+                                        placeholder="Tus apellidos"
+                                        className="h-11 rounded-lg border-border/80 pl-10"
+                                    />
+                                </div>
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage className="text-xs" />
                         </FormItem>
                     )}
                 />
@@ -123,12 +144,23 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                     name="email"
                     control={form.control}
                     render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Correo electrónico</FormLabel>
+                        <FormItem className="space-y-1.5">
+                            <FormLabel className="text-[12px] font-medium text-muted-foreground">Correo electrónico</FormLabel>
                             <FormControl>
-                                <Input {...field} type="email" placeholder="tu@email.com" />
+                                <div className="relative">
+                                    <Mail
+                                        size={16}
+                                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                                    />
+                                    <Input
+                                        {...field}
+                                        type="email"
+                                        placeholder="tu@email.com"
+                                        className="h-11 rounded-lg border-border/80 pl-10"
+                                    />
+                                </div>
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage className="text-xs" />
                         </FormItem>
                     )}
                 />
@@ -137,17 +169,32 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                     name="password"
                     control={form.control}
                     render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Contraseña</FormLabel>
+                        <FormItem className="space-y-1.5">
+                            <FormLabel className="text-[12px] font-medium text-muted-foreground">Contraseña</FormLabel>
                             <FormControl>
-                                <Input {...field} type="password" placeholder="••••••••" />
+                                <div className="relative">
+                                    <Lock
+                                        size={16}
+                                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                                    />
+                                    <Input
+                                        {...field}
+                                        type="password"
+                                        placeholder="••••••••"
+                                        className="h-11 rounded-lg border-border/80 pl-10"
+                                    />
+                                </div>
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage className="text-xs" />
                         </FormItem>
                     )}
                 />
 
-                <Button disabled={isLoading || isLoadingConfig} className="w-full" type="submit">
+                <Button
+                    disabled={isLoading || isLoadingConfig}
+                    className="h-11 w-full rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.99]"
+                    type="submit"
+                >
                     {isLoading ? "Creando..." : "Crear cuenta"}
                 </Button>
             </form>
