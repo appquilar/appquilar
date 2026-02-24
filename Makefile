@@ -13,7 +13,7 @@ NC = \033[0m # No color
 
 NETWORK_NAME = appquilar
 
-.PHONY: help install dev build up down restart logs clean test test-unit test-integration test-e2e test-ci ensure-playwright start start-prod exec destroy rebuild network check-be shell
+.PHONY: help install dev build up down restart logs clean test test-unit test-integration test-e2e test-ci coverage coverage-top coverage-all ensure-playwright start start-prod exec destroy rebuild network check-be shell
 
 # Help
 help:
@@ -36,6 +36,9 @@ help:
 	@echo "  make test-integration - Run FE integration tests"
 	@echo "  make test-e2e    - Run FE end-to-end tests"
 	@echo "  make test-ci     - Run FE CI test suite"
+	@echo "  make coverage    - Run FE unit+integration coverage (console + html + lcov + summary)"
+	@echo "  make coverage-top - Show the files with lowest FE line coverage"
+	@echo "  make coverage-all - Run FE e2e + unit+integration coverage"
 	@echo "  make check-be    - Check if the FE can reach the BE inside Docker"
 
 # Create network only if it doesn't exist
@@ -144,6 +147,25 @@ test-ci:
 	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
 	@echo "${GREEN}Running FE CI test suite...${NC}"
 	$(NPM) run test:ci
+
+coverage:
+	@echo "${GREEN}Running FE coverage (unit + integration)...${NC}"
+	npx vitest run --config vitest.config.ts src/test/unit src/test/integration --coverage --coverage.reporter=text --coverage.reporter=lcov --coverage.reporter=html --coverage.reporter=json-summary
+	@echo "${GREEN}Coverage reports:${NC}"
+	@echo "  Console: shown above"
+	@echo "  HTML: coverage/index.html"
+	@echo "  LCOV: coverage/lcov.info"
+	@echo "  Summary JSON: coverage/coverage-summary.json"
+
+coverage-top:
+	@node -e 'const fs=require("fs"); const path="coverage/coverage-summary.json"; if(!fs.existsSync(path)){console.error("Missing "+path+". Run `make coverage` first."); process.exit(1);} const data=JSON.parse(fs.readFileSync(path,"utf8")); const rows=Object.entries(data).filter(([file])=>file!=="total").map(([file,metrics])=>({file,lines:metrics.lines.pct,branches:metrics.branches.pct,functions:metrics.functions.pct,statements:metrics.statements.pct})).sort((a,b)=>a.lines-b.lines).slice(0,15); console.table(rows);'
+
+coverage-all:
+	@echo "${GREEN}Ensuring Playwright Chromium is installed...${NC}"
+	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
+	@echo "${GREEN}Running FE E2E tests...${NC}"
+	$(NPM) run test:e2e
+	@$(MAKE) coverage
 
 # Check connectivity FE → BE inside Docker (production container name)
 check-be:

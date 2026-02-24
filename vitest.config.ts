@@ -9,7 +9,7 @@ export default defineConfig({
       "src/test/unit/**/*.{test,spec}.{ts,tsx}",
       "src/test/integration/**/*.{test,spec}.{ts,tsx}",
     ],
-    exclude: ["src/test/e2e/**"],
+    exclude: [],
     globals: true,
     restoreMocks: true,
     clearMocks: true,
@@ -17,6 +17,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "lcov"],
       reportsDirectory: "./coverage",
+      exclude: ["node_modules", "dist", "src/test/**"]
     },
   },
   resolve: {

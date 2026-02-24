@@ -44,3 +44,83 @@ jobs:
 
       - name: Run tests
         run: ${{ matrix.command }}
+
+  coverage-regression:
+    name: Coverage Regression Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      COVERAGE_MAX_DROP: "0.50"
+      COVERAGE_MIN_LINES: "80"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate current coverage
+        run: make coverage
+
+      - name: Resolve base commit
+        id: base
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+          fi
+
+          if [[ -z "$BASE_SHA" || "$BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "No base commit available. Skipping coverage comparison."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+            echo "Using base commit: $BASE_SHA"
+          fi
+
+      - name: Generate base coverage
+        if: ${{ steps.base.outputs.skip != 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_DIR="$(mktemp -d)"
+
+          cleanup() {
+            git worktree remove "$BASE_DIR" --force >/dev/null 2>&1 || true
+            rm -rf "$BASE_DIR" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          git worktree add --detach "$BASE_DIR" "${{ steps.base.outputs.sha }}"
+
+          pushd "$BASE_DIR"
+          npm ci
+          npx vitest run --config vitest.config.ts src/test/unit src/test/integration --coverage --coverage.reporter=json-summary
+          popd
+
+          mkdir -p .tmp-coverage
+          cp "$BASE_DIR/coverage/coverage-summary.json" .tmp-coverage/base-coverage-summary.json
+
+      - name: Compare coverage with base
+        if: ${{ steps.base.outputs.skip != 'true' }}
+        run: |
+          node scripts/check-coverage-regression.mjs \
+            --current coverage/coverage-summary.json \
+            --base .tmp-coverage/base-coverage-summary.json \
+            --max-drop "$COVERAGE_MAX_DROP" \
+            --min-lines "$COVERAGE_MIN_LINES"
+
+      - name: Skip comparison notice
+        if: ${{ steps.base.outputs.skip == 'true' }}
+        run: echo "Coverage comparison skipped (no base commit available)."
