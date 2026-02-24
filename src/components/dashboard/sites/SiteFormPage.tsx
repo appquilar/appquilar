@@ -16,7 +16,7 @@ const SiteFormPage = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl mx-auto">
+    <div className="space-y-6">
       <FormHeader
         title={isAddMode ? 'Crear Sitio' : 'Editar Sitio'}
         backUrl="/dashboard/sites"

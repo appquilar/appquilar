@@ -24,7 +24,7 @@ const SiteSettingsPage = () => {
 
     if (error || !site) {
         return (
-            <div className="p-6">
+            <div className="space-y-6">
                 <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
@@ -144,7 +144,7 @@ const SiteSettingsPage = () => {
      * ===================== */
 
     return (
-        <div className="mx-auto max-w-5xl space-y-6">
+        <div className="space-y-6">
             <DashboardSectionHeader
                 title="Sitio"
                 description="Edita solo los campos permitidos."

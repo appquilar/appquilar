@@ -77,12 +77,12 @@ const CategoriesPage = () => {
     }, [imageUrlsById]);
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="public-marketplace min-h-screen flex flex-col">
             <Header />
-            <main className="flex-1 pt-24 px-4 sm:px-6 md:px-8">
-                <div className="max-w-7xl mx-auto">
+            <main className="public-main public-section flex-1">
+                <div className="public-container">
                     <div className="mb-8">
-                        <h1 className="text-3xl font-display font-semibold tracking-tight">
+                        <h1 className="text-2xl md:text-3xl font-display font-semibold tracking-tight">
                             Todas las categorías
                         </h1>
                     </div>
@@ -92,12 +92,12 @@ const CategoriesPage = () => {
                             Cargando categorías...
                         </div>
                     ) : categories.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
                             {categories.map((category, index) => (
                                 <Link
                                     key={category.id}
                                     to={`/category/${category.slug}`}
-                                    className="group relative overflow-hidden rounded-xl aspect-[4/3] border border-border/60 bg-muted hover:border-primary/30 transition-all duration-300"
+                                    className="group relative overflow-hidden rounded-xl aspect-[5/4] border border-border/60 bg-muted hover:border-primary/30 transition-all duration-300"
                                     style={{ animationDelay: `${index * 40}ms` }}
                                 >
                                     <div className="absolute inset-0">
@@ -115,12 +115,12 @@ const CategoriesPage = () => {
 
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/10 opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
 
-                                    <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                                        <h2 className="text-xl font-medium text-white font-display">
+                                    <div className="absolute inset-0 p-4 md:p-5 flex flex-col justify-end">
+                                        <h2 className="text-base md:text-lg font-medium text-white font-display">
                                             {category.name}
                                         </h2>
                                         {category.description ? (
-                                            <p className="text-sm text-white/80 mt-1 line-clamp-2">
+                                            <p className="mt-1 line-clamp-2 text-xs text-white/80">
                                                 {category.description}
                                             </p>
                                         ) : null}

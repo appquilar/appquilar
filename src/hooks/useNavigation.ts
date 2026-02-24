@@ -4,14 +4,12 @@ import {Calendar, Home, MessageCircle, Package, Settings, Users, Grid2X2Plus, Bu
 import type {NavSection} from "@/domain/services/navigation/types";
 import {UserRole} from "@/domain/models/UserRole";
 import { useAuth } from "@/context/AuthContext";
-import { useUnreadRentMessagesCount } from "@/application/hooks/useRentalMessages";
 import { useOwnedProductsCount } from "@/application/hooks/useProducts";
 import { useOwnerRentalsCount } from "@/application/hooks/useRentals";
 
 export const useNavigation = () => {
     const location = useLocation();
     const { currentUser } = useAuth();
-    const { totalUnread } = useUnreadRentMessagesCount();
     const ownerId = currentUser?.companyId || currentUser?.id;
     const ownerType = currentUser?.companyId ? "company" : "user";
     const ownedPublishedProductsCountQuery = useOwnedProductsCount({
@@ -68,7 +66,6 @@ export const useNavigation = () => {
                     title: "Mensajes",
                     href: "/dashboard/messages",
                     icon: MessageCircle,
-                    badge: totalUnread > 0 ? String(totalUnread) : undefined,
                 },
             ],
         },

@@ -7,6 +7,8 @@ export type RentRole = 'owner' | 'renter';
 
 export interface RentListParams {
   productId?: string;
+  search?: string;
+  statusGroup?: 'pending' | 'cancelled' | 'completed';
   startDate?: Date;
   endDate?: Date;
   status?: RentStatus;

@@ -184,6 +184,42 @@
     @apply transition-transform duration-500 ease-spring hover:scale-105;
   }
 
+  .public-marketplace {
+    background: #ffffff;
+    color: #111827;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .public-main {
+    padding-top: 96px;
+  }
+
+  @media (min-width: 768px) {
+    .public-main {
+      padding-top: 136px;
+    }
+  }
+
+  .public-container {
+    width: 100%;
+    max-width: 1320px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .public-section {
+    @apply px-4 py-12 sm:px-6 md:px-8;
+  }
+
+  .public-section-title {
+    @apply text-2xl font-display font-semibold tracking-tight text-foreground;
+  }
+
+  .public-section-description {
+    @apply mt-2 text-sm text-muted-foreground;
+  }
+
   .dashboard-premium {
     --background: 220 33% 98%;
     --foreground: 215 28% 11%;
@@ -341,5 +377,17 @@
 
   .dashboard-premium .text-muted-foreground {
     color: rgba(15, 23, 42, 0.55);
+  }
+
+  .dashboard-premium .dashboard-filter-panel {
+    @apply rounded-lg border bg-card p-4 md:p-5;
+  }
+
+  .dashboard-premium .dashboard-filter-grid {
+    @apply grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4;
+  }
+
+  .dashboard-premium .dashboard-filter-actions {
+    @apply mt-4 flex flex-wrap items-center justify-end gap-2;
   }
 }

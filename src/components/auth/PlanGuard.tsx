@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useAuth } from "@/context/AuthContext";
 import type { CompanyPlanType, UserPlanType } from "@/domain/models/Subscription";
+import { getEffectiveUserPlan, isSubscriptionActive } from "@/domain/models/Subscription";
 import { UserRole } from "@/domain/models/UserRole";
 
 interface PlanGuardProps {
@@ -45,7 +46,9 @@ const PlanGuard = ({
 
         const effectiveCompanyPlan = companyContext.isFoundingAccount
             ? "enterprise"
-            : companyContext.planType;
+            : (isSubscriptionActive(companyContext.subscriptionStatus)
+                ? companyContext.planType
+                : "starter");
 
         if (!requiredCompanyPlans.includes(effectiveCompanyPlan)) {
             return <>{fallback}</>;
@@ -53,7 +56,10 @@ const PlanGuard = ({
     }
 
     if (requiredUserPlans && requiredUserPlans.length > 0) {
-        const userPlan = currentUser.planType ?? "explorer";
+        const userPlan = getEffectiveUserPlan(
+            currentUser.planType,
+            currentUser.subscriptionStatus
+        );
         if (!requiredUserPlans.includes(userPlan)) {
             return <>{fallback}</>;
         }
@@ -63,4 +69,3 @@ const PlanGuard = ({
 };
 
 export default PlanGuard;
-

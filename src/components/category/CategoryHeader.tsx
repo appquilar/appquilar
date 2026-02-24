@@ -11,13 +11,13 @@ const CategoryHeader = ({ name, description }: Props) => {
 
     return (
         <header className="w-full">
-            <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-display font-semibold tracking-tight">
                 {name}
             </h1>
 
             {html ? (
                 <div
-                    className="mt-3 w-full text-muted-foreground leading-relaxed prose prose-sm max-w-none"
+                    className="mt-2 w-full text-sm text-muted-foreground leading-relaxed prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: html }}
                 />
             ) : null}

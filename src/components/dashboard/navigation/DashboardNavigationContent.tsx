@@ -12,6 +12,7 @@ import {MapPin} from "lucide-react";
 import {useAuth} from "@/context/AuthContext";
 import {UserRole} from "@/domain/models/UserRole";
 import { useSidebar } from "@/components/ui/sidebar";
+import { getEffectiveUserPlan } from "@/domain/models/Subscription";
 
 /**
  * Contenido principal de la navegación del panel de control
@@ -31,7 +32,11 @@ const DashboardNavigationContent = ({
     const isAdmin = roles.includes(UserRole.ADMIN);
     const isRegularUser = roles.includes(UserRole.REGULAR_USER);
     const hasCompany = Boolean(currentUser?.companyContext?.companyId ?? currentUser?.companyId);
-    const isUserPro = currentUser?.planType === "user_pro";
+    const effectiveUserPlan = getEffectiveUserPlan(
+        currentUser?.planType,
+        currentUser?.subscriptionStatus
+    );
+    const isUserPro = effectiveUserPlan === "user_pro";
     const canUpgradeToUserPro = isRegularUser && !isAdmin && !hasCompany && !isUserPro;
 
     // El usuario se considera "con dirección" si tiene address

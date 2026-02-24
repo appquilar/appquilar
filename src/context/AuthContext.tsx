@@ -19,6 +19,7 @@ import { UserRole } from "@/domain/models/UserRole";
 import type { AuthSession } from "@/domain/models/AuthSession";
 import { Uuid } from "@/domain/valueObject/uuidv4";
 import type { CreateCompanyInput } from "@/domain/models/CompanyMembership";
+import { ApiError } from "@/infrastructure/http/ApiClient";
 
 const authService = compositionRoot.authService;
 const companyMembershipService = compositionRoot.companyMembershipService;
@@ -27,6 +28,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     isLoading: boolean;
     currentUser: User | null;
+    authBlockMessage: string | null;
 
     isLoggedIn: boolean;
     hasRole: (role: UserRole) => boolean;
@@ -57,6 +59,31 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const COMPANY_SUBSCRIPTION_INACTIVE_ERROR_CODE = "subscription.company.inactive.contact_account_manager";
+const COMPANY_SUBSCRIPTION_INACTIVE_MESSAGE =
+    "Hay un problema con la suscripción de tu empresa. Contacta con el gestor de la cuenta.";
+
+const resolveAuthBlockMessage = (error: unknown): string | null => {
+    if (!(error instanceof ApiError) || error.status !== 401) {
+        return null;
+    }
+
+    const payload = error.payload as { error?: unknown } | undefined;
+    const backendError = payload?.error;
+
+    const errorCode = Array.isArray(backendError)
+        ? backendError.find((value): value is string => typeof value === "string")
+        : typeof backendError === "string"
+            ? backendError
+            : null;
+
+    if (errorCode === COMPANY_SUBSCRIPTION_INACTIVE_ERROR_CODE) {
+        return COMPANY_SUBSCRIPTION_INACTIVE_MESSAGE;
+    }
+
+    return null;
+};
+
 export const useAuth = (): AuthContextType => {
     const ctx = useContext(AuthContext);
     if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
@@ -69,6 +96,7 @@ export const useAuth = (): AuthContextType => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [authBlockMessage, setAuthBlockMessage] = useState<string | null>(null);
 
     //
     // Carga inicial: si hay sesión válida, traemos /api/me
@@ -78,8 +106,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             try {
                 const user = await authService.getCurrentUser();
                 setCurrentUser(user);
-            } catch {
+                setAuthBlockMessage(null);
+            } catch (error) {
                 setCurrentUser(null);
+                setAuthBlockMessage(resolveAuthBlockMessage(error));
             } finally {
                 setIsLoading(false);
             }
@@ -95,9 +125,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             const user = await authService.refreshCurrentUser();
             setCurrentUser(user);
+            setAuthBlockMessage(null);
             return user;
-        } catch {
+        } catch (error) {
             setCurrentUser(null);
+            setAuthBlockMessage(resolveAuthBlockMessage(error));
             return null;
         }
     };
@@ -107,6 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     //
     const login = async (email: string, password: string): Promise<void> => {
         setIsLoading(true);
+        setAuthBlockMessage(null);
 
         try {
             const credentials: LoginCredentials = { email, password };
@@ -202,6 +235,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const logout = async () => {
         await authService.logout();
         setCurrentUser(null);
+        setAuthBlockMessage(null);
 
         await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
         await queryClient.invalidateQueries();
@@ -259,6 +293,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 isLoggedIn: Boolean(currentUser),
                 isAuthenticated: Boolean(currentUser),
                 currentUser,
+                authBlockMessage,
                 isLoading,
                 login,
                 logout,

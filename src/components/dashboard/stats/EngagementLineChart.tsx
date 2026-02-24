@@ -1,5 +1,14 @@
 import { useId } from "react";
-import { Area, Line, LineChart, ResponsiveContainer, Tooltip } from "recharts";
+import {
+    Area,
+    CartesianGrid,
+    Line,
+    LineChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from "recharts";
 
 export interface EngagementLineChartPoint {
     day: string;
@@ -20,7 +29,7 @@ const EngagementLineChart = ({ data, color, label }: EngagementLineChartProps) =
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                     data={data}
-                    margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
+                    margin={{ top: 16, right: 16, left: 8, bottom: 10 }}
                     className="px-2 sm:px-6"
                 >
                     <defs>
@@ -45,6 +54,25 @@ const EngagementLineChart = ({ data, color, label }: EngagementLineChartProps) =
                         }}
                         labelStyle={{ color: "rgba(15, 23, 42, 0.6)" }}
                         formatter={(value: number) => [value.toLocaleString("es-ES"), label]}
+                    />
+                    <CartesianGrid
+                        vertical={false}
+                        stroke="rgba(148, 163, 184, 0.2)"
+                        strokeDasharray="3 4"
+                    />
+                    <XAxis
+                        dataKey="day"
+                        tick={{ fill: "rgba(15, 23, 42, 0.6)", fontSize: 12 }}
+                        axisLine={{ stroke: "rgba(148, 163, 184, 0.35)" }}
+                        tickLine={{ stroke: "rgba(148, 163, 184, 0.3)" }}
+                        minTickGap={14}
+                    />
+                    <YAxis
+                        allowDecimals={false}
+                        tick={{ fill: "rgba(15, 23, 42, 0.6)", fontSize: 12 }}
+                        axisLine={{ stroke: "rgba(148, 163, 184, 0.35)" }}
+                        tickLine={{ stroke: "rgba(148, 163, 184, 0.3)" }}
+                        width={38}
                     />
                     <Area
                         type="monotone"

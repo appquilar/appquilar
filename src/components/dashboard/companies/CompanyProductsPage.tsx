@@ -57,14 +57,14 @@ const CompanyProductsPage = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 flex justify-center">
+      <div className="flex justify-center py-10">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="space-y-6">
       <FormHeader
         title={`Productos de ${company?.name}`}
         backUrl="/dashboard/companies"

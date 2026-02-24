@@ -389,7 +389,7 @@ const RentConversationPanel = ({
               variant="outline"
               size="sm"
               onClick={onToggleSummary}
-              className="h-7 px-2 text-xs"
+              className="h-7 px-2 text-xs lg:hidden"
             >
               {isSummaryOpen ? 'Ocultar detalles' : 'Ver detalles'}
             </Button>

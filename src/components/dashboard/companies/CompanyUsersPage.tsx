@@ -39,7 +39,7 @@ const CompanyUsersPage = () => {
 
     if (!effectiveCompanyId) {
         return (
-            <div className="p-6">
+            <div className="space-y-6">
                 <p className="text-sm text-muted-foreground">
                     No hay empresa asociada a tu usuario.
                 </p>
@@ -49,7 +49,7 @@ const CompanyUsersPage = () => {
 
     if (currentUser?.companyId && currentUser.companyId !== effectiveCompanyId && !isPlatformAdmin) {
         return (
-            <div className="p-6">
+            <div className="space-y-6">
                 <p className="text-sm text-muted-foreground">
                     No tienes permisos para gestionar esta empresa.
                 </p>
@@ -100,7 +100,7 @@ const CompanyUsersPage = () => {
     };
 
     return (
-        <div className="p-6 max-w-5xl mx-auto">
+        <div className="space-y-6">
             <FormHeader
                 title={`Gestión de usuarios - ${companyName}`}
                 backUrl="/dashboard/companies"

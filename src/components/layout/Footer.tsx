@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { Link } from "react-router-dom";
-import { Instagram, Linkedin, Twitter, Facebook } from "lucide-react";
+import { Instagram } from "lucide-react";
 
 type SocialLink = {
     key: string;
@@ -15,7 +15,7 @@ type FooterLink =
 
 const BRAND = {
     name: "Appquilar",
-    logoSrc: "/appquilar-combined-white.png",
+    logoSrc: "/appquilar-combined-orange.png",
     description:
         "Alquila lo que necesitas, cuando lo necesitas. Ahorra dinero, reduce residuos y accede a productos de calidad sin comprarlos.",
 };
@@ -66,27 +66,27 @@ const FooterNavLink = ({ link, className }: { link: FooterLink; className?: stri
 
 const Footer = () => {
     return (
-        <footer className="bg-neutral-500 text-neutral-200 py-14 px-6 md:px-8 mt-20">
-            <div className="max-w-7xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+        <footer className="mt-16 border-t border-border/70 bg-white px-4 py-12 sm:px-6 md:px-8">
+            <div className="mx-auto w-full max-w-[1320px]">
+                <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
                     {/* Logo + descripción */}
                     <div className="space-y-5 md:col-span-2">
                         <Link to="/" aria-label="Ir a inicio">
                             <img
                                 src={BRAND.logoSrc}
                                 alt={BRAND.name}
-                                className="h-8 w-auto"
+                                className="h-7 w-auto"
                                 loading="lazy"
                             />
                         </Link>
 
-                        <p className="text-sm text-neutral-400 max-w-md">
+                        <p className="max-w-md text-sm text-muted-foreground">
                             {BRAND.description}
                         </p>
 
                         {ENABLE_NEWSLETTER ? (
                             <div className="pt-4">
-                                <p className="text-sm text-neutral-400">
+                                <p className="text-sm text-muted-foreground">
                                     Suscríbete para recibir novedades y ofertas puntuales.
                                 </p>
 
@@ -99,11 +99,11 @@ const Footer = () => {
                                     <input
                                         type="email"
                                         placeholder="Tu email"
-                                        className="flex-1 min-w-[180px] px-3 py-2 text-sm rounded-l-md sm:rounded-r-none rounded-r-md mb-2 sm:mb-0 bg-neutral-800 border border-neutral-700 text-neutral-100"
+                                        className="mb-2 min-w-[180px] flex-1 rounded-r-md rounded-l-md border border-border bg-background px-3 py-2 text-sm text-foreground sm:mb-0 sm:rounded-r-none"
                                     />
                                     <button
                                         type="submit"
-                                        className="bg-primary text-primary-foreground px-4 py-2 text-sm sm:rounded-l-none rounded-l-md sm:rounded-r-md rounded-r-md hover:bg-primary/90 transition-colors w-full sm:w-auto"
+                                        className="w-full rounded-r-md rounded-l-md bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto sm:rounded-l-none sm:rounded-r-md"
                                     >
                                         Suscribirme
                                     </button>
@@ -114,7 +114,7 @@ const Footer = () => {
 
                     {/* Empresa */}
                     <div className="space-y-4">
-                        <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                             Empresa
                         </h3>
                         <ul className="space-y-2">
@@ -122,7 +122,7 @@ const Footer = () => {
                                 <li key={l.key}>
                                     <FooterNavLink
                                         link={l}
-                                        className="text-sm text-neutral-300 hover:text-white transition-colors"
+                                        className="text-sm text-foreground/75 transition-colors hover:text-foreground"
                                     />
                                 </li>
                             ))}
@@ -131,7 +131,7 @@ const Footer = () => {
 
                     {/* RRSS */}
                     <div className="space-y-4">
-                        <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                             Conecta
                         </h3>
 
@@ -142,7 +142,7 @@ const Footer = () => {
                                     href={href}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="p-2 rounded-full bg-neutral-800 hover:bg-neutral-700 transition-colors"
+                                    className="rounded-full border border-border/80 p-2 text-muted-foreground transition-colors hover:text-primary"
                                     aria-label={label}
                                     title={label}
                                 >
@@ -154,8 +154,8 @@ const Footer = () => {
                 </div>
 
                 {/* Bottom */}
-                <div className="mt-12 pt-6 border-t border-neutral-800 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-xs text-neutral-500">
+                <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-border/80 pt-6 md:flex-row">
+                    <p className="text-xs text-muted-foreground">
                         © {new Date().getFullYear()} {BRAND.name}. Todos los derechos reservados.
                     </p>
 
@@ -164,7 +164,7 @@ const Footer = () => {
                             <FooterNavLink
                                 key={l.key}
                                 link={l}
-                                className="text-xs text-neutral-400 hover:text-white transition-colors"
+                                className="text-xs text-foreground/65 transition-colors hover:text-foreground"
                             />
                         ))}
                     </div>

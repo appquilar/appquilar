@@ -6,6 +6,7 @@ import { RentConversation } from '@/domain/models/RentConversation';
 import { RentalStatusService } from '@/domain/services/RentalStatusService';
 import { useUpdateRentStatusFromMessages } from '@/application/hooks/useRentalMessages';
 import { useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RentConversationSummaryProps {
   conversation: RentConversation;
@@ -26,6 +27,7 @@ const formatDate = (date: Date): string => {
 };
 
 const RentConversationSummary = ({ conversation, onBackToConversation }: RentConversationSummaryProps) => {
+  const isMobile = useIsMobile();
   const rental = conversation.rental;
   const publicProductHref = `/product/${rental.productSlug ?? rental.productId}`;
   const estimatedTotal = rental.price.amount + rental.deposit.amount;
@@ -53,16 +55,18 @@ const RentConversationSummary = ({ conversation, onBackToConversation }: RentCon
         <CardTitle className="text-base">Resumen del alquiler</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 min-h-0 space-y-3 overflow-y-auto text-sm">
-        <div>
-          <Button
-            type="button"
-            variant="default"
-            className="w-full"
-            onClick={onBackToConversation}
-          >
-            Volver a la conversación
-          </Button>
-        </div>
+        {isMobile && onBackToConversation && (
+          <div>
+            <Button
+              type="button"
+              variant="default"
+              className="w-full"
+              onClick={onBackToConversation}
+            >
+              Volver a la conversación
+            </Button>
+          </div>
+        )}
 
         <div>
           <p className="text-muted-foreground">Producto</p>

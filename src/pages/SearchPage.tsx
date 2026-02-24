@@ -291,22 +291,22 @@ const SearchPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="public-marketplace min-h-screen flex flex-col">
             <Header />
-            <main className="flex-1 pt-24 px-4 sm:px-6 md:px-8">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
-                    <aside className="h-fit lg:pr-6 lg:border-r border-border/60 mb-8 lg:mb-0">
+            <main className="public-main public-section flex-1">
+                <div className="public-container grid grid-cols-1 gap-6 lg:grid-cols-[250px_1fr] xl:grid-cols-[270px_1fr]">
+                    <aside className="h-fit rounded-xl border border-border/70 bg-card p-4 lg:sticky lg:top-36">
                         <button
                             type="button"
                             onClick={applyFilters}
                             disabled={isLocating}
-                            className="w-full mb-4 h-9 rounded-md border border-border bg-transparent text-sm font-medium hover:bg-orange-100 hover:text-orange-700 hover:border-orange-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="mb-4 h-9 w-full rounded-lg border border-border bg-transparent text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {isLocating ? "Obteniendo ubicación..." : "Aplicar filtros"}
                         </button>
 
-                        <h2 className="text-base font-medium mb-1">Filtros</h2>
-                        <p className="text-sm text-muted-foreground mb-4">Refina tu búsqueda</p>
+                        <h2 className="mb-1 text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">Filtros</h2>
+                        <p className="mb-4 text-sm text-muted-foreground">Refina tu búsqueda</p>
 
                         <div className="mb-4">
                             <label className="block text-sm font-medium mb-1">
@@ -315,7 +315,7 @@ const SearchPage = () => {
                             <select
                                 value={selectedRadius}
                                 onChange={(event) => setSelectedRadius(event.target.value)}
-                                className="w-full h-9 rounded-md border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                             >
                                 {DISTANCE_OPTIONS.map((option) => (
                                     <option key={option.value} value={option.value}>
@@ -381,20 +381,20 @@ const SearchPage = () => {
                         </div>
                     </aside>
 
-                    <section className="lg:pl-2">
-                        <h1 className="text-3xl font-semibold mb-6">Buscar productos</h1>
+                    <section className="lg:pl-1">
+                        <h1 className="mb-5 text-2xl md:text-3xl font-semibold">Buscar productos</h1>
 
-                        <form onSubmit={handleSubmit} className="mb-8">
+                        <form onSubmit={handleSubmit} className="mb-6">
                             <div className="relative w-full">
                                 <Search
                                     className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
-                                    size={18}
+                                    size={17}
                                 />
                                 <input
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}
                                     placeholder="Buscar herramientas, equipos o categorías..."
-                                    className="w-full h-12 rounded-lg border bg-background pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="h-11 w-full rounded-xl border border-border/80 bg-background pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
                         </form>
@@ -410,7 +410,7 @@ const SearchPage = () => {
                         ) : products.length > 0 ? (
                             <ProductGrid products={products} />
                         ) : (
-                            <div className="text-center py-16 bg-muted/30 rounded-lg">
+                            <div className="rounded-xl bg-muted/30 py-16 text-center">
                                 <h3 className="text-lg font-medium mb-2">No hay resultados</h3>
                                 <p className="text-muted-foreground">
                                     {queryFromUrl

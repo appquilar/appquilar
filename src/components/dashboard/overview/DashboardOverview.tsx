@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import {
     differenceInCalendarDays,
@@ -11,11 +11,22 @@ import {
     subDays,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarRange, Eye, Home, MessageCircle, Repeat, Timer, X } from "lucide-react";
+import {
+    ArrowUpDown,
+    CalendarRange,
+    ExternalLink,
+    Eye,
+    Home,
+    MessageCircle,
+    Repeat,
+    Timer,
+    X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -32,11 +43,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useCompanyEngagementStats } from "@/application/hooks/useCompanyEngagementStats";
 import { useUserEngagementStats } from "@/application/hooks/useUserEngagementStats";
 import { useCreateCheckoutSession } from "@/application/hooks/useBilling";
-import { useActiveProductsCount } from "@/application/hooks/useProducts";
+import { useActiveProductsCount, useDashboardProducts } from "@/application/hooks/useProducts";
 import EngagementLineChart, { EngagementLineChartPoint } from "@/components/dashboard/stats/EngagementLineChart";
 import SpanishDateInput from "@/components/products/SpanishDateInput";
 import { ApiError } from "@/infrastructure/http/ApiClient";
 import {
+    getEffectiveUserPlan,
     getCompanyPlanProductLimit,
     getUserPlanProductLimit,
     isCompanyAdvancedAnalyticsEnabled,
@@ -44,6 +56,40 @@ import {
 import DashboardSectionHeader from "@/components/dashboard/common/DashboardSectionHeader";
 
 const MAX_RANGE_DAYS = 30;
+const OWNER_PRODUCTS_LOOKUP_PAGE_SIZE = 500;
+
+type ProductSortField =
+    | "productName"
+    | "totalViews"
+    | "uniqueVisitors"
+    | "messagesTotal"
+    | "loggedViews"
+    | "anonymousViews"
+    | "visitToMessageRatio"
+    | "messageToRentalRatio";
+
+type ProductSortDirection = "asc" | "desc";
+
+type ProductSortState = {
+    field: ProductSortField;
+    direction: ProductSortDirection;
+};
+
+type ProductBreakdownRow = {
+    productId: string;
+    productName: string;
+    productSlug: string;
+    productInternalId: string;
+    totalViews: number;
+    uniqueVisitors: number;
+    messagesTotal: number;
+    loggedViews: number;
+    anonymousViews: number;
+    visitToMessageRatio: number;
+    messageToRentalRatio: number;
+};
+
+const PRODUCT_BREAKDOWN_PAGE_SIZE = 8;
 
 const formatPercent = (value: number): string => `${(value * 100).toFixed(1)}%`;
 
@@ -109,7 +155,10 @@ const DashboardOverview = () => {
     const companyContext = currentUser?.companyContext ?? null;
     const companyId = companyContext?.companyId ?? currentUser?.companyId ?? null;
     const userId = currentUser?.id ?? null;
-    const userPlan = currentUser?.planType ?? "explorer";
+    const userPlan = getEffectiveUserPlan(
+        currentUser?.planType,
+        currentUser?.subscriptionStatus
+    );
     const isCompanyScope = Boolean(companyId);
     const isUserProScope = !isCompanyScope && userPlan === "user_pro";
     const isExplorerScope = !isCompanyScope && !isUserProScope;
@@ -119,8 +168,11 @@ const DashboardOverview = () => {
     const ownerType = companyId ? "company" : "user";
 
     const slotLimit = companyId
-        ? getCompanyPlanProductLimit(companyContext)
-        : getUserPlanProductLimit(userPlan);
+        ? (companyContext?.productSlotLimit ?? getCompanyPlanProductLimit(companyContext))
+        : (currentUser?.productSlotLimit ?? getUserPlanProductLimit(
+            currentUser?.planType,
+            currentUser?.subscriptionStatus
+        ));
     const createCheckoutMutation = useCreateCheckoutSession();
     const activeProductsCountQuery = useActiveProductsCount({
         ownerId,
@@ -134,8 +186,15 @@ const DashboardOverview = () => {
         from: defaultFrom,
         to: today,
     });
+    const [productSort, setProductSort] = useState<ProductSortState>({
+        field: "uniqueVisitors",
+        direction: "desc",
+    });
+    const [productSearch, setProductSearch] = useState("");
+    const [productPage, setProductPage] = useState(1);
     const [rangeError, setRangeError] = useState<string | null>(null);
     const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
+    const ownerProductsFilters = useMemo(() => ({}), []);
 
     const period = useMemo(() => {
         if (!range.from || !range.to) {
@@ -153,6 +212,14 @@ const DashboardOverview = () => {
         isUserProScope ? userId : null,
         period
     );
+    const ownerProductsQuery = useDashboardProducts({
+        page: 1,
+        perPage: OWNER_PRODUCTS_LOOKUP_PAGE_SIZE,
+        ownerId,
+        ownerType,
+        filters: ownerProductsFilters,
+        enabled: Boolean(ownerId) && !isExplorerScope,
+    });
 
     const isLoading = isCompanyScope
         ? companyStatsQuery.isLoading
@@ -202,6 +269,80 @@ const DashboardOverview = () => {
         );
     }, [range, isCompanyScope, companyStatsQuery.data?.dailyMessages, userStatsQuery.data?.dailyMessages]);
 
+    const hasViewsChartData = useMemo(
+        () => viewsChartData.some((point) => point.value > 0),
+        [viewsChartData]
+    );
+    const hasMessagesChartData = useMemo(
+        () => messagesChartData.some((point) => point.value > 0),
+        [messagesChartData]
+    );
+    const productMetaById = useMemo(() => {
+        const map = new Map<string, { internalId: string; slug: string }>();
+        (ownerProductsQuery.data?.data ?? []).forEach((product) => {
+            map.set(product.id, {
+                internalId: (product.internalId ?? "").trim(),
+                slug: (product.slug ?? "").trim(),
+            });
+        });
+        return map;
+    }, [ownerProductsQuery.data?.data]);
+    const breakdownRows = useMemo<ProductBreakdownRow[]>(() => {
+        const rawRows = isCompanyScope
+            ? (companyStatsQuery.data?.byProduct ?? [])
+            : (userStatsQuery.data?.byProduct ?? []);
+
+        return rawRows.map((row) => {
+            const meta = productMetaById.get(row.productId);
+            return {
+                productId: row.productId,
+                productName: row.productName,
+                productSlug: (row.productSlug || meta?.slug || "").trim(),
+                productInternalId: (meta?.internalId ?? "").trim(),
+                totalViews: row.totalViews,
+                uniqueVisitors: row.uniqueVisitors,
+                messagesTotal: row.messagesTotal,
+                loggedViews: "loggedViews" in row ? row.loggedViews : 0,
+                anonymousViews: "anonymousViews" in row ? row.anonymousViews : 0,
+                visitToMessageRatio: "visitToMessageRatio" in row ? row.visitToMessageRatio : 0,
+                messageToRentalRatio: "messageToRentalRatio" in row ? row.messageToRentalRatio : 0,
+            };
+        });
+    }, [companyStatsQuery.data?.byProduct, isCompanyScope, productMetaById, userStatsQuery.data?.byProduct]);
+    const sortedBreakdownRows = useMemo(() => {
+        const rows = [...breakdownRows];
+        const factor = productSort.direction === "asc" ? 1 : -1;
+
+        rows.sort((a, b) => {
+            if (productSort.field === "productName") {
+                return a.productName.localeCompare(b.productName, "es", { sensitivity: "base" }) * factor;
+            }
+
+            return ((a[productSort.field] as number) - (b[productSort.field] as number)) * factor;
+        });
+
+        return rows;
+    }, [breakdownRows, productSort]);
+    const filteredBreakdownRows = useMemo(() => {
+        const needle = productSearch.trim().toLowerCase();
+        if (needle === "") {
+            return sortedBreakdownRows;
+        }
+
+        return sortedBreakdownRows.filter((row) => {
+            const nameMatch = row.productName.toLowerCase().includes(needle);
+            const internalIdMatch = row.productInternalId.toLowerCase().includes(needle);
+            return nameMatch || internalIdMatch;
+        });
+    }, [productSearch, sortedBreakdownRows]);
+    const productBreakdownTotalPages = useMemo(() => {
+        return Math.max(1, Math.ceil(filteredBreakdownRows.length / PRODUCT_BREAKDOWN_PAGE_SIZE));
+    }, [filteredBreakdownRows.length]);
+    const paginatedBreakdownRows = useMemo(() => {
+        const start = (productPage - 1) * PRODUCT_BREAKDOWN_PAGE_SIZE;
+        return filteredBreakdownRows.slice(start, start + PRODUCT_BREAKDOWN_PAGE_SIZE);
+    }, [filteredBreakdownRows, productPage]);
+
     const handleRangeChange = (next: DateRange | undefined) => {
         if (!next?.from) {
             return;
@@ -236,6 +377,41 @@ const DashboardOverview = () => {
     const selectedRangeDays = range.from && range.to
         ? differenceInCalendarDays(range.to, range.from) + 1
         : 0;
+    const toggleProductSort = (field: ProductSortField) => {
+        setProductPage(1);
+        setProductSort((current) => {
+            if (current.field === field) {
+                return {
+                    field,
+                    direction: current.direction === "asc" ? "desc" : "asc",
+                };
+            }
+
+            return {
+                field,
+                direction: field === "productName" ? "asc" : "desc",
+            };
+        });
+    };
+    const sortHeaderClass = (field: ProductSortField): string =>
+        `inline-flex items-center gap-1.5 transition-colors ${
+            productSort.field === field ? "text-[#C86A35]" : "text-[#0F172A]"
+        }`;
+    const handleProductSearchChange = (value: string) => {
+        setProductSearch(value);
+        setProductPage(1);
+    };
+    const handlePreviousProductPage = () => {
+        setProductPage((prev) => Math.max(1, prev - 1));
+    };
+    const handleNextProductPage = () => {
+        setProductPage((prev) => Math.min(productBreakdownTotalPages, prev + 1));
+    };
+    useEffect(() => {
+        if (productPage > productBreakdownTotalPages) {
+            setProductPage(productBreakdownTotalPages);
+        }
+    }, [productBreakdownTotalPages, productPage]);
 
     const isPresetRange = (days: number): boolean =>
         Boolean(range.from && range.to && selectedRangeDays === days && isSameDay(range.to, today));
@@ -294,12 +470,12 @@ const DashboardOverview = () => {
                 />
                 {!isExplorerScope && (
                     <div className="dashboard-toolbar rounded-xl border border-slate-200/80 bg-white/80 p-2.5 shadow-sm backdrop-blur-md">
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1">
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className={`border-slate-200 bg-white px-4 ${isPresetRange(7) ? "border-[#F19D70]/50 bg-[#F19D70]/10 text-[#C86A35]" : ""}`}
+                                className={`shrink-0 border-slate-200 bg-white px-4 ${isPresetRange(7) ? "border-[#F19D70]/50 bg-[#F19D70]/10 text-[#C86A35]" : ""}`}
                                 onClick={() => applyLastDays(7)}
                             >
                                 7D
@@ -308,7 +484,7 @@ const DashboardOverview = () => {
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className={`border-slate-200 bg-white px-4 ${isPresetRange(30) ? "border-[#F19D70]/50 bg-[#F19D70]/10 text-[#C86A35]" : ""}`}
+                                className={`shrink-0 border-slate-200 bg-white px-4 ${isPresetRange(30) ? "border-[#F19D70]/50 bg-[#F19D70]/10 text-[#C86A35]" : ""}`}
                                 onClick={() => applyLastDays(30)}
                             >
                                 30D
@@ -318,7 +494,7 @@ const DashboardOverview = () => {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="border-slate-200 bg-white px-4 text-[#0F172A] hover:bg-slate-50"
+                                        className="shrink-0 border-slate-200 bg-white px-4 text-[#0F172A] hover:bg-slate-50"
                                     >
                                         <CalendarRange className="h-4 w-4 text-[#F19D70]" />
                                         Fechas
@@ -369,12 +545,10 @@ const DashboardOverview = () => {
                                     </div>
                                 </PopoverContent>
                             </Popover>
-                        </div>
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
-                            <span className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-[#0F172A]/70">
+                            <span className="inline-flex shrink-0 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-[#0F172A]/70">
                                 {selectedRangeDays} días
                             </span>
-                            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-[#0F172A]/70">
+                            <span className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-[#0F172A]/70">
                                 {formatRangeLabel(range)}
                                 <button
                                     type="button"
@@ -572,11 +746,19 @@ const DashboardOverview = () => {
                                 <CardTitle>Visitas diarias</CardTitle>
                             </CardHeader>
                             <CardContent className="p-0 h-[320px] sm:h-[380px]">
-                                <EngagementLineChart
-                                    data={viewsChartData}
-                                    color="#F19D70"
-                                    label="Visitas"
-                                />
+                                {!isLoading && !hasViewsChartData ? (
+                                    <div className="flex h-full items-center justify-center p-6">
+                                        <div className="rounded-xl border border-slate-200 bg-white/90 px-5 py-3 text-sm font-medium text-[#0F172A]/60 shadow-sm">
+                                            Sin datos que mostrar
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <EngagementLineChart
+                                        data={viewsChartData}
+                                        color="#F19D70"
+                                        label="Visitas"
+                                    />
+                                )}
                             </CardContent>
                         </Card>
 
@@ -585,11 +767,19 @@ const DashboardOverview = () => {
                                 <CardTitle>Mensajes diarios</CardTitle>
                             </CardHeader>
                             <CardContent className="p-0 h-[320px] sm:h-[380px]">
-                                <EngagementLineChart
-                                    data={messagesChartData}
-                                    color="#E59A73"
-                                    label="Mensajes"
-                                />
+                                {!isLoading && !hasMessagesChartData ? (
+                                    <div className="flex h-full items-center justify-center p-6">
+                                        <div className="rounded-xl border border-slate-200 bg-white/90 px-5 py-3 text-sm font-medium text-[#0F172A]/60 shadow-sm">
+                                            Sin datos que mostrar
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <EngagementLineChart
+                                        data={messagesChartData}
+                                        color="#E59A73"
+                                        label="Mensajes"
+                                    />
+                                )}
                             </CardContent>
                         </Card>
                     </div>
@@ -598,44 +788,100 @@ const DashboardOverview = () => {
                         <Card className="xl:col-span-2 overflow-hidden">
                             <CardHeader>
                                 <CardTitle>Desglose por producto</CardTitle>
+                                <div className="pt-3">
+                                    <Input
+                                        value={productSearch}
+                                        onChange={(event) => handleProductSearchChange(event.target.value)}
+                                        placeholder="Buscar por nombre o ID interno..."
+                                        className="h-10 max-w-md bg-white"
+                                    />
+                                </div>
                             </CardHeader>
                             <CardContent className="p-0">
                                 <Table className="min-w-[760px]">
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Producto</TableHead>
-                                            <TableHead>Visitas</TableHead>
-                                            <TableHead>Únicas</TableHead>
-                                            <TableHead>Mensajes</TableHead>
+                                            <TableHead>
+                                                <button type="button" className={sortHeaderClass("productName")} onClick={() => toggleProductSort("productName")}>
+                                                    Producto
+                                                    <ArrowUpDown className="h-3.5 w-3.5" />
+                                                </button>
+                                            </TableHead>
+                                            <TableHead>
+                                                <button type="button" className={sortHeaderClass("totalViews")} onClick={() => toggleProductSort("totalViews")}>
+                                                    Visitas
+                                                    <ArrowUpDown className="h-3.5 w-3.5" />
+                                                </button>
+                                            </TableHead>
+                                            <TableHead>
+                                                <button type="button" className={sortHeaderClass("uniqueVisitors")} onClick={() => toggleProductSort("uniqueVisitors")}>
+                                                    Únicas
+                                                    <ArrowUpDown className="h-3.5 w-3.5" />
+                                                </button>
+                                            </TableHead>
+                                            <TableHead>
+                                                <button type="button" className={sortHeaderClass("messagesTotal")} onClick={() => toggleProductSort("messagesTotal")}>
+                                                    Mensajes
+                                                    <ArrowUpDown className="h-3.5 w-3.5" />
+                                                </button>
+                                            </TableHead>
                                             {isCompanyScope && isAdvancedCompanyAnalytics && (
                                                 <>
-                                                    <TableHead>Logadas</TableHead>
-                                                    <TableHead>No logadas</TableHead>
-                                                    <TableHead>Visita a mensaje</TableHead>
-                                                    <TableHead>Mensaje a alquiler</TableHead>
+                                                    <TableHead>
+                                                        <button type="button" className={sortHeaderClass("loggedViews")} onClick={() => toggleProductSort("loggedViews")}>
+                                                            Logadas
+                                                            <ArrowUpDown className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </TableHead>
+                                                    <TableHead>
+                                                        <button type="button" className={sortHeaderClass("anonymousViews")} onClick={() => toggleProductSort("anonymousViews")}>
+                                                            No logadas
+                                                            <ArrowUpDown className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </TableHead>
+                                                    <TableHead>
+                                                        <button type="button" className={sortHeaderClass("visitToMessageRatio")} onClick={() => toggleProductSort("visitToMessageRatio")}>
+                                                            Visita a mensaje
+                                                            <ArrowUpDown className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </TableHead>
+                                                    <TableHead>
+                                                        <button type="button" className={sortHeaderClass("messageToRentalRatio")} onClick={() => toggleProductSort("messageToRentalRatio")}>
+                                                            Mensaje a alquiler
+                                                            <ArrowUpDown className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </TableHead>
                                                 </>
                                             )}
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {!isLoading && isCompanyScope && (companyStatsQuery.data?.byProduct.length ?? 0) === 0 && (
+                                        {!isLoading && filteredBreakdownRows.length === 0 && (
                                             <TableRow>
                                                 <TableCell colSpan={isAdvancedCompanyAnalytics ? 8 : 4} className="text-center text-[#0F172A]/55">
                                                     Sin datos de productos para el período.
                                                 </TableCell>
                                             </TableRow>
                                         )}
-                                        {!isLoading && !isCompanyScope && (userStatsQuery.data?.byProduct.length ?? 0) === 0 && (
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="text-center text-[#0F172A]/55">
-                                                    Sin datos de productos para el período.
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
 
-                                        {isCompanyScope && (companyStatsQuery.data?.byProduct ?? []).map((product) => (
+                                        {paginatedBreakdownRows.map((product) => (
                                             <TableRow key={product.productId}>
-                                                <TableCell className="font-medium">{product.productName}</TableCell>
+                                                <TableCell className="font-medium">
+                                                    <div className="min-w-0">
+                                                        <a
+                                                            href={product.productSlug ? `/product/${product.productSlug}` : `/dashboard/products/${product.productId}`}
+                                                            target={product.productSlug ? "_blank" : "_self"}
+                                                            rel={product.productSlug ? "noopener noreferrer" : undefined}
+                                                            className="inline-flex items-center gap-1 text-[#0F172A] transition-colors hover:text-[#C86A35] hover:underline"
+                                                        >
+                                                            <span className="truncate">{product.productName}</span>
+                                                            <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+                                                        </a>
+                                                        <p className="mt-0.5 text-xs text-[#0F172A]/45">
+                                                            ID interno: {product.productInternalId || "—"}
+                                                        </p>
+                                                    </div>
+                                                </TableCell>
                                                 <TableCell>{product.totalViews}</TableCell>
                                                 <TableCell>{product.uniqueVisitors}</TableCell>
                                                 <TableCell>{product.messagesTotal}</TableCell>
@@ -649,17 +895,35 @@ const DashboardOverview = () => {
                                                 )}
                                             </TableRow>
                                         ))}
-
-                                        {!isCompanyScope && (userStatsQuery.data?.byProduct ?? []).map((product) => (
-                                            <TableRow key={product.productId}>
-                                                <TableCell className="font-medium">{product.productName}</TableCell>
-                                                <TableCell>{product.totalViews}</TableCell>
-                                                <TableCell>{product.uniqueVisitors}</TableCell>
-                                                <TableCell>{product.messagesTotal}</TableCell>
-                                            </TableRow>
-                                        ))}
                                     </TableBody>
                                 </Table>
+                                {filteredBreakdownRows.length > PRODUCT_BREAKDOWN_PAGE_SIZE && (
+                                    <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3">
+                                        <p className="text-xs text-[#0F172A]/55">
+                                            Página {productPage} de {productBreakdownTotalPages}
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={handlePreviousProductPage}
+                                                disabled={productPage <= 1}
+                                            >
+                                                Anterior
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={handleNextProductPage}
+                                                disabled={productPage >= productBreakdownTotalPages}
+                                            >
+                                                Siguiente
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 

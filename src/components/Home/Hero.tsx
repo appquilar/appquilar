@@ -34,15 +34,15 @@ const Hero = () => {
     }, [palabras.length]);
 
     return (
-        <div className="pt-28 pb-10 px-4 sm:px-6 md:px-8 animate-fade-in">
-            <div className="max-w-4xl mx-auto text-center">
+        <section className="animate-fade-in px-4 pb-12 sm:px-6 md:px-8">
+            <div className="public-container text-center pt-0 md:pt-1">
                 <div className="inline-block mb-3 px-3 py-1 bg-primary/10 rounded-full">
           <span className="text-xs font-medium uppercase tracking-wider">
             Alquila lo que necesitas, cuando lo necesitas
           </span>
                 </div>
 
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-semibold tracking-tight mb-6 animate-slide-down">
+                <h1 className="mx-auto max-w-4xl text-3xl sm:text-4xl lg:text-5xl font-display font-semibold tracking-tight mb-5 animate-slide-down">
                     La Forma Inteligente de Alquilar{' '}
                     <span
                         className={`inline-block text-primary transition-opacity duration-500 ${
@@ -54,7 +54,7 @@ const Hero = () => {
                 </h1>
 
                 <p
-                    className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-slide-down"
+                    className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 animate-slide-down"
                     style={{ animationDelay: '50ms' }}
                 >
                     Accede a equipos profesionales sin el costo de propiedad. Perfecto para proyectos DIY, eventos y trabajo profesional.
@@ -64,7 +64,7 @@ const Hero = () => {
                     <SearchBar />
                 </div>
             </div>
-        </div>
+        </section>
     );
 };
 

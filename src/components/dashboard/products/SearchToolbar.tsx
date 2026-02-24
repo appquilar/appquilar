@@ -41,8 +41,8 @@ const SearchToolbar = ({
     const hasActiveFilters = Object.values(filters).some(Boolean);
 
     return (
-        <form className="mb-6 rounded-lg border bg-card p-4 md:p-5" onSubmit={onSearch}>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <form className="dashboard-filter-panel mb-6" onSubmit={onSearch}>
+            <div className="dashboard-filter-grid">
                 <Input
                     placeholder="Nombre..."
                     value={filters.name || ''}
@@ -88,7 +88,7 @@ const SearchToolbar = ({
                 </Select>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+            <div className="dashboard-filter-actions">
                 {hasActiveFilters && (
                     <Button
                         type="button"

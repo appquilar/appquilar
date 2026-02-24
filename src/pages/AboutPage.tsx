@@ -10,16 +10,16 @@ const AboutPage = () => {
     });
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="public-marketplace min-h-screen flex flex-col">
             <Header />
 
-            <main className="flex-1 pt-24 px-4 sm:px-6 md:px-8">
-                <div className="max-w-4xl mx-auto">
-                    <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight">
+            <main className="public-main public-section flex-1">
+                <div className="mx-auto w-full max-w-4xl">
+                    <h1 className="text-2xl md:text-3xl font-display font-semibold tracking-tight">
                         Quiénes somos
                     </h1>
 
-                    <p className="mt-6 text-base md:text-lg text-muted-foreground">
+                    <p className="mt-5 text-[15px] text-muted-foreground">
                         Appquilar es una plataforma para conectar personas que quieren alquilar cosas con
                         personas que las necesitan. Nuestro objetivo es que puedas acceder a artículos sin
                         tener que comprarlos, ahorrando dinero y reduciendo el desperdicio.

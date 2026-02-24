@@ -30,7 +30,7 @@ export const Sidebar = React.forwardRef<
       return (
         <div
           className={cn(
-            "flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground",
+            "flex h-svh min-h-0 w-[--sidebar-width] flex-col overflow-hidden bg-sidebar text-sidebar-foreground",
             className
           )}
           ref={ref}

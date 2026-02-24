@@ -16,6 +16,16 @@ export interface CreateCustomerPortalSessionInput {
     returnUrl: string;
 }
 
+export interface MigrateCompanyToExplorerInput {
+    targetOwnerUserId?: string | null;
+    confirm: boolean;
+}
+
+export interface CompanyMigrationResult {
+    migratedOwnerUserId: string;
+    companyDeleted: boolean;
+}
+
 export interface BillingSessionResult {
     url: string;
 }

@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRentals } from '@/application/hooks/useRentals';
 import { useOwnedProductsCount } from '@/application/hooks/useProducts';
 import { useCurrentUser } from '@/application/hooks/useCurrentUser';
-import { RentalFilterService } from '@/domain/services/RentalFilterService';
 import { RentalRoleTab, RentalStatusFilter } from '@/domain/models/RentalFilters';
+
+const RENTALS_PER_PAGE = 9;
 
 export const useRentalsData = () => {
   const { user } = useCurrentUser();
@@ -11,9 +12,9 @@ export const useRentalsData = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [rentalId, setRentalId] = useState('');
   const [statusFilter, setStatusFilter] = useState<RentalStatusFilter>('pending');
   const [roleTab, setRoleTab] = useState<RentalRoleTab>('owner');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const ownerReferenceId = user?.companyId ?? user?.id ?? undefined;
   const ownerType = user?.companyId ? 'company' : 'user';
@@ -116,49 +117,41 @@ export const useRentalsData = () => {
 
   const ownerId = effectiveRoleTab === 'owner' ? ownerReferenceId : undefined;
 
-  const { rentals, isLoading, error } = useRentals({
+  const normalizedSearchQuery = searchQuery.trim();
+
+  const {
+    rentals,
+    total,
+    isLoading,
+    error,
+  } = useRentals({
     role: effectiveRoleTab,
     ownerId,
-    page: 1,
-    perPage: 200,
+    search: normalizedSearchQuery.length > 0 ? normalizedSearchQuery : undefined,
+    statusGroup: statusFilter,
+    startDate,
+    endDate,
+    page: currentPage,
+    perPage: RENTALS_PER_PAGE,
   }, { enabled: isUserLoaded && (effectiveRoleTab === 'renter' || Boolean(ownerId)) });
 
-  const filters = useMemo(
-    () => ({
-      searchQuery,
-      startDate,
-      endDate,
-      rentalId,
-      statusFilter,
-      roleTab: effectiveRoleTab,
-    }),
-    [searchQuery, startDate, endDate, rentalId, statusFilter, effectiveRoleTab]
-  );
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [normalizedSearchQuery, startDate, endDate, statusFilter, effectiveRoleTab]);
 
-  const filteredRentals = useMemo(() => RentalFilterService.filterRentals(rentals, filters), [rentals, filters]);
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(total / RENTALS_PER_PAGE));
+  }, [total]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDateSelect = (date: Date) => {
-    if (!startDate || (startDate && endDate)) {
-      setStartDate(date);
-      setEndDate(undefined);
-      return;
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
     }
-
-    if (date < startDate) {
-      setEndDate(startDate);
-      setStartDate(date);
-      return;
-    }
-
-    setEndDate(date);
-  };
+  }, [currentPage, totalPages]);
 
   return {
     rentals,
+    total,
     isLoading,
     error,
     searchQuery,
@@ -167,15 +160,14 @@ export const useRentalsData = () => {
     setStartDate,
     endDate,
     setEndDate,
-    rentalId,
-    setRentalId,
     statusFilter,
     setStatusFilter,
     roleTab: effectiveRoleTab,
     setRoleTab,
     showRoleFilter,
-    filteredRentals,
-    handleSearch,
-    handleDateSelect,
+    filteredRentals: rentals,
+    currentPage,
+    totalPages,
+    setCurrentPage,
   };
 };

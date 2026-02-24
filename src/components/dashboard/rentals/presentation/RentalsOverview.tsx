@@ -4,8 +4,8 @@ import RentalsHeader from '../RentalsHeader';
 import RentalFilters from '../RentalFilters';
 import RentalsList from '../RentalsList';
 import RentalsContainer from '../RentalsContainer';
-import RentalRoleTabs from '../RentalRoleTabs';
 import { useRentalsManagement } from '../hooks/useRentalsManagement';
+import ProductPagination from '@/components/dashboard/products/ProductPagination';
 
 /**
  * Main rentals overview component that serves as the page container
@@ -26,10 +26,11 @@ const RentalsOverview = () => {
     setRoleTab,
     showRoleFilter,
     filteredRentals,
-    handleSearch,
+    currentPage,
+    totalPages,
+    handlePageChange,
     handleCreateRental,
     handleViewDetails,
-    handleDateSelect
   } = useRentalsManagement();
   
   return (
@@ -37,26 +38,19 @@ const RentalsOverview = () => {
       {/* Header with create button */}
       <RentalsHeader onCreateRental={handleCreateRental} />
       
-      {/* Enhanced Filters - more mobile friendly */}
-      <div className="flex flex-col space-y-4">
-        {showRoleFilter && (
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Tipo de alquiler</p>
-            <RentalRoleTabs roleTab={roleTab} onRoleChange={setRoleTab} />
-          </div>
-        )}
-        <RentalFilters 
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          startDate={startDate}
-          endDate={endDate}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          onSearch={handleSearch}
-        />
-      </div>
+      <RentalFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        showRoleFilter={showRoleFilter}
+        roleTab={roleTab}
+        onRoleChange={setRoleTab}
+      />
       
       {/* Rental listing with loading and error handling */}
       <RentalsContainer isLoading={isLoading} error={error}>
@@ -64,6 +58,11 @@ const RentalsOverview = () => {
           rentals={filteredRentals}
           onViewDetails={handleViewDetails}
           roleTab={roleTab}
+        />
+        <ProductPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
         />
       </RentalsContainer>
     </div>

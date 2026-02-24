@@ -30,12 +30,12 @@ const PartnersPage = () => {
     const disabled = !company.trim() || !email.trim() || !message.trim();
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="public-marketplace min-h-screen flex flex-col">
             <Header />
 
-            <main className="flex-1 pt-24 px-4 sm:px-6 md:px-8">
-                <div className="max-w-3xl mx-auto">
-                    <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight">
+            <main className="public-main public-section flex-1">
+                <div className="mx-auto w-full max-w-3xl">
+                    <h1 className="text-2xl md:text-3xl font-display font-semibold tracking-tight">
                         Colabora con nosotros
                     </h1>
 

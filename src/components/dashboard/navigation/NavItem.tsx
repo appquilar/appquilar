@@ -1,5 +1,6 @@
 import {Link} from 'react-router-dom';
 import {NavItem as NavItemType} from '@/domain/services/navigation/types';
+import UnreadMessagesBadge from "./UnreadMessagesBadge";
 
 interface NavItemProps {
   link: NavItemType;
@@ -30,7 +31,8 @@ const NavItem = ({ link, isActive, onClick }: NavItemProps) => {
           </span>
           <span className="truncate">{link.title}</span>
         </div>
-        {link.badge && (
+        {link.id === "messages" && <UnreadMessagesBadge />}
+        {link.id !== "messages" && link.badge && (
           <span className="bg-[#F19D70]/20 text-[#C86A35] text-xs font-medium px-2 py-0.5 rounded-md">
             {link.badge}
           </span>

@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useDashboardProducts, useDeleteProduct, usePublishProduct, useActiveProductsCount } from "@/application/hooks/useProducts";
 import { useCreateCheckoutSession, useCreateCustomerPortalSession } from "@/application/hooks/useBilling";
 import type { ProductFilters } from "@/domain/repositories/ProductRepository";
-import { getCompanyPlanProductLimit, getUserPlanProductLimit } from "@/domain/models/Subscription";
+import { getCompanyPlanProductLimit, getEffectiveUserPlan, getUserPlanProductLimit } from "@/domain/models/Subscription";
 import { toast } from "sonner";
 import { ApiError } from "@/infrastructure/http/ApiClient";
 import type { CompanyUserRoleType } from "@/domain/models/Subscription";
@@ -54,6 +54,10 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
     const userId = normalizedUser?.id ?? normalizedUser?.user_id ?? null;
     const ownerId = companyId ?? userId;
     const ownerType = companyId ? 'company' : 'user';
+    const effectiveUserPlan = getEffectiveUserPlan(
+        normalizedUser?.planType ?? "explorer",
+        normalizedUser?.subscriptionStatus ?? "active"
+    );
 
     // Debounce logic could be added here if needed, but for now passing filters directly
     const query = useDashboardProducts({
@@ -71,11 +75,22 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
 
     const slotLimit = useMemo(() => {
         if (companyId) {
-            return getCompanyPlanProductLimit(normalizedUser?.companyContext ?? null);
+            return normalizedUser?.companyContext?.productSlotLimit
+                ?? getCompanyPlanProductLimit(normalizedUser?.companyContext ?? null);
         }
 
-        return getUserPlanProductLimit(normalizedUser?.planType ?? "explorer");
-    }, [companyId, normalizedUser?.companyContext, normalizedUser?.planType]);
+        return normalizedUser?.productSlotLimit
+            ?? getUserPlanProductLimit(
+                normalizedUser?.planType ?? "explorer",
+                normalizedUser?.subscriptionStatus ?? "active"
+            );
+    }, [
+        companyId,
+        normalizedUser?.companyContext,
+        normalizedUser?.productSlotLimit,
+        normalizedUser?.planType,
+        normalizedUser?.subscriptionStatus,
+    ]);
 
     const activeProductsCountQuery = useActiveProductsCount({
         ownerId,
@@ -100,7 +115,7 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
         }
 
         if (!companyId) {
-            if (normalizedUser?.planType === "user_pro") {
+            if (effectiveUserPlan === "user_pro") {
                 return {
                     label: "Hazte empresa",
                     action: "upgrade_to_company",
@@ -138,7 +153,7 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
         hasReachedProductPublicationLimit,
         isCompanyAdmin,
         normalizedUser?.companyContext?.planType,
-        normalizedUser?.planType,
+        effectiveUserPlan,
     ]);
 
     const products = query.data?.data ?? [];

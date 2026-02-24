@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useCreateCheckoutSession } from "@/application/hooks/useBilling";
 import { useAuth } from "@/context/AuthContext";
 import { ApiError } from "@/infrastructure/http/ApiClient";
+import { getEffectiveUserPlan } from "@/domain/models/Subscription";
 
 interface UpgradeToProLinkProps {
   onAfterNavigate?: () => void;
@@ -20,7 +21,10 @@ const UpgradeToProLink = ({ onAfterNavigate }: UpgradeToProLinkProps) => {
   const hasCompanyProfile = Boolean(
     currentUser.companyContext?.companyId ?? currentUser.companyId
   );
-  const isUserPro = currentUser.planType === "user_pro";
+  const isUserPro = getEffectiveUserPlan(
+    currentUser.planType,
+    currentUser.subscriptionStatus
+  ) === "user_pro";
 
   if (hasCompanyProfile || isUserPro) {
     return null;

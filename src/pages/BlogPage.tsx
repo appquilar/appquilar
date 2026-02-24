@@ -44,13 +44,13 @@ const BlogPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="public-marketplace min-h-screen flex flex-col">
             <Header />
 
-            <main className="flex-1 px-4 py-24 sm:px-6 md:px-8">
-                <div className="mx-auto w-full max-w-7xl space-y-6">
+            <main className="public-main public-section flex-1">
+                <div className="public-container space-y-6">
                     <div className="space-y-2">
-                        <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
                         <p className="text-muted-foreground">
                             Artículos y novedades del marketplace.
                         </p>

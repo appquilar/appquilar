@@ -46,10 +46,10 @@ const BlogPostPage = () => {
     }
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="public-marketplace min-h-screen flex flex-col">
             <Header />
 
-            <main className="flex-1 px-4 py-24 sm:px-6 md:px-8">
+            <main className="public-main public-section flex-1">
                 <div className="mx-auto w-full max-w-4xl space-y-6">
                     <Link to="/blog" className="inline-flex">
                         <Button variant="ghost" size="sm">Volver al blog</Button>
@@ -83,7 +83,7 @@ const BlogPostPage = () => {
                                         {publishedLabel}
                                     </p>
                                 )}
-                                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{post.title}</h1>
+                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{post.title}</h1>
                                 {post.category && (
                                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                                         {post.category.name}

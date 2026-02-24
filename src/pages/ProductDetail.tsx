@@ -13,7 +13,7 @@ const ProductDetail = () => {
   }, []);
 
   return (
-      <div className="min-h-screen flex flex-col">
+      <div className="public-marketplace min-h-screen flex flex-col">
         <Header />
         <main className="flex-1">
           <ProductPage productId={slug} />

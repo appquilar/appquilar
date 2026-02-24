@@ -70,33 +70,33 @@ const ProductInfo = ({
 
             {/* Header Info */}
             <div>
-                <div className="flex items-center mb-3 gap-2">
+                <div className="mb-3 flex items-center gap-2">
                     {product.category?.name && (
-                        <span className="text-xs bg-primary/10 px-2.5 py-0.5 rounded-full text-primary font-medium">
+                        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
               {product.category.name}
             </span>
                     )}
                 </div>
 
-                <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight mb-4 text-foreground">
+                <h1 className="mb-3 text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground">
                     {product.name}
                 </h1>
             </div>
 
             {/* Pricing Section */}
             <div>
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <h3 className="mb-3 flex items-center gap-2 text-base font-semibold">
                     Tarifas de Alquiler
                 </h3>
 
                 <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
                     <div className="p-5 border-b border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Precio Base</p>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Precio Base</p>
                             <p className="text-xs text-muted-foreground mt-0.5">Precio del primer tier disponible</p>
                         </div>
                         <div className="text-left sm:text-right">
-                    <span className="text-3xl font-bold text-foreground">
+                    <span className="text-2xl font-bold text-foreground">
                         {(price.daily || 0).toFixed(2)}€
                     </span>
                             <span className="text-muted-foreground ml-1">/ día</span>

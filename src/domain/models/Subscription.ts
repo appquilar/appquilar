@@ -13,10 +13,31 @@ export interface CompanyContext {
     planType: CompanyPlanType;
     subscriptionStatus: SubscriptionStatus;
     isFoundingAccount: boolean;
+    productSlotLimit?: number | null;
 }
 
-export const getUserPlanProductLimit = (planType: UserPlanType | null | undefined): number => {
-    if (planType === "user_pro") {
+export const isSubscriptionActive = (status: SubscriptionStatus | string | null | undefined): boolean => {
+    return status === "active";
+};
+
+export const getEffectiveUserPlan = (
+    planType: UserPlanType | null | undefined,
+    subscriptionStatus: SubscriptionStatus | string | null | undefined
+): UserPlanType => {
+    if (planType === "user_pro" && isSubscriptionActive(subscriptionStatus)) {
+        return "user_pro";
+    }
+
+    return "explorer";
+};
+
+export const getUserPlanProductLimit = (
+    planType: UserPlanType | null | undefined,
+    subscriptionStatus?: SubscriptionStatus | string | null
+): number => {
+    const effectivePlan = getEffectiveUserPlan(planType, subscriptionStatus);
+
+    if (effectivePlan === "user_pro") {
         return 5;
     }
 
@@ -32,7 +53,11 @@ export const getCompanyPlanProductLimit = (context: CompanyContext | null | unde
         return null;
     }
 
-    switch (context.planType) {
+    const effectivePlan = isSubscriptionActive(context.subscriptionStatus)
+        ? context.planType
+        : "starter";
+
+    switch (effectivePlan) {
         case "starter":
             return 10;
         case "pro":
@@ -53,6 +78,9 @@ export const isCompanyAdvancedAnalyticsEnabled = (
         return true;
     }
 
+    if (!isSubscriptionActive(context.subscriptionStatus)) {
+        return false;
+    }
+
     return context.planType === "pro" || context.planType === "enterprise";
 };
-

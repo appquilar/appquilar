@@ -45,25 +45,25 @@ const FAQS = [
 
 const FaqSection = () => {
   return (
-    <section className="py-16 px-4 sm:px-6 md:px-8">
-      <div className="max-w-5xl mx-auto">
+    <section className="public-section">
+      <div className="mx-auto w-full max-w-6xl">
         <div className="text-center">
           <div className="inline-flex items-center justify-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary">
             Preguntas frecuentes
           </div>
-          <h2 className="mt-4 text-3xl font-display font-semibold tracking-tight">
+          <h2 className="mt-4 text-2xl md:text-3xl font-display font-semibold tracking-tight">
             Resolvemos las dudas más comunes
           </h2>
-          <p className="mt-3 text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             Encuentra respuestas rápidas antes de publicar o alquilar.
           </p>
         </div>
 
-        <div className="mt-10 rounded-2xl border border-border/60 bg-white shadow-sm">
+        <div className="mt-8 rounded-2xl border border-border/60 bg-white shadow-sm">
           <Accordion type="single" collapsible className="divide-y">
             {FAQS.map((item, index) => (
               <AccordionItem key={item.question} value={`faq-${index}`} className="px-6">
-                <AccordionTrigger className="py-5 text-left text-base font-semibold">
+                <AccordionTrigger className="py-4 text-left text-[15px] font-semibold">
                   {item.question}
                 </AccordionTrigger>
                 <AccordionContent className="pb-5 text-sm text-muted-foreground">

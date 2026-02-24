@@ -4,6 +4,7 @@ import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sideb
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import AppLogo from "@/components/common/AppLogo";
+import CompanySubscriptionStatusNotice from "@/components/dashboard/layout/CompanySubscriptionStatusNotice";
 
 interface DashboardLayoutProps {
     sidebar: React.ReactNode;
@@ -25,7 +26,7 @@ const DashboardLayoutContent = ({ sidebar, content }: DashboardLayoutProps) => {
     }, []);
 
     return (
-        <div className="dashboard-premium flex min-h-svh w-full font-sans text-[#0F172A]">
+        <div className="dashboard-premium flex h-full min-h-0 w-full overflow-hidden font-sans text-[#0F172A]">
             {/* The Sidebar component (passed as prop) will handle its own rendering/state */}
             {sidebar}
 
@@ -59,7 +60,8 @@ const DashboardLayoutContent = ({ sidebar, content }: DashboardLayoutProps) => {
                 )}
 
                 {/* Page Content */}
-                <main className="dashboard-main-content flex-1 overflow-y-auto p-3 sm:p-4 lg:p-5">
+                <main className="dashboard-main-content flex-1 overflow-y-auto px-3 pb-3 pt-4 sm:px-4 sm:pb-4 sm:pt-5 lg:px-5 lg:pb-5 lg:pt-6">
+                    <CompanySubscriptionStatusNotice />
                     {content}
                 </main>
             </SidebarInset>

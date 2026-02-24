@@ -54,9 +54,11 @@ interface UserDto {
     is_company_owner?: boolean | null;
     plan_type?: UserPlanType | null;
     subscription_status?: SubscriptionStatus | null;
+    product_slot_limit?: number | null;
     company_plan_type?: CompanyPlanType | null;
     company_subscription_status?: SubscriptionStatus | null;
     company_is_founding_account?: boolean | null;
+    company_product_slot_limit?: number | null;
     company_context?: {
         company_id: string;
         company_name: string;
@@ -65,6 +67,7 @@ interface UserDto {
         plan_type: CompanyPlanType;
         subscription_status: SubscriptionStatus;
         is_founding_account: boolean;
+        product_slot_limit?: number | null;
     } | null;
     company?: {
         company_id?: string;
@@ -150,6 +153,7 @@ function mapUserDtoToDomain(dto: UserDto): User {
             planType: dto.company_context.plan_type,
             subscriptionStatus: dto.company_context.subscription_status,
             isFoundingAccount: dto.company_context.is_founding_account,
+            productSlotLimit: dto.company_context.product_slot_limit ?? dto.company_product_slot_limit ?? null,
         }
         : companyId
             ? {
@@ -160,6 +164,7 @@ function mapUserDtoToDomain(dto: UserDto): User {
                 planType: dto.company_plan_type ?? "starter",
                 subscriptionStatus: dto.company_subscription_status ?? "active",
                 isFoundingAccount: dto.company_is_founding_account === true,
+                productSlotLimit: dto.company_product_slot_limit ?? null,
             }
             : null;
 
@@ -178,6 +183,7 @@ function mapUserDtoToDomain(dto: UserDto): User {
         companyContext,
         planType: dto.plan_type ?? "explorer",
         subscriptionStatus: dto.subscription_status ?? "active",
+        productSlotLimit: dto.product_slot_limit ?? null,
         status: dto.status ?? null,
         dateAdded: dto.date_added ? new Date(dto.date_added) : null,
         // OpenAPI: profile_picture_id

@@ -117,6 +117,24 @@ export const useUnreadRentMessagesCount = () => {
   };
 };
 
+export const useUnreadRentMessagesTotal = () => {
+  const query = useQuery({
+    queryKey: [RENT_UNREAD_KEY],
+    queryFn: () => rentalService.getUnreadRentMessagesCount(),
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
+    placeholderData: (previousData) => previousData,
+    select: (data) => data?.totalUnread ?? 0,
+  });
+
+  return {
+    totalUnread: query.data ?? 0,
+    isLoading: query.isLoading,
+    error: query.error ? "Error al cargar no leidos" : null,
+    refetch: query.refetch,
+  };
+};
+
 export const useUnreadCountForRent = (rentId: string | undefined): number => {
   const { byRent } = useUnreadRentMessagesCount();
 

@@ -50,7 +50,7 @@ const RentalDetails = () => {
   const formattedEndDate = formatDate(rental.endDate);
 
   return (
-    <div className={`container mx-auto ${isMobile ? 'px-3 py-3' : 'py-6'}`}>
+    <div className={`space-y-6 ${isMobile ? 'pb-1 pt-2' : 'pb-2 pt-3'}`}>
       <RentalDetailsHeader rental={rental} />
 
       <div className="grid grid-cols-1 gap-4 md:gap-6">

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
 import { rentalService } from '@/compositionRoot';
 import { RentalFormValues, rentalFormSchema, defaultRentalFormValues } from '@/domain/models/RentalForm';
@@ -9,6 +10,7 @@ const toCents = (value: number) => Math.round((Number.isFinite(value) ? value : 
 
 export const useRentalForm = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm<RentalFormValues>({
     resolver: zodResolver(rentalFormSchema),
@@ -39,6 +41,9 @@ export const useRentalForm = () => {
         title: 'Alquiler creado',
         description: 'El alquiler ha sido creado exitosamente',
       });
+
+      await queryClient.invalidateQueries({ queryKey: ['rents'] });
+      await queryClient.refetchQueries({ queryKey: ['rents'], type: 'all' });
 
       navigate('/dashboard/rentals');
     } catch (error) {

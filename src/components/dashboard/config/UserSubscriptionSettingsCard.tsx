@@ -9,7 +9,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ApiError } from "@/infrastructure/http/ApiClient";
-import type { UserPlanType } from "@/domain/models/Subscription";
+import {
+    getEffectiveUserPlan,
+    isSubscriptionActive,
+    type UserPlanType,
+} from "@/domain/models/Subscription";
 
 const USER_PLAN_LABELS: Record<UserPlanType, string> = {
     explorer: "Explorer",
@@ -49,9 +53,11 @@ const UserSubscriptionSettingsCard = () => {
     }
 
     const currentUrl = typeof window !== "undefined" ? window.location.href : "";
-    const currentPlan: UserPlanType = currentUser.planType ?? "explorer";
-    const isUserPro = currentPlan === "user_pro";
+    const rawPlan: UserPlanType = currentUser.planType ?? "explorer";
     const currentStatus = currentUser.subscriptionStatus ?? "active";
+    const currentPlan: UserPlanType = getEffectiveUserPlan(rawPlan, currentStatus);
+    const isUserPro = currentPlan === "user_pro";
+    const hasInactivePaidUserPlan = rawPlan === "user_pro" && !isSubscriptionActive(currentStatus);
 
     const handleOpenUserPortal = async () => {
         const newTab = window.open("", "_blank");
@@ -120,6 +126,13 @@ const UserSubscriptionSettingsCard = () => {
                             >
                                 {STATUS_LABELS[currentStatus] ?? currentStatus}
                             </Badge>
+                        ) : hasInactivePaidUserPlan ? (
+                            <Badge
+                                variant="outline"
+                                className={`cursor-default ${statusBadgeClass(currentStatus)}`}
+                            >
+                                {STATUS_LABELS[currentStatus] ?? currentStatus}
+                            </Badge>
                         ) : (
                             <Badge
                                 variant="outline"
@@ -131,7 +144,9 @@ const UserSubscriptionSettingsCard = () => {
                     </div>
                     {!isUserPro && (
                         <p className="text-xs text-muted-foreground">
-                            Activa User Pro para ver metricas y gestionar tu suscripcion desde Stripe.
+                            {hasInactivePaidUserPlan
+                                ? "Tu suscripcion no esta activa. Reactiva User Pro para recuperar metricas y beneficios."
+                                : "Activa User Pro para ver metricas y gestionar tu suscripcion desde Stripe."}
                         </p>
                     )}
                 </div>

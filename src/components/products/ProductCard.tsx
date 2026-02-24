@@ -49,8 +49,8 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
     const imgSrc = raw.trim().length > 0 ? raw : PLACEHOLDER;
 
     return (
-        <Card className="overflow-hidden hover:shadow-sm transition-shadow">
-            <div className="aspect-[4/3] relative bg-muted">
+        <Card className="overflow-hidden rounded-xl border-border/70 hover:shadow-sm transition-shadow">
+            <div className="aspect-[5/4] relative bg-muted">
                 <img
                     src={imgSrc}
                     alt={product.name}
@@ -59,28 +59,28 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
                 />
 
                 {product.internalId && (
-                    <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                    <div className="absolute top-2 right-2 rounded-md bg-black/70 px-2 py-1 text-[11px] text-white">
                         {product.internalId}
                     </div>
                 )}
             </div>
 
-            <CardHeader className="py-3">
-                <CardTitle className="text-base font-medium truncate">{product.name}</CardTitle>
+            <CardHeader className="px-4 pt-3 pb-1">
+                <CardTitle className="text-[15px] font-semibold truncate leading-tight">{product.name}</CardTitle>
             </CardHeader>
 
-            <CardContent className="py-2">
-                <p className="text-xs text-muted-foreground mb-2">
+            <CardContent className="px-4 py-1">
+                <p className="mb-1 text-[12px] text-muted-foreground">
                     {product.category?.name ? `${product.category.name} • ` : ""}
                     {product.price.daily}€/día
                     {product.price.deposit != null ? ` • ${product.price.deposit}€ fianza` : ""}
                 </p>
-                <p className="text-sm line-clamp-2">{product.description}</p>
+                <p className="text-[13px] leading-snug line-clamp-2">{product.description}</p>
             </CardContent>
 
-            <CardFooter className="pt-2 pb-4 flex flex-col gap-2">
+            <CardFooter className="px-4 pt-3 pb-4 flex flex-col gap-2">
                 <Link to={`/product/${product.slug}`} className="w-full">
-                    <Button variant="default" size="sm" className="gap-1 w-full">
+                    <Button variant="default" size="sm" className="h-9 gap-1 w-full rounded-lg text-sm">
                         Ver producto
                     </Button>
                 </Link>

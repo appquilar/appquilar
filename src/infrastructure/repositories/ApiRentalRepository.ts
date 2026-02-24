@@ -209,6 +209,8 @@ export class ApiRentalRepository implements RentalRepository {
     const queryParams = new URLSearchParams();
 
     if (params.productId) queryParams.append('product_id', params.productId);
+    if (params.search) queryParams.append('search', params.search);
+    if (params.statusGroup) queryParams.append('status_group', params.statusGroup);
     if (params.startDate) queryParams.append('start_date', this.formatApiDate(params.startDate));
     if (params.endDate) queryParams.append('end_date', this.formatApiDate(params.endDate));
     if (params.status) queryParams.append('status', params.status);

@@ -184,7 +184,7 @@ const CategoryPage = () => {
 
     if (isLoading && !data) {
         return (
-            <div className="min-h-screen flex flex-col">
+            <div className="public-marketplace min-h-screen flex flex-col">
                 <Header />
                 <main className="flex-1">
                     <LoadingState />
@@ -196,7 +196,7 @@ const CategoryPage = () => {
 
     if (notFound || !category) {
         return (
-            <div className="min-h-screen flex flex-col">
+            <div className="public-marketplace min-h-screen flex flex-col">
                 <Header />
                 <main className="flex-1 flex flex-col items-center justify-center p-4">
                     <h1 className="text-2xl font-medium mb-4">Category not found</h1>
@@ -210,19 +210,19 @@ const CategoryPage = () => {
     }
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="public-marketplace min-h-screen flex flex-col">
             <Header />
-            <main className="flex-1 pt-20 px-4 sm:px-6 md:px-8 animate-fade-in">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
-                    <aside className="h-fit lg:pr-6 lg:border-r border-border/60 mb-8 lg:mb-0">
-                        <h2 className="text-base font-medium mb-1">Filtros</h2>
-                        <p className="text-sm text-muted-foreground mb-4">Refina tu búsqueda</p>
+            <main className="public-main public-section flex-1 animate-fade-in">
+                <div className="public-container grid grid-cols-1 gap-6 lg:grid-cols-[250px_1fr] xl:grid-cols-[270px_1fr]">
+                    <aside className="h-fit rounded-xl border border-border/70 bg-card p-4 lg:sticky lg:top-36">
+                        <h2 className="mb-1 text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">Filtros</h2>
+                        <p className="mb-4 text-sm text-muted-foreground">Refina tu búsqueda</p>
 
                         <button
                             type="button"
                             onClick={() => void applyFilters()}
                             disabled={isLocating}
-                            className="w-full mb-4 h-9 rounded-md border border-border bg-transparent text-sm font-medium hover:bg-orange-100 hover:text-orange-700 hover:border-orange-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="mb-4 h-9 w-full rounded-lg border border-border bg-transparent text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {isLocating ? "Obteniendo ubicación..." : "Aplicar filtros"}
                         </button>
@@ -231,7 +231,7 @@ const CategoryPage = () => {
                         <select
                             value={selectedRadius}
                             onChange={(event) => setSelectedRadius(event.target.value)}
-                            className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                            className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         >
                             {DISTANCE_OPTIONS.map((option) => (
                                 <option key={option.value} value={option.value}>
@@ -251,7 +251,7 @@ const CategoryPage = () => {
                         )}
                     </aside>
 
-                    <section className="lg:pl-2">
+                    <section className="lg:pl-1">
                         <CategoryHeader
                             name={category.name}
                             description={category.description ?? ""}

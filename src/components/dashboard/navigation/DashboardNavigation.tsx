@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { DashboardNavigationProps } from './types';
 import DashboardNavigationContent from './DashboardNavigationContent';
-import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarHeader } from '@/components/ui/sidebar';
 import AppLogo from '@/components/common/AppLogo';
 
 /**
@@ -10,7 +10,7 @@ import AppLogo from '@/components/common/AppLogo';
  */
 const DashboardNavigation = (props: DashboardNavigationProps) => {
     return (
-        <Sidebar collapsible="icon" variant="floating" className="dashboard-sidebar-shell">
+        <Sidebar collapsible="none" variant="floating" className="dashboard-sidebar-shell">
             <SidebarHeader className="h-20 flex justify-center px-5 border-b border-slate-200/60">
                 <Link
                     to="/"
@@ -41,8 +41,6 @@ const DashboardNavigation = (props: DashboardNavigationProps) => {
                 {/* Main navigation links */}
                 <DashboardNavigationContent {...props} />
             </SidebarContent>
-
-            <SidebarRail />
         </Sidebar>
     );
 };

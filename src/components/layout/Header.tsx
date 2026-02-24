@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, LogOut, Menu, Search, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -22,16 +22,17 @@ import {
 import { CategoryDrawerTree } from "@/components/layout/CategoryDrawerTree";
 
 const Header = () => {
-    const [isScrolled, setIsScrolled] = useState(false);
     const [authModalOpen, setAuthModalOpen] = useState(false);
     const [desktopCategoriesOpen, setDesktopCategoriesOpen] = useState(false);
     const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
+    const [searchValue, setSearchValue] = useState("");
 
+    const location = useLocation();
+    const navigate = useNavigate();
     const { user: currentUser, isAuthenticated } = useCurrentUser();
     const { logout } = useAuth();
 
     const {
-        rotatingCategories, // 👉 SOLO Hero
         menuCategories,     // 👉 SOLO navbar chips
         allCategories,
         isLoading: isSiteLoading,
@@ -42,13 +43,6 @@ const Header = () => {
             ? `${currentUser.firstName} ${currentUser.lastName ?? ""}`.trim()
             : currentUser?.email ?? "Usuario";
 
-    // Scroll visual
-    useEffect(() => {
-        const handleScroll = () => setIsScrolled(window.scrollY > 10);
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
-
     // Abrir login si venimos de reset password
     useEffect(() => {
         if (isAuthenticated) return;
@@ -56,8 +50,33 @@ const Header = () => {
         if (msg) setAuthModalOpen(true);
     }, [isAuthenticated]);
 
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        setSearchValue(params.get("q") ?? "");
+    }, [location.search]);
+
     const handleLogout = async () => {
         await logout();
+    };
+
+    const handleSearchSubmit = (event: FormEvent) => {
+        event.preventDefault();
+        const query = searchValue.trim();
+        if (!query) {
+            navigate("/search");
+            return;
+        }
+
+        navigate(`/search?q=${encodeURIComponent(query)}`);
+    };
+
+    const handleSellClick = () => {
+        if (!isAuthenticated) {
+            setAuthModalOpen(true);
+            return;
+        }
+
+        navigate("/dashboard/products/new");
     };
 
     /**
@@ -80,43 +99,160 @@ const Header = () => {
 
     return (
         <>
-            <header
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 md:px-8 ${
-                    isScrolled ? "py-3 bg-white shadow-sm" : "py-5 bg-transparent"
-                }`}
-            >
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    {/* Logo */}
+            <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/70 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90">
+                <div className="mx-auto flex h-[70px] w-full max-w-[1320px] items-center gap-3 px-4 sm:px-6 md:px-8">
                     <Link
                         to="/"
-                        className="flex items-center hover:opacity-90 transition-opacity"
+                        className="flex items-center hover:opacity-90 transition-opacity shrink-0"
                         aria-label="Ir a inicio"
                     >
                         <AppLogo
-                            imageClassName="h-8 w-auto"
-                            textClassName="text-2xl font-display font-semibold tracking-tight text-primary"
+                            imageClassName="h-7 w-auto"
+                            textClassName="text-xl font-display font-semibold tracking-tight text-primary"
                         />
                     </Link>
 
-                    {/* DESKTOP: categorías + botón */}
-                    <div className="hidden md:flex items-center gap-4">
-                        <nav className="flex items-center gap-2">
-                            {menuTop.map((c) => (
-                                <Link
-                                    key={c.id}
-                                    to={`/category/${c.slug}`}
-                                    className="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
-                                >
-                                    {c.name}
-                                </Link>
-                            ))}
-                        </nav>
+                    <form onSubmit={handleSearchSubmit} className="hidden md:flex min-w-0 flex-1 max-w-3xl">
+                        <div className="relative w-full">
+                            <Search
+                                size={18}
+                                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+                            />
+                            <input
+                                value={searchValue}
+                                onChange={(event) => setSearchValue(event.target.value)}
+                                placeholder="Busca productos para alquilar"
+                                className="h-11 w-full rounded-full border border-border/80 bg-background pl-11 pr-4 text-sm text-foreground transition-colors focus:border-primary/50 focus:outline-none"
+                            />
+                        </div>
+                    </form>
 
+                    <div className="ml-auto flex items-center gap-2 sm:gap-3">
+                        <Link
+                            to="/search"
+                            className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 text-muted-foreground transition-colors hover:text-primary"
+                            aria-label="Buscar"
+                        >
+                            <Search size={18} />
+                        </Link>
+
+                        {isAuthenticated && currentUser ? (
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-10 rounded-full border-border/80 px-4 text-sm"
+                                    >
+                                        <User size={16} />
+                                        <span className="hidden lg:inline ml-2">Hola {displayName}</span>
+                                    </Button>
+                                </PopoverTrigger>
+
+                                <PopoverContent className="p-0 w-56" align="end">
+                                    <div className="p-3 border-b">
+                                        <p className="font-medium">¡Hola, {displayName}!</p>
+                                    </div>
+
+                                    <div className="p-1">
+                                        <Link
+                                            to="/dashboard"
+                                            className="flex items-center gap-2 p-2 hover:bg-secondary rounded-md text-sm"
+                                        >
+                                            <LayoutDashboard size={16} />
+                                            Panel de control
+                                        </Link>
+
+                                        <button
+                                            onClick={handleLogout}
+                                            className="flex items-center gap-2 p-2 hover:bg-secondary rounded-md w-full text-left text-destructive text-sm"
+                                        >
+                                            <LogOut size={16} />
+                                            Cerrar sesión
+                                        </button>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        ) : (
+                            <>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    data-trigger-login
+                                    onClick={() => setAuthModalOpen(true)}
+                                    className="hidden sm:inline-flex h-10 rounded-full border-primary/70 px-5 text-sm text-foreground hover:bg-primary/5"
+                                >
+                                    Regístrate o inicia sesión
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    data-trigger-login
+                                    onClick={() => setAuthModalOpen(true)}
+                                    className="sm:hidden h-10 w-10 rounded-full border-primary/60 text-foreground"
+                                    aria-label="Iniciar sesión"
+                                >
+                                    <User size={16} />
+                                </Button>
+                            </>
+                        )}
+
+                        <Button
+                            size="sm"
+                            onClick={handleSellClick}
+                            className="h-10 rounded-full px-5 text-sm"
+                        >
+                            Vender
+                        </Button>
+
+                        <div className="md:hidden">
+                            <Sheet open={mobileCategoriesOpen} onOpenChange={setMobileCategoriesOpen}>
+                                <SheetTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full">
+                                        <Menu size={20} />
+                                    </Button>
+                                </SheetTrigger>
+
+                                <SheetContent
+                                    side="left"
+                                    className="p-0 w-[320px] flex flex-col"
+                                >
+                                    <div className="sticky top-0 z-10 bg-background border-b p-6">
+                                        <SheetHeader>
+                                            <SheetTitle>Categorías</SheetTitle>
+                                        </SheetHeader>
+                                    </div>
+
+                                    <div className="flex-1 overflow-y-auto p-6">
+                                        {drawerCategories.length === 0 ? (
+                                            <div className="text-sm text-muted-foreground">
+                                                Cargando categorías…
+                                            </div>
+                                        ) : (
+                                            <CategoryDrawerTree
+                                                categories={drawerCategories}
+                                                isOpen={mobileCategoriesOpen}
+                                                onNavigate={() => setMobileCategoriesOpen(false)}
+                                            />
+                                        )}
+                                    </div>
+                                </SheetContent>
+                            </Sheet>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="hidden md:block border-t border-border/60">
+                    <div className="mx-auto flex h-12 w-full max-w-[1320px] items-center gap-2 overflow-x-auto px-4 sm:px-6 md:px-8 [&::-webkit-scrollbar]:hidden">
                         <Sheet open={desktopCategoriesOpen} onOpenChange={setDesktopCategoriesOpen}>
                             <SheetTrigger asChild>
-                                <Button variant="outline" size="sm" className="gap-2">
-                                    <Menu size={18} />
-                                    Categorías
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="shrink-0 h-9 gap-2 rounded-full px-4 text-sm text-foreground hover:bg-secondary"
+                                >
+                                    <Menu size={16} />
+                                    Todas las categorías
                                 </Button>
                             </SheetTrigger>
 
@@ -148,104 +284,18 @@ const Header = () => {
                                 </div>
                             </SheetContent>
                         </Sheet>
-                    </div>
 
-                    {/* DERECHA */}
-                    <div className="flex items-center gap-4">
-                        <Link
-                            to="/search"
-                            className="p-2 rounded-full text-muted-foreground hover:text-primary transition-colors"
-                            aria-label="Buscar"
-                        >
-                            <Search size={20} />
-                        </Link>
-
-                        {isAuthenticated && currentUser ? (
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="flex items-center gap-2"
-                                    >
-                                        <User size={16} />
-                                        <span className="hidden sm:inline">
-                      Hola {displayName}
-                    </span>
-                                    </Button>
-                                </PopoverTrigger>
-
-                                <PopoverContent className="p-0 w-56" align="end">
-                                    <div className="p-3 border-b">
-                                        <p className="font-medium">¡Hola, {displayName}!</p>
-                                    </div>
-
-                                    <div className="p-1">
-                                        <Link
-                                            to="/dashboard"
-                                            className="flex items-center gap-2 p-2 hover:bg-secondary rounded-md text-sm"
-                                        >
-                                            <LayoutDashboard size={16} />
-                                            Panel de control
-                                        </Link>
-
-                                        <button
-                                            onClick={handleLogout}
-                                            className="flex items-center gap-2 p-2 hover:bg-secondary rounded-md w-full text-left text-destructive text-sm"
-                                        >
-                                            <LogOut size={16} />
-                                            Cerrar sesión
-                                        </button>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-                        ) : (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                data-trigger-login
-                                onClick={() => setAuthModalOpen(true)}
-                            >
-                                Iniciar sesión
-                            </Button>
-                        )}
-
-                        {/* MOBILE */}
-                        <div className="md:hidden">
-                            <Sheet open={mobileCategoriesOpen} onOpenChange={setMobileCategoriesOpen}>
-                                <SheetTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                        <Menu size={24} />
-                                    </Button>
-                                </SheetTrigger>
-
-                                <SheetContent
-                                    side="left"
-                                    className="p-0 w-[320px] flex flex-col"
+                        <nav className="flex items-center gap-1">
+                            {menuTop.map((category) => (
+                                <Link
+                                    key={category.id}
+                                    to={`/category/${category.slug}`}
+                                    className="shrink-0 rounded-full px-4 py-2 text-sm font-medium text-foreground/85 transition-colors hover:bg-secondary hover:text-foreground"
                                 >
-                                    <div className="sticky top-0 z-10 bg-background border-b p-6">
-                                        <SheetHeader>
-                                            <SheetTitle>Categorías</SheetTitle>
-                                        </SheetHeader>
-
-                                    </div>
-
-                                    <div className="flex-1 overflow-y-auto p-6">
-                                        {drawerCategories.length === 0 ? (
-                                            <div className="text-sm text-muted-foreground">
-                                                Cargando categorías…
-                                            </div>
-                                        ) : (
-                                            <CategoryDrawerTree
-                                                categories={drawerCategories}
-                                                isOpen={mobileCategoriesOpen}
-                                                onNavigate={() => setMobileCategoriesOpen(false)}
-                                            />
-                                        )}
-                                    </div>
-                                </SheetContent>
-                            </Sheet>
-                        </div>
+                                    {category.name}
+                                </Link>
+                            ))}
+                        </nav>
                     </div>
                 </div>
             </header>

@@ -108,8 +108,8 @@ const BlogManagementPage = () => {
                 )}
             />
 
-            <div className="rounded-lg border bg-card p-4">
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div className="dashboard-filter-panel">
+                <div className="dashboard-filter-grid md:grid-cols-3">
                     <Input
                         value={textFilter}
                         onChange={(event) => {
@@ -127,7 +127,7 @@ const BlogManagementPage = () => {
                             setPage(1);
                         }}
                     >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-10">
                             <SelectValue placeholder="Estado" />
                         </SelectTrigger>
                         <SelectContent>

@@ -25,7 +25,7 @@ const CreateRental = () => {
   } = useProductSelection(form);
 
   return (
-    <div className={`container mx-auto ${isMobile ? 'px-3 pb-20' : 'px-4 py-6'}`}>
+    <div className={`space-y-6 ${isMobile ? 'pb-20' : ''}`}>
       <CreateRentalHeader />
 
       <div className="bg-card rounded-lg border p-3 sm:p-6">

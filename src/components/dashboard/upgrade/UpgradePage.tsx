@@ -128,7 +128,7 @@ const UpgradePage = () => {
   };
 
   return (
-    <div className="container max-w-5xl py-4 sm:py-8 px-4 sm:px-6">
+    <div className="space-y-6">
       <div className="space-y-6 sm:space-y-8">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold">Actualizar a Cuenta de Empresa</h1>

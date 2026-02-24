@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { Filter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import SearchField from './filters/SearchField';
 import DateRangePicker from './filters/DateRangePicker';
+import RentalRoleTabs from './RentalRoleTabs';
 import {
   Select,
   SelectContent,
@@ -22,7 +21,9 @@ interface RentalFiltersProps {
   onEndDateChange: (date: Date | undefined) => void;
   statusFilter: RentalStatusFilter;
   onStatusFilterChange: (status: RentalStatusFilter) => void;
-  onSearch: (e: React.FormEvent) => void;
+  showRoleFilter: boolean;
+  roleTab: 'owner' | 'renter';
+  onRoleChange: (role: 'owner' | 'renter') => void;
 }
 
 const RentalFilters = ({
@@ -34,42 +35,45 @@ const RentalFilters = ({
   onEndDateChange,
   statusFilter,
   onStatusFilterChange,
-  onSearch
+  showRoleFilter,
+  roleTab,
+  onRoleChange,
 }: RentalFiltersProps) => {
   return (
-    <div className="w-full">
-      <div className="flex flex-col gap-2">
+    <div className="dashboard-filter-panel w-full">
+      <div className="dashboard-filter-grid">
+        {showRoleFilter && (
+          <div className="space-y-2 md:col-span-2 xl:col-span-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#0F172A]/55">
+              Tipo de alquiler
+            </p>
+            <RentalRoleTabs roleTab={roleTab} onRoleChange={onRoleChange} />
+          </div>
+        )}
         <SearchField 
           value={searchQuery} 
           onChange={onSearchChange} 
+          className="md:col-span-2"
+        />
+
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={onStartDateChange}
+          onEndDateChange={onEndDateChange}
           className="w-full"
         />
-        
-        <div className="flex flex-col sm:flex-row gap-2 w-full">
-          <DateRangePicker
-            startDate={startDate}
-            endDate={endDate}
-            onStartDateChange={onStartDateChange}
-            onEndDateChange={onEndDateChange}
-            className="w-full sm:w-auto"
-          />
 
-          <Select value={statusFilter} onValueChange={(value) => onStatusFilterChange(value as RentalStatusFilter)}>
-            <SelectTrigger className="h-10 w-full sm:w-[220px]">
-              <SelectValue placeholder="Estado" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pending">Pendiente</SelectItem>
-              <SelectItem value="cancelled">Cancelado</SelectItem>
-              <SelectItem value="completed">Completado</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Button onClick={(e) => onSearch(e)} className="h-10 w-full sm:w-auto">
-            <Filter className="h-4 w-4 mr-2" />
-            <span>Filtrar</span>
-          </Button>
-        </div>
+        <Select value={statusFilter} onValueChange={(value) => onStatusFilterChange(value as RentalStatusFilter)}>
+          <SelectTrigger className="h-10">
+            <SelectValue placeholder="Estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pending">Pendientes</SelectItem>
+            <SelectItem value="cancelled">Cancelados</SelectItem>
+            <SelectItem value="completed">Completados</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

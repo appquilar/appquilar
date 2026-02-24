@@ -1,7 +1,9 @@
 import type {
     BillingSessionResult,
+    CompanyMigrationResult,
     CreateCheckoutSessionInput,
     CreateCustomerPortalSessionInput,
+    MigrateCompanyToExplorerInput,
 } from "@/domain/models/Billing";
 import type { BillingRepository } from "@/domain/repositories/BillingRepository";
 import { ApiClient } from "@/infrastructure/http/ApiClient";
@@ -27,6 +29,16 @@ interface CheckoutSessionRequestDto {
 interface CustomerPortalSessionRequestDto {
     scope: "user" | "company";
     return_url: string;
+}
+
+interface MigrateCompanyToExplorerRequestDto {
+    target_owner_user_id?: string;
+    confirm: boolean;
+}
+
+interface MigrateCompanyToExplorerResponseDto {
+    migrated_owner_user_id: string;
+    company_deleted: boolean;
 }
 
 export class ApiBillingRepository implements BillingRepository {
@@ -85,6 +97,31 @@ export class ApiBillingRepository implements BillingRepository {
 
         return {
             url: response.data.url,
+        };
+    }
+
+    async migrateCompanyToExplorer(
+        input: MigrateCompanyToExplorerInput
+    ): Promise<CompanyMigrationResult> {
+        const headers = await this.authHeaders();
+
+        const payload: MigrateCompanyToExplorerRequestDto = {
+            confirm: input.confirm,
+        };
+
+        if (input.targetOwnerUserId) {
+            payload.target_owner_user_id = input.targetOwnerUserId;
+        }
+
+        const response = await this.apiClient.post<ApiResponse<MigrateCompanyToExplorerResponseDto>>(
+            "/api/billing/company/migrate-to-explorer",
+            payload,
+            { headers }
+        );
+
+        return {
+            migratedOwnerUserId: response.data.migrated_owner_user_id,
+            companyDeleted: response.data.company_deleted,
         };
     }
 }

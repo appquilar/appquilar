@@ -32,6 +32,7 @@ const statusLabelMap: Record<string, string> = {
     ACCEPTED: "Aceptado",
     PENDING: "Pendiente",
     EXPIRED: "Expirado",
+    SUSPENDED: "Suspendido",
 };
 
 interface CompanyUsersTableProps {

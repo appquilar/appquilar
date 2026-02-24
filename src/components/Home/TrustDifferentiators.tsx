@@ -37,30 +37,30 @@ const DIFFERENTIATORS = [
 
 const TrustDifferentiators = () => {
   return (
-    <section className="py-16 px-4 sm:px-6 md:px-8 bg-muted/20">
-      <div className="max-w-7xl mx-auto">
+    <section className="public-section bg-muted/20">
+      <div className="public-container">
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center justify-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary">
             Diferenciadores clave
           </div>
-          <h2 className="mt-4 text-3xl font-display font-semibold tracking-tight">
+          <h2 className="mt-4 text-2xl md:text-3xl font-display font-semibold tracking-tight">
             La confianza reduce la fricción en los alquileres
           </h2>
-          <p className="mt-3 text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             Por eso Appquilar está construido para dar seguridad y claridad en cada reserva.
           </p>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {DIFFERENTIATORS.map(({ title, description, Icon, accent, border }) => (
             <div
               key={title}
-              className={`rounded-xl border ${border} bg-gradient-to-br ${accent} p-6 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md`}
+              className={`rounded-xl border ${border} bg-gradient-to-br ${accent} p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md`}
             >
-              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Icon className="h-5 w-5" strokeWidth={2} />
+              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Icon className="h-4 w-4" strokeWidth={2} />
               </div>
-              <h3 className="text-lg font-semibold">{title}</h3>
+              <h3 className="text-base font-semibold">{title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{description}</p>
             </div>
           ))}

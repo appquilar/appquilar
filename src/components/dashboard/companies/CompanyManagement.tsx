@@ -164,30 +164,32 @@ const CompanyManagement = () => {
                         )}
                     />
 
-                    <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
-                        <div className="relative flex-1">
-                            <Search
-                                size={16}
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                            />
-                            <Input
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Buscar por nombre"
-                                className="pl-9"
-                            />
+                    <form onSubmit={handleSearch} className="dashboard-filter-panel">
+                        <div className="dashboard-filter-grid md:grid-cols-[minmax(0,2fr)_auto_auto]">
+                            <div className="relative flex-1">
+                                <Search
+                                    size={16}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                                />
+                                <Input
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Buscar por nombre"
+                                    className="pl-9"
+                                />
+                            </div>
+                            <Button type="submit" className="sm:w-auto">
+                                Buscar
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="sm:w-auto"
+                                onClick={clearSearch}
+                            >
+                                Limpiar
+                            </Button>
                         </div>
-                        <Button type="submit" className="sm:w-auto">
-                            Buscar
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="sm:w-auto"
-                            onClick={clearSearch}
-                        >
-                            Limpiar
-                        </Button>
                     </form>
                 </div>
             )}

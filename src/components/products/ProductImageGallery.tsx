@@ -25,7 +25,7 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
 
     if (!images || images.length === 0) {
         return (
-            <div className="aspect-[21/9] bg-muted rounded-xl flex items-center justify-center text-muted-foreground">
+            <div className="aspect-[16/10] bg-muted rounded-xl flex items-center justify-center text-sm text-muted-foreground">
                 Sin imágenes
             </div>
         );
@@ -35,7 +35,7 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
         <div className="space-y-4">
             <div
                 ref={sliderRef}
-                className="relative aspect-[16/9] md:aspect-[21/9] max-h-[500px] overflow-hidden bg-muted rounded-xl border border-border"
+                className="relative aspect-[16/10] max-h-[560px] overflow-hidden bg-muted rounded-xl border border-border"
             >
                 <div
                     className="flex transition-transform duration-500 ease-spring h-full"
@@ -57,20 +57,20 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
                         <Button
                             variant="secondary"
                             size="icon"
-                            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100 shadow-md bg-white/90"
+                            className="absolute left-3 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100 shadow-md bg-white/90"
                             onClick={() => slideToIndex(currentImageIndex - 1)}
                             aria-label="Imagen anterior"
                         >
-                            <ChevronLeft size={18} />
+                            <ChevronLeft size={16} />
                         </Button>
                         <Button
                             variant="secondary"
                             size="icon"
-                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100 shadow-md bg-white/90"
+                            className="absolute right-3 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100 shadow-md bg-white/90"
                             onClick={() => slideToIndex(currentImageIndex + 1)}
                             aria-label="Siguiente imagen"
                         >
-                            <ChevronRight size={18} />
+                            <ChevronRight size={16} />
                         </Button>
                     </>
                 )}

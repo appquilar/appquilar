@@ -161,7 +161,7 @@ const CompanyFormPage = () => {
 
     if (!resolvedCompanyId) {
         return (
-            <div className="p-6">
+            <div className="space-y-6">
                 <p className="text-sm text-muted-foreground">
                     No hay empresa asociada a tu usuario.
                 </p>
@@ -175,7 +175,7 @@ const CompanyFormPage = () => {
 
     if (profileQuery.isError || !profileQuery.data) {
         return (
-            <div className="p-6">
+            <div className="space-y-6">
                 <p className="text-sm text-destructive">
                     No se pudo cargar la información de la empresa.
                 </p>
@@ -184,7 +184,7 @@ const CompanyFormPage = () => {
     }
 
     return (
-        <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-4">
+        <div className="space-y-6">
             <FormHeader
                 title="Mi empresa"
                 backUrl="/dashboard"

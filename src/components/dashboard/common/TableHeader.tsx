@@ -31,14 +31,16 @@ const TableHeader = ({
         </Button>
       </div>
       
-      <form onSubmit={onSearch} className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder={`Buscar por nombre...`}
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-9 w-full max-w-full sm:max-w-md"
-        />
+      <form onSubmit={onSearch} className="dashboard-filter-panel">
+        <div className="relative w-full max-w-full sm:max-w-md">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder={`Buscar por nombre...`}
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-9"
+          />
+        </div>
       </form>
     </div>
   );

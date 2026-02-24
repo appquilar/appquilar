@@ -33,6 +33,7 @@ export interface User {
     companyContext?: CompanyContext | null;
     planType?: UserPlanType | null;
     subscriptionStatus?: SubscriptionStatus | null;
+    productSlotLimit?: number | null;
     status?: string | null;
     dateAdded?: Date | null;
 
@@ -58,6 +59,7 @@ export function createUser(params: {
     companyContext?: CompanyContext | null;
     planType?: UserPlanType | null;
     subscriptionStatus?: SubscriptionStatus | null;
+    productSlotLimit?: number | null;
     status?: string | null;
     dateAdded?: Date | null;
     profilePictureId?: string | null;
@@ -77,6 +79,7 @@ export function createUser(params: {
         companyContext: params.companyContext ?? null,
         planType: params.planType ?? null,
         subscriptionStatus: params.subscriptionStatus ?? null,
+        productSlotLimit: params.productSlotLimit ?? null,
         status: params.status ?? null,
         dateAdded: params.dateAdded ?? null,
         profilePictureId: params.profilePictureId ?? null,

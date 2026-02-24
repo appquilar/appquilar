@@ -1,6 +1,6 @@
 export type CompanyUserRole = "ROLE_ADMIN" | "ROLE_CONTRIBUTOR";
 
-export type CompanyUserStatus = "ACCEPTED" | "PENDING" | "EXPIRED";
+export type CompanyUserStatus = "ACCEPTED" | "PENDING" | "EXPIRED" | "SUSPENDED";
 
 export interface CompanyUserMembership {
     companyId: string;

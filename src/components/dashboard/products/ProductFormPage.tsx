@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Product } from '@/domain/models/Product';
+import { Product, ProductFormData } from '@/domain/models/Product';
 import ProductEditForm from '@/components/dashboard/ProductEditForm';
 import { toast } from 'sonner';
 import { productService } from '@/compositionRoot';
@@ -11,6 +11,8 @@ import { Uuid } from '@/domain/valueObject/uuidv4';
 import { useCreateProduct, useUpdateProduct } from '@/application/hooks/useProducts';
 import { useAuth } from '@/context/AuthContext';
 import { hasMinimalAddress } from '@/domain/models/Address';
+import FormHeader from '@/components/dashboard/common/FormHeader';
+import { Card, CardContent } from '@/components/ui/card';
 
 const ProductFormPage = () => {
     const { productId } = useParams();
@@ -94,12 +96,12 @@ const ProductFormPage = () => {
 
             if (isAddMode) {
                 // Al usar mutateAsync, se ejecutará el onSuccess del hook que hace invalidateQueries(['products'])
-                await createProduct(updatedProduct as any);
+                await createProduct(updatedProduct as ProductFormData);
                 // El hook ya muestra el toast de éxito
             } else {
                 await updateProduct({
                     id: productId as string,
-                    data: updatedProduct as any
+                    data: updatedProduct as ProductFormData
                 });
                 // El hook ya muestra el toast de éxito
             }
@@ -118,7 +120,7 @@ const ProductFormPage = () => {
 
     if (isLoading) {
         return (
-            <div className="p-6 flex justify-center">
+            <div className="flex justify-center py-10">
                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
@@ -126,9 +128,12 @@ const ProductFormPage = () => {
 
     if (!product && !isAddMode) {
         return (
-            <div className="p-6">
+            <div className="space-y-6">
+                <FormHeader
+                    title="Producto no encontrado"
+                    backUrl="/dashboard/products"
+                />
                 <div className="flex flex-col items-center justify-center p-8 text-center">
-                    <h2 className="text-2xl font-bold mb-2">Producto no encontrado</h2>
                     <Button onClick={() => navigate('/dashboard/products')}>
                         Volver a Productos
                     </Button>
@@ -138,20 +143,11 @@ const ProductFormPage = () => {
     }
 
     return (
-        <div className="p-6 max-w-5xl mx-auto">
-            <div className="mb-6 flex items-center gap-4">
-                <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => navigate('/dashboard/products')}
-                    className="h-9 w-9"
-                >
-                    <ArrowLeft size={18} />
-                </Button>
-                <h1 className="text-2xl font-bold">
-                    {isAddMode ? 'Añadir Nuevo Producto' : 'Editar Producto'}
-                </h1>
-            </div>
+        <div className="space-y-6">
+            <FormHeader
+                title={isAddMode ? 'Añadir Nuevo Producto' : 'Editar Producto'}
+                backUrl="/dashboard/products"
+            />
 
             {isAddMode && !canCreateProduct && (
                 <Alert variant="warning" className="mb-6">
@@ -168,12 +164,16 @@ const ProductFormPage = () => {
             )}
 
             {product && (
-                <ProductEditForm
-                    product={product}
-                    onSave={handleSaveProduct}
-                    onCancel={handleCancel}
-                    disableSubmit={isAddMode && !canCreateProduct}
-                />
+                <Card>
+                    <CardContent className="!p-4 sm:!p-6">
+                        <ProductEditForm
+                            product={product}
+                            onSave={handleSaveProduct}
+                            onCancel={handleCancel}
+                            disableSubmit={isAddMode && !canCreateProduct}
+                        />
+                    </CardContent>
+                </Card>
             )}
         </div>
     );

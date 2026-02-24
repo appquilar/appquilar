@@ -10,12 +10,12 @@ const PrivacyPage = () => {
     });
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="public-marketplace min-h-screen flex flex-col">
             <Header />
 
-            <main className="flex-1 pt-24 px-4 sm:px-6 md:px-8">
+            <main className="public-main public-section flex-1">
                 <div className="max-w-4xl mx-auto">
-                    <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight">
+                    <h1 className="text-2xl md:text-3xl font-display font-semibold tracking-tight">
                         Política de Privacidad
                     </h1>
                     <p className="mt-2 text-sm text-muted-foreground">

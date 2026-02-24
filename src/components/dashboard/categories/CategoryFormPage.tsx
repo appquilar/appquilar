@@ -99,7 +99,7 @@ const CategoryFormPage = () => {
     if (isLoading) return <LoadingSpinner />;
 
     return (
-        <div className="p-6 max-w-5xl mx-auto">
+        <div className="space-y-6">
             <FormHeader
                 title={isAddMode ? "Crear Categoría" : "Editar Categoría"}
                 backUrl="/dashboard/categories"

@@ -178,9 +178,11 @@ const ProductPage: React.FC = () => {
 
     if (query.isLoading) {
         return (
-            <div className="container mx-auto py-8">
+            <div className="public-main public-section">
+                <div className="public-container py-2">
                 <div className="flex justify-center items-center h-64">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
+                </div>
                 </div>
             </div>
         );
@@ -188,31 +190,33 @@ const ProductPage: React.FC = () => {
 
     if (query.isError || !product) {
         return (
-            <div className="container mx-auto py-8">
+            <div className="public-main public-section">
+                <div className="public-container py-2">
                 <div className="text-center">
                     <h2 className="text-2xl font-bold mb-4">Producto no encontrado</h2>
                     <p>Lo sentimos, el producto que estás buscando no existe o ha sido eliminado.</p>
+                </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto pt-24 pb-8 px-4 sm:px-6 md:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="public-main px-4 pb-10 sm:px-6 md:px-8">
+            <div className="public-container grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-7">
                 <div className="lg:col-span-2">
                     <ProductImageGallery
                         images={galleryImages}
                         productName={product.name}
                     />
 
-                    <div className="mt-8">
-                        <h2 className="text-xl font-semibold mb-4">Detalles</h2>
-                        <p className="text-muted-foreground whitespace-pre-wrap">{product.description}</p>
+                    <div className="mt-6">
+                        <h2 className="mb-3 text-lg font-semibold">Detalles</h2>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{product.description}</p>
                     </div>
 
-                    <div className="mt-8">
-                        <h2 className="text-xl font-semibold mb-4">Ubicación</h2>
+                    <div className="mt-6">
+                        <h2 className="mb-3 text-lg font-semibold">Ubicación</h2>
                         <ProductLocationMap
                             city={product.location?.city || "Ubicación desconocida"}
                             state={product.location?.state || ""}

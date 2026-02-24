@@ -26,18 +26,18 @@ const BlogPublicCard = ({ post }: BlogPublicCardProps) => {
     const publishedLabel = formatDate(post.publishedAt);
 
     return (
-        <article className="mb-6 break-inside-avoid rounded-lg border bg-card shadow-sm transition-shadow hover:shadow-md">
+        <article className="mb-5 break-inside-avoid rounded-xl border border-border/70 bg-card shadow-sm transition-shadow hover:shadow-md">
             <Link to={`/blog/${post.slug}`} className="block">
                 <BlogMediaImage
                     mediaId={coverImageId}
                     alt={post.title}
-                    className="h-52 rounded-t-lg"
+                    className="h-44 rounded-t-xl"
                     size="LARGE"
                     fallbackText="Sin imagen"
                 />
             </Link>
 
-            <div className="space-y-3 p-4">
+            <div className="space-y-2.5 p-4">
                 {publishedLabel && (
                     <p className="text-xs uppercase tracking-wide text-muted-foreground">
                         {publishedLabel}
@@ -51,7 +51,7 @@ const BlogPublicCard = ({ post }: BlogPublicCardProps) => {
                 )}
 
                 <Link to={`/blog/${post.slug}`} className="block">
-                    <h2 className="text-xl font-semibold leading-tight hover:text-primary">
+                    <h2 className="text-lg font-semibold leading-tight hover:text-primary">
                         {post.title}
                     </h2>
                 </Link>

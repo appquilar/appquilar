@@ -120,16 +120,16 @@ const CategoryGrid = () => {
     }, [featuredVM]);
 
     return (
-        <section className="py-16 px-4 sm:px-6 md:px-8">
-            <div className="max-w-7xl mx-auto">
+        <section className="public-section">
+            <div className="public-container">
                 <div className="max-w-3xl mx-auto text-center">
                     <div className="inline-flex items-center justify-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary">
                         Categorías destacadas
                     </div>
-                    <h2 className="mt-4 text-3xl font-display font-semibold tracking-tight">
+                    <h2 className="mt-4 text-2xl md:text-3xl font-display font-semibold tracking-tight">
                         Explora por categorías
                     </h2>
-                    <p className="mt-3 text-muted-foreground">
+                    <p className="mt-2 text-sm text-muted-foreground">
                         Encuentra rápido lo que necesitas según el tipo de producto.
                     </p>
                 </div>
@@ -143,12 +143,12 @@ const CategoryGrid = () => {
                     </Link>
                 </div>
 
-                <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
                     {featuredVM.map((category, index) => (
                         <Link
                             key={category.id}
                             to={`/category/${category.slug}`}
-                            className="group relative overflow-hidden rounded-xl aspect-[4/3] transition-all duration-350 hover-glow"
+                            className="group relative overflow-hidden rounded-xl aspect-[5/4] transition-all duration-350 hover-glow"
                             style={{ animationDelay: `${index * 50}ms` }}
                         >
                             {/* Imagen de categoría */}
@@ -169,10 +169,10 @@ const CategoryGrid = () => {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/10 transition-opacity duration-350 group-hover:opacity-90"></div>
 
                             {/* Contenido */}
-                            <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                                <h3 className="text-xl font-medium text-white font-display">{category.name}</h3>
+                            <div className="absolute inset-0 p-4 md:p-5 flex flex-col justify-end">
+                                <h3 className="text-base md:text-lg font-medium text-white font-display">{category.name}</h3>
                                 {typeof category.count === "number" ? (
-                                    <p className="text-sm text-white/80 mt-1">{category.count} items</p>
+                                    <p className="text-xs text-white/80 mt-1">{category.count} items</p>
                                 ) : null}
                             </div>
                         </Link>

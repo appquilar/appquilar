@@ -87,7 +87,11 @@ const DateRangePicker = ({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className={`h-10 w-full ${className}`}>
+        <Button
+          variant="outline"
+          size="sm"
+          className={`h-10 w-full justify-start border-input bg-background px-3 text-sm font-normal text-foreground hover:bg-background ${className}`}
+        >
           <CalendarIcon className="h-4 w-4 mr-2" />
           <span>Rango de fechas</span>
         </Button>
