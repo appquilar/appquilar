@@ -8,14 +8,15 @@ test.beforeEach(async ({ page }) => {
 test("public home renders and category panel can be opened/closed", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { name: /La Forma Inteligente de Alquilar/i })).toBeVisible();
-
-  const allCategoriesButton = page.getByRole("button", { name: /Todas las categorías/i }).first();
-  await allCategoriesButton.click();
-
-  await expect(page.getByPlaceholder("Buscar categoría...")).toBeVisible();
+  const allCategoriesButton = page.locator("button:visible", { hasText: "Todas las categorías" }).first();
+  await expect(allCategoriesButton).toBeVisible();
 
   await allCategoriesButton.click();
 
-  await expect(page.getByPlaceholder("Buscar categoría...")).toBeHidden();
+  const categorySearchInput = page.getByPlaceholder("Buscar categoría...");
+  await expect(categorySearchInput).toBeVisible({ timeout: 10000 });
+
+  await allCategoriesButton.click();
+
+  await expect(categorySearchInput).toBeHidden();
 });

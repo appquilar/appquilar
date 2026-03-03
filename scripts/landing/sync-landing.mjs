@@ -126,11 +126,7 @@ const normalizeLandingBundles = (assetsDir) => {
   for (const fileName of bundleFiles) {
     const filePath = path.join(assetsDir, fileName);
     const raw = fs.readFileSync(filePath, 'utf8');
-    const normalized = raw
-      .replace(/"\/assets\//g, '"/landing/assets/')
-      .replace(/'\/assets\//g, "'/landing/assets/")
-      .replace(/\(\/assets\//g, '(/landing/assets/')
-      .replace(/url\(\/assets\//g, 'url(/landing/assets/');
+    const normalized = raw.replace(/(?<!\/landing)\/assets\//g, '/landing/assets/');
 
     if (normalized !== raw) {
       fs.writeFileSync(filePath, normalized, 'utf8');

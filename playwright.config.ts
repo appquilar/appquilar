@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const isCoverageRun = process.env.E2E_COVERAGE === "1";
 const isCiRun = !!process.env.CI;
+const siteId = process.env.VITE_APPQUILAR_SITE_ID ?? "test-site";
 
 export default defineConfig({
   testDir: "./src/test/e2e",
@@ -23,7 +24,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev -- --host 127.0.0.1 --port 4173",
+    command: `VITE_LANDING_ONLY_MODE=false VITE_APPQUILAR_SITE_ID=${siteId} npm run dev -- --host 127.0.0.1 --port 4173`,
     url: "http://127.0.0.1:4173",
     reuseExistingServer: !isCiRun && !isCoverageRun,
     timeout: 120000,
