@@ -28,3 +28,7 @@ local-gitingest
 .env
 
 coverage/
+coverage-e2e/
+coverage-e2e-full/
+.e2e-coverage/
+public/landing/

@@ -10,7 +10,7 @@ services:
       - .:/app
       - /app/node_modules
     environment:
-      VITE_API_BASE_URL: "http://localhost:8000"
+      VITE_API_BASE_URL: "${VITE_API_BASE_URL:-https://dev.api.appquilar.com}"
       VITE_USE_MOCK_DATA: "false"
     ports:
       - "8080:8080"

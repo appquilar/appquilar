@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:landing": "VITE_LANDING_ONLY_MODE=true vite --host 127.0.0.1 --port 4173",
+    "dev:e2e:seed": "VITE_API_BASE_URL=http://127.0.0.1:18080 VITE_APPQUILAR_SITE_ID=550e8400-e29b-41d4-a716-446655440000 vite --host 127.0.0.1 --port 4173",
     "build": "vite build",
+    "build:landing": "npm run landing:sync && VITE_LANDING_ONLY_MODE=true vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -13,10 +16,22 @@
     "test:integration": "vitest run --config vitest.config.ts src/test/integration",
     "test:e2e": "playwright test --config playwright.config.ts",
     "test:e2e:ui": "playwright test --ui --config playwright.config.ts",
+    "coverage:e2e:clean": "rm -rf .e2e-coverage coverage-e2e coverage-e2e-full",
+    "coverage:e2e:report": "node scripts/e2e/generate-e2e-coverage-report.mjs",
+    "test:e2e:coverage:app": "E2E_COVERAGE=1 E2E_COVERAGE_EXPLORATORY=1 playwright test --config playwright.config.ts",
+    "test:e2e:dashboard:coverage": "E2E_COVERAGE=1 E2E_COVERAGE_EXPLORATORY=1 playwright test --config playwright.dashboard.config.ts",
+    "test:e2e:coverage": "npm run coverage:e2e:clean && npm run test:e2e:coverage:app && npm run test:e2e:dashboard:coverage && npm run coverage:e2e:report",
+    "e2e:seed:server": "node scripts/e2e/seed-server.mjs",
+    "e2e:dashboard:generate": "node scripts/e2e/generate-dashboard-spec-from-csv.mjs",
+    "landing:sync": "node scripts/landing/sync-landing.mjs",
+    "landing:build-sync": "node scripts/landing/sync-landing.mjs --build",
+    "test:e2e:dashboard": "playwright test --config playwright.dashboard.config.ts",
+    "test:e2e:dashboard:ui": "playwright test --ui --config playwright.dashboard.config.ts",
     "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "test:ci": "npm run test:unit && npm run test:integration && npm run test:e2e"
   },
   "dependencies": {
+    "@emotion/is-prop-valid": "^1.4.0",
     "@googlemaps/js-api-loader": "^2.0.2",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
@@ -90,6 +105,9 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
+    "istanbul-lib-coverage": "^3.2.2",
+    "istanbul-lib-report": "^3.0.1",
+    "istanbul-reports": "^3.1.7",
     "jsdom": "^28.1.0",
     "msw": "^2.12.10",
     "postcss": "^8.4.47",
@@ -97,6 +115,7 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1",
+    "vite-plugin-istanbul": "^7.2.1",
     "vitest": "^4.0.18"
   }
 }

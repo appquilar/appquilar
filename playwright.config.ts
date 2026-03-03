@@ -1,12 +1,17 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const isCoverageRun = process.env.E2E_COVERAGE === "1";
+const isCiRun = !!process.env.CI;
+
 export default defineConfig({
   testDir: "./src/test/e2e",
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? "github" : "list",
+  // Dashboard seeded suite has its own config and environment.
+  testIgnore: ["**/dashboard/**"],
+  fullyParallel: !isCoverageRun,
+  forbidOnly: isCiRun,
+  retries: isCiRun ? 1 : 0,
+  workers: isCiRun || isCoverageRun ? 1 : undefined,
+  reporter: isCiRun ? "github" : "list",
   use: {
     baseURL: "http://127.0.0.1:4173",
     trace: "on-first-retry",
@@ -20,7 +25,7 @@ export default defineConfig({
   webServer: {
     command: "npm run dev -- --host 127.0.0.1 --port 4173",
     url: "http://127.0.0.1:4173",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !isCiRun && !isCoverageRun,
     timeout: 120000,
   },
 });

@@ -13,18 +13,29 @@ NC = \033[0m # No color
 
 NETWORK_NAME = appquilar
 
-.PHONY: help install dev build up down restart logs clean test test-unit test-integration test-e2e test-ci coverage coverage-top coverage-all ensure-playwright start start-prod exec destroy rebuild network check-be shell
+.PHONY: help install dev dev-landing dev-domains-setup dev-domains-up dev-domains-down dev-e2e-seed e2e-seed-server landing-sync landing-build-sync build build-landing up up-prod down down-prod restart logs clean test test-unit test-integration test-e2e test-e2e-dashboard test-e2e-dashboard-shard test-e2e-dashboard-ui test-e2e-dashboard-ui-shard e2e-dashboard-generate test-ci coverage coverage-e2e coverage-top coverage-all ensure-playwright start start-prod exec destroy rebuild network check-be shell
 
 # Help
 help:
 	@echo "${GREEN}Available commands:${NC}"
 	@echo "  make install     - Install dependencies"
 	@echo "  make dev         - Start development environment (Vite) on host"
+	@echo "  make dev-landing - Start development in landing-only mode"
+	@echo "  make dev-domains-setup - Generate local HTTPS certs + show hosts setup for dev.* domains"
+	@echo "  make dev-domains-up - Start API + FE + HTTPS proxy for dev.appquilar.com / dev.api.appquilar.com"
+	@echo "  make dev-domains-down - Stop API + FE + HTTPS proxy local domains stack"
+	@echo "  make dev-e2e-seed - Start FE locally using deterministic E2E seed API"
+	@echo "  make landing-sync - Sync appquilar-landing dist into public/landing"
+	@echo "  make landing-build-sync - Build and sync appquilar-landing into public/landing"
+	@echo "  make e2e-seed-server - Start deterministic seed API server"
 	@echo "  make build       - Build the application for production"
-	@echo "  make up          - Start Docker containers (production compose)"
+	@echo "  make build-landing - Build FE in landing-only mode"
+	@echo "  make up          - Start API + FE + HTTPS proxy (dev.appquilar.com / dev.api.appquilar.com)"
+	@echo "  make up-prod     - Start Docker containers (legacy production compose)"
 	@echo "  make start       - Start the FE in Docker in DEVELOPMENT mode (Vite + hot reload)"
 	@echo "  make start-prod  - Start the FE in Docker like in the BE (Nginx + built dist)"
-	@echo "  make down        - Stop Docker containers"
+	@echo "  make down        - Stop API + FE + HTTPS proxy local stack"
+	@echo "  make down-prod   - Stop legacy production compose containers"
 	@echo "  make restart     - Restart Docker containers"
 	@echo "  make logs        - Show container logs"
 	@echo "  make clean       - Remove dist/ and node_modules/"
@@ -35,8 +46,14 @@ help:
 	@echo "  make test-unit   - Run FE unit tests"
 	@echo "  make test-integration - Run FE integration tests"
 	@echo "  make test-e2e    - Run FE end-to-end tests"
+	@echo "  make test-e2e-dashboard - Run seeded Dashboard Playwright suite"
+	@echo "  make test-e2e-dashboard-shard SHARD=1 TOTAL=4 - Run one seeded dashboard shard"
+	@echo "  make test-e2e-dashboard-ui - Run seeded Dashboard suite in Playwright UI mode"
+	@echo "  make test-e2e-dashboard-ui-shard SHARD=1 TOTAL=4 - Run one dashboard shard in UI mode"
+	@echo "  make e2e-dashboard-generate CSV=/path/file.csv - Generate dashboard Playwright tests from CSV"
 	@echo "  make test-ci     - Run FE CI test suite"
 	@echo "  make coverage    - Run FE unit+integration coverage (console + html + lcov + summary)"
+	@echo "  make coverage-e2e - Run FE E2E coverage (console + html + lcov + summary)"
 	@echo "  make coverage-top - Show the files with lowest FE line coverage"
 	@echo "  make coverage-all - Run FE e2e + unit+integration coverage"
 	@echo "  make check-be    - Check if the FE can reach the BE inside Docker"
@@ -60,14 +77,73 @@ dev:
 	@echo "${GREEN}Starting development environment on host...${NC}"
 	$(NPM) run dev
 
+dev-landing:
+	@echo "${GREEN}Starting frontend in landing-only mode...${NC}"
+	$(NPM) run landing:sync
+	$(NPM) run dev:landing
+
+dev-domains-setup:
+	@echo "${GREEN}Preparing local HTTPS setup for dev domains...${NC}"
+	./docker/dev-domains/scripts/setup-local-https.sh
+
+dev-domains-up: network dev-domains-setup
+	@echo "${GREEN}Starting API stack for local HTTPS domains...${NC}"
+	$(DOCKER_COMPOSE) -f ../api/docker-compose.yml up -d php mysql mysql_integration opensearch opensearch-dashboards
+	@if ( [ -f .env ] && grep -Eiq '^VITE_LANDING_ONLY_MODE=(1|true|yes|on)$$' .env ) || ( [ -f .env.local ] && grep -Eiq '^VITE_LANDING_ONLY_MODE=(1|true|yes|on)$$' .env.local ); then \
+		echo "${GREEN}Landing-only mode detected. Syncing landing assets...${NC}"; \
+		$(NPM) run landing:sync; \
+	fi
+	@echo "${GREEN}Starting FE (Vite) stack...${NC}"
+	VITE_API_BASE_URL=https://dev.api.appquilar.com $(DOCKER_COMPOSE) -f docker-compose.dev.yml up -d --build --renew-anon-volumes web
+	@echo "${GREEN}Starting HTTPS reverse proxy (Caddy)...${NC}"
+	$(DOCKER_COMPOSE) -f docker/dev-domains/docker-compose.yml up -d --force-recreate dev-proxy
+	@echo ""
+	@echo "${GREEN}Ready:${NC}"
+	@echo "  FE:  https://dev.appquilar.com"
+	@echo "  API: https://dev.api.appquilar.com"
+	@echo ""
+
+dev-domains-down:
+	@echo "${GREEN}Stopping local HTTPS domains stack...${NC}"
+	-$(DOCKER_COMPOSE) -f docker/dev-domains/docker-compose.yml down
+	-$(DOCKER_COMPOSE) -f docker-compose.dev.yml down
+	-$(DOCKER_COMPOSE) -f ../api/docker-compose.yml down
+
+# Development mode against deterministic E2E seed API
+dev-e2e-seed:
+	@echo "${GREEN}Starting frontend against E2E seed API...${NC}"
+	$(NPM) run dev:e2e:seed
+
+# Sync built landing assets into FE public/landing
+landing-sync:
+	@echo "${GREEN}Syncing landing dist into public/landing...${NC}"
+	$(NPM) run landing:sync
+
+# Build and sync landing assets into FE public/landing
+landing-build-sync:
+	@echo "${GREEN}Building and syncing landing dist into public/landing...${NC}"
+	$(NPM) run landing:build-sync
+
+# Start deterministic seed API server
+e2e-seed-server:
+	@echo "${GREEN}Starting deterministic E2E seed API server...${NC}"
+	$(NPM) run e2e:seed:server
+
 # Build for production
 build:
 	@echo "${GREEN}Building for production...${NC}"
 	$(NPM) run build
 
-# Start Docker containers (production compose)
-up:
-	@echo "${GREEN}Starting Docker containers (production compose)...${NC}"
+build-landing:
+	@echo "${GREEN}Building frontend in landing-only mode...${NC}"
+	$(NPM) run build:landing
+
+# Default up/down now use local HTTPS domains stack
+up: dev-domains-up
+
+# Legacy production-compose up
+up-prod:
+	@echo "${GREEN}Starting Docker containers (legacy production compose)...${NC}"
 	$(DOCKER_COMPOSE) up -d
 
 # Start FE (Docker) in DEVELOPMENT mode (Vite + hot reload)
@@ -86,9 +162,12 @@ start-prod: network
 	@echo "${GREEN}Frontend (prod) available at:${NC} http://localhost:8080"
 	@echo ""
 
-# Stop containers
-down:
-	@echo "${GREEN}Stopping Docker containers...${NC}"
+# Default down for local HTTPS domains stack
+down: dev-domains-down
+
+# Legacy production-compose down
+down-prod:
+	@echo "${GREEN}Stopping Docker containers (legacy production compose)...${NC}"
 	$(DOCKER_COMPOSE) down
 
 # Restart containers
@@ -142,6 +221,46 @@ test-e2e:
 	@echo "${GREEN}Running FE E2E tests...${NC}"
 	$(NPM) run test:e2e
 
+test-e2e-dashboard:
+	@echo "${GREEN}Ensuring Playwright Chromium is installed...${NC}"
+	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
+	@echo "${GREEN}Running seeded Dashboard Playwright suite...${NC}"
+	$(NPM) run test:e2e:dashboard
+
+test-e2e-dashboard-shard:
+	@if [ -z "$(SHARD)" ] || [ -z "$(TOTAL)" ]; then \
+		echo "${RED}❌ Missing SHARD/TOTAL. Usage: make test-e2e-dashboard-shard SHARD=1 TOTAL=4${NC}"; \
+		exit 1; \
+	fi
+	@echo "${GREEN}Ensuring Playwright Chromium is installed...${NC}"
+	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
+	@echo "${GREEN}Running seeded Dashboard shard $(SHARD)/$(TOTAL)...${NC}"
+	$(NPM) run test:e2e:dashboard -- --shard=$(SHARD)/$(TOTAL)
+
+test-e2e-dashboard-ui:
+	@echo "${GREEN}Ensuring Playwright Chromium is installed...${NC}"
+	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
+	@echo "${GREEN}Running seeded Dashboard Playwright suite (UI mode)...${NC}"
+	$(NPM) run test:e2e:dashboard:ui
+
+test-e2e-dashboard-ui-shard:
+	@if [ -z "$(SHARD)" ] || [ -z "$(TOTAL)" ]; then \
+		echo "${RED}❌ Missing SHARD/TOTAL. Usage: make test-e2e-dashboard-ui-shard SHARD=1 TOTAL=4${NC}"; \
+		exit 1; \
+	fi
+	@echo "${GREEN}Ensuring Playwright Chromium is installed...${NC}"
+	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
+	@echo "${GREEN}Running seeded Dashboard shard $(SHARD)/$(TOTAL) in UI mode...${NC}"
+	$(NPM) run test:e2e:dashboard:ui -- --shard=$(SHARD)/$(TOTAL)
+
+e2e-dashboard-generate:
+	@if [ -z "$(CSV)" ]; then \
+		echo "${RED}❌ Missing CSV path. Usage: make e2e-dashboard-generate CSV=/absolute/path/file.csv${NC}"; \
+		exit 1; \
+	fi
+	@echo "${GREEN}Generating dashboard Playwright tests from CSV...${NC}"
+	$(NPM) run e2e:dashboard:generate -- "$(CSV)"
+
 test-ci:
 	@echo "${GREEN}Ensuring Playwright Chromium is installed...${NC}"
 	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
@@ -157,14 +276,26 @@ coverage:
 	@echo "  LCOV: coverage/lcov.info"
 	@echo "  Summary JSON: coverage/coverage-summary.json"
 
+coverage-e2e:
+	@echo "${GREEN}Ensuring Playwright Chromium is installed...${NC}"
+	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
+	@echo "${GREEN}Running FE E2E coverage (app + dashboard suites)...${NC}"
+	$(NPM) run test:e2e:coverage
+	@echo "${GREEN}E2E coverage reports:${NC}"
+	@echo "  Scoped console: shown above (coverage-e2e)"
+	@echo "  Scoped HTML: coverage-e2e/index.html"
+	@echo "  Scoped LCOV: coverage-e2e/lcov.info"
+	@echo "  Scoped Summary JSON: coverage-e2e/coverage-summary.json"
+	@echo "  Scope metadata: coverage-e2e/scope.json"
+	@echo "  Full HTML: coverage-e2e-full/index.html"
+	@echo "  Full LCOV: coverage-e2e-full/lcov.info"
+	@echo "  Full Summary JSON: coverage-e2e-full/coverage-summary.json"
+
 coverage-top:
 	@node -e 'const fs=require("fs"); const path="coverage/coverage-summary.json"; if(!fs.existsSync(path)){console.error("Missing "+path+". Run `make coverage` first."); process.exit(1);} const data=JSON.parse(fs.readFileSync(path,"utf8")); const rows=Object.entries(data).filter(([file])=>file!=="total").map(([file,metrics])=>({file,lines:metrics.lines.pct,branches:metrics.branches.pct,functions:metrics.functions.pct,statements:metrics.statements.pct})).sort((a,b)=>a.lines-b.lines).slice(0,15); console.table(rows);'
 
 coverage-all:
-	@echo "${GREEN}Ensuring Playwright Chromium is installed...${NC}"
-	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
-	@echo "${GREEN}Running FE E2E tests...${NC}"
-	$(NPM) run test:e2e
+	@$(MAKE) coverage-e2e
 	@$(MAKE) coverage
 
 # Check connectivity FE → BE inside Docker (production container name)

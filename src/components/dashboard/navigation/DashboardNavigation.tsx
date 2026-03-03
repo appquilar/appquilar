@@ -10,7 +10,7 @@ import AppLogo from '@/components/common/AppLogo';
  */
 const DashboardNavigation = (props: DashboardNavigationProps) => {
     return (
-        <Sidebar collapsible="none" variant="floating" className="dashboard-sidebar-shell">
+        <Sidebar collapsible="offcanvas" variant="floating" className="dashboard-sidebar-shell">
             <SidebarHeader className="h-20 flex justify-center px-5 border-b border-slate-200/60">
                 <Link
                     to="/"

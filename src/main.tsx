@@ -1,17 +1,53 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App.tsx';
 import './index.css';
-import {RepositoryConfig} from './infrastructure/config/RepositoryConfig';
 
-// Initialize repositories (default to mock repositories)
-RepositoryConfig.useApiRepositories(import.meta.env.VITE_API_BASE_URL);
+const isLandingOnlyModeEnabled = (() => {
+  const raw = String(import.meta.env.VITE_LANDING_ONLY_MODE ?? '').trim().toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on';
+})();
 
-// To use API repositories, uncomment the line below:
-// RepositoryConfig.useApiRepositories('https://api.example.com');
+const resolveLandingEntry = (): string => {
+  const configured = String(import.meta.env.VITE_LANDING_ENTRY ?? '').trim();
+  if (configured.length > 0) {
+    return configured;
+  }
+  return '/landing/index.html';
+};
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+const mount = async (): Promise<void> => {
+  if (isLandingOnlyModeEnabled) {
+    const landingEntry = resolveLandingEntry();
+    const landingUrl = new URL(landingEntry, window.location.origin);
+    if (window.location.pathname !== landingUrl.pathname) {
+      if (landingUrl.origin === window.location.origin) {
+        const requestedPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        landingUrl.searchParams.set('appquilar_landing_path', requestedPath);
+      }
+      window.location.replace(landingUrl.toString());
+    }
+    return;
+  }
+
+  const rootElement = document.getElementById('root');
+  if (!rootElement) {
+    throw new Error('Root element #root was not found');
+  }
+
+  const root = ReactDOM.createRoot(rootElement);
+  const [{ RepositoryConfig }, { default: App }] = await Promise.all([
+    import('./infrastructure/config/RepositoryConfig'),
+    import('./App.tsx'),
+  ]);
+
+  // Initialize repositories (default to API repositories)
+  RepositoryConfig.useApiRepositories(import.meta.env.VITE_API_BASE_URL);
+
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+};
+
+void mount();

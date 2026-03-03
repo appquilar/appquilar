@@ -1,0 +1,18 @@
+services:
+  dev-proxy:
+    image: caddy:2.8-alpine
+    container_name: appquilar-dev-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/certs:ro
+      - ../../public:/srv/public:ro
+    networks:
+      - appquilar
+
+networks:
+  appquilar:
+    external: true

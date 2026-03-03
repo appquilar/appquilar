@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { registerNetworkMocks } from "./networkMocks";
 
 test.beforeEach(async ({ page }) => {

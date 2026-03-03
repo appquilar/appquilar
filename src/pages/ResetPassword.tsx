@@ -7,7 +7,8 @@ import { useAuth } from "@/context/AuthContext";
 const ResetPasswordPage = () => {
     const { resetPassword } = useAuth();
     const [params] = useSearchParams();
-    const email = params.get("email") ?? "";
+    // Backward-compatible fix: old links may include "+" unescaped, and URLSearchParams decodes it as space.
+    const email = (params.get("email") ?? "").replace(/ /g, "+");
     const token = params.get("token") ?? "";
 
     const [password, setPassword] = useState("");
