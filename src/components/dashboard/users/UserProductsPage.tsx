@@ -1,82 +1,68 @@
-// src/components/dashboard/users/UserProductsPage.tsx  (ajusta ruta si difiere)
-
-import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "sonner";
 import { Edit, Plus, Trash } from "lucide-react";
 
 import FormHeader from "../common/FormHeader";
 import DataTable from "../common/DataTable";
 import { Button } from "@/components/ui/button";
 
-import type { User } from "@/domain/models/User";
-import type { ProductFormData } from "@/domain/models/Product";
-import { compositionRoot } from "@/compositionRoot";
-
-type RowProduct = ProductFormData & { id: string };
+import type { Product } from "@/domain/models/Product";
+import { useUserById } from "@/application/hooks/useUserById";
+import { useDashboardProducts, useDeleteProduct } from "@/application/hooks/useProducts";
 
 const UserProductsPage = () => {
     const { userId } = useParams<{ userId: string }>();
     const navigate = useNavigate();
+    const userQuery = useUserById(userId);
+    const productsQuery = useDashboardProducts({
+        ownerId: userId,
+        ownerType: 'user',
+        page: 1,
+        perPage: 50,
+        enabled: Boolean(userId),
+    });
+    const deleteProduct = useDeleteProduct();
 
-    const [user, setUser] = useState<User | null>(null);
-    const [products, setProducts] = useState<RowProduct[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    if (!userId) {
+        navigate("/dashboard/users");
+        return null;
+    }
 
-    const productService = compositionRoot.productService;
-    const userService = compositionRoot.userService;
+    const products = productsQuery.data?.data ?? [];
+    const isLoading = userQuery.isLoading || productsQuery.isLoading;
 
-    useEffect(() => {
-        if (!userId) {
-            navigate("/dashboard/users");
-            return;
-        }
-
-        const loadData = async () => {
-            setIsLoading(true);
-            try {
-                const userData = await userService.getUserById(userId);
-                if (!userData) {
-                    toast.error("Usuario no encontrado");
-                    navigate("/dashboard/users");
-                    return;
-                }
-                setUser(userData);
-
-                // ✅ Correcto: productos por owner user_id
-                const result = await productService.listByOwner(userId, 1, 50);
-                setProducts(result.data);
-            } catch (error) {
-                console.error("Error loading user products:", error);
-                toast.error("Error al cargar los productos del usuario");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        void loadData();
-    }, [userId, navigate, userService, productService]);
+    const getDailyPrice = (product: Product): number => {
+        const tierPrice = product.price.tiers?.[0]?.pricePerDay;
+        return typeof tierPrice === "number" ? tierPrice : Number(product.price.daily ?? 0);
+    };
 
     const columns = [
         {
             key: "name",
             header: "Nombre",
-            cell: (product: RowProduct) => (
+            cell: (product: Product) => (
                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-md bg-muted overflow-hidden" />
+                    <div className="h-10 w-10 rounded-md bg-muted overflow-hidden">
+                        {(product.thumbnailUrl || product.imageUrl) && (
+                            <img
+                                src={product.thumbnailUrl || product.imageUrl}
+                                alt={product.name}
+                                className="h-full w-full object-cover"
+                            />
+                        )}
+                    </div>
                     <span className="font-medium">{product.name}</span>
                 </div>
             ),
         },
         {
-            key: "categoryId",
+            key: "category",
             header: "Categoría",
-            cell: (product: RowProduct) => product.categoryId || "—",
+            cell: (product: Product) => product.category.name || "—",
         },
         {
             key: "price",
             header: "Precio por día",
-            cell: (product: RowProduct) => `${Number(product.price?.daily ?? 0).toFixed(2)} €`,
+            cell: (product: Product) => `${getDailyPrice(product).toFixed(2)} €`,
         },
     ];
 
@@ -84,24 +70,13 @@ const UserProductsPage = () => {
         {
             label: "Editar",
             icon: <Edit size={16} />,
-            onClick: (product: RowProduct) => navigate(`/dashboard/products/${product.id}/edit`),
+            onClick: (product: Product) => navigate(`/dashboard/products/${product.id}/edit`),
         },
         {
-            label: "Eliminar",
+            label: "Archivar",
             icon: <Trash size={16} />,
-            onClick: async (product: RowProduct) => {
-                if (!confirm(`¿Estás seguro que deseas eliminar el producto: ${product.name}?`)) return;
-
-                // ⚠️ No me has dado endpoint DELETE en Nelmio.
-                // Si lo que quieres es "archivar", usa archive(product.id).
-                try {
-                    await productService.archive(product.id);
-                    setProducts((prev) => prev.filter((p) => p.id !== product.id));
-                    toast.success("Producto archivado correctamente");
-                } catch (e) {
-                    console.error(e);
-                    toast.error("Error al archivar el producto");
-                }
+            onClick: async (product: Product) => {
+                await deleteProduct.mutateAsync(product.id);
             },
         },
     ];
@@ -116,7 +91,10 @@ const UserProductsPage = () => {
 
     return (
         <div className="space-y-6">
-            <FormHeader title={`Productos de ${user?.firstName || user?.email || "Usuario"}`} backUrl="/dashboard/users" />
+            <FormHeader
+                title={`Productos de ${userQuery.user?.firstName || userQuery.user?.email || "Usuario"}`}
+                backUrl="/dashboard/users"
+            />
 
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-medium">Lista de productos</h2>
@@ -126,7 +104,7 @@ const UserProductsPage = () => {
                 </Button>
             </div>
 
-            <DataTable
+            <DataTable<Product>
                 data={products}
                 columns={columns}
                 actions={actions}

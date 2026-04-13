@@ -94,7 +94,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                         </div>
 
                         <div className="px-5 pb-4">
-                            <div className="grid grid-cols-3 rounded-xl border border-border/70 bg-muted/40 p-1">
+                            <div className="grid grid-cols-2 rounded-xl border border-border/70 bg-muted/40 p-1">
                                 <button
                                     type="button"
                                     className={`h-9 rounded-lg text-sm font-medium transition-colors ${
@@ -117,18 +117,6 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                                     onClick={() => setActiveTab("signup")}
                                 >
                                     Registrarse
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className={`h-9 rounded-lg text-sm font-medium transition-colors ${
-                                        activeTab === "forgot"
-                                            ? "bg-white text-foreground shadow-sm"
-                                            : "text-muted-foreground hover:text-foreground"
-                                    }`}
-                                    onClick={() => setActiveTab("forgot")}
-                                >
-                                    Recuperar
                                 </button>
                             </div>
                         </div>

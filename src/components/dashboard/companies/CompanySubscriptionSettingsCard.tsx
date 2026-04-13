@@ -3,6 +3,7 @@ import { AlertTriangle, CreditCard, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
+import { UserRole } from "@/domain/models/UserRole";
 import {
     useCreateCustomerPortalSession,
     useMigrateCompanyToExplorer,
@@ -17,8 +18,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { ApiError } from "@/infrastructure/http/ApiClient";
 import type { CompanyPlanType } from "@/domain/models/Subscription";
+import {
+    buildBillingBaseUrl,
+    buildBillingReturnUrl,
+} from "@/hooks/useBillingReturnSync";
+import { extractBackendErrorMessage } from "@/utils/backendError";
 
 const COMPANY_PLAN_LABELS: Record<CompanyPlanType, string> = {
     starter: "Starter",
@@ -49,15 +54,12 @@ const CompanySubscriptionSettingsCard = () => {
     const { currentUser, refreshCurrentUser } = useAuth();
     const createPortalMutation = useCreateCustomerPortalSession();
     const migrateCompanyMutation = useMigrateCompanyToExplorer();
+    const isPlatformAdmin = currentUser?.roles?.includes(UserRole.ADMIN) ?? false;
 
     const companyContext = currentUser?.companyContext ?? null;
     const effectiveCompanyRole = companyContext?.companyRole ?? currentUser?.companyRole ?? null;
     const isCompanyAdmin = effectiveCompanyRole === "ROLE_ADMIN";
-    if (!companyContext || !isCompanyAdmin) {
-        return null;
-    }
-
-    const companyUsersQuery = useCompanyUsers(companyContext.companyId, 1, 200);
+    const companyUsersQuery = useCompanyUsers(companyContext?.companyId, 1, 200);
     const ownerCandidates = useMemo(
         () =>
             (companyUsersQuery.data ?? []).filter(
@@ -79,7 +81,12 @@ const CompanySubscriptionSettingsCard = () => {
         }
     }, [defaultOwnerCandidate, targetOwnerUserId]);
 
+    if (!companyContext || !isCompanyAdmin || isPlatformAdmin) {
+        return null;
+    }
+
     const currentUrl = typeof window !== "undefined" ? window.location.href : "";
+    const currentBaseUrl = buildBillingBaseUrl(currentUrl);
     const currentPlan: CompanyPlanType = companyContext.planType;
     const isSubscriptionInactive = companyContext.subscriptionStatus !== "active";
     const isPaused = companyContext.subscriptionStatus === "paused";
@@ -95,7 +102,7 @@ const CompanySubscriptionSettingsCard = () => {
         try {
             const response = await createPortalMutation.mutateAsync({
                 scope: "company",
-                returnUrl: currentUrl,
+                returnUrl: buildBillingReturnUrl(currentBaseUrl, "company"),
             });
 
             newTab.location.href = response.url;
@@ -253,25 +260,6 @@ const CompanySubscriptionSettingsCard = () => {
             )}
         </div>
     );
-};
-
-const extractBackendErrorMessage = (error: unknown): string | null => {
-    if (!(error instanceof ApiError)) {
-        return null;
-    }
-
-    const payload = error.payload as { error?: unknown } | undefined;
-    const backendError = payload?.error;
-
-    if (Array.isArray(backendError) && typeof backendError[0] === "string") {
-        return backendError[0];
-    }
-
-    if (typeof backendError === "string") {
-        return backendError;
-    }
-
-    return null;
 };
 
 export default CompanySubscriptionSettingsCard;

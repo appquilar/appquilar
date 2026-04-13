@@ -1,12 +1,14 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import {useSeo} from "@/hooks/useSeo.ts";
+import { PUBLIC_PATHS, buildAbsolutePublicUrl } from "@/domain/config/publicRoutes";
 
 const PrivacyPage = () => {
     useSeo({
-        type: "static",
         title: "Política de privacidad · Appquilar",
         description: "Política de privacidad en Appquilar.",
+        canonicalUrl: buildAbsolutePublicUrl(PUBLIC_PATHS.privacy),
+        robots: "noindex,follow",
     });
 
     return (

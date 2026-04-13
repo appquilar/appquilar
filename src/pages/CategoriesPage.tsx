@@ -1,80 +1,27 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { usePublicSiteCategories } from "@/application/hooks/usePublicSiteCategories";
-import { compositionRoot } from "@/compositionRoot";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { useSeo } from "@/hooks/useSeo";
+import { getPublicMediaUrl } from "@/application/hooks/usePublicMediaUrl";
+import { PUBLIC_PATHS, buildAbsolutePublicUrl, buildCategoryPath } from "@/domain/config/publicRoutes";
 
 const CategoriesPage = () => {
     useScrollToTop();
     useSeo({
-        type: "static",
-        title: "Categorías · Appquilar",
-        description: "Explora todas las categorías disponibles en Appquilar.",
+        title: "Categorías de alquiler | Appquilar",
+        description: "Explora todas las categorías disponibles en Appquilar y encuentra productos de alquiler para trabajo, eventos, bricolaje y mucho más.",
+        canonicalUrl: buildAbsolutePublicUrl(PUBLIC_PATHS.categories),
     });
 
     const { allCategories, isLoading } = usePublicSiteCategories();
-    const [imageUrlsById, setImageUrlsById] = useState<Record<string, string>>({});
 
     const categories = useMemo(() => {
         return [...allCategories].sort((a, b) => a.name.localeCompare(b.name));
     }, [allCategories]);
-
-    useEffect(() => {
-        let alive = true;
-
-        const loadImages = async () => {
-            if (isLoading || categories.length === 0) return;
-
-            const candidates = categories
-                .map((category) => ({
-                    id: category.id,
-                    mediaId: category.featuredImageId ?? category.landscapeImageId ?? null,
-                }))
-                .filter((item) => !!item.mediaId) as Array<{ id: string; mediaId: string }>;
-
-            const missing = candidates.filter(({ id }) => !imageUrlsById[id]);
-            if (missing.length === 0) return;
-
-            try {
-                const entries = await Promise.all(
-                    missing.map(async ({ id, mediaId }) => {
-                        const blob = await compositionRoot.mediaService.getImage(mediaId, "ORIGINAL");
-                        const url = URL.createObjectURL(blob);
-                        return [id, url] as const;
-                    })
-                );
-
-                if (!alive) return;
-
-                setImageUrlsById((previous) => {
-                    const next = { ...previous };
-                    for (const [id, url] of entries) {
-                        next[id] = url;
-                    }
-                    return next;
-                });
-            } catch {
-                // Keep visual fallback when image loading fails.
-            }
-        };
-
-        void loadImages();
-
-        return () => {
-            alive = false;
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [categories, isLoading]);
-
-    useEffect(() => {
-        return () => {
-            Object.values(imageUrlsById).forEach((url) => URL.revokeObjectURL(url));
-        };
-    }, [imageUrlsById]);
 
     return (
         <div className="public-marketplace min-h-screen flex flex-col">
@@ -85,6 +32,10 @@ const CategoriesPage = () => {
                         <h1 className="text-2xl md:text-3xl font-display font-semibold tracking-tight">
                             Todas las categorías
                         </h1>
+                        <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
+                            Recorre las categorías del marketplace y descubre productos de alquiler pensados para profesionales,
+                            particulares, eventos y necesidades puntuales.
+                        </p>
                     </div>
 
                     {isLoading ? (
@@ -96,14 +47,14 @@ const CategoriesPage = () => {
                             {categories.map((category, index) => (
                                 <Link
                                     key={category.id}
-                                    to={`/category/${category.slug}`}
+                                    to={buildCategoryPath(category.slug)}
                                     className="group relative overflow-hidden rounded-xl aspect-[5/4] border border-border/60 bg-muted hover:border-primary/30 transition-all duration-300"
                                     style={{ animationDelay: `${index * 40}ms` }}
                                 >
                                     <div className="absolute inset-0">
-                                        {imageUrlsById[category.id] ? (
+                                        {getPublicMediaUrl(category.featuredImageId ?? category.landscapeImageId, "LARGE") ? (
                                             <img
-                                                src={imageUrlsById[category.id]}
+                                                src={getPublicMediaUrl(category.featuredImageId ?? category.landscapeImageId, "LARGE") ?? ""}
                                                 alt={category.name}
                                                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                                 loading="lazy"

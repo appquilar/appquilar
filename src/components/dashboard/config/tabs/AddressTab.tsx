@@ -32,7 +32,7 @@ const AddressTab: React.FC<AddressTabProps> = ({
                                                    addressForm,
                                                    onAddressSubmit,
                                                }) => {
-    const { searchInputRef, mapContainerRef, isMapsLoading } =
+    const { autocompleteContainerRef, mapContainerRef, isMapsLoading, mapsError } =
         useAddressMap(addressForm);
 
     const latitude = addressForm.watch("latitude");
@@ -57,14 +57,18 @@ const AddressTab: React.FC<AddressTabProps> = ({
                         {/* Buscador de dirección (no es campo del schema, sólo autocomplete) */}
                         <div className="space-y-1">
                             <FormLabel>Buscar dirección</FormLabel>
-                            <Input
-                                ref={searchInputRef}
-                                placeholder="Empieza a escribir y selecciona tu dirección…"
-                                disabled={isMapsLoading}
+                            <div
+                                ref={autocompleteContainerRef}
+                                className="min-h-10"
                             />
                             <p className="text-xs text-muted-foreground">
                                 Después puedes mover el pin en el mapa para afinar la posición.
                             </p>
+                            {mapsError && (
+                                <p className="text-xs text-destructive">
+                                    {mapsError}
+                                </p>
+                            )}
                         </div>
 
                         {/* Calle y resto de datos */}
@@ -75,7 +79,11 @@ const AddressTab: React.FC<AddressTabProps> = ({
                                 <FormItem>
                                     <FormLabel>Calle y número</FormLabel>
                                     <FormControl>
-                                        <Input {...field} placeholder="Calle y número" />
+                                        <Input
+                                            {...field}
+                                            value={field.value ?? ""}
+                                            placeholder="Calle y número"
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -89,7 +97,11 @@ const AddressTab: React.FC<AddressTabProps> = ({
                                 <FormItem>
                                     <FormLabel>Dirección adicional (opcional)</FormLabel>
                                     <FormControl>
-                                        <Input {...field} placeholder="Piso, puerta, escalera…" />
+                                        <Input
+                                            {...field}
+                                            value={field.value ?? ""}
+                                            placeholder="Piso, puerta, escalera…"
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -104,7 +116,11 @@ const AddressTab: React.FC<AddressTabProps> = ({
                                     <FormItem>
                                         <FormLabel>Ciudad</FormLabel>
                                         <FormControl>
-                                            <Input {...field} placeholder="Ciudad" />
+                                            <Input
+                                                {...field}
+                                                value={field.value ?? ""}
+                                                placeholder="Ciudad"
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -118,7 +134,11 @@ const AddressTab: React.FC<AddressTabProps> = ({
                                     <FormItem>
                                         <FormLabel>Provincia / Estado</FormLabel>
                                         <FormControl>
-                                            <Input {...field} placeholder="Provincia o estado" />
+                                            <Input
+                                                {...field}
+                                                value={field.value ?? ""}
+                                                placeholder="Provincia o estado"
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -134,7 +154,11 @@ const AddressTab: React.FC<AddressTabProps> = ({
                                     <FormItem>
                                         <FormLabel>País</FormLabel>
                                         <FormControl>
-                                            <Input {...field} placeholder="País" />
+                                            <Input
+                                                {...field}
+                                                value={field.value ?? ""}
+                                                placeholder="País"
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -148,7 +172,11 @@ const AddressTab: React.FC<AddressTabProps> = ({
                                     <FormItem>
                                         <FormLabel>Código postal</FormLabel>
                                         <FormControl>
-                                            <Input {...field} placeholder="Código postal" />
+                                            <Input
+                                                {...field}
+                                                value={field.value ?? ""}
+                                                placeholder="Código postal"
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -180,7 +208,7 @@ const AddressTab: React.FC<AddressTabProps> = ({
                         <CardFooter className="!px-0 !pb-0 !pt-4 border-t mt-4">
                             <Button
                                 type="submit"
-                                disabled={addressForm.formState.isSubmitting}
+                                disabled={addressForm.formState.isSubmitting || isMapsLoading}
                             >
                                 {addressForm.formState.isSubmitting
                                     ? "Guardando…"

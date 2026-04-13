@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { SeoContext } from "@/core/application/SeoService";
+import type { PlatformSeoConfig } from "@/domain/models/PlatformSeo";
 import { seoService } from "@/compositionRoot";
 
 function setMeta(name: string, content: string) {
@@ -22,25 +22,37 @@ function setProperty(property: string, content: string) {
     meta.content = content;
 }
 
-export const useSeo = (context: SeoContext, options?: { noIndex?: boolean }) => {
+const JSON_LD_SELECTOR = 'script[data-appquilar-seo-jsonld="true"]';
+
+const setJsonLd = (nodes: Record<string, unknown>[]) => {
+    document.querySelectorAll(JSON_LD_SELECTOR).forEach((node) => node.remove());
+
+    for (const node of nodes) {
+        const script = document.createElement("script");
+        script.type = "application/ld+json";
+        script.dataset.appquilarSeoJsonld = "true";
+        script.text = JSON.stringify(node);
+        document.head.appendChild(script);
+    }
+};
+
+export const useSeo = (config: PlatformSeoConfig) => {
     useEffect(() => {
-        // Guard against missing context
-        if (!context) return;
+        if (!config) return;
 
-        // Use the service to get/merge SEO info
-        const seo = seoService.getSeo(context);
-
-        // Guard against service returning null/undefined
-        if (!seo) return;
+        const seo = seoService.getSeo(config);
 
         document.title = seo.title;
 
         if (seo.description) setMeta("description", seo.description);
         if (seo.keywords && seo.keywords.length > 0) setMeta("keywords", seo.keywords.join(", "));
+        if (seo.robots) setMeta("robots", seo.robots);
 
         if (seo.ogTitle) setProperty("og:title", seo.ogTitle);
         if (seo.ogDescription) setProperty("og:description", seo.ogDescription);
         if (seo.ogImage) setProperty("og:image", seo.ogImage);
+        if (seo.ogUrl) setProperty("og:url", seo.ogUrl);
+        if (seo.ogType) setProperty("og:type", seo.ogType);
 
         if (seo.twitterCard) setMeta("twitter:card", seo.twitterCard);
         if (seo.twitterTitle) setMeta("twitter:title", seo.twitterTitle);
@@ -61,8 +73,10 @@ export const useSeo = (context: SeoContext, options?: { noIndex?: boolean }) => 
             link.href = seo.canonicalUrl;
         }
 
-        if (options?.noIndex) {
-            setMeta("robots", "noindex,nofollow");
-        }
-    }, [context, options]);
+        setJsonLd(seo.jsonLd ?? []);
+
+        return () => {
+            document.querySelectorAll(JSON_LD_SELECTOR).forEach((node) => node.remove());
+        };
+    }, [config]);
 };

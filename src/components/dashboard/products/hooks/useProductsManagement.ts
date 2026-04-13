@@ -1,13 +1,19 @@
 import { useCallback, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { UserRole } from "@/domain/models/UserRole";
 import { useDashboardProducts, useDeleteProduct, usePublishProduct, useActiveProductsCount } from "@/application/hooks/useProducts";
 import { useCreateCheckoutSession, useCreateCustomerPortalSession } from "@/application/hooks/useBilling";
 import type { ProductFilters } from "@/domain/repositories/ProductRepository";
 import { getCompanyPlanProductLimit, getEffectiveUserPlan, getUserPlanProductLimit } from "@/domain/models/Subscription";
 import { toast } from "sonner";
-import { ApiError } from "@/infrastructure/http/ApiClient";
 import type { CompanyUserRoleType } from "@/domain/models/Subscription";
+import {
+    buildBillingBaseUrl,
+    buildBillingCheckoutSuccessUrl,
+    buildBillingReturnUrl,
+} from "@/hooks/useBillingReturnSync";
+import { extractBackendErrorMessage } from "@/utils/backendError";
 
 type UseProductsManagementOptions = {
     initialPage?: number;
@@ -52,6 +58,7 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
     }) | null;
     const companyId = normalizedUser?.companyId ?? normalizedUser?.company_id ?? null;
     const userId = normalizedUser?.id ?? normalizedUser?.user_id ?? null;
+    const isPlatformAdmin = normalizedUser?.roles?.includes(UserRole.ADMIN) ?? false;
     const ownerId = companyId ?? userId;
     const ownerType = companyId ? 'company' : 'user';
     const effectiveUserPlan = getEffectiveUserPlan(
@@ -74,6 +81,10 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
     const createPortalMutation = useCreateCustomerPortalSession();
 
     const slotLimit = useMemo(() => {
+        if (isPlatformAdmin) {
+            return null;
+        }
+
         if (companyId) {
             return normalizedUser?.companyContext?.productSlotLimit
                 ?? getCompanyPlanProductLimit(normalizedUser?.companyContext ?? null);
@@ -90,6 +101,7 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
         normalizedUser?.productSlotLimit,
         normalizedUser?.planType,
         normalizedUser?.subscriptionStatus,
+        isPlatformAdmin,
     ]);
 
     const activeProductsCountQuery = useActiveProductsCount({
@@ -222,14 +234,19 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
         }
 
         const currentUrl = typeof window !== "undefined" ? window.location.href : "/dashboard/products";
+        const currentBaseUrl = buildBillingBaseUrl(currentUrl);
 
         try {
             if (publicationLimitCta.action === "upgrade_user_pro") {
                 const checkoutSession = await createCheckoutMutation.mutateAsync({
                     scope: "user",
                     planType: "user_pro",
-                    successUrl: currentUrl,
-                    cancelUrl: currentUrl,
+                    successUrl: buildBillingCheckoutSuccessUrl(
+                        currentBaseUrl,
+                        "user",
+                        "user_pro"
+                    ),
+                    cancelUrl: currentBaseUrl,
                 });
 
                 window.location.assign(checkoutSession.url);
@@ -246,7 +263,7 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
             try {
                 const portalSession = await createPortalMutation.mutateAsync({
                     scope: "company",
-                    returnUrl: currentUrl,
+                    returnUrl: buildBillingReturnUrl(currentBaseUrl, "company"),
                 });
 
                 newTab.location.href = portalSession.url;
@@ -296,22 +313,3 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
         confirmDeleteProduct,
     };
 }
-
-const extractBackendErrorMessage = (error: unknown): string | null => {
-    if (!(error instanceof ApiError)) {
-        return null;
-    }
-
-    const payload = error.payload as { error?: unknown } | undefined;
-    const backendError = payload?.error;
-
-    if (Array.isArray(backendError) && typeof backendError[0] === "string") {
-        return backendError[0];
-    }
-
-    if (typeof backendError === "string") {
-        return backendError;
-    }
-
-    return null;
-};

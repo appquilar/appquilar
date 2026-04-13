@@ -6,6 +6,7 @@ import { Rental } from '@/domain/models/Rental';
 import { RentActorRole } from '@/domain/services/RentalStateMachineService';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Link } from 'react-router-dom';
+import { buildProductPath } from '@/domain/config/publicRoutes';
 
 interface RentalDetailsCardProps {
   rental: Rental;
@@ -28,7 +29,7 @@ const RentalDetailsCard = ({
   formattedEndDate
 }: RentalDetailsCardProps) => {
   const isMobile = useIsMobile();
-  const publicProductHref = `/product/${rental.productSlug ?? rental.productId}`;
+  const publicProductHref = buildProductPath(rental.productSlug ?? rental.productId);
   const ownerEditProductHref = `/dashboard/products/${rental.productId}`;
   const canOwnerEditProduct = viewerRole === 'owner' || viewerRole === 'admin';
   const shouldShowRenterPublicButton = viewerRole === 'renter';

@@ -3,14 +3,15 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import {useSeo} from "@/hooks/useSeo.ts";
+import { PUBLIC_PATHS, buildAbsolutePublicUrl } from "@/domain/config/publicRoutes";
 
 const PARTNERS_EMAIL = "appquilar.contacto@gmail.com";
 
 const PartnersPage = () => {
     useSeo({
-        type: "static",
-        title: "Partners · Appquilar",
-        description: "Empresas y colaboradores de Appquilar.",
+        title: "Colabora con nosotros | Appquilar",
+        description: "Descubre oportunidades de colaboracion con Appquilar para empresas, partners locales y proveedores.",
+        canonicalUrl: buildAbsolutePublicUrl(PUBLIC_PATHS.partners),
     });
     const [company, setCompany] = useState("");
     const [contactName, setContactName] = useState("");

@@ -13,12 +13,15 @@ import DesktopConfigLayout from "./layout/DesktopConfigLayout";
 import {useSeo} from "@/hooks/useSeo.ts";
 import UserSubscriptionSettingsCard from "@/components/dashboard/config/UserSubscriptionSettingsCard";
 import DashboardSectionHeader from "@/components/dashboard/common/DashboardSectionHeader";
+import { buildAbsolutePublicUrl } from "@/domain/config/publicRoutes";
 
 const UserConfigPage: React.FC = () => {
-    useSeo(
-        { type: "dashboard-section", section: "Configuración" },
-        { noIndex: true }
-    );
+    useSeo({
+        title: "Configuracion | Dashboard Appquilar",
+        description: "Zona privada de configuracion de Appquilar.",
+        canonicalUrl: buildAbsolutePublicUrl("/dashboard/configuracion"),
+        robots: "noindex,nofollow",
+    });
 
     const {
         activeTab,

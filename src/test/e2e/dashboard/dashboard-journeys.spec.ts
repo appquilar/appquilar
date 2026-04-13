@@ -118,7 +118,21 @@ const applyRentStateToPayload = (payload: unknown, rentStates: Map<string, Mutab
 
   const typedPayload = payload as Record<string, unknown>;
 
-  if (typedPayload.data && Array.isArray((typedPayload.data as Record<string, unknown>).data)) {
+  if (Array.isArray(typedPayload.data)) {
+    typedPayload.data = typedPayload.data.map((rent) => {
+      if (!rent || typeof rent !== "object") {
+        return rent;
+      }
+
+      const rentRecord = rent as Record<string, unknown>;
+      const rentId = String(rentRecord.rent_id ?? "");
+      const state = rentStates.get(rentId);
+      return state ? patchRent(rentRecord, state) : rentRecord;
+    });
+    return typedPayload;
+  }
+
+  if (typedPayload.data && typeof typedPayload.data === "object" && Array.isArray((typedPayload.data as Record<string, unknown>).data)) {
     const listData = (typedPayload.data as Record<string, unknown>).data as Array<Record<string, unknown>>;
     (typedPayload.data as Record<string, unknown>).data = listData.map((rent) => {
       const rentId = String(rent.rent_id ?? "");
@@ -136,6 +150,11 @@ const applyRentStateToPayload = (payload: unknown, rentStates: Map<string, Mutab
       typedPayload.data = patchRent(rentData, state);
     }
     return typedPayload;
+  }
+
+  if (typeof typedPayload.rent_id === "string") {
+    const state = rentStates.get(typedPayload.rent_id);
+    return state ? patchRent(typedPayload, state) : typedPayload;
   }
 
   return typedPayload;
@@ -622,6 +641,7 @@ test.describe("Dashboard Journeys (seeded API)", () => {
         status: "proposal_pending_renter",
         ownerAccepted: true,
         renterAccepted: false,
+        proposalValidUntil: null,
       });
 
       await switchActor(page, request, seed, "user", "/dashboard/messages?rent_id=rent-1");

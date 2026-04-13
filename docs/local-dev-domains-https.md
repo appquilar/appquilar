@@ -59,3 +59,52 @@ make down
 - FE is still Vite dev mode behind Caddy.
 - `VITE_API_BASE_URL` is forced to `https://dev.api.appquilar.com` in `make up`.
 - Caddy config: `docker/dev-domains/Caddyfile`.
+
+## Stripe in local
+
+Use the local HTTPS domains for browser flows:
+
+- Checkout / portal return URLs should point back to `https://dev.appquilar.com/...`
+- The frontend should keep calling `https://dev.api.appquilar.com`
+
+For webhooks, do not create a Stripe Dashboard webhook that points directly at this local stack. The local `dev.api.appquilar.com` certificate is generated with `mkcert`, so it is trusted only on your machine. Stripe's servers will not trust it.
+
+Instead, forward Stripe events through Stripe CLI:
+
+```bash
+cd appquilar
+make up
+make stripe-listen
+```
+
+`make stripe-listen` forwards the billing events Appquilar handles to:
+
+```text
+https://dev.api.appquilar.com/api/billing/webhook/stripe
+```
+
+When Stripe CLI prints a webhook signing secret, copy it into a local backend override:
+
+```bash
+cp ../api/.env.local.example ../api/.env.local
+```
+
+Then edit `../api/.env.local` and set:
+
+```dotenv
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+If your API container is already running, restart it once after updating the secret:
+
+```bash
+docker-compose -f ../api/docker-compose.yml restart php
+```
+
+What you need to do:
+
+1. Run `stripe login` once on your machine if Stripe CLI is not authenticated yet.
+2. Create `../api/.env.local` from the example and paste the local `whsec_...` secret there.
+3. Keep `make stripe-listen` running in a second terminal while testing billing locally.
+
+You only need a real Stripe Dashboard webhook endpoint when you want Stripe to hit a shared remote environment with a public, trusted TLS certificate.

@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { usePublicBlogPost } from '@/application/hooks/useBlog';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { useSeo } from '@/hooks/useSeo';
+import PublicBreadcrumbs from '@/components/common/PublicBreadcrumbs';
+import { PUBLIC_PATHS, buildAbsolutePublicUrl, buildBlogPostPath } from '@/domain/config/publicRoutes';
 
 const formatDate = (value: string | null) => {
     if (!value) return null;
@@ -29,20 +31,60 @@ const BlogPostPage = () => {
     const { '*': slugPath } = useParams();
     const slug = slugPath ?? '';
     const { data: post, isLoading, isError } = usePublicBlogPost(slug);
+    const canonicalPath = post ? buildBlogPostPath(post.slug) : PUBLIC_PATHS.blog;
 
-    const seoTitle = post?.title ? `${post.title} · Blog Appquilar` : 'Blog · Appquilar';
-    const seoDescription = post?.googlePreview?.description || 'Blog de Appquilar';
-
-    useSeo({
-        title: seoTitle,
-        description: seoDescription,
-        keywords: post?.keywords ?? [],
-    });
+    useSeo(
+        post
+            ? {
+                  title: `${post.title} | Blog Appquilar`,
+                  description: post.googlePreview?.description || post.excerpt || "Artículo del blog de Appquilar.",
+                  canonicalUrl: buildAbsolutePublicUrl(canonicalPath),
+                  keywords: post.keywords ?? [],
+                  ogType: "article",
+                  jsonLd: [
+                      {
+                          "@context": "https://schema.org",
+                          "@type": "Article",
+                          headline: post.title,
+                          description: post.googlePreview?.description || post.excerpt,
+                          datePublished: post.publishedAt,
+                          author: {
+                              "@type": "Organization",
+                              name: "Appquilar",
+                          },
+                          publisher: {
+                              "@type": "Organization",
+                              name: "Appquilar",
+                              logo: {
+                                  "@type": "ImageObject",
+                                  url: buildAbsolutePublicUrl("/appquilar-combined-orange.png"),
+                              },
+                          },
+                          mainEntityOfPage: buildAbsolutePublicUrl(canonicalPath),
+                      },
+                      {
+                          "@context": "https://schema.org",
+                          "@type": "BreadcrumbList",
+                          itemListElement: [
+                              { "@type": "ListItem", position: 1, name: "Inicio", item: buildAbsolutePublicUrl("/") },
+                              { "@type": "ListItem", position: 2, name: "Blog", item: buildAbsolutePublicUrl(PUBLIC_PATHS.blog) },
+                              { "@type": "ListItem", position: 3, name: post.title, item: buildAbsolutePublicUrl(canonicalPath) },
+                          ],
+                      },
+                  ],
+              }
+            : {
+                  title: "Artículo no encontrado | Blog Appquilar",
+                  description: "El artículo que buscas no existe o ya no está disponible.",
+                  canonicalUrl: buildAbsolutePublicUrl(PUBLIC_PATHS.blog),
+                  robots: "noindex,follow",
+              }
+    );
 
     const publishedLabel = useMemo(() => formatDate(post?.publishedAt ?? null), [post?.publishedAt]);
 
     if (!slugPath) {
-        return <Navigate to="/blog" replace />;
+        return <Navigate to={PUBLIC_PATHS.blog} replace />;
     }
 
     return (
@@ -51,7 +93,7 @@ const BlogPostPage = () => {
 
             <main className="public-main public-section flex-1">
                 <div className="mx-auto w-full max-w-4xl space-y-6">
-                    <Link to="/blog" className="inline-flex">
+                    <Link to={PUBLIC_PATHS.blog} className="inline-flex">
                         <Button variant="ghost" size="sm">Volver al blog</Button>
                     </Link>
 
@@ -78,6 +120,13 @@ const BlogPostPage = () => {
                     {!isLoading && !isError && post && (
                         <article className="space-y-6">
                             <header className="space-y-3">
+                                <PublicBreadcrumbs
+                                    items={[
+                                        { label: "Inicio", to: "/" },
+                                        { label: "Blog", to: PUBLIC_PATHS.blog },
+                                        { label: post.title },
+                                    ]}
+                                />
                                 {publishedLabel && (
                                     <p className="text-xs uppercase tracking-wide text-muted-foreground">
                                         {publishedLabel}

@@ -6,7 +6,7 @@ import type { Site } from "@/domain/models/Site";
 const MAX_PER_PAGE = 50;
 
 // ===== Cache (memoria + sessionStorage) =====
-const CACHE_KEY = "appquilar:publicSiteCategories:v1";
+const CACHE_KEY = "appquilar:publicSiteCategories:v2";
 
 type CacheEntry = {
     siteId: string;

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Info, AlertTriangle } from 'lucide-react';
-import { Product } from '@/domain/models/Product';
 import CompanyInfo from './CompanyInfo';
 import {
     Table,
@@ -16,7 +15,31 @@ import ProductRentalCostCalculator from './ProductRentalCostCalculator';
 import { RentalCostBreakdown } from '@/domain/repositories/ProductRepository';
 
 interface ProductInfoProps {
-    product: Product;
+    product: {
+        id: string;
+        name: string;
+        publicationStatus?: string;
+        category: {
+            id: string;
+            name: string;
+            slug: string;
+        };
+        company: {
+            id: string;
+            name: string;
+            slug: string;
+        };
+        price: {
+            daily?: number;
+            deposit?: number;
+            tiers?: Array<{
+                daysFrom: number;
+                daysTo?: number;
+                pricePerDay: number;
+            }>;
+        };
+        providerLocationLabel?: string;
+    };
     onContact: () => void;
     isLoggedIn: boolean;
     leadStartDate: string;
@@ -53,7 +76,7 @@ const ProductInfo = ({
 
     const price = product.price || { daily: 0, deposit: 0, tiers: [] };
     const tiers = price.tiers || [];
-    const providerLocationLabel = (product as Product & { providerLocationLabel?: string }).providerLocationLabel;
+    const providerLocationLabel = product.providerLocationLabel;
 
     return (
         <div className="space-y-8">

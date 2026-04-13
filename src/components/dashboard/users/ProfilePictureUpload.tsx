@@ -83,7 +83,7 @@ const ProfilePictureUpload = ({ value, onChange }: ProfilePictureUploadProps) =>
                     <ImagePreview
                         image={currentImage}
                         onRemove={() => {}}
-                        onSetPrimary={() => {}}
+                        index={0}
                     />
                 ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center cursor-pointer">

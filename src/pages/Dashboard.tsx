@@ -3,6 +3,7 @@ import {Navigate} from "react-router-dom";
 import DashboardComponent from "@/components/dashboard/Dashboard";
 import {useAuth} from "@/context/AuthContext";
 import {useSeo} from "@/hooks/useSeo.ts";
+import { buildAbsolutePublicUrl } from "@/domain/config/publicRoutes";
 
 /**
  * Top-level dashboard route component.
@@ -11,7 +12,12 @@ import {useSeo} from "@/hooks/useSeo.ts";
  * - Redirects unauthenticated users to the public home page.
  */
 const Dashboard = () => {
-    useSeo({ type: "dashboard" }, { noIndex: true });
+    useSeo({
+        title: "Dashboard | Appquilar",
+        description: "Zona privada de Appquilar.",
+        canonicalUrl: buildAbsolutePublicUrl("/dashboard"),
+        robots: "noindex,nofollow",
+    });
     const { isLoggedIn, isLoading } = useAuth();
 
     // Scroll to top on page load

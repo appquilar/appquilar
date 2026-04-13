@@ -101,8 +101,7 @@ const AdminUserProfileTab: React.FC<AdminUserProfileTabProps> = ({
                                                                 {
                                                                     id: "profile-image",
                                                                     url: displayUrl,
-                                                                    file: null,
-                                                                    isPrimary: true,
+                                                                    file: undefined,
                                                                 },
                                                             ]
                                                             : []

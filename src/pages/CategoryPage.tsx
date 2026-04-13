@@ -12,8 +12,12 @@ import LoadingState from "@/components/category/LoadingState";
 
 import type { Product as DomainProduct } from "@/domain/models/Product";
 import { useCategoryWithProductsByText } from "@/application/hooks/useCategoryWithProducts";
+import { usePublicSiteCategories } from "@/application/hooks/usePublicSiteCategories";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSeo } from "@/hooks/useSeo";
+import PublicBreadcrumbs from "@/components/common/PublicBreadcrumbs";
+import { PUBLIC_PATHS, buildAbsolutePublicUrl, buildCategoryPath, buildProductPath } from "@/domain/config/publicRoutes";
+import { getPublicMediaUrl } from "@/application/hooks/usePublicMediaUrl";
 
 const EMPTY_DOMAIN_PRODUCTS: DomainProduct[] = [];
 const DISTANCE_OPTIONS = [
@@ -30,8 +34,12 @@ const getDailyPrice = (product: DomainProduct): number => {
     return tiers[0]?.pricePerDay ?? 0;
 };
 
+const stripHtml = (value: string | null | undefined): string =>
+    (value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+
 const CategoryPage = () => {
     const { slug } = useParams<{ slug: string }>();
+    const { allCategories } = usePublicSiteCategories();
 
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedRadius, setSelectedRadius] = useState<string>("any");
@@ -61,33 +69,11 @@ const CategoryPage = () => {
     const category = data?.category ?? null;
     const domainProducts = data?.products ?? EMPTY_DOMAIN_PRODUCTS;
     const notFound = !isLoading && !category;
-
-    // ✅ SEO: una sola fuente de verdad (prioridad: notFound > category > fallback)
-    const seoContext = useMemo(() => {
-        if (notFound) {
-            return {
-                type: "static" as const,
-                title: "Categoría no encontrada · Appquilar",
-                description: "La categoría que buscas no existe o no está disponible.",
-            };
-        }
-
-        if (category && slug) {
-            return {
-                type: "category" as const,
-                name: category.name,
-                slug,
-            };
-        }
-
-        return {
-            type: "static" as const,
-            title: "Categoría · Appquilar",
-            description: "Explora productos en alquiler por categoría.",
-        };
-    }, [notFound, category, slug]);
-
-    useSeo(seoContext);
+    const categoryById = useMemo(() => {
+        const map = new Map<string, typeof category>();
+        allCategories.forEach((item) => map.set(item.id, item));
+        return map;
+    }, [allCategories]);
 
     // Scroll to top on page load
     useEffect(() => {
@@ -121,6 +107,110 @@ const CategoryPage = () => {
             reviewCount: product.reviewCount ?? 0,
         }));
     }, [category?.id, category?.name, category?.slug, domainProducts]);
+
+    const categoryHeaderImageUrl = useMemo(() => {
+        if (!category) {
+            return null;
+        }
+
+        return getPublicMediaUrl(
+            category.landscapeImageId ?? category.featuredImageId,
+            "LARGE"
+        );
+    }, [category]);
+
+    const breadcrumbItems = useMemo(() => {
+        const items: Array<{ label: string; to?: string }> = [
+            { label: "Inicio", to: "/" },
+            { label: "Categorías", to: PUBLIC_PATHS.categories },
+        ];
+
+        if (!category) {
+            return items;
+        }
+
+        const chain: Array<{ name: string; slug: string; id: string; parentId?: string | null }> = [];
+        let current = categoryById.get(category.id);
+        let guard = 0;
+
+        while (current && guard < 20) {
+            chain.unshift({ id: current.id, name: current.name, slug: current.slug, parentId: current.parentId });
+            current = current.parentId ? categoryById.get(current.parentId) : undefined;
+            guard += 1;
+        }
+
+        chain.forEach((item, index) => {
+            const isLast = index === chain.length - 1;
+            items.push({
+                label: item.name,
+                to: isLast ? undefined : buildCategoryPath(item.slug),
+            });
+        });
+
+        return items;
+    }, [category, categoryById]);
+
+    const seoConfig = useMemo(() => {
+        if (notFound) {
+            return {
+                title: "Categoría no encontrada | Appquilar",
+                description: "La categoría que buscas no existe o no está disponible.",
+                canonicalUrl: buildAbsolutePublicUrl(slug ? buildCategoryPath(slug) : PUBLIC_PATHS.categories),
+                robots: "noindex,follow" as const,
+            };
+        }
+
+        if (!category || !slug) {
+            return {
+                title: "Categoría de alquiler | Appquilar",
+                description: "Explora productos en alquiler por categoría en Appquilar.",
+                canonicalUrl: buildAbsolutePublicUrl(PUBLIC_PATHS.categories),
+                robots: "noindex,follow" as const,
+            };
+        }
+
+        const plainDescription = stripHtml(category.description);
+        const description =
+            plainDescription ||
+            (searchProducts.length > 0
+                ? `${searchProducts.length} productos de alquiler disponibles en la categoría ${category.name}.`
+                : `Explora productos de alquiler en la categoría ${category.name}.`);
+
+        const canonicalPath = buildCategoryPath(slug);
+        const breadcrumbJsonLd = {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: breadcrumbItems.map((item, index) => ({
+                "@type": "ListItem",
+                position: index + 1,
+                name: item.label,
+                item: buildAbsolutePublicUrl(item.to ?? canonicalPath),
+            })),
+        };
+
+        const itemListJsonLd =
+            searchProducts.length > 0
+                ? {
+                      "@context": "https://schema.org",
+                      "@type": "ItemList",
+                      itemListElement: searchProducts.map((product, index) => ({
+                          "@type": "ListItem",
+                          position: index + 1,
+                          url: buildAbsolutePublicUrl(buildProductPath(product.slug)),
+                          name: product.name,
+                      })),
+                  }
+                : null;
+
+        return {
+            title: `${category.name} en alquiler | Appquilar`,
+            description,
+            canonicalUrl: buildAbsolutePublicUrl(canonicalPath),
+            jsonLd: itemListJsonLd ? [breadcrumbJsonLd, itemListJsonLd] : [breadcrumbJsonLd],
+        };
+    }, [breadcrumbItems, category, notFound, searchProducts, slug]);
+
+    useSeo(seoConfig);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -186,7 +276,7 @@ const CategoryPage = () => {
         return (
             <div className="public-marketplace min-h-screen flex flex-col">
                 <Header />
-                <main className="flex-1">
+                <main className="public-main public-section flex-1">
                     <LoadingState />
                 </main>
                 <Footer />
@@ -198,7 +288,7 @@ const CategoryPage = () => {
         return (
             <div className="public-marketplace min-h-screen flex flex-col">
                 <Header />
-                <main className="flex-1 flex flex-col items-center justify-center p-4">
+                <main className="public-main public-section flex-1 flex flex-col items-center justify-center p-4">
                     <h1 className="text-2xl font-medium mb-4">Category not found</h1>
                     <p className="text-muted-foreground">
                         The category you're looking for doesn't exist.
@@ -213,72 +303,80 @@ const CategoryPage = () => {
         <div className="public-marketplace min-h-screen flex flex-col">
             <Header />
             <main className="public-main public-section flex-1 animate-fade-in">
-                <div className="public-container grid grid-cols-1 gap-6 lg:grid-cols-[250px_1fr] xl:grid-cols-[270px_1fr]">
-                    <aside className="h-fit rounded-xl border border-border/70 bg-card p-4 lg:sticky lg:top-36">
-                        <h2 className="mb-1 text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">Filtros</h2>
-                        <p className="mb-4 text-sm text-muted-foreground">Refina tu búsqueda</p>
-
-                        <button
-                            type="button"
-                            onClick={() => void applyFilters()}
-                            disabled={isLocating}
-                            className="mb-4 h-9 w-full rounded-lg border border-border bg-transparent text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                            {isLocating ? "Obteniendo ubicación..." : "Aplicar filtros"}
-                        </button>
-
-                        <label className="block text-sm font-medium mb-1">Distancia</label>
-                        <select
-                            value={selectedRadius}
-                            onChange={(event) => setSelectedRadius(event.target.value)}
-                            className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                        >
-                            {DISTANCE_OPTIONS.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
-
-                        {isLocating && (
-                            <div className="mt-3 text-sm text-muted-foreground">
-                                Obteniendo ubicación para filtrar distancia...
-                            </div>
-                        )}
-
-                        {locationError && (
-                            <div className="mt-3 text-sm text-destructive">{locationError}</div>
-                        )}
-                    </aside>
-
-                    <section className="lg:pl-1">
-                        <CategoryHeader
-                            name={category.name}
-                            description={category.description ?? ""}
-                        />
-
-                        <CategorySearch
-                            searchQuery={searchQuery}
-                            categoryName={category.name}
-                            onSearchChange={setSearchQuery}
-                            onSearch={handleSearch}
-                        />
-
-                        {isFetching && (
-                            <div className="mb-4 text-sm text-muted-foreground">
-                                Actualizando resultados...
-                            </div>
-                        )}
-
-                        {searchProducts.length > 0 ? (
-                            <ProductGrid products={searchProducts} />
-                        ) : (
-                            <NoProductsFound
-                                searchQuery={searchQuery}
-                                categoryName={category.name}
+                <div className="public-container">
+                    <div className="pt-3 md:pt-4">
+                        <PublicBreadcrumbs items={breadcrumbItems} className="mb-4" />
+                        <div className="mb-6">
+                            <CategoryHeader
+                                name={category.name}
+                                description={category.description ?? ""}
+                                imageUrl={categoryHeaderImageUrl}
                             />
-                        )}
-                    </section>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[250px_1fr] xl:grid-cols-[270px_1fr]">
+                            <aside className="h-fit rounded-xl border border-border/70 bg-card p-4 lg:sticky lg:top-[var(--public-sticky-offset)]">
+                                <h2 className="mb-1 text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">Filtros</h2>
+                                <p className="mb-4 text-sm text-muted-foreground">Refina tu búsqueda</p>
+
+                                <button
+                                    type="button"
+                                    onClick={() => void applyFilters()}
+                                    disabled={isLocating}
+                                    className="mb-4 h-9 w-full rounded-lg border border-border bg-transparent text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    {isLocating ? "Obteniendo ubicación..." : "Aplicar filtros"}
+                                </button>
+
+                                <label className="mb-1 block text-sm font-medium">Distancia</label>
+                                <select
+                                    value={selectedRadius}
+                                    onChange={(event) => setSelectedRadius(event.target.value)}
+                                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                >
+                                    {DISTANCE_OPTIONS.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                {isLocating && (
+                                    <div className="mt-3 text-sm text-muted-foreground">
+                                        Obteniendo ubicación para filtrar distancia...
+                                    </div>
+                                )}
+
+                                {locationError && (
+                                    <div className="mt-3 text-sm text-destructive">{locationError}</div>
+                                )}
+                            </aside>
+
+                            <section className="lg:pl-1">
+                                <CategorySearch
+                                    searchQuery={searchQuery}
+                                    categoryName={category.name}
+                                    onSearchChange={setSearchQuery}
+                                    onSearch={handleSearch}
+                                />
+
+                                {isFetching && (
+                                    <div className="mb-4 text-sm text-muted-foreground">
+                                        Actualizando resultados...
+                                    </div>
+                                )}
+
+                                {searchProducts.length > 0 ? (
+                                    <ProductGrid products={searchProducts} />
+                                ) : (
+                                    <NoProductsFound
+                                        searchQuery={searchQuery}
+                                        categoryName={category.name}
+                                    />
+                                )}
+                            </section>
+                        </div>
+                    </div>
                 </div>
             </main>
             <Footer />

@@ -175,21 +175,21 @@ export class ApiProductRepository implements ProductRepository {
         }
     }
 
-    async createProduct(data: ProductFormData): Promise<Product> {
+    async createProduct(data: ProductFormData): Promise<void> {
         const dto = this.mapToDto(data);
 
         if (!dto.product_id) {
             dto.product_id = crypto.randomUUID();
         }
 
-        const response = await this.client.post<any>(
+        await this.client.post<void>(
             '/api/products',
             dto,
-            { headers: this.getAuthHeaders() }
+            {
+                headers: this.getAuthHeaders(),
+                skipParseJson: true
+            }
         );
-
-        const responseData = (response as any).data ? (response as any).data : response;
-        return this.mapToDomain(responseData);
     }
 
     async updateProduct(id: string, data: ProductFormData): Promise<Product> {
@@ -310,6 +310,9 @@ export class ApiProductRepository implements ProductRepository {
             publicationStatus: status,
 
             price: {
+                daily: Array.isArray(apiData.tiers) && apiData.tiers.length > 0
+                    ? (apiData.tiers[0]?.price_per_day?.amount || 0) / 100
+                    : 0,
                 deposit: (apiData.deposit?.amount || 0) / 100,
                 tiers: Array.isArray(apiData.tiers) ? apiData.tiers.map((t: any) => ({
                     daysFrom: t.days_from,

@@ -17,7 +17,12 @@ test.describe("Dashboard Core (seeded API)", () => {
     await seed.loginAs(page, request, "admin");
 
     await page.goto("/dashboard");
-    await expect(page.getByRole("heading", { name: "Resumen" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Resumen" })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/sin límite/i)).toBeVisible();
+    await expect(page.getByText(/Ventajas de User Pro/i)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Hazte Pro" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Hazte empresa" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /Gestionar suscripcion/i })).toHaveCount(0);
 
     await page.goto("/dashboard/users");
     await expect(page).toHaveURL(/\/dashboard\/users$/);

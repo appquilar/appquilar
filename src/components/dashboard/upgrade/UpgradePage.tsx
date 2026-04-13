@@ -10,8 +10,12 @@ import CompanyInfoStep from './steps/CompanyInfoStep';
 import ContactInfoStep from './steps/ContactInfoStep';
 import SelectPlanStep from './steps/SelectPlanStep';
 import { useCreateCheckoutSession } from "@/application/hooks/useBilling";
-import { ApiError } from "@/infrastructure/http/ApiClient";
 import type { CompanyBillingPlanType } from "@/domain/models/Billing";
+import {
+  buildBillingBaseUrl,
+  buildBillingCheckoutSuccessUrl,
+} from "@/hooks/useBillingReturnSync";
+import { extractBackendErrorMessage } from "@/utils/backendError";
 
 // Form schema
 const companyFormSchema = z.object({
@@ -97,11 +101,17 @@ const UpgradePage = () => {
         throw new Error("No se pudo recuperar la empresa para iniciar el checkout.");
       }
 
-      const companySettingsUrl = `${window.location.origin}/dashboard/companies/${companyId}`;
+      const companySettingsUrl = buildBillingBaseUrl(
+        `${window.location.origin}/dashboard/companies/${companyId}`
+      );
       const checkoutSession = await createCheckoutMutation.mutateAsync({
         scope: "company",
         planType: formData.selectedPlan as CompanyBillingPlanType,
-        successUrl: companySettingsUrl,
+        successUrl: buildBillingCheckoutSuccessUrl(
+          companySettingsUrl,
+          "company",
+          formData.selectedPlan as CompanyBillingPlanType
+        ),
         cancelUrl: companySettingsUrl,
       });
 
@@ -195,25 +205,6 @@ const UpgradePage = () => {
       </div>
     </div>
   );
-};
-
-const extractBackendErrorMessage = (error: unknown): string | null => {
-  if (!(error instanceof ApiError)) {
-    return null;
-  }
-
-  const payload = error.payload as { error?: unknown } | undefined;
-  const backendError = payload?.error;
-
-  if (Array.isArray(backendError) && typeof backendError[0] === "string") {
-    return backendError[0];
-  }
-
-  if (typeof backendError === "string") {
-    return backendError;
-  }
-
-  return null;
 };
 
 export default UpgradePage;

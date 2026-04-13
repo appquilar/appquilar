@@ -13,6 +13,7 @@ export interface Product {
     thumbnailUrl: string;
     publicationStatus: PublicationStatusType;
     price: {
+        daily?: number;
         deposit?: number;
         tiers?: {
             daysFrom: number;
@@ -33,7 +34,7 @@ export interface Product {
     // Explicitly add image_ids to the domain model for editing
     image_ids?: string[];
     circle?: { latitude: number; longitude: number }[];
-    ownerData: {
+    ownerData?: {
         ownerId: string;
         type: string;
         name: string;
@@ -84,6 +85,6 @@ export interface ProductFormData {
     companyId: string;
     categoryId: string;
     currentTab: string;
-    images: any[]; // Changed to any[] to support {id, url, file} objects
+    images: Array<{ id: string; url?: string; file?: File }>;
     internalId?: string;
 }

@@ -1,124 +1,39 @@
-// Define the context interface locally if not available, or import it
-import {SeoRepository} from "@/core/ports/SeoRepository.ts";
-import {MockSeoRepository} from "@/infrastructure/adapters/MockSeoRepository.ts";
-import {SeoInfo} from "@/core/domain/SeoInfo.ts";
+import type { PlatformSeoConfig } from "@/domain/models/PlatformSeo";
+import { buildAbsolutePublicUrl } from "@/domain/config/publicRoutes";
 
-export interface SeoContext {
-    title?: string;
-    description?: string;
-    keywords?: string[];
-    ogTitle?: string;
-    ogDescription?: string;
-    ogImage?: string;
-    // other fields...
-}
-
-/**
- * Servicio para la gestión de SEO en la aplicación
- */
 export class SeoService {
-    private seoRepository: SeoRepository;
-    private static instance: SeoService;
+    private readonly defaultTitle = "Appquilar | Marketplace de alquiler en España";
+    private readonly defaultDescription =
+        "Appquilar es el marketplace para alquilar herramientas, equipamiento y productos cerca de ti en España.";
+    private readonly defaultKeywords = [
+        "alquiler",
+        "marketplace de alquiler",
+        "alquilar herramientas",
+        "alquilar productos",
+        "Appquilar",
+        "España",
+    ];
+    private readonly defaultOgImage = buildAbsolutePublicUrl("/appquilar-combined-orange.png");
 
-    /**
-     * Constructor privado para implementar patrón Singleton
-     */
-    private constructor() {
-        // En producción, esto sería inyectado o configurado según el entorno
-        this.seoRepository = new MockSeoRepository();
-    }
-
-    /**
-     * Obtiene la instancia singleton del servicio
-     */
-    public static getInstance(): SeoService {
-        if (!SeoService.instance) {
-            SeoService.instance = new SeoService();
-        }
-        return SeoService.instance;
-    }
-
-    /**
-     * Adapta un contexto dinámico a un objeto SeoInfo completo.
-     * Método añadido para soportar la llamada desde useSeo hook.
-     */
-    getSeo(context: any): SeoInfo {
-        const defaultSeo: SeoInfo = {
-            title: "Appquilar - Alquila lo que necesites",
-            description: "Plataforma de alquiler de herramientas y maquinaria.",
-            keywords: ["alquiler", "herramientas", "maquinaria"],
-            ogTitle: "Appquilar",
-            ogDescription: "Plataforma de alquiler.",
-            ogImage: "https://appquilar.com/og-image.jpg",
-            twitterCard: "summary_large_image",
-            twitterTitle: "Appquilar",
-            twitterDescription: "Plataforma de alquiler.",
-            twitterImage: "https://appquilar.com/twitter-image.jpg",
-            canonicalUrl: typeof window !== 'undefined' ? window.location.href : ''
-        };
-
-        if (!context) return defaultSeo;
-
+    getSeo(config: PlatformSeoConfig): PlatformSeoConfig {
         return {
-            ...defaultSeo,
-            ...context,
-            // Ensure fallbacks
-            title: context.title || defaultSeo.title,
-            description: context.description || defaultSeo.description,
-            ogTitle: context.ogTitle || context.title || defaultSeo.ogTitle,
-            ogDescription: context.ogDescription || context.description || defaultSeo.ogDescription,
-            ogImage: context.ogImage || defaultSeo.ogImage
+            ...config,
+            title: config.title || this.defaultTitle,
+            description: config.description || this.defaultDescription,
+            canonicalUrl: config.canonicalUrl || buildAbsolutePublicUrl("/"),
+            robots: config.robots ?? "index,follow",
+            keywords: config.keywords && config.keywords.length > 0 ? config.keywords : this.defaultKeywords,
+            ogTitle: config.ogTitle || config.title || this.defaultTitle,
+            ogDescription: config.ogDescription || config.description || this.defaultDescription,
+            ogImage: config.ogImage || this.defaultOgImage,
+            ogUrl: config.ogUrl || config.canonicalUrl || buildAbsolutePublicUrl("/"),
+            ogType: config.ogType || "website",
+            twitterCard: config.twitterCard || "summary_large_image",
+            twitterTitle: config.twitterTitle || config.ogTitle || config.title || this.defaultTitle,
+            twitterDescription:
+                config.twitterDescription || config.ogDescription || config.description || this.defaultDescription,
+            twitterImage: config.twitterImage || config.ogImage || this.defaultOgImage,
+            jsonLd: config.jsonLd ?? [],
         };
-    }
-
-    /**
-     * Obtiene información SEO para una página
-     * @param page Identificador de la página
-     * @returns Información SEO
-     */
-    async getSeoInfo(page: string): Promise<SeoInfo> {
-        return this.seoRepository.getSeoInfo(page);
-    }
-
-    /**
-     * Obtiene información SEO para la página de producto con variables
-     */
-    async getProductSeoInfo(
-        productSlug: string,
-        productName: string,
-        companyName: string,
-        productCategory: string,
-        lowestPrice: number
-    ): Promise<SeoInfo> {
-        const baseSeoInfo = await this.seoRepository.getSeoInfo('product');
-
-        return (this.seoRepository as MockSeoRepository).interpolateSeoVariables(
-            baseSeoInfo,
-            {
-                productSlug,
-                productName,
-                companyName,
-                productCategory,
-                lowestPrice: lowestPrice.toString()
-            }
-        );
-    }
-
-    /**
-     * Obtiene información SEO para la página de categoría con variables
-     */
-    async getCategorySeoInfo(
-        categorySlug: string,
-        categoryName: string
-    ): Promise<SeoInfo> {
-        const baseSeoInfo = await this.seoRepository.getSeoInfo('category');
-
-        return (this.seoRepository as MockSeoRepository).interpolateSeoVariables(
-            baseSeoInfo,
-            {
-                categorySlug,
-                categoryName
-            }
-        );
     }
 }

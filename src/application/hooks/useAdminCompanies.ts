@@ -69,7 +69,6 @@ export const useAdminCompanies = (enabled = true): UseAdminCompaniesApi => {
         companies,
         total,
         page,
-        perPage,
         isLoading,
         error,
         filters,

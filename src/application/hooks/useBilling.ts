@@ -4,6 +4,7 @@ import type {
     MigrateCompanyToExplorerInput,
     CreateCheckoutSessionInput,
     CreateCustomerPortalSessionInput,
+    SynchronizeCheckoutSessionInput,
 } from "@/domain/models/Billing";
 
 export const useCreateCheckoutSession = () => {
@@ -17,6 +18,13 @@ export const useCreateCustomerPortalSession = () => {
     return useMutation({
         mutationFn: (input: CreateCustomerPortalSessionInput) =>
             billingService.createCustomerPortalSession(input),
+    });
+};
+
+export const useSynchronizeCheckoutSession = () => {
+    return useMutation({
+        mutationFn: (input: SynchronizeCheckoutSessionInput) =>
+            billingService.synchronizeCheckoutSession(input),
     });
 };
 

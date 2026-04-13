@@ -138,6 +138,7 @@ describe("ApiClient", () => {
 
     await expect(client.get("/downstream")).rejects.toEqual(
       expect.objectContaining<ApiError>({
+        name: "ApiError",
         status: 502,
         message: "Request failed with status 502 (Bad Gateway)",
       })

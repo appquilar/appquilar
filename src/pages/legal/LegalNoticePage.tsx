@@ -1,12 +1,14 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import {useSeo} from "@/hooks/useSeo.ts";
+import { PUBLIC_PATHS, buildAbsolutePublicUrl } from "@/domain/config/publicRoutes";
 
 const LegalNoticePage = () => {
     useSeo({
-        type: "static",
         title: "Aviso Legal · Appquilar",
         description: "Información legal en Appquilar.",
+        canonicalUrl: buildAbsolutePublicUrl(PUBLIC_PATHS.legalNotice),
+        robots: "noindex,follow",
     });
 
     return (

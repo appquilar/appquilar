@@ -241,7 +241,8 @@ test.describe("Dashboard Coverage Auth + Subscription Matrix", () => {
     await expect(modal.getByText(/Tu cuenta se ha creado correctamente/i)).toBeVisible();
     await expect(modal.locator("button[type='submit']").first()).toHaveText(/Iniciar sesi[oó]n/);
 
-    await modal.getByRole("button", { name: "Recuperar" }).click();
+    await expect(modal.getByRole("button", { name: "Recuperar" })).toHaveCount(0);
+    await modal.getByRole("button", { name: "¿Has olvidado tu contraseña?" }).click();
     await modal.getByPlaceholder("tu@email.com").fill("user.e2e@appquilar.test");
     await modal.getByRole("button", { name: /Enviar enlace de recuperaci[oó]n/ }).click();
 

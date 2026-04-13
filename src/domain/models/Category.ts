@@ -7,8 +7,8 @@ export interface Category {
 
     parentId?: string | null; // backend: parent_id
 
-    // backend fields (ids de media)
-    iconId?: string | null; // icon_id
+    // backend fields
+    iconName?: string | null; // icon_name
     featuredImageId?: string | null; // featured_image_id
     landscapeImageId?: string | null; // landscape_image_id
 }
@@ -33,7 +33,7 @@ export type CategoryUpsertPayload = {
     slug: string;
     description?: string | null;
     parentId?: string | null;
-    iconId?: string | null;
+    iconName?: string | null;
     featuredImageId?: string | null;
     landscapeImageId?: string | null;
 };

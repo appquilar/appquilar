@@ -11,6 +11,7 @@
     "build:landing": "npm run landing:sync && VITE_LANDING_ONLY_MODE=true vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
+    "typecheck": "tsc -b",
     "preview": "vite preview",
     "test:unit": "vitest run --config vitest.config.ts src/test/unit",
     "test:integration": "vitest run --config vitest.config.ts src/test/integration",
@@ -27,6 +28,7 @@
     "landing:build-sync": "node scripts/landing/sync-landing.mjs --build",
     "test:e2e:dashboard": "playwright test --config playwright.dashboard.config.ts",
     "test:e2e:dashboard:ui": "playwright test --ui --config playwright.dashboard.config.ts",
+    "verify:mvp": "npm run lint && npm run typecheck && npm run build && npm run test:unit && npm run test:integration",
     "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "test:ci": "npm run test:unit && npm run test:integration && npm run test:e2e"
   },

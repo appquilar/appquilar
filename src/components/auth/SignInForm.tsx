@@ -29,6 +29,20 @@ type SignInFormValues = {
     password: string;
 };
 
+type ErrorPayload = {
+    error?: unknown;
+    errors?: unknown;
+    message?: unknown;
+    response?: {
+        data?: unknown;
+    };
+    body?: unknown;
+    data?: unknown;
+};
+
+const hasErrorCode = (value: unknown, code: string): boolean =>
+    Array.isArray(value) && value.some((item) => item === code);
+
 /**
  * Intenta detectar si el error devuelto por la API corresponde a
  * credenciales inválidas: {"success":false,"error":["login.invalid"]}
@@ -36,33 +50,32 @@ type SignInFormValues = {
 const isInvalidCredentialsError = (error: unknown): boolean => {
     if (!error) return false;
 
-    const anyErr: any = error;
+    const typedError = error as ErrorPayload;
 
     // Caso mensaje en el propio error
     if (
-        typeof anyErr?.message === "string" &&
-        anyErr.message.includes("login.invalid")
+        typeof typedError.message === "string" &&
+        typedError.message.includes("login.invalid")
     ) {
         return true;
     }
 
     // Caso payload directo { success: false, error: [...] }
-    if (Array.isArray(anyErr?.error)) {
-        if (anyErr.error.includes("login.invalid")) {
-            return true;
-        }
-    }
-
-    // Caso estilo axios/fetch con response.data/body
-    const data = anyErr?.response?.data ?? anyErr?.body ?? anyErr?.data ?? null;
-
-    if (!data) return false;
-
-    if (Array.isArray(data.error) && data.error.includes("login.invalid")) {
+    if (hasErrorCode(typedError.error, "login.invalid")) {
         return true;
     }
 
-    if (Array.isArray(data.errors) && data.errors.includes("login.invalid")) {
+    // Caso estilo axios/fetch con response.data/body
+    const data = typedError.response?.data ?? typedError.body ?? typedError.data ?? null;
+    const typedData = (data ?? null) as ErrorPayload | null;
+
+    if (!typedData) return false;
+
+    if (hasErrorCode(typedData.error, "login.invalid")) {
+        return true;
+    }
+
+    if (hasErrorCode(typedData.errors, "login.invalid")) {
         return true;
     }
 
@@ -92,7 +105,9 @@ const SignInForm = ({
             onSuccess?.();
         } catch (error) {
             setLoginError(
-                "El correo electrónico o la contraseña no son correctos.",
+                isInvalidCredentialsError(error)
+                    ? "El correo electrónico o la contraseña no son correctos."
+                    : "No se pudo iniciar sesión. Inténtalo de nuevo.",
             );
         }
     };

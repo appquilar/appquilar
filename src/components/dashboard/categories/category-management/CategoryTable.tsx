@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Category } from "@/domain/models/Category";
+import CategoryIcon from "@/components/categories/CategoryIcon";
 
 interface CategoryTableProps {
     categories: Category[];
@@ -70,7 +71,16 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
                         {!isLoading &&
                             categories.map((category) => (
                                 <TableRow key={category.id}>
-                                    <TableCell className="font-medium">{category.name}</TableCell>
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-3">
+                                            <CategoryIcon
+                                                iconName={category.iconName}
+                                                containerClassName="h-9 w-9 rounded-md bg-muted/80 text-foreground"
+                                                iconClassName="h-4 w-4"
+                                            />
+                                            <span>{category.name}</span>
+                                        </div>
+                                    </TableCell>
 
                                     <TableCell>
                                         <Tooltip>

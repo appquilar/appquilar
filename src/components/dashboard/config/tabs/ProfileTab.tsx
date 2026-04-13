@@ -106,8 +106,6 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
                                                                 {
                                                                     id: "profile-image",
                                                                     url: displayUrl,
-                                                                    file: null,
-                                                                    isPrimary: true,
                                                                 },
                                                             ]
                                                             : []
@@ -137,6 +135,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
                                                 <FormControl>
                                                     <Input
                                                         {...field}
+                                                        value={field.value ?? ""}
                                                         placeholder="Tu nombre"
                                                     />
                                                 </FormControl>
@@ -156,6 +155,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
                                                 <FormControl>
                                                     <Input
                                                         {...field}
+                                                        value={field.value ?? ""}
                                                         placeholder="Tus apellidos"
                                                     />
                                                 </FormControl>
@@ -174,6 +174,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
                                             <FormControl>
                                                 <Input
                                                     {...field}
+                                                    value={field.value ?? ""}
                                                     type="email"
                                                     disabled
                                                     className="bg-muted"

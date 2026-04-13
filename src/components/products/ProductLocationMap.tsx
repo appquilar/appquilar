@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { MapPin } from 'lucide-react';
-import { loadGoogleMaps } from '@/infrastructure/google/GoogleMapsLoader';
+import { useProductLocationMap } from '@/hooks/useProductLocationMap';
 
 interface ProductLocationMapProps {
     city: string;
@@ -11,71 +11,13 @@ interface ProductLocationMapProps {
 
 const ProductLocationMap = ({ city, state, coordinates = [-2.4637, 36.8381], polygon }: ProductLocationMapProps) => {
     const mapContainer = useRef<HTMLDivElement>(null);
-    const mapInstance = useRef<google.maps.Map | null>(null);
-
-    useEffect(() => {
-        if (!mapContainer.current) return;
-
-        const initMap = async () => {
-            try {
-                const google = await loadGoogleMaps(
-                    import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
-                );
-
-                // Convert [lng, lat] to Google Maps { lat, lng }
-                const center = { lat: coordinates[1], lng: coordinates[0] };
-
-                if (!mapInstance.current) {
-                    const { Map } = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
-
-                    mapInstance.current = new Map(mapContainer.current, {
-                        center: center,
-                        zoom: 13,
-                        mapId: 'DEMO_MAP_ID', // Replace with valid Map ID if available in env
-                        disableDefaultUI: false,
-                        streetViewControl: false,
-                        mapTypeControl: false,
-                    });
-                } else {
-                    mapInstance.current.setCenter(center);
-                }
-
-                // Draw Polygon (Circle) if available
-                if (polygon && polygon.length > 0) {
-                    const polygonPath = polygon.map(p => ({ lat: p.latitude, lng: p.longitude }));
-
-                    new google.maps.Polygon({
-                        paths: polygonPath,
-                        strokeColor: "#FF5A1F",
-                        strokeOpacity: 0.8,
-                        strokeWeight: 2,
-                        fillColor: "#FF5A1F",
-                        fillOpacity: 0.35,
-                        map: mapInstance.current,
-                    });
-
-                    // Fit map to polygon
-                    const bounds = new google.maps.LatLngBounds();
-                    polygonPath.forEach(p => bounds.extend(p));
-                    mapInstance.current.fitBounds(bounds);
-
-                } else {
-                    // Fallback: Draw Marker at exact location
-                    const { Marker } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
-                    new Marker({
-                        position: center,
-                        map: mapInstance.current,
-                        title: city + ", " + state
-                    });
-                }
-
-            } catch (error) {
-                console.error('Error initializing Google Maps:', error);
-            }
-        };
-
-        initMap();
-    }, [coordinates, polygon, city + ', ' + state]);
+    useProductLocationMap({
+        containerRef: mapContainer,
+        city,
+        state,
+        coordinates,
+        polygon,
+    });
 
     return (
         <div className="space-y-3">

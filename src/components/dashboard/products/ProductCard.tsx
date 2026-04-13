@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { useMediaUrl } from "@/application/hooks/useMediaUrl";
 import { Badge } from "@/components/ui/badge";
 import type { Product, PublicationStatusType } from "@/domain/models/Product";
+import { buildProductPath } from "@/domain/config/publicRoutes";
 
 interface ProductCardProps {
     product: Product;
@@ -169,7 +170,7 @@ const ProductCard = ({
                             Editar
                         </Button>
                         <Link
-                            to={`/product/${product.slug || product.id}`}
+                            to={buildProductPath(product.slug || product.id)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="block"

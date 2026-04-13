@@ -75,6 +75,38 @@ describe("ApiBillingRepository", () => {
     );
   });
 
+  it("synchronizes checkout session with snake_case payload", async () => {
+    const apiClient = createApiClientMock();
+    apiClient.post.mockResolvedValue({
+      success: true,
+      data: { synchronized: true },
+    });
+
+    const repository = new ApiBillingRepository(
+      apiClient as any,
+      () => createAuthSession({ token: "jwt-token" })
+    );
+
+    const result = await repository.synchronizeCheckoutSession({
+      scope: "user",
+      sessionId: "cs_test_123",
+    });
+
+    expect(result).toEqual({ synchronized: true });
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/api/billing/checkout-session/sync",
+      {
+        scope: "user",
+        session_id: "cs_test_123",
+      },
+      {
+        headers: {
+          Authorization: "Bearer jwt-token",
+        },
+      }
+    );
+  });
+
   it("migrates company to explorer with optional target owner", async () => {
     const apiClient = createApiClientMock();
     apiClient.post.mockResolvedValue({

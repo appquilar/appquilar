@@ -29,7 +29,7 @@ const ProductPriceFields = ({ control }: ProductPriceFieldsProps) => {
             append({
                 daysFrom: 1,
                 daysTo: undefined,
-                pricePerDay: undefined as any,
+                pricePerDay: 0,
             });
             return;
         }
@@ -44,7 +44,7 @@ const ProductPriceFields = ({ control }: ProductPriceFieldsProps) => {
         append({
             daysFrom: nextFrom,
             daysTo: undefined,
-            pricePerDay: undefined as any,
+            pricePerDay: 0,
         });
     };
 

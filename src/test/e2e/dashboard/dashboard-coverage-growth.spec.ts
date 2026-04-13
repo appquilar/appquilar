@@ -444,7 +444,7 @@ test.describe("Dashboard Coverage Growth", () => {
       if (Array.isArray(payload?.data) && payload.data.length > 0) {
         payload.data = payload.data.map((category: Record<string, unknown>, index: number) => ({
           ...category,
-          icon_id: index === 0 ? "icon-seed-1" : null,
+          icon_name: index === 0 ? "Package" : null,
         }));
       }
 

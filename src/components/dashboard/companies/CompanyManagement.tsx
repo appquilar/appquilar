@@ -217,7 +217,7 @@ const CompanyManagement = () => {
             )}
 
             {!isAuthLoading && isAdmin && !isLoading && !error && (
-                <DataTable
+                <DataTable<CompanyAdminSummary>
                     data={companies}
                     columns={columns}
                     actions={actions}

@@ -19,7 +19,7 @@ type CategoryDto = {
 
     parent_id?: string | null;
 
-    icon_id?: string | null;
+    icon_name?: string | null;
     featured_image_id?: string | null;
     landscape_image_id?: string | null;
 };
@@ -45,7 +45,7 @@ const mapCategoryDtoToDomain = (dto: CategoryDto): Category => {
         slug: dto.slug ?? "",
         description: dto.description ?? null,
         parentId: dto.parent_id ?? null,
-        iconId: dto.icon_id ?? null,
+        iconName: dto.icon_name ?? null,
         featuredImageId: dto.featured_image_id ?? null,
         landscapeImageId: dto.landscape_image_id ?? null,
     };
@@ -57,7 +57,7 @@ const mapDomainToUpsertDto = (payload: CategoryUpsertPayload) => ({
     slug: payload.slug,
     description: payload.description ?? null,
     parent_id: payload.parentId ?? null,
-    icon_id: payload.iconId ?? null,
+    icon_name: payload.iconName ?? null,
     featured_image_id: payload.featuredImageId ?? null,
     landscape_image_id: payload.landscapeImageId ?? null,
 });

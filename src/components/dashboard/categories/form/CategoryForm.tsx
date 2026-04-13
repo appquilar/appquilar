@@ -21,13 +21,11 @@ import type { CategoryUpsertPayload } from "@/domain/models/Category";
 import { slugify } from "@/utils/slugify";
 
 import CategoryParentSelect from "@/components/dashboard/categories/form/CategoryParentSelect";
-import CategoryIconUpload from "@/components/dashboard/categories/form/CategoryIconUpload";
 import CategoryLandscapeUpload from "@/components/dashboard/categories/form/CategoryLandscapeUpload";
 import CategoryFeaturedUpload from "@/components/dashboard/categories/form/CategoryFeaturedUpload";
 import CategoryDescriptionEditor from "@/components/dashboard/categories/form/CategoryDescriptionEditor";
-
-import { mediaService } from "@/compositionRoot";
-import {Uuid} from "@/domain/valueObject/uuidv4.ts";
+import IconPicker from "@/components/dashboard/categories/icon-picker/IconPicker";
+import { useMediaActions } from "@/application/hooks/useMediaActions";
 
 type FormValues = Omit<CategoryUpsertPayload, "id">;
 
@@ -36,7 +34,7 @@ const schema = z.object({
     slug: z.string().min(1, "El slug es obligatorio"),
     description: z.string().nullable().optional(),
     parentId: z.string().nullable().optional(),
-    iconId: z.string().nullable().optional(),
+    iconName: z.string().nullable().optional(),
     featuredImageId: z.string().nullable().optional(),
     landscapeImageId: z.string().nullable().optional(),
 });
@@ -50,17 +48,18 @@ type Props = {
 };
 
 const CategoryForm: React.FC<Props> = ({
-                                           defaultValues,
-                                           isSubmitting,
-                                           onSubmit,
-                                           onCancel,
-                                           categoryId,
-                                       }) => {
+    defaultValues,
+    isSubmitting,
+    onSubmit,
+    onCancel,
+    categoryId,
+}) => {
     const form = useForm<FormValues>({
         resolver: zodResolver(schema),
         defaultValues,
         mode: "onSubmit",
     });
+    const { deleteImage, replaceImage } = useMediaActions();
 
     const name = form.watch("name");
 
@@ -76,7 +75,6 @@ const CategoryForm: React.FC<Props> = ({
         form.reset(defaultValues);
     }, [defaultValues, form]);
 
-    const [iconUploading, setIconUploading] = React.useState(false);
     const [featuredUploading, setFeaturedUploading] = React.useState(false);
     const [landscapeUploading, setLandscapeUploading] = React.useState(false);
 
@@ -85,18 +83,8 @@ const CategoryForm: React.FC<Props> = ({
         setId: (id: string | null) => void,
         file: File
     ) => {
-        const newId = Uuid.generate().toString();
-        await mediaService.uploadImage(file, newId);
+        const newId = await replaceImage({ currentId, file });
         setId(newId);
-
-        if (currentId && currentId !== newId) {
-            try {
-                await mediaService.deleteImage(currentId);
-            } catch (e) {
-                // no bloqueamos el flujo si el delete falla
-                console.warn("Could not delete previous image:", e);
-            }
-        }
     };
 
     const removeCurrent = async (currentId: string | null, setId: (id: string | null) => void) => {
@@ -104,7 +92,7 @@ const CategoryForm: React.FC<Props> = ({
             setId(null);
             return;
         }
-        await mediaService.deleteImage(currentId);
+        await deleteImage(currentId);
         setId(null);
     };
 
@@ -175,45 +163,27 @@ const CategoryForm: React.FC<Props> = ({
                 <div className="space-y-6">
                     <h3 className="text-base font-semibold">Imágenes (se guardan como IDs)</h3>
 
-                    <FormField
-                        control={form.control}
-                        name="iconId"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormControl>
-                                    <CategoryIconUpload
-                                        iconId={field.value ?? null}
-                                        isUploading={iconUploading}
-                                        onSelectFile={async (file) => {
-                                            setIconUploading(true);
-                                            try {
-                                                await uploadReplace(field.value ?? null, field.onChange, file);
-                                                toast.success("Icono subido");
-                                            } catch (e) {
-                                                console.error(e);
-                                                toast.error("Error al subir el icono");
-                                            } finally {
-                                                setIconUploading(false);
-                                            }
-                                        }}
-                                        onRemove={async () => {
-                                            setIconUploading(true);
-                                            try {
-                                                await removeCurrent(field.value ?? null, field.onChange);
-                                                toast.success("Icono eliminado");
-                                            } catch (e) {
-                                                console.error(e);
-                                                toast.error("Error al eliminar el icono");
-                                            } finally {
-                                                setIconUploading(false);
-                                            }
-                                        }}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                    <div className="space-y-2">
+                        <Label>Icono Lucide</Label>
+                        <FormField
+                            control={form.control}
+                            name="iconName"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormControl>
+                                        <IconPicker
+                                            selectedIcon={field.value ?? null}
+                                            onSelectIcon={field.onChange}
+                                        />
+                                    </FormControl>
+                                    <p className="text-xs text-muted-foreground">
+                                        Se guarda como `icon_name` y se renderiza con Lucide en FE.
+                                    </p>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
 
                     <FormField
                         control={form.control}

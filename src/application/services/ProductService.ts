@@ -51,7 +51,7 @@ export class ProductService {
         return this.repository.getProductsByCategoryId(categoryId);
     }
 
-    async createProduct(productData: ProductFormData): Promise<Product> {
+    async createProduct(productData: ProductFormData): Promise<void> {
         return this.repository.createProduct(productData);
     }
 

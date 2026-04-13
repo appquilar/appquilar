@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { Product } from '@/domain/models/Product';
 
+const productImageSchema = z.object({
+    id: z.string(),
+    url: z.string().optional(),
+    file: z.instanceof(File).optional(),
+});
+
 export const productFormSchema = z.object({
     internalId: z.string().optional(),
     name: z.string().min(1, { message: 'El nombre es obligatorio' }),
@@ -16,7 +22,7 @@ export const productFormSchema = z.object({
         tiers: z.array(z.object({
             daysFrom: z.coerce.number().min(1, { message: 'Debe ser al menos 1' }),
             daysTo: z.coerce.number().nullable().optional(),
-            pricePerDay: z.any()
+            pricePerDay: z.unknown()
                 .transform((val) => Number(val))
                 .refine((val) => !isNaN(val) && val >= 0, { message: 'Precio obligatorio' }),
         })).optional(),
@@ -35,13 +41,14 @@ export const productFormSchema = z.object({
         slug: z.string().optional(),
     }),
     currentTab: z.string().optional(),
-    images: z.array(z.any()).default([]),
+    images: z.array(productImageSchema).default([]),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
+export type ProductFormImage = z.infer<typeof productImageSchema>;
 
 export const mapProductToFormValues = (product: Product): ProductFormValues => {
-    let initialImages: any[] = [];
+    let initialImages: ProductFormImage[] = [];
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
     if (product.image_ids && Array.isArray(product.image_ids)) {
@@ -112,8 +119,6 @@ export const mapFormValuesToProduct = (values: ProductFormValues, originalProduc
                 pricePerDay: tier.pricePerDay
             })) || [],
         },
-        isRentable: true,
-        isForSale: false,
         productType: 'rental',
         category,
     };

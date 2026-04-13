@@ -35,13 +35,7 @@ const mount = async (): Promise<void> => {
   }
 
   const root = ReactDOM.createRoot(rootElement);
-  const [{ RepositoryConfig }, { default: App }] = await Promise.all([
-    import('./infrastructure/config/RepositoryConfig'),
-    import('./App.tsx'),
-  ]);
-
-  // Initialize repositories (default to API repositories)
-  RepositoryConfig.useApiRepositories(import.meta.env.VITE_API_BASE_URL);
+  const [{ default: App }] = await Promise.all([import('./App.tsx')]);
 
   root.render(
     <React.StrictMode>

@@ -76,4 +76,36 @@ describe("ApiBillingRepository integration", () => {
 
     expect(result.url).toBe("https://billing.stripe.test/portal");
   });
+
+  it("synchronizes checkout session and maps response", async () => {
+    server.use(
+      http.post(`${apiBaseUrl}/api/billing/checkout-session/sync`, async ({ request }) => {
+        const body = await request.json();
+
+        expect(body).toEqual({
+          scope: "user",
+          session_id: "cs_sync_123",
+        });
+
+        return HttpResponse.json({
+          success: true,
+          data: {
+            synchronized: true,
+          },
+        });
+      })
+    );
+
+    const repository = new ApiBillingRepository(
+      new ApiClient({ baseUrl: apiBaseUrl }),
+      () => createAuthSession({ token: "jwt-token" })
+    );
+
+    const result = await repository.synchronizeCheckoutSession({
+      scope: "user",
+      sessionId: "cs_sync_123",
+    });
+
+    expect(result.synchronized).toBe(true);
+  });
 });

@@ -19,7 +19,10 @@ import { UserRole } from "@/domain/models/UserRole";
 import type { AuthSession } from "@/domain/models/AuthSession";
 import { Uuid } from "@/domain/valueObject/uuidv4";
 import type { CreateCompanyInput } from "@/domain/models/CompanyMembership";
-import { ApiError } from "@/infrastructure/http/ApiClient";
+import {
+    extractBackendErrorCode,
+    extractBackendErrorStatus,
+} from "@/utils/backendError";
 
 const authService = compositionRoot.authService;
 const companyMembershipService = compositionRoot.companyMembershipService;
@@ -64,18 +67,11 @@ const COMPANY_SUBSCRIPTION_INACTIVE_MESSAGE =
     "Hay un problema con la suscripción de tu empresa. Contacta con el gestor de la cuenta.";
 
 const resolveAuthBlockMessage = (error: unknown): string | null => {
-    if (!(error instanceof ApiError) || error.status !== 401) {
+    if (extractBackendErrorStatus(error) !== 401) {
         return null;
     }
 
-    const payload = error.payload as { error?: unknown } | undefined;
-    const backendError = payload?.error;
-
-    const errorCode = Array.isArray(backendError)
-        ? backendError.find((value): value is string => typeof value === "string")
-        : typeof backendError === "string"
-            ? backendError
-            : null;
+    const errorCode = extractBackendErrorCode(error);
 
     if (errorCode === COMPANY_SUBSCRIPTION_INACTIVE_ERROR_CODE) {
         return COMPANY_SUBSCRIPTION_INACTIVE_MESSAGE;

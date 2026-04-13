@@ -137,8 +137,9 @@ export const test = base.extend<{ seed: DashboardSeedFixture; coverageCapture: v
     },
     { auto: true },
   ],
-  seed: async ({}, useFixture) => {
-    await useFixture({
+  seed: async ({ request }, applySeedFixture) => {
+    void request;
+    await applySeedFixture({
       reset: resetSeed,
       loginAs,
       clearToken,
@@ -149,3 +150,4 @@ export const test = base.extend<{ seed: DashboardSeedFixture; coverageCapture: v
 });
 
 export { expect };
+export type { Page };

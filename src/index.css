@@ -49,6 +49,10 @@
     /* Chart specific variables */
     --color-views: #0ea5e9;
     --color-rentals: #10b981;
+
+    --public-header-height: 118px;
+    --public-scroll-offset: calc(var(--public-header-height) + 24px);
+    --public-sticky-offset: calc(var(--public-header-height) + 16px);
   }
 
   .dark {
@@ -104,6 +108,10 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html {
+    scroll-padding-top: var(--public-scroll-offset);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -192,13 +200,7 @@
   }
 
   .public-main {
-    padding-top: 96px;
-  }
-
-  @media (min-width: 768px) {
-    .public-main {
-      padding-top: 136px;
-    }
+    padding-top: 1rem;
   }
 
   .public-container {
@@ -307,6 +309,63 @@
 
   .dashboard-premium .ui-input::placeholder {
     color: rgba(15, 23, 42, 0.48);
+  }
+
+  .ui-google-place-autocomplete {
+    display: block;
+    width: 100%;
+    border: 1px solid hsl(var(--input));
+    border-radius: calc(var(--radius) - 2px);
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    color-scheme: light;
+    overflow: visible;
+    position: relative;
+    z-index: 20;
+  }
+
+  .ui-google-place-autocomplete::part(input) {
+    min-height: 2.5rem;
+    padding: 0 0.75rem;
+    border: 0;
+    background: transparent;
+    color: hsl(var(--foreground));
+    font-size: 1rem;
+    font-family: inherit;
+    line-height: 1.5;
+  }
+
+  .ui-google-place-autocomplete::part(input)::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .ui-google-place-autocomplete::part(prediction-list) {
+    border: 1px solid hsl(var(--border));
+    border-radius: calc(var(--radius) - 2px);
+    background: hsl(var(--popover));
+    box-shadow: 0 10px 28px -24px rgba(15, 23, 42, 0.45);
+    margin-top: 0.25rem;
+    overflow: hidden;
+    z-index: 30;
+  }
+
+  .ui-google-place-autocomplete::part(prediction-item) {
+    color: hsl(var(--foreground));
+    background: transparent;
+  }
+
+  .ui-google-place-autocomplete::part(prediction-item-main-text) {
+    color: hsl(var(--foreground));
+  }
+
+  .ui-google-place-autocomplete::part(prediction-item-selected) {
+    background: hsl(var(--accent));
+  }
+
+  .dashboard-premium .ui-google-place-autocomplete {
+    border-radius: 0.4rem;
+    border-color: rgba(148, 163, 184, 0.3);
+    background: #fff;
   }
 
   .dashboard-premium .ui-popover-content,

@@ -39,7 +39,7 @@ const RentalCalendar = ({
     const dates = [];
     
     // Add all dates between start and end date
-    let currentDate = new Date(rentalStartDate);
+    const currentDate = new Date(rentalStartDate);
     while (currentDate <= rentalEndDate) {
       dates.push(new Date(currentDate));
       currentDate.setDate(currentDate.getDate() + 1);

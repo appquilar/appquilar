@@ -1,9 +1,11 @@
 import type {
     BillingSessionResult,
+    CheckoutSessionSynchronizationResult,
     CompanyMigrationResult,
     CreateCheckoutSessionInput,
     CreateCustomerPortalSessionInput,
     MigrateCompanyToExplorerInput,
+    SynchronizeCheckoutSessionInput,
 } from "@/domain/models/Billing";
 import type { BillingRepository } from "@/domain/repositories/BillingRepository";
 
@@ -20,6 +22,12 @@ export class BillingService {
         input: CreateCustomerPortalSessionInput
     ): Promise<BillingSessionResult> {
         return this.billingRepository.createCustomerPortalSession(input);
+    }
+
+    async synchronizeCheckoutSession(
+        input: SynchronizeCheckoutSessionInput
+    ): Promise<CheckoutSessionSynchronizationResult> {
+        return this.billingRepository.synchronizeCheckoutSession(input);
     }
 
     async migrateCompanyToExplorer(

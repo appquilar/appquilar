@@ -3,8 +3,19 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 vi.mock("@/components/auth/SignInForm", () => ({
-  default: ({ infoMessage }: { infoMessage?: string | null }) => (
-    <div data-testid="signin-form">signin:{infoMessage ?? "none"}</div>
+  default: ({
+    infoMessage,
+    onForgotPassword,
+  }: {
+    infoMessage?: string | null;
+    onForgotPassword?: () => void;
+  }) => (
+    <div data-testid="signin-form">
+      <span>signin:{infoMessage ?? "none"}</span>
+      <button type="button" onClick={onForgotPassword}>
+        ¿Has olvidado tu contraseña?
+      </button>
+    </div>
   ),
 }));
 
@@ -13,7 +24,14 @@ vi.mock("@/components/auth/SignUpForm", () => ({
 }));
 
 vi.mock("@/components/auth/ForgotPasswordForm", () => ({
-  default: () => <div data-testid="forgot-form">forgot</div>,
+  default: ({ onBack }: { onBack: () => void }) => (
+    <div data-testid="forgot-form">
+      forgot
+      <button type="button" onClick={onBack}>
+        Volver a iniciar sesión
+      </button>
+    </div>
+  ),
 }));
 
 import AuthModal from "@/components/auth/AuthModal";
@@ -26,16 +44,25 @@ describe("AuthModal", () => {
     expect(screen.getByTestId("signin-form")).toHaveTextContent("signin:none");
   });
 
-  it("switches segmented tabs between login/register/recover", async () => {
+  it("switches between login/register and opens recovery from the forgot password link", async () => {
     render(<AuthModal isOpen onClose={vi.fn()} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Registrarse" }));
     expect(screen.getByTestId("signup-form")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Recuperar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Iniciar sesión" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "¿Has olvidado tu contraseña?" }),
+    );
     expect(screen.getByTestId("forgot-form")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Iniciar sesión" }));
+    expect(
+      screen.queryByRole("button", { name: "Recuperar" }),
+    ).not.toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Volver a iniciar sesión" }),
+    );
     expect(screen.getByTestId("signin-form")).toBeInTheDocument();
   });
 

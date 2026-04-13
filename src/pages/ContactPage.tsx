@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useSeo } from "@/hooks/useSeo.ts";
 import { useSendContactMessage } from "@/application/hooks/useContact";
 import { useRecaptchaToken } from "@/application/hooks/useCaptcha";
+import { PUBLIC_PATHS, buildAbsolutePublicUrl } from "@/domain/config/publicRoutes";
 
 const CONTACT_EMAIL = "appquilar.contacto@gmail.com";
 
@@ -39,9 +40,9 @@ type ContactFormValues = z.infer<typeof contactSchema>;
 
 const ContactPage = () => {
     useSeo({
-        type: "static",
-        title: "Contacto · Appquilar",
-        description: "Contacta con el equipo de Appquilar.",
+        title: "Contacto | Appquilar",
+        description: "Contacta con el equipo de Appquilar para soporte, colaboraciones, prensa o consultas legales.",
+        canonicalUrl: buildAbsolutePublicUrl(PUBLIC_PATHS.contact),
     });
 
     const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);

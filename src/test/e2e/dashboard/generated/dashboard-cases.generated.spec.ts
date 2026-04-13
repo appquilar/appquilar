@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { test, expect } from "../fixtures";
 
 type GeneratedCase = {
@@ -488,7 +487,7 @@ const modules: Array<{ module: string; cases: GeneratedCase[] }> = [
     },
     {
       id: "AUTH-006",
-      title: "Tab Recuperar activo",
+      title: "Recuperación desde enlace de contraseña olvidada",
       role: "user",
       path: "/",
       expectedText: "Muestra formulario recovery",

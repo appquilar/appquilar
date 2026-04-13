@@ -1,33 +1,36 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash } from "lucide-react";
 
-interface Column {
+interface DataTableItem {
+  id: string | number;
+}
+
+interface Column<TItem extends DataTableItem> {
   key: string;
   header: string;
-  cell?: (item: any) => React.ReactNode;
+  cell?: (item: TItem) => React.ReactNode;
 }
 
-interface Action {
+interface Action<TItem extends DataTableItem> {
   label: string;
   icon: React.ReactNode;
-  onClick: (item: any) => void;
+  onClick: (item: TItem) => void;
 }
 
-interface DataTableProps {
-  data: any[];
-  columns: Column[];
-  actions?: Action[];
+interface DataTableProps<TItem extends DataTableItem> {
+  data: TItem[];
+  columns: Column<TItem>[];
+  actions?: Action<TItem>[];
   emptyMessage?: string;
 }
 
-const DataTable = ({ 
+const DataTable = <TItem extends DataTableItem>({
   data, 
   columns, 
   actions = [],
   emptyMessage = "No se encontraron registros"
-}: DataTableProps) => {
+}: DataTableProps<TItem>) => {
   if (data.length === 0) {
     return (
       <div className="text-center py-12 bg-muted/30 rounded-lg">
@@ -53,7 +56,7 @@ const DataTable = ({
             <TableRow key={item.id}>
               {columns.map((column) => (
                 <TableCell key={`${item.id}-${column.key}`}>
-                  {column.cell ? column.cell(item) : item[column.key]}
+                  {column.cell ? column.cell(item) : String(item[column.key as keyof TItem] ?? "")}
                 </TableCell>
               ))}
               {actions.length > 0 && (

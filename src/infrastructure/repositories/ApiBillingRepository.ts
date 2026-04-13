@@ -1,9 +1,11 @@
 import type {
     BillingSessionResult,
+    CheckoutSessionSynchronizationResult,
     CompanyMigrationResult,
     CreateCheckoutSessionInput,
     CreateCustomerPortalSessionInput,
     MigrateCompanyToExplorerInput,
+    SynchronizeCheckoutSessionInput,
 } from "@/domain/models/Billing";
 import type { BillingRepository } from "@/domain/repositories/BillingRepository";
 import { ApiClient } from "@/infrastructure/http/ApiClient";
@@ -39,6 +41,15 @@ interface MigrateCompanyToExplorerRequestDto {
 interface MigrateCompanyToExplorerResponseDto {
     migrated_owner_user_id: string;
     company_deleted: boolean;
+}
+
+interface SynchronizeCheckoutSessionRequestDto {
+    scope: "user" | "company";
+    session_id: string;
+}
+
+interface SynchronizeCheckoutSessionResponseDto {
+    synchronized: boolean;
 }
 
 export class ApiBillingRepository implements BillingRepository {
@@ -97,6 +108,27 @@ export class ApiBillingRepository implements BillingRepository {
 
         return {
             url: response.data.url,
+        };
+    }
+
+    async synchronizeCheckoutSession(
+        input: SynchronizeCheckoutSessionInput
+    ): Promise<CheckoutSessionSynchronizationResult> {
+        const headers = await this.authHeaders();
+
+        const payload: SynchronizeCheckoutSessionRequestDto = {
+            scope: input.scope,
+            session_id: input.sessionId,
+        };
+
+        const response = await this.apiClient.post<ApiResponse<SynchronizeCheckoutSessionResponseDto>>(
+            "/api/billing/checkout-session/sync",
+            payload,
+            { headers }
+        );
+
+        return {
+            synchronized: response.data.synchronized,
         };
     }
 

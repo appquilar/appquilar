@@ -13,7 +13,7 @@ export interface StatsDataPoint {
   day: string;
   views?: number;
   rentals?: number;
-  [key: string]: any; // Support for additional metrics
+  [key: string]: string | number | undefined; // Support for additional metrics
 }
 
 export interface PopularProduct {

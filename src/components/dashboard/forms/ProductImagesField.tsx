@@ -4,18 +4,25 @@ import { ProductImagesFieldProps, ImageFile } from "./image-upload/types";
 import ImageDropZone from "./image-upload/ImageDropZone";
 import ImageGallery from "./image-upload/ImageGallery";
 import { validateAndProcessFiles } from "./image-upload/imageUtils";
-import { ControllerRenderProps, FieldValues } from "react-hook-form";
-import { mediaService } from "@/compositionRoot";
+import { ControllerRenderProps } from "react-hook-form";
 import { toast } from "sonner";
+import { useMediaActions } from "@/application/hooks/useMediaActions";
+import type { ProductFormValues } from "./productFormSchema";
 
 const ProductImagesContent = ({
-                                  field
+    field
                               }: {
-    field: ControllerRenderProps<FieldValues, "images">
+    field: ControllerRenderProps<ProductFormValues, "images">
 }) => {
     const [isDragging, setIsDragging] = useState(false);
+    const { deleteImage, uploadImage } = useMediaActions();
 
-    const images: ImageFile[] = Array.isArray(field.value) ? field.value : [];
+    const images: ImageFile[] = Array.isArray(field.value)
+        ? field.value.filter(
+            (image): image is ImageFile =>
+                typeof image?.id === "string" && typeof image?.url === "string"
+        )
+        : [];
 
     const handleFiles = async (files: File[]) => {
         // 1. Validate and create local objects with IDs
@@ -31,15 +38,15 @@ const ProductImagesContent = ({
         for (const img of newImages) {
             try {
                 toast.info(`Subiendo ${img.file.name}...`);
-                await mediaService.uploadImage(img.file, img.id);
+                await uploadImage(img.file, img.id);
                 toast.success(`Imagen subida: ${img.file.name}`);
             } catch (error) {
                 console.error("Upload error:", error);
                 toast.error(`Error al subir ${img.file.name}`);
 
                 // Revert this specific image on failure
-                const current = field.value as ImageFile[] || [];
-                field.onChange(current.filter(i => i.id !== img.id));
+                const current = Array.isArray(field.value) ? field.value : [];
+                field.onChange(current.filter((image) => image.id !== img.id));
             }
         }
     };
@@ -84,7 +91,7 @@ const ProductImagesContent = ({
 
         // 2. Delete from Backend
         try {
-            await mediaService.deleteImage(id);
+            await deleteImage(id);
             toast.success("Imagen eliminada");
         } catch (error) {
             console.error("Delete error:", error);
@@ -126,7 +133,7 @@ const ProductImagesField = ({ control }: ProductImagesFieldProps) => {
             control={control}
             name="images"
             render={({ field }) => (
-                <ProductImagesContent field={field as any} />
+                <ProductImagesContent field={field} />
             )}
         />
     );

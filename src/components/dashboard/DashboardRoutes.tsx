@@ -1,157 +1,157 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import DashboardOverview from "./overview/DashboardOverview";
-import ProductsManagement from "@/components/dashboard/ProductsManagement";
-import ProductFormPage from "./products/ProductFormPage";
-import UserManagement from "@/components/dashboard/UserManagement";
-import EditUserPage from "@/pages/dashboard/users/EditUser";
-import MessagesDashboard from "./MessagesDashboard";
-import RentalsPage from "@/pages/dashboard/rentals/RentalsPage";
-import CompanyManagement from "./companies/CompanyManagement";
-import CompanyFormPage from "./companies/CompanyFormPage";
-import CompanyProductsPage from "./companies/CompanyProductsPage";
-import CompanyUsersPage from "./companies/CompanyUsersPage";
-import CategoryManagement from "./categories/CategoryManagement";
-import CategoryFormPage from "./categories/CategoryFormPage";
-import SiteManagement from "./sites/SiteManagement";
-import SiteFormPage from "./sites/SiteFormPage";
-import UserConfigPage from "./config/UserConfigPage";
-import UpgradePage from "./upgrade/UpgradePage";
-import CreateRental from "@/pages/dashboard/rentals/CreateRental";
-import RentalDetails from "@/pages/dashboard/rentals/RentalDetails";
-import UserProductsPage from "./users/UserProductsPage";
-import SiteSettingsPage from "./sites/SiteSettingsPage";
-import BlogManagementPage from "@/components/dashboard/blog/BlogManagementPage";
-import BlogEditorPage from "@/components/dashboard/blog/BlogEditorPage";
+import { lazy, Suspense, type ReactNode } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import RoleGuard from "@/components/auth/RoleGuard";
 import { UserRole } from "@/domain/models/UserRole";
 
+const DashboardOverview = lazy(() => import("./overview/DashboardOverview"));
+const ProductsManagement = lazy(() => import("@/components/dashboard/ProductsManagement"));
+const ProductFormPage = lazy(() => import("./products/ProductFormPage"));
+const UserManagement = lazy(() => import("@/components/dashboard/UserManagement"));
+const EditUserPage = lazy(() => import("@/pages/dashboard/users/EditUser"));
+const MessagesDashboard = lazy(() => import("./MessagesDashboard"));
+const RentalsPage = lazy(() => import("@/pages/dashboard/rentals/RentalsPage"));
+const CompanyManagement = lazy(() => import("./companies/CompanyManagement"));
+const CompanyFormPage = lazy(() => import("./companies/CompanyFormPage"));
+const CompanyProductsPage = lazy(() => import("./companies/CompanyProductsPage"));
+const CompanyUsersPage = lazy(() => import("./companies/CompanyUsersPage"));
+const CategoryManagement = lazy(() => import("./categories/CategoryManagement"));
+const CategoryFormPage = lazy(() => import("./categories/CategoryFormPage"));
+const UserConfigPage = lazy(() => import("./config/UserConfigPage"));
+const UpgradePage = lazy(() => import("./upgrade/UpgradePage"));
+const CreateRental = lazy(() => import("@/pages/dashboard/rentals/CreateRental"));
+const RentalDetails = lazy(() => import("@/pages/dashboard/rentals/RentalDetails"));
+const UserProductsPage = lazy(() => import("./users/UserProductsPage"));
+const SiteSettingsPage = lazy(() => import("./sites/SiteSettingsPage"));
+const BlogManagementPage = lazy(() => import("@/components/dashboard/blog/BlogManagementPage"));
+const BlogEditorPage = lazy(() => import("@/components/dashboard/blog/BlogEditorPage"));
+
+const DashboardRouteFallback = () => (
+    <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+    </div>
+);
+
+const withRouteSuspense = (element: ReactNode) => (
+    <Suspense fallback={<DashboardRouteFallback />}>
+        {element}
+    </Suspense>
+);
+
 const DashboardRoutes = () => {
     return (
         <Routes>
-            {/* Resumen */}
-            <Route index element={<DashboardOverview />} />
+            <Route index element={withRouteSuspense(<DashboardOverview />)} />
 
-            {/* Products */}
-            <Route path="products" element={<ProductsManagement />} />
-            <Route path="products/new" element={<ProductFormPage />} />
-            <Route path="products/:productId/edit" element={<ProductFormPage />} />
-            <Route path="products/:productId" element={<ProductFormPage />} />
+            <Route path="products" element={withRouteSuspense(<ProductsManagement />)} />
+            <Route path="products/new" element={withRouteSuspense(<ProductFormPage />)} />
+            <Route path="products/:productId/edit" element={withRouteSuspense(<ProductFormPage />)} />
+            <Route path="products/:productId" element={withRouteSuspense(<ProductFormPage />)} />
 
-            {/* Rentals */}
-            <Route path="rentals" element={<RentalsPage />} />
-            <Route path="rentals/new" element={<CreateRental />} />
-            <Route path="rentals/:id" element={<RentalDetails />} />
+            <Route path="rentals" element={withRouteSuspense(<RentalsPage />)} />
+            <Route path="rentals/new" element={withRouteSuspense(<CreateRental />)} />
+            <Route path="rentals/:id" element={withRouteSuspense(<RentalDetails />)} />
 
-            <Route path="companies" element={<CompanyManagement />} />
-            <Route path="companies/new" element={<CompanyFormPage />} />
-            <Route path="companies/:id" element={<CompanyFormPage />} />
+            <Route path="companies" element={withRouteSuspense(<CompanyManagement />)} />
+            <Route path="companies/new" element={withRouteSuspense(<CompanyFormPage />)} />
+            <Route path="companies/:id" element={withRouteSuspense(<CompanyFormPage />)} />
             <Route
                 path="companies/:companyId/products"
-                element={<CompanyProductsPage />}
+                element={withRouteSuspense(<CompanyProductsPage />)}
             />
             <Route
                 path="companies/:companyId/users"
-                element={<CompanyUsersPage />}
+                element={withRouteSuspense(<CompanyUsersPage />)}
             />
 
             <Route
                 path="categories"
-                element={
+                element={withRouteSuspense(
                     <RoleGuard requiredRoles={[UserRole.ADMIN]}>
                         <CategoryManagement />
                     </RoleGuard>
-                }
+                )}
             />
             <Route
                 path="categories/new"
-                element={
+                element={withRouteSuspense(
                     <RoleGuard requiredRoles={[UserRole.ADMIN]}>
                         <CategoryFormPage />
                     </RoleGuard>
-                }
+                )}
             />
             <Route
                 path="categories/:id"
-                element={
+                element={withRouteSuspense(
                     <RoleGuard requiredRoles={[UserRole.ADMIN]}>
                         <CategoryFormPage />
                     </RoleGuard>
-                }
+                )}
             />
 
-            {/* Blog (🔒 sólo ADMIN) */}
             <Route
                 path="blog"
-                element={
+                element={withRouteSuspense(
                     <RoleGuard requiredRoles={[UserRole.ADMIN]}>
                         <BlogManagementPage />
                     </RoleGuard>
-                }
+                )}
             />
             <Route
                 path="blog/new"
-                element={
+                element={withRouteSuspense(
                     <RoleGuard requiredRoles={[UserRole.ADMIN]}>
                         <BlogEditorPage />
                     </RoleGuard>
-                }
+                )}
             />
             <Route
                 path="blog/:postId"
-                element={
+                element={withRouteSuspense(
                     <RoleGuard requiredRoles={[UserRole.ADMIN]}>
                         <BlogEditorPage />
                     </RoleGuard>
-                }
+                )}
             />
 
-            {/* Sites (🔒 sólo ADMIN) */}
             <Route
                 path="sites"
-                element={
+                element={withRouteSuspense(
                     <RoleGuard requiredRoles={[UserRole.ADMIN]}>
                         <SiteSettingsPage />
                     </RoleGuard>
-                }
+                )}
             />
 
-            {/* Users (🔒 sólo ADMIN) */}
             <Route
                 path="users"
-                element={
+                element={withRouteSuspense(
                     <RoleGuard requiredRoles={[UserRole.ADMIN]}>
                         <UserManagement />
                     </RoleGuard>
-                }
+                )}
             />
             <Route
                 path="users/:userId"
-                element={
+                element={withRouteSuspense(
                     <RoleGuard requiredRoles={[UserRole.ADMIN]}>
                         <EditUserPage />
                     </RoleGuard>
-                }
+                )}
             />
             <Route
                 path="users/:userId/products"
-                element={
+                element={withRouteSuspense(
                     <RoleGuard requiredRoles={[UserRole.ADMIN]}>
                         <UserProductsPage />
                     </RoleGuard>
-                }
+                )}
             />
 
-            {/* Mensajes (cualquier usuario logado) */}
-            <Route path="messages" element={<MessagesDashboard />} />
+            <Route path="messages" element={withRouteSuspense(<MessagesDashboard />)} />
+            <Route path="config" element={withRouteSuspense(<UserConfigPage />)} />
+            <Route path="upgrade" element={withRouteSuspense(<UpgradePage />)} />
 
-            {/* Configuración usuario (cualquier usuario logado) */}
-            <Route path="config" element={<UserConfigPage />} />
-
-            {/* Upgrade (cualquier usuario logado) */}
-            <Route path="upgrade" element={<UpgradePage />} />
-
-            {/* Fallback → índice del dashboard */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
     );

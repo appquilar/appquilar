@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { buildProductPath } from "@/domain/config/publicRoutes";
 import {
     Table,
     TableBody,
@@ -46,14 +47,19 @@ import { useCreateCheckoutSession } from "@/application/hooks/useBilling";
 import { useActiveProductsCount, useDashboardProducts } from "@/application/hooks/useProducts";
 import EngagementLineChart, { EngagementLineChartPoint } from "@/components/dashboard/stats/EngagementLineChart";
 import SpanishDateInput from "@/components/products/SpanishDateInput";
-import { ApiError } from "@/infrastructure/http/ApiClient";
 import {
     getEffectiveUserPlan,
     getCompanyPlanProductLimit,
     getUserPlanProductLimit,
     isCompanyAdvancedAnalyticsEnabled,
 } from "@/domain/models/Subscription";
+import { UserRole } from "@/domain/models/UserRole";
 import DashboardSectionHeader from "@/components/dashboard/common/DashboardSectionHeader";
+import {
+    buildBillingBaseUrl,
+    buildBillingCheckoutSuccessUrl,
+} from "@/hooks/useBillingReturnSync";
+import { extractBackendErrorMessage } from "@/utils/backendError";
 
 const MAX_RANGE_DAYS = 30;
 const OWNER_PRODUCTS_LOOKUP_PAGE_SIZE = 500;
@@ -155,24 +161,27 @@ const DashboardOverview = () => {
     const companyContext = currentUser?.companyContext ?? null;
     const companyId = companyContext?.companyId ?? currentUser?.companyId ?? null;
     const userId = currentUser?.id ?? null;
+    const isPlatformAdmin = currentUser?.roles?.includes(UserRole.ADMIN) ?? false;
     const userPlan = getEffectiveUserPlan(
         currentUser?.planType,
         currentUser?.subscriptionStatus
     );
     const isCompanyScope = Boolean(companyId);
-    const isUserProScope = !isCompanyScope && userPlan === "user_pro";
-    const isExplorerScope = !isCompanyScope && !isUserProScope;
-    const isAdvancedCompanyAnalytics = isCompanyAdvancedAnalyticsEnabled(companyContext);
+    const isUserProScope = !isCompanyScope && (isPlatformAdmin || userPlan === "user_pro");
+    const isExplorerScope = !isCompanyScope && !isPlatformAdmin && !isUserProScope;
+    const isAdvancedCompanyAnalytics = isPlatformAdmin || isCompanyAdvancedAnalyticsEnabled(companyContext);
 
     const ownerId = companyId ?? userId;
     const ownerType = companyId ? "company" : "user";
 
-    const slotLimit = companyId
-        ? (companyContext?.productSlotLimit ?? getCompanyPlanProductLimit(companyContext))
-        : (currentUser?.productSlotLimit ?? getUserPlanProductLimit(
-            currentUser?.planType,
-            currentUser?.subscriptionStatus
-        ));
+    const slotLimit = isPlatformAdmin
+        ? null
+        : companyId
+            ? (companyContext?.productSlotLimit ?? getCompanyPlanProductLimit(companyContext))
+            : (currentUser?.productSlotLimit ?? getUserPlanProductLimit(
+                currentUser?.planType,
+                currentUser?.subscriptionStatus
+            ));
     const createCheckoutMutation = useCreateCheckoutSession();
     const activeProductsCountQuery = useActiveProductsCount({
         ownerId,
@@ -302,10 +311,10 @@ const DashboardOverview = () => {
                 totalViews: row.totalViews,
                 uniqueVisitors: row.uniqueVisitors,
                 messagesTotal: row.messagesTotal,
-                loggedViews: "loggedViews" in row ? row.loggedViews : 0,
-                anonymousViews: "anonymousViews" in row ? row.anonymousViews : 0,
-                visitToMessageRatio: "visitToMessageRatio" in row ? row.visitToMessageRatio : 0,
-                messageToRentalRatio: "messageToRentalRatio" in row ? row.messageToRentalRatio : 0,
+                loggedViews: Number("loggedViews" in row ? row.loggedViews : 0),
+                anonymousViews: Number("anonymousViews" in row ? row.anonymousViews : 0),
+                visitToMessageRatio: Number("visitToMessageRatio" in row ? row.visitToMessageRatio : 0),
+                messageToRentalRatio: Number("messageToRentalRatio" in row ? row.messageToRentalRatio : 0),
             };
         });
     }, [companyStatsQuery.data?.byProduct, isCompanyScope, productMetaById, userStatsQuery.data?.byProduct]);
@@ -437,13 +446,18 @@ const DashboardOverview = () => {
     };
 
     const currentUrl = typeof window !== "undefined" ? window.location.href : "";
+    const currentBaseUrl = buildBillingBaseUrl(currentUrl);
     const handleUpgradeToUserPro = async () => {
         try {
             const response = await createCheckoutMutation.mutateAsync({
                 scope: "user",
                 planType: "user_pro",
-                successUrl: currentUrl,
-                cancelUrl: currentUrl,
+                successUrl: buildBillingCheckoutSuccessUrl(
+                    currentBaseUrl,
+                    "user",
+                    "user_pro"
+                ),
+                cancelUrl: currentBaseUrl,
             });
 
             window.location.assign(response.url);
@@ -869,7 +883,7 @@ const DashboardOverview = () => {
                                                 <TableCell className="font-medium">
                                                     <div className="min-w-0">
                                                         <a
-                                                            href={product.productSlug ? `/product/${product.productSlug}` : `/dashboard/products/${product.productId}`}
+                                                            href={product.productSlug ? buildProductPath(product.productSlug) : `/dashboard/products/${product.productId}`}
                                                             target={product.productSlug ? "_blank" : "_self"}
                                                             rel={product.productSlug ? "noopener noreferrer" : undefined}
                                                             className="inline-flex items-center gap-1 text-[#0F172A] transition-colors hover:text-[#C86A35] hover:underline"
@@ -991,25 +1005,6 @@ const DashboardOverview = () => {
             )}
         </div>
     );
-};
-
-const extractBackendErrorMessage = (error: unknown): string | null => {
-    if (!(error instanceof ApiError)) {
-        return null;
-    }
-
-    const payload = error.payload as { error?: unknown } | undefined;
-    const backendError = payload?.error;
-
-    if (Array.isArray(backendError) && typeof backendError[0] === "string") {
-        return backendError[0];
-    }
-
-    if (typeof backendError === "string") {
-        return backendError;
-    }
-
-    return null;
 };
 
 export default DashboardOverview;

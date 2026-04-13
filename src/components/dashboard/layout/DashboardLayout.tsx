@@ -6,6 +6,7 @@ import { Menu } from 'lucide-react';
 import AppLogo from "@/components/common/AppLogo";
 import CompanySubscriptionStatusNotice from "@/components/dashboard/layout/CompanySubscriptionStatusNotice";
 import UserSubscriptionStatusNotice from "@/components/dashboard/layout/UserSubscriptionStatusNotice";
+import { useBillingReturnSync } from "@/hooks/useBillingReturnSync";
 
 interface DashboardLayoutProps {
     sidebar: React.ReactNode;
@@ -17,6 +18,7 @@ interface DashboardLayoutProps {
  */
 const DashboardLayoutContent = ({ sidebar, content }: DashboardLayoutProps) => {
     const { toggleSidebar, isMobile } = useSidebar();
+    useBillingReturnSync();
 
     React.useEffect(() => {
         document.body.classList.add("dashboard-premium-active");

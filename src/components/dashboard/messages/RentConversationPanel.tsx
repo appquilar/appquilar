@@ -18,6 +18,7 @@ import { RentalStatusService } from '@/domain/services/RentalStatusService';
 import { RentalStateMachineService } from '@/domain/services/RentalStateMachineService';
 import { RentConversationRole } from '@/domain/models/RentConversation';
 import type { RentalMessage } from '@/domain/models/RentalMessage';
+import { buildProductPath } from '@/domain/config/publicRoutes';
 
 interface RentConversationPanelProps {
   rentId: string;
@@ -91,7 +92,7 @@ const RentConversationPanel = ({
 }: RentConversationPanelProps) => {
   const rentalStatus: RentStatus = rental.status;
   const isCancelled = rentalStatus === 'cancelled';
-  const publicProductHref = `/product/${rental.productSlug ?? rental.productId}`;
+  const publicProductHref = buildProductPath(rental.productSlug ?? rental.productId);
   const [proposalValidUntil, setProposalValidUntil] = useState<string>(
     rental.proposalValidUntil ? toDateInput(rental.proposalValidUntil) : ''
   );

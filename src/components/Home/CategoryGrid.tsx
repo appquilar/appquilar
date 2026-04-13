@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { usePublicSiteCategories } from "@/application/hooks/usePublicSiteCategories";
-import { compositionRoot } from "@/compositionRoot";
+import { getPublicMediaUrl } from "@/application/hooks/usePublicMediaUrl";
+import { PUBLIC_PATHS, buildCategoryPath } from "@/domain/config/publicRoutes";
 
 interface FeaturedCategoryVM {
     id: string;
@@ -41,7 +42,6 @@ const FALLBACK: FeaturedCategoryVM[] = [
  */
 const CategoryGrid = () => {
     const { featuredCategories, isLoading } = usePublicSiteCategories();
-    const [imageUrlsById, setImageUrlsById] = useState<Record<string, string>>({});
 
     const featuredVM = useMemo<FeaturedCategoryVM[]>(() => {
         if (!isLoading && featuredCategories.length > 0) {
@@ -49,66 +49,12 @@ const CategoryGrid = () => {
                 id: c.id,
                 name: c.name,
                 slug: c.slug,
-                imageUrl: imageUrlsById[c.id] ?? "", // se rellena tras descargar
+                imageUrl: getPublicMediaUrl(c.featuredImageId ?? c.landscapeImageId, "LARGE") ?? "",
             }));
         }
 
         return FALLBACK;
-    }, [featuredCategories, imageUrlsById, isLoading]);
-
-    // descargar imágenes (featuredImageId o landscapeImageId)
-    useEffect(() => {
-        let alive = true;
-
-        const loadImages = async () => {
-            if (isLoading) return;
-            if (featuredCategories.length === 0) return;
-
-            const candidates = featuredCategories
-                .map((c) => ({
-                    id: c.id,
-                    mediaId: c.featuredImageId ?? c.landscapeImageId ?? null,
-                }))
-                .filter((x) => !!x.mediaId) as Array<{ id: string; mediaId: string }>;
-
-            const missing = candidates.filter(({ id }) => !imageUrlsById[id]);
-            if (missing.length === 0) return;
-
-            try {
-                const entries = await Promise.all(
-                    missing.map(async ({ id, mediaId }) => {
-                        const blob = await compositionRoot.mediaService.getImage(mediaId, "ORIGINAL");
-                        const url = URL.createObjectURL(blob);
-                        return [id, url] as const;
-                    })
-                );
-
-                if (!alive) return;
-
-                setImageUrlsById((prev) => {
-                    const next = { ...prev };
-                    for (const [id, url] of entries) next[id] = url;
-                    return next;
-                });
-            } catch {
-                // si falla, dejamos fallback visual (o quedará vacío)
-            }
-        };
-
-        void loadImages();
-
-        return () => {
-            alive = false;
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [featuredCategories, isLoading]);
-
-    // cleanup URLs
-    useEffect(() => {
-        return () => {
-            Object.values(imageUrlsById).forEach((url) => URL.revokeObjectURL(url));
-        };
-    }, [imageUrlsById]);
 
     // Precarga (cuando ya tengas urls)
     useEffect(() => {
@@ -136,19 +82,19 @@ const CategoryGrid = () => {
 
                 <div className="mt-5 flex justify-center">
                     <Link
-                        to="/categories"
+                        to={PUBLIC_PATHS.categories}
                         className="inline-flex items-center rounded-full border border-border/70 bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
                     >
                         Ver todas las categorías
                     </Link>
                 </div>
 
-                <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+                <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                     {featuredVM.map((category, index) => (
                         <Link
                             key={category.id}
-                            to={`/category/${category.slug}`}
-                            className="group relative overflow-hidden rounded-xl aspect-[5/4] transition-all duration-350 hover-glow"
+                            to={buildCategoryPath(category.slug)}
+                            className="group relative overflow-hidden rounded-xl aspect-[5/4] md:aspect-[16/10] transition-all duration-350 hover-glow"
                             style={{ animationDelay: `${index * 50}ms` }}
                         >
                             {/* Imagen de categoría */}
@@ -172,7 +118,7 @@ const CategoryGrid = () => {
                             <div className="absolute inset-0 p-4 md:p-5 flex flex-col justify-end">
                                 <h3 className="text-base md:text-lg font-medium text-white font-display">{category.name}</h3>
                                 {typeof category.count === "number" ? (
-                                    <p className="text-xs text-white/80 mt-1">{category.count} items</p>
+                                    <p className="text-xs text-white/80 mt-1">{category.count} productos</p>
                                 ) : null}
                             </div>
                         </Link>

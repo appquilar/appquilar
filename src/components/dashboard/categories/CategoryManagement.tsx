@@ -9,12 +9,15 @@ import ResultsCount from "./category-management/ResultsCount";
 import { usePlatformCategories } from "@/application/hooks/usePlatformCategories";
 import type { CategoryListFilters } from "@/domain/models/Category";
 import {useSeo} from "@/hooks/useSeo.ts";
+import { buildAbsolutePublicUrl } from "@/domain/config/publicRoutes";
 
 const CategoryManagement: React.FC = () => {
-    useSeo(
-        { type: "dashboard-section", section: "Categorías" },
-        { noIndex: true }
-    );
+    useSeo({
+        title: "Categorias | Dashboard Appquilar",
+        description: "Zona privada de gestion de categorias.",
+        canonicalUrl: buildAbsolutePublicUrl("/dashboard/categorias"),
+        robots: "noindex,nofollow",
+    });
 
     const navigate = useNavigate();
 

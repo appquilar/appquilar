@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,86 +6,58 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Product, ProductFormData } from '@/domain/models/Product';
 import ProductEditForm from '@/components/dashboard/ProductEditForm';
 import { toast } from 'sonner';
-import { productService } from '@/compositionRoot';
 import { Uuid } from '@/domain/valueObject/uuidv4';
-import { useCreateProduct, useUpdateProduct } from '@/application/hooks/useProducts';
+import { useCreateProduct, useProduct, useUpdateProduct } from '@/application/hooks/useProducts';
 import { useAuth } from '@/context/AuthContext';
 import { hasMinimalAddress } from '@/domain/models/Address';
 import FormHeader from '@/components/dashboard/common/FormHeader';
 import { Card, CardContent } from '@/components/ui/card';
 
+const createDraftProduct = (): Product => ({
+    id: Uuid.generate().toString(),
+    internalId: '',
+    name: '',
+    slug: '',
+    description: '',
+    imageUrl: '',
+    thumbnailUrl: '',
+    publicationStatus: 'draft',
+    price: {
+        daily: 0,
+        deposit: 0,
+        tiers: []
+    },
+    category: { id: '', name: '', slug: '' },
+    rating: 0,
+    reviewCount: 0,
+    productType: 'rental',
+});
+
 const ProductFormPage = () => {
     const { productId } = useParams();
     const navigate = useNavigate();
-    const [product, setProduct] = useState<Product | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
     const isAddMode = !productId || productId === 'new';
     const { currentUser } = useAuth();
     const canCreateProduct = hasMinimalAddress(currentUser?.address);
+    const productQuery = useProduct(isAddMode ? undefined : productId);
+    const product: Product | null = isAddMode
+        ? createDraftProduct()
+        : productQuery.data
+            ? {
+                ...productQuery.data,
+                category: productQuery.data.category || { id: '', name: '', slug: '' },
+                price: {
+                    daily: productQuery.data.price?.daily ?? productQuery.data.price?.tiers?.[0]?.pricePerDay ?? 0,
+                    deposit: productQuery.data.price?.deposit || 0,
+                    tiers: productQuery.data.price?.tiers || []
+                },
+                productType: 'rental' as const
+            }
+            : null;
 
     // Usamos los hooks de mutación que gestionan la invalidación de caché
     const { mutateAsync: createProduct } = useCreateProduct();
     const { mutateAsync: updateProduct } = useUpdateProduct();
-
-    useEffect(() => {
-        const loadProduct = async () => {
-            setIsLoading(true);
-            try {
-                if (isAddMode) {
-                    // Create a new empty product template
-                    const newProduct: Product = {
-                        id: Uuid.generate().toString(),
-                        internalId: '',
-                        name: '',
-                        slug: '',
-                        description: '',
-                        imageUrl: '',
-                        thumbnailUrl: '',
-                        publicationStatus: 'draft',
-                        price: {
-                            daily: 0,
-                            deposit: 0,
-                            tiers: []
-                        },
-                        isRentable: true,
-                        isForSale: false,
-                        company: { id: '', name: '', slug: '' },
-                        category: { id: '', name: '', slug: '' },
-                        rating: 0,
-                        reviewCount: 0,
-                        productType: 'rental'
-                    };
-                    setProduct(newProduct);
-                } else {
-                    // Find existing product
-                    // Nota: Aquí usamos el servicio directamente para cargar los datos iniciales del formulario,
-                    // lo cual es correcto. La invalidación importa al GUARDAR.
-                    const foundProduct = await productService.getProductById(productId!);
-                    if (foundProduct) {
-                        const safeProduct: Product = {
-                            ...foundProduct,
-                            category: foundProduct.category || { id: '', name: '', slug: '' },
-                            price: {
-                                daily: foundProduct.price?.daily || 0,
-                                deposit: foundProduct.price?.deposit || 0,
-                                tiers: foundProduct.price?.tiers || []
-                            },
-                            productType: 'rental',
-                            publicationStatus: foundProduct.publicationStatus || 'draft'
-                        };
-                        setProduct(safeProduct);
-                    }
-                }
-            } catch (error) {
-                console.error("Error loading product:", error);
-                toast.error("Error al cargar el producto");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        loadProduct();
-    }, [productId, isAddMode]);
 
     const handleSaveProduct = async (updatedProduct: Partial<Product>) => {
         try {
@@ -118,12 +90,16 @@ const ProductFormPage = () => {
         navigate('/dashboard/products');
     };
 
-    if (isLoading) {
+    if (!isAddMode && productQuery.isLoading) {
         return (
             <div className="flex justify-center py-10">
                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
+    }
+
+    if (!isAddMode && productQuery.error) {
+        toast.error("Error al cargar el producto");
     }
 
     if (!product && !isAddMode) {

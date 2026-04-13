@@ -7,6 +7,7 @@ import { RentalStatusService } from '@/domain/services/RentalStatusService';
 import { useUpdateRentStatusFromMessages } from '@/application/hooks/useRentalMessages';
 import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { buildProductPath } from '@/domain/config/publicRoutes';
 
 interface RentConversationSummaryProps {
   conversation: RentConversation;
@@ -29,7 +30,7 @@ const formatDate = (date: Date): string => {
 const RentConversationSummary = ({ conversation, onBackToConversation }: RentConversationSummaryProps) => {
   const isMobile = useIsMobile();
   const rental = conversation.rental;
-  const publicProductHref = `/product/${rental.productSlug ?? rental.productId}`;
+  const publicProductHref = buildProductPath(rental.productSlug ?? rental.productId);
   const estimatedTotal = rental.price.amount + rental.deposit.amount;
   const ownerName = rental.ownerName ?? 'Sin nombre';
   const ownerAddress = rental.ownerLocation?.label ?? 'Direccion no disponible';

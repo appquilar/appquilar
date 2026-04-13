@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
+import { buildSearchPath } from '@/domain/config/publicRoutes';
 
 const SearchBar = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -10,7 +11,7 @@ const SearchBar = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(buildSearchPath(searchQuery.trim()));
     }
   };
 

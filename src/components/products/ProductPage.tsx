@@ -4,7 +4,6 @@ import { toast } from "sonner";
 
 import ProductImageGallery from "./ProductImageGallery";
 import ProductInfo from "./ProductInfo";
-import SecondHandInfo from "./SecondHandInfo";
 import ProductLocationMap from "./ProductLocationMap";
 import ContactModal from "./ContactModal";
 
@@ -13,18 +12,24 @@ import { useProductBySlug } from "@/application/hooks/useProducts";
 import { useSeo } from "@/hooks/useSeo";
 import { RentalCostBreakdown } from "@/domain/repositories/ProductRepository";
 import { useTrackProductView } from "@/application/hooks/useTrackProductView";
+import PublicBreadcrumbs from "@/components/common/PublicBreadcrumbs";
+import {
+    PUBLIC_PATHS,
+    buildAbsolutePublicUrl,
+    buildCategoryPath,
+    buildProductPath,
+} from "@/domain/config/publicRoutes";
 
 // ViewModel simplificado para la vista
 type ProductPageVm = {
     id: string;
+    internalId?: string;
     name: string;
     slug: string;
     description: string;
-    isRentable: boolean;
-    isForSale: boolean;
     company: { id: string; name: string; slug: string };
     category: { id: string; name: string; slug: string };
-    price: { daily: number; deposit?: number; tiers?: any[] };
+    price: { daily: number; deposit?: number; tiers?: Array<{ daysFrom: number; daysTo?: number; pricePerDay: number }> };
     imageIds: string[];
     rating: number;
     reviewCount: number;
@@ -36,6 +41,78 @@ type ProductPageVm = {
         circle?: { latitude: number; longitude: number }[];
     };
     providerLocationLabel?: string;
+};
+
+type RawProductImage = {
+    id?: string | null;
+};
+
+type RawProductOwnerAddress = {
+    city?: string | null;
+    state?: string | null;
+    country?: string | null;
+};
+
+type RawProductOwnerGeoLocation = {
+    latitude?: number | null;
+    longitude?: number | null;
+    circle?: Array<{ latitude: number; longitude: number }> | null;
+};
+
+type RawProductOwner = {
+    ownerId?: string | null;
+    name?: string | null;
+    lastName?: string | null;
+    slug?: string | null;
+    address?: RawProductOwnerAddress | null;
+    geoLocation?: RawProductOwnerGeoLocation | null;
+};
+
+type RawProductCategory = {
+    id?: string | null;
+    name?: string | null;
+    slug?: string | null;
+};
+
+type RawProductPriceTier = {
+    daysFrom: number;
+    daysTo?: number;
+    pricePerDay?: number;
+};
+
+type RawProductPrice = {
+    daily?: number;
+    deposit?: number;
+    tiers?: RawProductPriceTier[];
+};
+
+type RawProductPublicationStatus = {
+    status?: string | null;
+};
+
+type RawProductData = {
+    id?: string | null;
+    internalId?: string | null;
+    internal_id?: string | null;
+    name?: string | null;
+    slug?: string | null;
+    description?: string | null;
+    ownerData?: RawProductOwner | null;
+    companyId?: string | null;
+    companyName?: string | null;
+    companySlug?: string | null;
+    category?: RawProductCategory | null;
+    categoryId?: string | null;
+    categoryName?: string | null;
+    categorySlug?: string | null;
+    price?: RawProductPrice | null;
+    image_ids?: string[] | null;
+    imageIds?: string[] | null;
+    images?: RawProductImage[] | null;
+    rating?: number | null;
+    reviewCount?: number | null;
+    publication_status?: RawProductPublicationStatus | null;
+    publicationStatus?: string | null;
 };
 
 const getBaseTierDailyPrice = (tiers: Array<{ pricePerDay?: number }> | undefined, fallback: number): number => {
@@ -52,7 +129,6 @@ const ProductPage: React.FC = () => {
 
     const { isLoggedIn } = useAuth();
 
-    const [activeTab, setActiveTab] = useState<"rental" | "secondhand">("rental");
     const [contactModalOpen, setContactModalOpen] = useState(false);
     const [leadStartDate, setLeadStartDate] = useState('');
     const [leadEndDate, setLeadEndDate] = useState('');
@@ -61,7 +137,7 @@ const ProductPage: React.FC = () => {
     const query = useProductBySlug(slug ?? null);
 
     const product: ProductPageVm | null = useMemo(() => {
-        const raw: any = query.data;
+        const raw = query.data as RawProductData | null;
         if (!raw) return null;
 
         const imageIds: string[] = Array.isArray(raw.image_ids)
@@ -69,7 +145,9 @@ const ProductPage: React.FC = () => {
             : Array.isArray(raw.imageIds)
                 ? raw.imageIds
                 : Array.isArray(raw.images)
-                    ? raw.images.map((x: any) => x?.id).filter(Boolean)
+                    ? raw.images
+                        .map((image) => image?.id)
+                        .filter((imageId): imageId is string => typeof imageId === "string" && imageId.length > 0)
                     : [];
 
         const ownerAddress = raw.ownerData?.address;
@@ -99,21 +177,30 @@ const ProductPage: React.FC = () => {
 
         return {
             id: raw.id ?? "",
+            internalId: raw.internalId ?? raw.internal_id ?? "",
             name: raw.name ?? "",
             slug: raw.slug ?? "",
             description: raw.description ?? "",
-            isRentable: raw.isRentable ?? true,
-            isForSale: raw.isForSale ?? false,
             company: {
                 id: raw.ownerData?.ownerId ?? raw.companyId ?? "",
                 name: ownerName || raw.companyName || "—",
                 slug: raw.ownerData?.slug ?? raw.companySlug ?? "",
             },
-            category: raw.category ?? { id: raw.categoryId ?? "", name: raw.categoryName ?? "—", slug: raw.categorySlug ?? "" },
+            category: {
+                id: raw.category?.id ?? raw.categoryId ?? "",
+                name: raw.category?.name ?? raw.categoryName ?? "—",
+                slug: raw.category?.slug ?? raw.categorySlug ?? "",
+            },
             price: {
                 daily: getBaseTierDailyPrice(raw.price?.tiers, raw.price?.daily ?? 0),
                 deposit: raw.price?.deposit,
-                tiers: raw.price?.tiers || []
+                tiers: Array.isArray(raw.price?.tiers)
+                    ? raw.price.tiers.map((tier) => ({
+                        daysFrom: tier.daysFrom,
+                        daysTo: tier.daysTo,
+                        pricePerDay: tier.pricePerDay ?? 0,
+                    }))
+                    : []
             },
             imageIds,
             rating: raw.rating || 0,
@@ -125,21 +212,6 @@ const ProductPage: React.FC = () => {
     }, [query.data]); // Eliminada dependencia de currentUser para el cálculo del producto
 
     useTrackProductView(product?.id ?? null);
-
-    // SEO Hook - Objeto seguro para evitar crashes
-    useSeo(
-        product
-            ? { type: "product", name: product.name, slug: product.slug }
-            : { type: "home" }
-    );
-
-    useEffect(() => {
-        if (product?.isForSale && !product?.isRentable) {
-            setActiveTab("secondhand");
-        } else {
-            setActiveTab("rental");
-        }
-    }, [product?.isForSale, product?.isRentable]);
 
     useEffect(() => {
         if (!product) {
@@ -167,6 +239,86 @@ const ProductPage: React.FC = () => {
         const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
         return product.imageIds.map(id => `${baseUrl}/api/media/images/${id}/LARGE`);
     }, [product]);
+
+    const breadcrumbItems = useMemo(() => {
+        const items: Array<{ label: string; to?: string }> = [{ label: "Inicio", to: "/" }];
+
+        if (product?.category?.name) {
+            items.push({ label: "Categorías", to: PUBLIC_PATHS.categories });
+            items.push({
+                label: product.category.name,
+                to: product.category.slug ? buildCategoryPath(product.category.slug) : undefined,
+            });
+        }
+
+        if (product?.name) {
+            items.push({ label: product.name });
+        }
+
+        return items;
+    }, [product]);
+
+    const seoConfig = useMemo(() => {
+        if (query.isError || !product) {
+            return {
+                title: "Producto no encontrado | Appquilar",
+                description: "El producto que buscas no existe o ya no está disponible.",
+                canonicalUrl: buildAbsolutePublicUrl(product?.slug ? buildProductPath(product.slug) : "/"),
+                robots: "noindex,follow" as const,
+            };
+        }
+
+        const canonicalPath = buildProductPath(product.slug);
+        const dailyPrice = product.price.daily > 0 ? `${product.price.daily} EUR al dia` : "precio a consultar";
+        const description = product.providerLocationLabel
+            ? `${product.name} disponible en alquiler en ${product.providerLocationLabel}. ${dailyPrice}.`
+            : `${product.name} disponible en alquiler en Appquilar. ${dailyPrice}.`;
+
+        return {
+            title: `${product.name} | Appquilar`,
+            description,
+            canonicalUrl: buildAbsolutePublicUrl(canonicalPath),
+            ogType: "product",
+            jsonLd: [
+                {
+                    "@context": "https://schema.org",
+                    "@type": "BreadcrumbList",
+                    itemListElement: breadcrumbItems.map((item, index) => ({
+                        "@type": "ListItem",
+                        position: index + 1,
+                        name: item.label,
+                        item: buildAbsolutePublicUrl(item.to ?? canonicalPath),
+                    })),
+                },
+                {
+                    "@context": "https://schema.org",
+                    "@type": "Product",
+                    name: product.name,
+                    description,
+                    category: product.category?.name,
+                    sku: product.internalId || product.id,
+                    image: galleryImages,
+                    offers: product.price.daily > 0
+                        ? {
+                              "@type": "Offer",
+                              priceCurrency: "EUR",
+                              price: product.price.daily,
+                              availability: "https://schema.org/InStock",
+                              url: buildAbsolutePublicUrl(canonicalPath),
+                          }
+                        : undefined,
+                    brand: product.company?.name
+                        ? {
+                              "@type": "Brand",
+                              name: product.company.name,
+                          }
+                        : undefined,
+                },
+            ],
+        };
+    }, [breadcrumbItems, galleryImages, product, query.isError]);
+
+    useSeo(seoConfig);
 
     const handleContactRequest = () => {
         if (!isLoggedIn) {
@@ -204,6 +356,9 @@ const ProductPage: React.FC = () => {
     return (
         <div className="public-main px-4 pb-10 sm:px-6 md:px-8">
             <div className="public-container grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-7">
+                <div className="lg:col-span-3">
+                    <PublicBreadcrumbs items={breadcrumbItems} className="mb-2" />
+                </div>
                 <div className="lg:col-span-2">
                     <ProductImageGallery
                         images={galleryImages}
@@ -228,7 +383,7 @@ const ProductPage: React.FC = () => {
 
                 <div className="lg:col-span-1 space-y-6">
                     <ProductInfo
-                        product={product as any}
+                        product={product}
                         onContact={handleContactRequest}
                         isLoggedIn={isLoggedIn}
                         leadStartDate={leadStartDate}
@@ -238,9 +393,6 @@ const ProductPage: React.FC = () => {
                         onLeadCalculationChange={setLeadCalculation}
                     />
 
-                    {product.isForSale && (
-                        <SecondHandInfo product={product as any} onContactClick={handleContactRequest} />
-                    )}
                 </div>
             </div>
 

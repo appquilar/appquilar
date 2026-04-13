@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { BlogPost } from '@/domain/models/BlogPost';
 import BlogMediaImage from '@/components/blog/BlogMediaImage';
+import { buildBlogPostPath } from '@/domain/config/publicRoutes';
 
 interface BlogPublicCardProps {
     post: BlogPost;
@@ -24,10 +25,11 @@ const formatDate = (value: string | null) => {
 const BlogPublicCard = ({ post }: BlogPublicCardProps) => {
     const coverImageId = post.heroImageId || post.headerImageId;
     const publishedLabel = formatDate(post.publishedAt);
+    const postPath = buildBlogPostPath(post.slug);
 
     return (
         <article className="mb-5 break-inside-avoid rounded-xl border border-border/70 bg-card shadow-sm transition-shadow hover:shadow-md">
-            <Link to={`/blog/${post.slug}`} className="block">
+            <Link to={postPath} className="block">
                 <BlogMediaImage
                     mediaId={coverImageId}
                     alt={post.title}
@@ -50,7 +52,7 @@ const BlogPublicCard = ({ post }: BlogPublicCardProps) => {
                     </p>
                 )}
 
-                <Link to={`/blog/${post.slug}`} className="block">
+                <Link to={postPath} className="block">
                     <h2 className="text-lg font-semibold leading-tight hover:text-primary">
                         {post.title}
                     </h2>
@@ -59,7 +61,7 @@ const BlogPublicCard = ({ post }: BlogPublicCardProps) => {
                 <p className="text-sm text-muted-foreground">{post.excerpt}</p>
 
                 <Link
-                    to={`/blog/${post.slug}`}
+                    to={postPath}
                     className="inline-flex text-sm font-medium text-primary hover:underline"
                 >
                     Leer artículo

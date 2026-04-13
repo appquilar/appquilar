@@ -105,7 +105,7 @@ export interface ProductRepository {
     /**
      * Create a new product
      */
-    createProduct(productData: ProductFormData): Promise<Product>;
+    createProduct(productData: ProductFormData): Promise<void>;
 
     /**
      * Update an existing product

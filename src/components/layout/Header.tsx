@@ -10,6 +10,7 @@ import { useCurrentUser } from "@/application/hooks/useCurrentUser";
 
 import AppLogo from "@/components/common/AppLogo";
 import { usePublicSiteCategories } from "@/application/hooks/usePublicSiteCategories";
+import { PUBLIC_PATHS, buildCategoryPath, buildSearchPath } from "@/domain/config/publicRoutes";
 
 import {
     Sheet,
@@ -24,7 +25,8 @@ import { CategoryDrawerTree } from "@/components/layout/CategoryDrawerTree";
 type DesktopCategoriesMode = "top" | "side";
 
 // Keep both implementations available. "top" disables the side drawer in desktop.
-const DESKTOP_CATEGORIES_MODE: DesktopCategoriesMode = "top";
+const resolveDesktopCategoriesMode = (): DesktopCategoriesMode => "top";
+const DESKTOP_CATEGORIES_MODE = resolveDesktopCategoriesMode();
 
 const Header = () => {
     const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -32,6 +34,7 @@ const Header = () => {
     const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
     const [mobileSessionOpen, setMobileSessionOpen] = useState(false);
     const [searchValue, setSearchValue] = useState("");
+    const headerRef = useRef<HTMLElement | null>(null);
     const desktopTopPanelRef = useRef<HTMLDivElement | null>(null);
 
     const location = useLocation();
@@ -95,6 +98,32 @@ const Header = () => {
         };
     }, [desktopCategoriesOpen]);
 
+    useEffect(() => {
+        const headerElement = headerRef.current;
+        if (!headerElement) return;
+
+        const root = document.documentElement;
+
+        const updateHeaderHeight = () => {
+            const nextHeight = Math.ceil(headerElement.getBoundingClientRect().height);
+            root.style.setProperty("--public-header-height", `${nextHeight}px`);
+        };
+
+        updateHeaderHeight();
+
+        const resizeObserver = new ResizeObserver(() => {
+            updateHeaderHeight();
+        });
+
+        resizeObserver.observe(headerElement);
+        window.addEventListener("resize", updateHeaderHeight);
+
+        return () => {
+            resizeObserver.disconnect();
+            window.removeEventListener("resize", updateHeaderHeight);
+        };
+    }, []);
+
     const handleLogout = async () => {
         await logout();
     };
@@ -103,11 +132,11 @@ const Header = () => {
         event.preventDefault();
         const query = searchValue.trim();
         if (!query) {
-            navigate("/search");
+            navigate(PUBLIC_PATHS.search);
             return;
         }
 
-        navigate(`/search?q=${encodeURIComponent(query)}`);
+        navigate(buildSearchPath(query));
     };
 
     const handleSellClick = () => {
@@ -139,7 +168,10 @@ const Header = () => {
 
     return (
         <>
-            <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/70 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90">
+            <header
+                ref={headerRef}
+                className="sticky top-0 left-0 right-0 z-50 border-b border-border/70 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90"
+            >
                 <div className="md:hidden">
                     <div className="mx-auto relative flex h-[70px] w-full max-w-[1320px] items-center px-4 sm:px-6">
                         <Sheet open={mobileCategoriesOpen} onOpenChange={setMobileCategoriesOpen}>
@@ -398,7 +430,7 @@ const Header = () => {
                             {menuTop.map((category) => (
                                 <Link
                                     key={category.id}
-                                    to={`/category/${category.slug}`}
+                                    to={buildCategoryPath(category.slug)}
                                     className="shrink-0 rounded-full px-4 py-2 text-sm font-medium text-foreground/85 transition-colors hover:bg-secondary hover:text-foreground"
                                 >
                                     {category.name}

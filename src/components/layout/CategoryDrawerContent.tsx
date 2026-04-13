@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Category } from "@/domain/models/Category";
 import { buildCategoryBreadcrumbName } from "@/utils/categoryBreadcrumb";
+import { buildCategoryPath } from "@/domain/config/publicRoutes";
 
 type Props = {
     allCategories: Category[];
@@ -87,7 +88,7 @@ export default function CategoryDrawerContent({
                     {topCategories.map((c) => (
                         <Link
                             key={c.id}
-                            to={`/category/${c.slug}`}
+                            to={buildCategoryPath(c.slug)}
                             onClick={onNavigate}
                             className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-secondary"
                         >
@@ -125,7 +126,7 @@ export default function CategoryDrawerContent({
                                     return (
                                         <Link
                                             key={r.id}
-                                            to={`/category/${r.slug}`}
+                                            to={buildCategoryPath(r.slug)}
                                             onClick={onNavigate}
                                             className="flex flex-col gap-1 py-3 hover:bg-secondary rounded-md px-2"
                                         >
@@ -172,7 +173,7 @@ function CategoryNode({
     return (
         <div className="py-1">
             <Link
-                to={`/category/${node.slug}`}
+                to={buildCategoryPath(node.slug)}
                 onClick={onNavigate}
                 className="flex items-center justify-between rounded-md px-2 py-2 hover:bg-secondary"
                 style={{ paddingLeft: 8 + level * 14 }}

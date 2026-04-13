@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
 import {
-    attachAutocomplete,
+    getMarkerCoordinates,
+    mountAddressAutocomplete,
     createMapWithDraggableMarker,
     reverseGeocode,
     type LatLngLiteral,
@@ -32,14 +33,15 @@ export function useAddressMap<T extends AddressMapFormValues>(
     addressForm: UseFormReturn<T>,
     enabled: boolean = true
 ) {
-    const searchInputRef = useRef<HTMLInputElement | null>(null);
+    const autocompleteContainerRef = useRef<HTMLDivElement | null>(null);
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
 
     const [isMapsLoading, setIsMapsLoading] = useState(false);
+    const [mapsError, setMapsError] = useState<string | null>(null);
 
     useEffect(() => {
-        let autocomplete: google.maps.places.Autocomplete | null = null;
-        let marker: google.maps.Marker | null = null;
+        let disposeAutocomplete: (() => void) | null = null;
+        let marker: google.maps.marker.AdvancedMarkerElement | null = null;
         let map: google.maps.Map | null = null;
         let isMounted = true;
 
@@ -48,6 +50,7 @@ export function useAddressMap<T extends AddressMapFormValues>(
         const init = async () => {
             try {
                 setIsMapsLoading(true);
+                setMapsError(null);
 
                 const latFromForm = addressForm.getValues("latitude" as any) as number | undefined;
                 const lngFromForm = addressForm.getValues("longitude" as any) as number | undefined;
@@ -79,13 +82,8 @@ export function useAddressMap<T extends AddressMapFormValues>(
                 // Cuando se suelta el marker -> coords + reverse geocode
                 marker.addListener("dragend", async () => {
                     if (!marker) return;
-                    const pos = marker.getPosition();
-                    if (!pos) return;
-
-                    const coords: LatLngLiteral = {
-                        lat: pos.lat(),
-                        lng: pos.lng(),
-                    };
+                    const coords = getMarkerCoordinates(marker);
+                    if (!coords) return;
 
                     addressForm.setValue("latitude" as any, coords.lat as any, { shouldValidate: true });
                     addressForm.setValue("longitude" as any, coords.lng as any, { shouldValidate: true });
@@ -112,68 +110,55 @@ export function useAddressMap<T extends AddressMapFormValues>(
                 });
 
                 // Autocomplete en el buscador
-                if (searchInputRef.current) {
-                    autocomplete = await attachAutocomplete(searchInputRef.current);
-                    if (autocomplete) {
-                        autocomplete.addListener("place_changed", () => {
-                            const place = autocomplete!.getPlace();
-                            if (!place || !place.address_components) return;
-
-                            let street = "";
-                            let streetNumber = "";
-                            let city = "";
-                            let state = "";
-                            let country = "";
-                            let postalCode = "";
-
-                            place.address_components.forEach((component) => {
-                                const types = component.types;
-
-                                if (types.includes("route")) street = component.long_name;
-                                if (types.includes("street_number"))
-                                    streetNumber = component.long_name;
-                                if (types.includes("locality")) city = component.long_name;
-                                if (types.includes("administrative_area_level_1"))
-                                    state = component.long_name;
-                                if (types.includes("country")) country = component.long_name;
-                                if (types.includes("postal_code"))
-                                    postalCode = component.long_name;
-                            });
-
-                            const fullStreet = streetNumber ? `${street} ${streetNumber}` : street;
-
-                            addressForm.setValue("street" as any, fullStreet as any, {
+                if (autocompleteContainerRef.current) {
+                    disposeAutocomplete = await mountAddressAutocomplete({
+                        container: autocompleteContainerRef.current,
+                        placeholder: "Empieza a escribir y selecciona tu dirección…",
+                        onError: (message) => {
+                            setMapsError(message);
+                        },
+                        onSelect: async ({ street, city, state, country, postalCode, location }) => {
+                            setMapsError(null);
+                            addressForm.setValue("street" as any, street as any, {
                                 shouldValidate: true,
                             });
-                            addressForm.setValue("city" as any, city as any, { shouldValidate: true });
-                            addressForm.setValue("state" as any, state as any, { shouldValidate: true });
-                            addressForm.setValue("country" as any, country as any, { shouldValidate: true });
+                            addressForm.setValue("city" as any, city as any, {
+                                shouldValidate: true,
+                            });
+                            addressForm.setValue("state" as any, state as any, {
+                                shouldValidate: true,
+                            });
+                            addressForm.setValue("country" as any, country as any, {
+                                shouldValidate: true,
+                            });
                             addressForm.setValue("postalCode" as any, postalCode as any, {
                                 shouldValidate: true,
                             });
 
-                            if (place.geometry?.location && map && marker) {
-                                const coords: LatLngLiteral = {
-                                    lat: place.geometry.location.lat(),
-                                    lng: place.geometry.location.lng(),
-                                };
-
-                                addressForm.setValue("latitude" as any, coords.lat as any, {
-                                    shouldValidate: true,
-                                });
-                                addressForm.setValue("longitude" as any, coords.lng as any, {
-                                    shouldValidate: true,
-                                });
-
-                                map.panTo(coords);
-                                map.setZoom(17);
-                                marker.setPosition(coords);
+                            if (!location || !map || !marker) {
+                                return;
                             }
-                        });
-                    }
+
+                            addressForm.setValue("latitude" as any, location.lat as any, {
+                                shouldValidate: true,
+                            });
+                            addressForm.setValue("longitude" as any, location.lng as any, {
+                                shouldValidate: true,
+                            });
+
+                            map.panTo(location);
+                            map.setZoom(17);
+                            marker.position = location;
+                        },
+                    });
                 }
             } catch (error) {
                 console.error("Error inicializando Google Maps:", error);
+                if (isMounted) {
+                    setMapsError(
+                        "No se pudo cargar Google Maps. Puedes guardar la dirección manualmente y revisar la configuración de la API key o los dominios autorizados.",
+                    );
+                }
             } finally {
                 if (isMounted) setIsMapsLoading(false);
             }
@@ -183,15 +168,17 @@ export function useAddressMap<T extends AddressMapFormValues>(
 
         return () => {
             isMounted = false;
-            if (autocomplete && (window as any).google?.maps?.event) {
-                (window as any).google.maps.event.clearInstanceListeners(autocomplete);
+            disposeAutocomplete?.();
+            if (marker && (window as any).google?.maps?.event) {
+                (window as any).google.maps.event.clearInstanceListeners(marker);
             }
         };
     }, [addressForm, enabled]);
 
     return {
-        searchInputRef,
+        autocompleteContainerRef,
         mapContainerRef,
         isMapsLoading,
+        mapsError,
     };
 }

@@ -12,6 +12,10 @@ import {
     mapFormValuesToProduct
 } from '../productFormSchema';
 
+type ProductSavePayload = Partial<Product> & {
+    images?: Array<{ id: string }>;
+};
+
 interface UseProductFormProps {
     product: Product;
     onSave: (product: Partial<Product>) => Promise<void> | void;
@@ -69,10 +73,10 @@ export const useProductForm = ({ product, onSave, onCancel }: UseProductFormProp
             }
 
             // 2. Prepare Final DTO
-            const updatedProduct = mapFormValuesToProduct(values, product);
+            const updatedProduct: ProductSavePayload = mapFormValuesToProduct(values, product);
 
             // Asignar los IDs de imágenes procesadas al DTO
-            (updatedProduct as any).images = processedImages;
+            updatedProduct.images = processedImages;
 
             // Actualizar URLs de vista previa para feedback inmediato
             if (processedImages.length > 0) {

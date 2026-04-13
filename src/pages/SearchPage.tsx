@@ -12,6 +12,7 @@ import type { Category } from "@/domain/models/Category";
 import { usePublicProductSearchWithCategories } from "@/application/hooks/usePublicProductSearch";
 import { usePublicSiteCategories } from "@/application/hooks/usePublicSiteCategories";
 import { useSeo } from "@/hooks/useSeo";
+import { PUBLIC_PATHS, buildAbsolutePublicUrl, buildSearchPath } from "@/domain/config/publicRoutes";
 
 const EMPTY_PRODUCTS: DomainProduct[] = [];
 const EMPTY_CATEGORY_IDS: string[] = [];
@@ -185,11 +186,12 @@ const SearchPage = () => {
     }, [domainProducts]);
 
     useSeo({
-        type: "static",
         title: queryFromUrl
-            ? `Buscar "${queryFromUrl}" · Appquilar`
-            : "Buscar productos · Appquilar",
+            ? `Buscar "${queryFromUrl}" | Appquilar`
+            : "Buscar productos | Appquilar",
         description: "Busca productos en Appquilar.",
+        canonicalUrl: buildAbsolutePublicUrl(buildSearchPath(queryFromUrl)),
+        robots: "noindex,follow",
     });
 
     const handleSubmit = (event: FormEvent) => {
@@ -295,7 +297,7 @@ const SearchPage = () => {
             <Header />
             <main className="public-main public-section flex-1">
                 <div className="public-container grid grid-cols-1 gap-6 lg:grid-cols-[250px_1fr] xl:grid-cols-[270px_1fr]">
-                    <aside className="h-fit rounded-xl border border-border/70 bg-card p-4 lg:sticky lg:top-36">
+                    <aside className="h-fit rounded-xl border border-border/70 bg-card p-4 lg:sticky lg:top-[var(--public-sticky-offset)]">
                         <button
                             type="button"
                             onClick={applyFilters}

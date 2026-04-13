@@ -2,14 +2,16 @@ import { AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { useAuth } from "@/context/AuthContext";
+import { UserRole } from "@/domain/models/UserRole";
 
 const UserSubscriptionStatusNotice = () => {
   const { currentUser } = useAuth();
+  const isPlatformAdmin = currentUser?.roles?.includes(UserRole.ADMIN) ?? false;
   const hasCompanyContext = Boolean(
     currentUser?.companyContext?.companyId ?? currentUser?.companyId
   );
 
-  if (!currentUser || hasCompanyContext) {
+  if (!currentUser || hasCompanyContext || isPlatformAdmin) {
     return null;
   }
 

@@ -1,12 +1,14 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import {useSeo} from "@/hooks/useSeo.ts";
+import { PUBLIC_PATHS, buildAbsolutePublicUrl } from "@/domain/config/publicRoutes";
 
 const CookiesPage = () => {
     useSeo({
-        type: "static",
         title: "Política de cookies · Appquilar",
         description: "Información legal sobre cookies en Appquilar.",
+        canonicalUrl: buildAbsolutePublicUrl(PUBLIC_PATHS.cookies),
+        robots: "noindex,follow",
     });
 
     return (

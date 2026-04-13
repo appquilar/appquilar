@@ -7,16 +7,18 @@ import { usePublicBlogPosts } from '@/application/hooks/useBlog';
 import BlogPublicCard from '@/components/blog/BlogPublicCard';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { useSeo } from '@/hooks/useSeo';
+import { PUBLIC_PATHS, buildAbsolutePublicUrl, buildBlogPagePath } from '@/domain/config/publicRoutes';
 
 const BlogPage = () => {
     useScrollToTop();
-    useSeo({
-        title: 'Blog · Appquilar',
-        description: 'Noticias, consejos y novedades sobre alquiler en Appquilar.',
-    });
-
     const [searchParams, setSearchParams] = useSearchParams();
     const page = Math.max(1, Number.parseInt(searchParams.get('page') ?? '1', 10) || 1);
+
+    useSeo({
+        title: page > 1 ? `Blog de alquiler - pagina ${page} | Appquilar` : 'Blog de alquiler | Appquilar',
+        description: 'Noticias, consejos y novedades sobre alquiler, marketplace y economia circular en Appquilar.',
+        canonicalUrl: buildAbsolutePublicUrl(buildBlogPagePath(page)),
+    });
 
     const { data, isLoading, isError } = usePublicBlogPosts({
         page,
@@ -29,7 +31,7 @@ const BlogPage = () => {
 
     const title = useMemo(() => {
         if (total === 0) return 'Blog';
-        return `Blog (${total})`;
+        return `Blog`;
     }, [total]);
 
     const setPage = (nextPage: number) => {
@@ -52,7 +54,7 @@ const BlogPage = () => {
                     <div className="space-y-2">
                         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
                         <p className="text-muted-foreground">
-                            Artículos y novedades del marketplace.
+                            Artículos y novedades del mundo del alquiler.
                         </p>
                     </div>
 

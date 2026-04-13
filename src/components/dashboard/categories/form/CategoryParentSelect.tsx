@@ -60,7 +60,11 @@ const CategoryParentSelect = ({
                               }: Props) => {
     const [open, setOpen] = useState(false);
 
-    const { categories, isLoading, applyFilters } = usePlatformCategories();
+    const { categories, isLoading, applyFilters, setPerPage } = usePlatformCategories();
+
+    useEffect(() => {
+        setPerPage(500);
+    }, [setPerPage]);
 
     const filteredCategories = useMemo(() => {
         if (!excludeCategoryId) return categories;

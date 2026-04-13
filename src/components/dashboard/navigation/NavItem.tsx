@@ -12,7 +12,7 @@ interface NavItemProps {
  * Componente para cada elemento de navegación
  */
 const NavItem = ({ link, isActive, onClick }: NavItemProps) => {
-  const Icon = link.icon;
+  const Icon = link.icon as ((props: { size?: number }) => JSX.Element) | undefined;
   
   return (
     <li key={link.href}>
@@ -27,7 +27,7 @@ const NavItem = ({ link, isActive, onClick }: NavItemProps) => {
       >
         <div className="flex items-center min-w-0">
           <span className={`mr-3 transition-colors ${isActive ? 'text-[#F19D70]' : 'text-slate-400 group-hover/nav-item:text-[#F19D70]'}`}>
-            <Icon size={18} />
+            {Icon ? <Icon size={18} /> : null}
           </span>
           <span className="truncate">{link.title}</span>
         </div>

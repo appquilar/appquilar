@@ -2,18 +2,24 @@ import { CreditCard, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
+import { UserRole } from "@/domain/models/UserRole";
 import {
     useCreateCheckoutSession,
     useCreateCustomerPortalSession,
 } from "@/application/hooks/useBilling";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ApiError } from "@/infrastructure/http/ApiClient";
 import {
     getEffectiveUserPlan,
     isSubscriptionActive,
     type UserPlanType,
 } from "@/domain/models/Subscription";
+import {
+    buildBillingBaseUrl,
+    buildBillingCheckoutSuccessUrl,
+    buildBillingReturnUrl,
+} from "@/hooks/useBillingReturnSync";
+import { extractBackendErrorMessage } from "@/utils/backendError";
 
 const USER_PLAN_LABELS: Record<UserPlanType, string> = {
     explorer: "Explorer",
@@ -43,16 +49,18 @@ const UserSubscriptionSettingsCard = () => {
     const { currentUser } = useAuth();
     const createPortalMutation = useCreateCustomerPortalSession();
     const createCheckoutMutation = useCreateCheckoutSession();
+    const isPlatformAdmin = currentUser?.roles?.includes(UserRole.ADMIN) ?? false;
 
     const hasCompanyProfile = Boolean(
         currentUser?.companyContext?.companyId ?? currentUser?.companyId
     );
 
-    if (!currentUser || hasCompanyProfile) {
+    if (!currentUser || hasCompanyProfile || isPlatformAdmin) {
         return null;
     }
 
     const currentUrl = typeof window !== "undefined" ? window.location.href : "";
+    const currentBaseUrl = buildBillingBaseUrl(currentUrl);
     const rawPlan: UserPlanType = currentUser.planType ?? "explorer";
     const currentStatus = currentUser.subscriptionStatus ?? "active";
     const currentPlan: UserPlanType = getEffectiveUserPlan(rawPlan, currentStatus);
@@ -71,7 +79,7 @@ const UserSubscriptionSettingsCard = () => {
         try {
             const response = await createPortalMutation.mutateAsync({
                 scope: "user",
-                returnUrl: currentUrl,
+                returnUrl: buildBillingReturnUrl(currentBaseUrl, "user"),
             });
 
             newTab.location.href = response.url;
@@ -90,8 +98,12 @@ const UserSubscriptionSettingsCard = () => {
             const response = await createCheckoutMutation.mutateAsync({
                 scope: "user",
                 planType: "user_pro",
-                successUrl: currentUrl,
-                cancelUrl: currentUrl,
+                successUrl: buildBillingCheckoutSuccessUrl(
+                    currentBaseUrl,
+                    "user",
+                    "user_pro"
+                ),
+                cancelUrl: currentBaseUrl,
             });
 
             window.location.assign(response.url);
@@ -180,25 +192,6 @@ const UserSubscriptionSettingsCard = () => {
             </div>
         </div>
     );
-};
-
-const extractBackendErrorMessage = (error: unknown): string | null => {
-    if (!(error instanceof ApiError)) {
-        return null;
-    }
-
-    const payload = error.payload as { error?: unknown } | undefined;
-    const backendError = payload?.error;
-
-    if (Array.isArray(backendError) && typeof backendError[0] === "string") {
-        return backendError[0];
-    }
-
-    if (typeof backendError === "string") {
-        return backendError;
-    }
-
-    return null;
 };
 
 export default UserSubscriptionSettingsCard;

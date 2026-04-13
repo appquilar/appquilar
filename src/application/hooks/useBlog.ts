@@ -11,7 +11,7 @@ import {
     AdminBlogPostListParams,
     BlogPostListParams,
 } from '@/domain/repositories/BlogRepository';
-import { ApiError } from '@/infrastructure/http/ApiClient';
+import { getErrorMessage } from '@/utils/backendError';
 
 const BLOG_QUERY_KEYS = {
     publicList: (params: BlogPostListParams) => ['blog', 'public', params] as const,
@@ -19,31 +19,6 @@ const BLOG_QUERY_KEYS = {
     adminList: (params: AdminBlogPostListParams) => ['blog', 'admin', params] as const,
     adminPost: (postId?: string) => ['blog', 'admin', 'post', postId] as const,
     categories: () => ['blog', 'admin', 'categories'] as const,
-};
-
-const getErrorMessage = (error: unknown, fallback: string): string => {
-    if (error instanceof ApiError) {
-        const firstError = error.payload?.errors && Object.values(error.payload.errors)[0]?.[0];
-        if (firstError) {
-            return firstError;
-        }
-
-        if (Array.isArray(error.payload?.error) && typeof error.payload.error[0] === 'string') {
-            return error.payload.error[0];
-        }
-
-        if (typeof error.payload?.error === 'string') {
-            return error.payload.error;
-        }
-
-        return fallback;
-    }
-
-    if (error instanceof Error) {
-        return error.message;
-    }
-
-    return fallback;
 };
 
 export const usePublicBlogPosts = (params: BlogPostListParams = {}) => {

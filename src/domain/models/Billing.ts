@@ -16,6 +16,11 @@ export interface CreateCustomerPortalSessionInput {
     returnUrl: string;
 }
 
+export interface SynchronizeCheckoutSessionInput {
+    scope: BillingScope;
+    sessionId: string;
+}
+
 export interface MigrateCompanyToExplorerInput {
     targetOwnerUserId?: string | null;
     confirm: boolean;
@@ -28,4 +33,8 @@ export interface CompanyMigrationResult {
 
 export interface BillingSessionResult {
     url: string;
+}
+
+export interface CheckoutSessionSynchronizationResult {
+    synchronized: boolean;
 }

@@ -1,12 +1,13 @@
 import type { ComponentType } from "react";
 import { Link } from "react-router-dom";
-import { Instagram } from "lucide-react";
+import { Instagram, type LucideProps } from "lucide-react";
+import { PUBLIC_PATHS } from "@/domain/config/publicRoutes";
 
 type SocialLink = {
     key: string;
     label: string;
     href: string;
-    Icon: ComponentType<{ size?: number }>;
+    Icon: ComponentType<LucideProps>;
 };
 
 type FooterLink =
@@ -30,17 +31,17 @@ const SOCIAL_LINKS: SocialLink[] = [
 ];
 
 const COMPANY_LINKS: FooterLink[] = [
-    { key: "about", label: "Quiénes somos", to: "/about" },
-    { key: "partners", label: "Colabora con nosotros", to: "/partners" },
-    { key: "blog", label: "Blog", to: "/blog" },
-    { key: "contact", label: "Contacto", to: "/contact" },
+    { key: "about", label: "Quiénes somos", to: PUBLIC_PATHS.about },
+    { key: "partners", label: "Colabora con nosotros", to: PUBLIC_PATHS.partners },
+    { key: "blog", label: "Blog", to: PUBLIC_PATHS.blog },
+    { key: "contact", label: "Contacto", to: PUBLIC_PATHS.contact },
 ];
 
 const LEGAL_LINKS: FooterLink[] = [
-    { key: "terms", label: "Términos de uso", to: "/legal/terminos" },
-    { key: "privacy", label: "Política de privacidad", to: "/legal/privacidad" },
-    { key: "cookies", label: "Política de cookies", to: "/legal/cookies" },
-    { key: "legal", label: "Aviso legal", to: "/legal/aviso-legal" },
+    { key: "terms", label: "Términos de uso", to: PUBLIC_PATHS.terms },
+    { key: "privacy", label: "Política de privacidad", to: PUBLIC_PATHS.privacy },
+    { key: "cookies", label: "Política de cookies", to: PUBLIC_PATHS.cookies },
+    { key: "legal", label: "Aviso legal", to: PUBLIC_PATHS.legalNotice },
 ];
 
 const FooterNavLink = ({ link, className }: { link: FooterLink; className?: string }) => {
@@ -57,9 +58,11 @@ const FooterNavLink = ({ link, className }: { link: FooterLink; className?: stri
         );
     }
 
+    const internalLink = link as Extract<FooterLink, { to: string }>;
+
     return (
-        <Link to={link.to} className={className}>
-            {link.label}
+        <Link to={internalLink.to} className={className}>
+            {internalLink.label}
         </Link>
     );
 };

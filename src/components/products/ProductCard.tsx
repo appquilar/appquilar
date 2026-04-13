@@ -3,6 +3,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Edit, Trash } from "lucide-react";
 import { Link } from "react-router-dom";
+import { buildProductPath } from "@/domain/config/publicRoutes";
 
 export interface ProductPrice {
     daily: number; // (en tu UI ahora mismo lo estás mostrando directo)
@@ -79,7 +80,7 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
             </CardContent>
 
             <CardFooter className="px-4 pt-3 pb-4 flex flex-col gap-2">
-                <Link to={`/product/${product.slug}`} className="w-full">
+                <Link to={buildProductPath(product.slug)} className="w-full">
                     <Button variant="default" size="sm" className="h-9 gap-1 w-full rounded-lg text-sm">
                         Ver producto
                     </Button>

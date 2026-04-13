@@ -1,19 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
-import { SeoService } from '@/infrastructure/services/SeoService';
 import { useRentConversations } from '@/application/hooks/useRentConversations';
 import { RentStatus } from '@/domain/models/Rental';
 import RentConversationList, { ConversationStatusFilter } from '@/components/dashboard/messages/RentConversationList';
 import RentConversationPanel from '@/components/dashboard/messages/RentConversationPanel';
 import RentConversationSummary from '@/components/dashboard/messages/RentConversationSummary';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useSeo } from '@/hooks/useSeo';
 import { Button } from '@/components/ui/button';
 import DashboardSectionHeader from '@/components/dashboard/common/DashboardSectionHeader';
+import { buildAbsolutePublicUrl } from '@/domain/config/publicRoutes';
 
 const OPEN_EXCLUDED_STATUSES: RentStatus[] = ['rental_completed', 'cancelled'];
 
 const MessagesDashboard = () => {
+  useSeo({
+    title: "Mensajes | Dashboard Appquilar",
+    description: "Conversaciones de alquiler entre tienda y cliente.",
+    canonicalUrl: buildAbsolutePublicUrl("/dashboard/messages"),
+    robots: "noindex,nofollow",
+  });
   const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -26,16 +33,6 @@ const MessagesDashboard = () => {
 
   const initialRentId = searchParams.get('rent_id');
   const [selectedRentId, setSelectedRentId] = useState<string | null>(initialRentId);
-
-  useEffect(() => {
-    const setupSeo = async () => {
-      const seoService = SeoService.getInstance();
-      const seoInfo = await seoService.getSeoInfo('dashboard');
-      document.title = 'Mensajes | ' + seoInfo.title;
-    };
-
-    setupSeo();
-  }, []);
 
   useEffect(() => {
     const updateAvailableHeight = () => {

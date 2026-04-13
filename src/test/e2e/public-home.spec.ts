@@ -8,7 +8,11 @@ test.beforeEach(async ({ page }) => {
 test("public home renders and category panel can be opened/closed", async ({ page }) => {
   await page.goto("/");
 
-  const allCategoriesButton = page.locator("button:visible", { hasText: "Todas las categorías" }).first();
+  await expect(page.getByRole("heading", { name: /La Forma Inteligente de Alquilar/i })).toBeVisible({
+    timeout: 10000,
+  });
+
+  const allCategoriesButton = page.getByRole("button", { name: "Todas las categorías" }).first();
   await expect(allCategoriesButton).toBeVisible();
 
   await allCategoriesButton.click();

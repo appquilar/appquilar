@@ -18,7 +18,11 @@ export const formatTime = (date: Date): string => {
 /**
  * Handles hour selection for a date
  */
-export const handleHourChange = (field: any, date: Date, hour: string) => {
+export const handleHourChange = (
+  field: { onChange: (value: Date) => void },
+  date: Date,
+  hour: string
+) => {
   const [h, m] = hour.split(':').map(Number);
   const newDate = new Date(date);
   newDate.setHours(h, m);

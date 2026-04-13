@@ -100,7 +100,12 @@ const CompanyFormPage = () => {
         });
     }, [profileQuery.data, form]);
 
-    const { searchInputRef, mapContainerRef, isMapsLoading } = useAddressMap(
+    const {
+        autocompleteContainerRef,
+        mapContainerRef,
+        isMapsLoading,
+        mapsError,
+    } = useAddressMap(
         form,
         !profileQuery.isLoading && !profileQuery.isError
     );
@@ -328,11 +333,15 @@ const CompanyFormPage = () => {
 
                             <div className="space-y-1">
                                 <FormLabel>Buscar dirección</FormLabel>
-                                <Input
-                                    ref={searchInputRef}
-                                    placeholder="Empieza a escribir y selecciona una dirección..."
-                                    disabled={isMapsLoading}
+                                <div
+                                    ref={autocompleteContainerRef}
+                                    className="min-h-10"
                                 />
+                                {mapsError && (
+                                    <p className="text-xs text-destructive">
+                                        {mapsError}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

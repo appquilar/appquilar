@@ -90,12 +90,33 @@ When `VITE_LANDING_ONLY_MODE=true`, the platform app shell is not mounted and pl
 make up
 ```
 
+In another terminal, forward Stripe webhooks locally:
+
+```bash
+make stripe-listen
+```
+
+After `stripe login` is already done, the local Stripe flow is:
+
+1. Run `make up`.
+2. Run `make stripe-listen` in another terminal.
+3. If the `whsec_...` shown by Stripe CLI is different from the one in the backend env, copy `/Users/victor/development/appquilar/api/.env.local.example` to `/Users/victor/development/appquilar/api/.env.local`, set `STRIPE_WEBHOOK_SECRET=whsec_...`, and restart the API container.
+
+Example:
+
+```bash
+cp /Users/victor/development/appquilar/api/.env.local.example /Users/victor/development/appquilar/api/.env.local
+docker-compose -f /Users/victor/development/appquilar/api/docker-compose.yml restart php
+```
+
+You do not need to create a new Stripe Dashboard webhook for local development. Keep `make stripe-listen` running while testing billing.
+
 Domains:
 
 - `https://dev.appquilar.com` (frontend)
 - `https://dev.api.appquilar.com` (backend API)
 
-See `docs/local-dev-domains-https.md` for full setup details.
+See `docs/local-dev-domains-https.md` for full setup details, including the local Stripe webhook flow.
 
 ## Dashboard E2E (Seeded)
 

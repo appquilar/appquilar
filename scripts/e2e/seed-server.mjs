@@ -951,7 +951,7 @@ const handleApiRequest = async (req, res, parsedUrl) => {
       slug: body.slug ?? normalize(body.name ?? "categoria").replace(/\s+/g, "-"),
       description: body.description ?? null,
       parent_id: body.parent_id ?? null,
-      icon_id: body.icon_id ?? null,
+      icon_name: body.icon_name ?? null,
       featured_image_id: body.featured_image_id ?? null,
       landscape_image_id: body.landscape_image_id ?? null,
     };
@@ -1020,7 +1020,7 @@ const handleApiRequest = async (req, res, parsedUrl) => {
     if (typeof body.slug === "string") category.slug = body.slug;
     if (typeof body.description === "string" || body.description === null) category.description = body.description;
     if (typeof body.parent_id === "string" || body.parent_id === null) category.parent_id = body.parent_id;
-    if (typeof body.icon_id === "string" || body.icon_id === null) category.icon_id = body.icon_id;
+    if (typeof body.icon_name === "string" || body.icon_name === null) category.icon_name = body.icon_name;
     if (typeof body.featured_image_id === "string" || body.featured_image_id === null) {
       category.featured_image_id = body.featured_image_id;
     }

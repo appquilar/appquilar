@@ -1,24 +1,26 @@
-
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ICONS_MAP } from '@/domain/constants/iconMapping';
-import { IconPickerProps } from '@/domain/types/icon';
+import CategoryIcon from '@/components/categories/CategoryIcon';
+import { CATEGORY_ICON_NAMES } from '@/components/categories/categoryIconNames';
+
+type IconPickerProps = {
+  selectedIcon: string | null;
+  onSelectIcon: (iconName: string | null) => void;
+};
 
 const IconPicker = ({ selectedIcon, onSelectIcon }: IconPickerProps) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredIcons = Object.keys(ICONS_MAP).filter(iconName =>
+  const filteredIcons = CATEGORY_ICON_NAMES.filter(iconName =>
     iconName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const renderIcon = (iconName: string) => {
-    const IconComponent = ICONS_MAP[iconName];
-    return <IconComponent className="w-6 h-6" />;
-  };
+  const prettifyIconName = (iconName: string) =>
+    iconName.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
 
   return (
     <TooltipProvider>
@@ -35,6 +37,32 @@ const IconPicker = ({ selectedIcon, onSelectIcon }: IconPickerProps) => {
             className="pl-9 w-full"
           />
         </div>
+
+        {selectedIcon ? (
+          <div className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2">
+            <div className="flex items-center gap-3">
+              <CategoryIcon
+                iconName={selectedIcon}
+                containerClassName="h-10 w-10 rounded-md bg-background text-foreground shadow-sm"
+                iconClassName="h-5 w-5"
+              />
+              <div className="flex flex-col">
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Icono seleccionado
+                </span>
+                <span className="text-sm font-medium">{prettifyIconName(selectedIcon)}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onSelectIcon(null)}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Quitar icono
+            </button>
+          </div>
+        ) : null}
         
         <ScrollArea className="h-[200px] border rounded-md p-2">
           <div className="grid grid-cols-6 gap-2">
@@ -45,15 +73,19 @@ const IconPicker = ({ selectedIcon, onSelectIcon }: IconPickerProps) => {
                     type="button"
                     onClick={() => onSelectIcon(iconName)}
                     className={cn(
-                      "p-2 rounded hover:bg-accent flex items-center justify-center",
-                      selectedIcon === iconName && "bg-accent"
+                      "p-2 rounded border border-transparent hover:bg-accent flex items-center justify-center transition-colors",
+                      selectedIcon === iconName && "border-primary bg-accent"
                     )}
                   >
-                    {renderIcon(iconName)}
+                    <CategoryIcon
+                      iconName={iconName}
+                      containerClassName="h-10 w-10 rounded-md bg-transparent"
+                      iconClassName="h-6 w-6"
+                    />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="capitalize">{iconName.replace('-', ' ')}</p>
+                  <p>{prettifyIconName(iconName)}</p>
                 </TooltipContent>
               </Tooltip>
             ))}

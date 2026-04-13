@@ -7,12 +7,15 @@ import UserSearchForm from "./user-management/UserSearchForm";
 import UserTable from "./user-management/UserTable";
 import ResultsCount from "./user-management/ResultsCount";
 import {useSeo} from "@/hooks/useSeo.ts";
+import { buildAbsolutePublicUrl } from "@/domain/config/publicRoutes";
 
 const UserManagement = () => {
-    useSeo(
-        { type: "dashboard-section", section: "Usuarios" },
-        { noIndex: true }
-    );
+    useSeo({
+        title: "Usuarios | Dashboard Appquilar",
+        description: "Zona privada de gestion de usuarios.",
+        canonicalUrl: buildAbsolutePublicUrl("/dashboard/users"),
+        robots: "noindex,nofollow",
+    });
     const navigate = useNavigate();
 
     const {

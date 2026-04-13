@@ -25,7 +25,7 @@ const RentalSummary = ({
   };
 
   return (
-    <div className="bg-white rounded-lg border p-6 sticky top-24">
+    <div className="rounded-lg border bg-white p-6 lg:sticky lg:top-[var(--public-sticky-offset)]">
       <h3 className="text-xl font-semibold mb-4">Resumen de Alquiler</h3>
       
       {selectedStartDate && selectedEndDate ? (

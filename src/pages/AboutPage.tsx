@@ -1,12 +1,13 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import {useSeo} from "@/hooks/useSeo.ts";
+import { useSeo } from "@/hooks/useSeo";
+import { PUBLIC_PATHS, buildAbsolutePublicUrl } from "@/domain/config/publicRoutes";
 
 const AboutPage = () => {
     useSeo({
-        type: "static",
-        title: "Sobre Appquilar",
-        description: "Conoce qué es Appquilar y nuestra misión.",
+        title: "Quiénes somos | Appquilar",
+        description: "Conoce Appquilar, nuestra misión y cómo ayudamos a alquilar productos de forma más sencilla en España.",
+        canonicalUrl: buildAbsolutePublicUrl(PUBLIC_PATHS.about),
     });
 
     return (

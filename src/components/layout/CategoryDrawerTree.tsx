@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 
 import type { Category } from "@/domain/models/Category";
-import { compositionRoot } from "@/compositionRoot";
 import { Input } from "@/components/ui/input";
 import { buildCategoryBreadcrumbName } from "@/utils/categoryBreadcrumb";
+import { buildCategoryPath } from "@/domain/config/publicRoutes";
+import CategoryIcon from "@/components/categories/CategoryIcon";
 
 interface Props {
     categories: Category[];
@@ -79,12 +80,6 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
     const [openIds, setOpenIds] = useState<Set<string>>(new Set());
     const [q, setQ] = useState("");
 
-    /**
-     * Cache en memoria (por iconId, no por categoryId).
-     */
-    const iconUrlByIconIdRef = useRef<Map<string, string>>(new Map());
-    const [iconUrlByIconId, setIconUrlByIconId] = useState<Record<string, string>>({});
-
     const byId = useMemo(() => buildCategoryMap(categories), [categories]);
     const tree = useMemo(() => buildTree(categories), [categories]);
 
@@ -109,78 +104,6 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
         });
     };
 
-    // Lista de iconIds que existen (estable)
-    const iconIdsKey = useMemo(() => {
-        const ids = categories.map((c) => c.iconId).filter(Boolean) as string[];
-        ids.sort();
-        return ids.join("|");
-    }, [categories]);
-
-    // Descarga de iconos SOLO cuando el drawer está abierto, y SOLO los que faltan en cache
-    useEffect(() => {
-        let alive = true;
-
-        const load = async () => {
-            if (!isOpen) return;
-            if (!iconIdsKey) return;
-
-            const iconIds = iconIdsKey.split("|").filter(Boolean);
-            const missing = iconIds.filter((iconId) => !iconUrlByIconIdRef.current.has(iconId));
-            if (missing.length === 0) return;
-
-            try {
-                const entries = await Promise.all(
-                    missing.map(async (iconId) => {
-                        const blob = await compositionRoot.mediaService.getImage(iconId, "ORIGINAL");
-                        const url = URL.createObjectURL(blob);
-                        return [iconId, url] as const;
-                    })
-                );
-
-                if (!alive) return;
-
-                for (const [iconId, url] of entries) {
-                    iconUrlByIconIdRef.current.set(iconId, url);
-                }
-
-                setIconUrlByIconId(() => {
-                    const next: Record<string, string> = {};
-                    for (const [iconId, url] of iconUrlByIconIdRef.current.entries()) {
-                        next[iconId] = url;
-                    }
-                    return next;
-                });
-            } catch {
-                // ignore
-            }
-        };
-
-        void load();
-
-        return () => {
-            alive = false;
-        };
-    }, [isOpen, iconIdsKey]);
-
-    // cleanup on unmount
-    useEffect(() => {
-        return () => {
-            for (const url of iconUrlByIconIdRef.current.values()) {
-                URL.revokeObjectURL(url);
-            }
-            iconUrlByIconIdRef.current.clear();
-        };
-    }, []);
-
-    const RowIcon = ({ category }: { category: Category }) => {
-        if (!category.iconId) return <span className="h-9 w-9 shrink-0 rounded bg-muted" />;
-
-        const url = iconUrlByIconId[category.iconId];
-        if (!url) return <span className="h-9 w-9 shrink-0 rounded bg-muted animate-pulse" />;
-
-        return <img src={url} alt="" className="h-10 w-10 object-contain shrink-0" loading="lazy" />;
-    };
-
     const renderNode = (node: Node, depth: number) => {
         const { category, children } = node;
         const hasChildren = children.length > 0;
@@ -191,9 +114,13 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
         return (
             <div key={category.id} className="select-none">
                 <div className={ROW_BASE} style={{ paddingLeft }}>
-                    <RowIcon category={category} />
+                    <CategoryIcon
+                        iconName={category.iconName}
+                        containerClassName="h-10 w-10 shrink-0 rounded-md bg-muted/80 text-foreground"
+                        iconClassName="h-5 w-5"
+                    />
 
-                    <Link to={`/category/${category.slug}`} onClick={onNavigate} className="flex-1 min-w-0">
+                    <Link to={buildCategoryPath(category.slug)} onClick={onNavigate} className="flex-1 min-w-0">
                         <span className="text-sm font-medium text-foreground truncate">{category.name}</span>
                     </Link>
 
@@ -250,7 +177,7 @@ export const CategoryDrawerTree = ({ categories, isOpen, onNavigate }: Props) =>
                                 return (
                                     <Link
                                         key={r.id}
-                                        to={`/category/${r.slug}`}
+                                        to={buildCategoryPath(r.slug)}
                                         onClick={onNavigate}
                                         className="flex flex-col gap-1 py-3 hover:bg-secondary rounded-md px-2"
                                     >

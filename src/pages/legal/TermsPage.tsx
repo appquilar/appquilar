@@ -1,12 +1,14 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import {useSeo} from "@/hooks/useSeo.ts";
+import { PUBLIC_PATHS, buildAbsolutePublicUrl } from "@/domain/config/publicRoutes";
 
 const TermsPage = () => {
     useSeo({
-        type: "static",
         title: "Términos y condiciones de uso · Appquilar",
         description: "Términos y condiciones de uso en Appquilar.",
+        canonicalUrl: buildAbsolutePublicUrl(PUBLIC_PATHS.terms),
+        robots: "noindex,follow",
     });
 
     return (

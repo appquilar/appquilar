@@ -3,8 +3,12 @@ import { toast } from "sonner";
 
 import { useCreateCheckoutSession } from "@/application/hooks/useBilling";
 import { useAuth } from "@/context/AuthContext";
-import { ApiError } from "@/infrastructure/http/ApiClient";
 import { getEffectiveUserPlan } from "@/domain/models/Subscription";
+import {
+  buildBillingBaseUrl,
+  buildBillingCheckoutSuccessUrl,
+} from "@/hooks/useBillingReturnSync";
+import { extractBackendErrorMessage } from "@/utils/backendError";
 
 interface UpgradeToProLinkProps {
   onAfterNavigate?: () => void;
@@ -32,13 +36,14 @@ const UpgradeToProLink = ({ onAfterNavigate }: UpgradeToProLinkProps) => {
 
   const handleUpgradeToPro = async () => {
     const currentUrl = window.location.href;
+    const currentBaseUrl = buildBillingBaseUrl(currentUrl);
 
     try {
       const checkoutSession = await createCheckoutMutation.mutateAsync({
         scope: "user",
         planType: "user_pro",
-        successUrl: currentUrl,
-        cancelUrl: currentUrl,
+        successUrl: buildBillingCheckoutSuccessUrl(currentBaseUrl, "user", "user_pro"),
+        cancelUrl: currentBaseUrl,
       });
 
       onAfterNavigate?.();
@@ -73,25 +78,6 @@ const UpgradeToProLink = ({ onAfterNavigate }: UpgradeToProLinkProps) => {
       </div>
     </button>
   );
-};
-
-const extractBackendErrorMessage = (error: unknown): string | null => {
-  if (!(error instanceof ApiError)) {
-    return null;
-  }
-
-  const payload = error.payload as { error?: unknown } | undefined;
-  const backendError = payload?.error;
-
-  if (Array.isArray(backendError) && typeof backendError[0] === "string") {
-    return backendError[0];
-  }
-
-  if (typeof backendError === "string") {
-    return backendError;
-  }
-
-  return null;
 };
 
 export default UpgradeToProLink;

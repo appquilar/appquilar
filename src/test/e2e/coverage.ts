@@ -58,7 +58,6 @@ export const persistPageCoverage = async (page: Page, testInfo: TestInfo): Promi
 
   if (!Array.isArray(coverageKeys) || coverageKeys.length === 0) {
     if (isCoverageDebugEnabled) {
-      // eslint-disable-next-line no-console
       console.log(`[e2e-coverage] no coverage keys for: ${testInfo.title}`);
     }
     return;
@@ -68,7 +67,6 @@ export const persistPageCoverage = async (page: Page, testInfo: TestInfo): Promi
 
   if (Object.keys(coverage).length === 0) {
     if (isCoverageDebugEnabled) {
-      // eslint-disable-next-line no-console
       console.log(`[e2e-coverage] empty merged coverage for: ${testInfo.title}`);
     }
     return;
@@ -87,7 +85,6 @@ export const persistPageCoverage = async (page: Page, testInfo: TestInfo): Promi
   fs.writeFileSync(path.join(rawCoverageDir, `${filename}.json`), JSON.stringify(coverage), "utf8");
 
   if (isCoverageDebugEnabled) {
-    // eslint-disable-next-line no-console
     console.log(
       `[e2e-coverage] persisted ${Object.keys(coverage).length} files for: ${testInfo.title}`
     );
@@ -168,14 +165,15 @@ const safelyFillInputs = async (page: Page, budgetEnd: number): Promise<void> =>
 
 const safelySelectOptions = async (page: Page, budgetEnd: number): Promise<void> => {
   const selectLocator = page.locator("select:not([disabled])");
-  const selectHandles = (await selectLocator.elementHandles()).slice(0, 3);
+  const selectCount = Math.min(await selectLocator.count(), 3);
 
-  for (const select of selectHandles) {
+  for (let index = 0; index < selectCount; index += 1) {
     if (getTimeBudgetRemaining(budgetEnd) <= 0) {
       return;
     }
 
     try {
+      const select = selectLocator.nth(index);
       const optionValues = await select.locator("option").evaluateAll((options) =>
         options
           .map((option) => (option as HTMLOptionElement).value)

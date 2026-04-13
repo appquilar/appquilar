@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import ProductCard, { Product as ProductCardModel } from '../products/ProductCard';
 import type { Product } from '@/domain/models/Product';
 import { useLatestPublicProducts } from '@/application/hooks/useLatestPublicProducts';
+import { PUBLIC_PATHS } from '@/domain/config/publicRoutes';
 
 const getDailyPrice = (product: Product): number => {
   const tiers = product.price?.tiers ?? [];
@@ -58,7 +59,7 @@ const FeaturedProducts = () => {
 
         <div className="mt-5 flex justify-center">
           <Link
-            to="/search"
+            to={PUBLIC_PATHS.search}
             className="inline-flex items-center rounded-full border border-border/70 bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
           >
             Ver todos los productos

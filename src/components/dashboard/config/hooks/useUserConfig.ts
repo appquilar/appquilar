@@ -15,6 +15,8 @@ import {
 import { Uuid } from "@/domain/valueObject/uuidv4";
 import { userService, mediaService } from "@/compositionRoot";
 
+const toFormString = (value: string | null | undefined): string => value ?? "";
+
 export const useUserConfig = () => {
     const {
         currentUser,
@@ -41,9 +43,9 @@ export const useUserConfig = () => {
     const profileForm = useForm<ProfileFormValues>({
         resolver: zodResolver(profileFormSchema),
         defaultValues: {
-            firstName: currentUser?.firstName || "",
-            lastName: currentUser?.lastName || "",
-            email: currentUser?.email || "",
+            firstName: toFormString(currentUser?.firstName),
+            lastName: toFormString(currentUser?.lastName),
+            email: toFormString(currentUser?.email),
             profilePicture: "",
         },
     });
@@ -51,9 +53,9 @@ export const useUserConfig = () => {
     useEffect(() => {
         if (currentUser) {
             profileForm.reset({
-                firstName: currentUser.firstName,
-                lastName: currentUser.lastName,
-                email: currentUser.email,
+                firstName: toFormString(currentUser.firstName),
+                lastName: toFormString(currentUser.lastName),
+                email: toFormString(currentUser.email),
                 profilePicture: "",
             });
         }
@@ -77,16 +79,45 @@ export const useUserConfig = () => {
     const addressForm = useForm<AddressFormValues>({
         resolver: zodResolver(addressFormSchema),
         defaultValues: {
-            street: currentUser?.address?.street || "",
-            street2: currentUser?.address?.street2 || "",
-            city: currentUser?.address?.city || "",
-            state: currentUser?.address?.state || "",
-            country: currentUser?.address?.country || "",
-            postalCode: currentUser?.address?.postalCode || "",
-            latitude: currentUser?.location?.latitude || undefined,
-            longitude: currentUser?.location?.longitude || undefined,
+            street: toFormString(currentUser?.address?.street),
+            street2: toFormString(currentUser?.address?.street2),
+            city: toFormString(currentUser?.address?.city),
+            state: toFormString(currentUser?.address?.state),
+            country: toFormString(currentUser?.address?.country),
+            postalCode: toFormString(currentUser?.address?.postalCode),
+            latitude:
+                typeof currentUser?.location?.latitude === "number"
+                    ? currentUser.location.latitude
+                    : undefined,
+            longitude:
+                typeof currentUser?.location?.longitude === "number"
+                    ? currentUser.location.longitude
+                    : undefined,
         },
     });
+
+    useEffect(() => {
+        if (!currentUser) {
+            return;
+        }
+
+        addressForm.reset({
+            street: toFormString(currentUser.address?.street),
+            street2: toFormString(currentUser.address?.street2),
+            city: toFormString(currentUser.address?.city),
+            state: toFormString(currentUser.address?.state),
+            country: toFormString(currentUser.address?.country),
+            postalCode: toFormString(currentUser.address?.postalCode),
+            latitude:
+                typeof currentUser.location?.latitude === "number"
+                    ? currentUser.location.latitude
+                    : undefined,
+            longitude:
+                typeof currentUser.location?.longitude === "number"
+                    ? currentUser.location.longitude
+                    : undefined,
+        });
+    }, [currentUser, addressForm]);
 
     // --------------------------------------------------------
     // GESTIÓN INMEDIATA DE IMAGEN DE PERFIL - SUBIR
@@ -247,7 +278,8 @@ export const useUserConfig = () => {
                     postalCode: data.postalCode,
                 },
                 location:
-                    data.latitude && data.longitude
+                    typeof data.latitude === "number" &&
+                    typeof data.longitude === "number"
                         ? {
                             latitude: data.latitude,
                             longitude: data.longitude,

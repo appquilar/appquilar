@@ -245,7 +245,7 @@ describe("useProducts hooks", () => {
 
   it("creates a product and invalidates products query", async () => {
     const data = sampleFormData();
-    createProductMock.mockResolvedValueOnce(sampleProduct("created"));
+    createProductMock.mockResolvedValueOnce(undefined);
     const { wrapper, invalidateQueriesSpy } = createWrapper();
 
     const { result } = renderHook(() => useCreateProduct(), { wrapper });

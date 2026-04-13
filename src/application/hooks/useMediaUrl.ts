@@ -49,8 +49,9 @@ export const useMediaUrl = (
                 setUrl(null);
                 setError("No se pudo cargar la imagen.");
             } finally {
-                if (!alive) return;
-                setIsLoading(false);
+                if (alive) {
+                    setIsLoading(false);
+                }
             }
         };
 
