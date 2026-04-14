@@ -16,26 +16,34 @@ import {
 } from "@/application/hooks/useCompanyMembership";
 import type { CompanyUserRole } from "@/domain/models/CompanyMembership";
 import { UserRole } from "@/domain/models/UserRole";
+import {
+    getUserCompanyId,
+    getUserCompanyName,
+    isCompanyAdminUser,
+    isCompanyOwnerUser,
+} from "@/domain/models/User";
+import AccessRestricted from "@/components/dashboard/user-management/AccessRestricted";
 
 const CompanyUsersPage = () => {
     const { companyId: routeCompanyId } = useParams();
-    const { currentUser } = useAuth();
+    const { currentUser, hasRole } = useAuth();
     const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
-    const effectiveCompanyId = routeCompanyId ?? currentUser?.companyId ?? null;
-    const isPlatformAdmin = currentUser?.roles?.includes(UserRole.ADMIN) ?? false;
-    const isCompanyOwner = currentUser?.isCompanyOwner === true;
-    const isCompanyAdmin = currentUser?.companyRole === "ROLE_ADMIN";
+    const userCompanyId = getUserCompanyId(currentUser);
+    const effectiveCompanyId = routeCompanyId ?? userCompanyId ?? null;
+    const isPlatformAdmin = hasRole(UserRole.ADMIN);
+    const isCompanyOwner = isCompanyOwnerUser(currentUser);
+    const isCompanyAdmin = isCompanyAdminUser(currentUser);
     const canManage = isPlatformAdmin || isCompanyOwner || isCompanyAdmin;
 
-    const usersQuery = useCompanyUsers(effectiveCompanyId);
+    const usersQuery = useCompanyUsers(canManage ? effectiveCompanyId : null);
     const inviteMutation = useInviteCompanyUser();
     const removeMutation = useRemoveCompanyUser();
     const updateRoleMutation = useUpdateCompanyUserRole();
 
     const companyName = useMemo(() => {
-        return currentUser?.companyName ?? "Empresa";
-    }, [currentUser?.companyName]);
+        return getUserCompanyName(currentUser) ?? "Empresa";
+    }, [currentUser]);
 
     if (!effectiveCompanyId) {
         return (
@@ -47,7 +55,7 @@ const CompanyUsersPage = () => {
         );
     }
 
-    if (currentUser?.companyId && currentUser.companyId !== effectiveCompanyId && !isPlatformAdmin) {
+    if (userCompanyId && userCompanyId !== effectiveCompanyId && !isPlatformAdmin) {
         return (
             <div className="space-y-6">
                 <p className="text-sm text-muted-foreground">
@@ -55,6 +63,10 @@ const CompanyUsersPage = () => {
                 </p>
             </div>
         );
+    }
+
+    if (!canManage) {
+        return <AccessRestricted />;
     }
 
     const handleInviteUser = async (data: { email: string; role: CompanyUserRole }) => {
@@ -103,27 +115,19 @@ const CompanyUsersPage = () => {
         <div className="space-y-6">
             <FormHeader
                 title={`Gestión de usuarios - ${companyName}`}
-                backUrl="/dashboard/companies"
+                backUrl={isPlatformAdmin ? "/dashboard/companies" : `/dashboard/companies/${effectiveCompanyId}`}
             />
-
-            {!canManage && (
-                <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-                    Solo admins de empresa o de plataforma pueden gestionar usuarios.
-                </div>
-            )}
 
             <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-lg font-medium">Usuarios de la empresa</h2>
-                {canManage && (
-                    <Button
-                        onClick={() => setInviteDialogOpen(true)}
-                        className="gap-2"
-                        disabled={inviteMutation.isPending}
-                    >
-                        <Mail size={16} />
-                        Invitar usuario
-                    </Button>
-                )}
+                <Button
+                    onClick={() => setInviteDialogOpen(true)}
+                    className="gap-2"
+                    disabled={inviteMutation.isPending}
+                >
+                    <Mail size={16} />
+                    Invitar usuario
+                </Button>
             </div>
 
             {usersQuery.isLoading && (
@@ -141,7 +145,7 @@ const CompanyUsersPage = () => {
             {!usersQuery.isLoading && !usersQuery.isError && (
                 <CompanyUsersTable
                     users={usersQuery.data ?? []}
-                    canManage={canManage}
+                    canManage={true}
                     onRoleChange={handleRoleChange}
                     onRemoveUser={handleRemoveUser}
                     isMutating={removeMutation.isPending || updateRoleMutation.isPending}
@@ -152,7 +156,7 @@ const CompanyUsersPage = () => {
                 open={inviteDialogOpen}
                 onOpenChange={setInviteDialogOpen}
                 onSubmit={handleInviteUser}
-                disabled={!canManage || inviteMutation.isPending}
+                disabled={inviteMutation.isPending}
             />
         </div>
     );

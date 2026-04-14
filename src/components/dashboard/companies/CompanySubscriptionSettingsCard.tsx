@@ -24,6 +24,7 @@ import {
     buildBillingReturnUrl,
 } from "@/hooks/useBillingReturnSync";
 import { extractBackendErrorMessage } from "@/utils/backendError";
+import { isCompanyAdminUser } from "@/domain/models/User";
 
 const COMPANY_PLAN_LABELS: Record<CompanyPlanType, string> = {
     starter: "Starter",
@@ -51,14 +52,13 @@ const statusBadgeClass = (status: string | null | undefined): string => {
 };
 
 const CompanySubscriptionSettingsCard = () => {
-    const { currentUser, refreshCurrentUser } = useAuth();
+    const { currentUser, refreshCurrentUser, hasRole } = useAuth();
     const createPortalMutation = useCreateCustomerPortalSession();
     const migrateCompanyMutation = useMigrateCompanyToExplorer();
-    const isPlatformAdmin = currentUser?.roles?.includes(UserRole.ADMIN) ?? false;
+    const isPlatformAdmin = hasRole(UserRole.ADMIN);
 
     const companyContext = currentUser?.companyContext ?? null;
-    const effectiveCompanyRole = companyContext?.companyRole ?? currentUser?.companyRole ?? null;
-    const isCompanyAdmin = effectiveCompanyRole === "ROLE_ADMIN";
+    const isCompanyAdmin = isCompanyAdminUser(currentUser);
     const companyUsersQuery = useCompanyUsers(companyContext?.companyId, 1, 200);
     const ownerCandidates = useMemo(
         () =>

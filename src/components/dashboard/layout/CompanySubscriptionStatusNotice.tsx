@@ -5,8 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/domain/models/UserRole";
 
 const CompanySubscriptionStatusNotice = () => {
-    const { currentUser } = useAuth();
-    const isPlatformAdmin = currentUser?.roles?.includes(UserRole.ADMIN) ?? false;
+    const { currentUser, hasRole } = useAuth();
+    const isPlatformAdmin = hasRole(UserRole.ADMIN);
     const companyContext = currentUser?.companyContext ?? null;
 
     if (!companyContext || isPlatformAdmin) {

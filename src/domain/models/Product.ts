@@ -1,4 +1,31 @@
 export type PublicationStatusType = 'draft' | 'published' | 'archived';
+export type InventoryCapabilityState = 'enabled' | 'read_only' | 'disabled';
+export type ProductInventoryUnavailabilityReason = 'unpublished' | 'rental_paused' | 'out_of_stock';
+
+export interface ProductInventorySummary {
+    productId: string;
+    productInternalId: string;
+    totalQuantity: number;
+    reservedQuantity: number;
+    availableQuantity: number;
+    isRentalEnabled: boolean;
+    capabilityState: InventoryCapabilityState;
+    isRentableNow: boolean;
+    unavailabilityReason: ProductInventoryUnavailabilityReason | null;
+}
+
+export interface InventoryAllocation {
+    allocationId: string;
+    rentId: string;
+    productId: string;
+    productInternalId: string;
+    allocatedQuantity: number;
+    state: 'reserved' | 'active' | 'released';
+    startsAt: string;
+    endsAt: string;
+    createdAt: string;
+    releasedAt: string | null;
+}
 
 /**
  * Product model representing rental items
@@ -9,6 +36,8 @@ export interface Product {
     name: string;
     slug: string;
     description: string;
+    quantity: number;
+    isRentalEnabled: boolean;
     imageUrl: string;
     thumbnailUrl: string;
     publicationStatus: PublicationStatusType;
@@ -31,6 +60,7 @@ export interface Product {
     reviewCount: number;
     createdAt?: string;
     updatedAt?: string;
+    inventorySummary?: ProductInventorySummary | null;
     // Explicitly add image_ids to the domain model for editing
     image_ids?: string[];
     circle?: { latitude: number; longitude: number }[];
@@ -39,6 +69,7 @@ export interface Product {
         type: string;
         name: string;
         lastName?: string;
+        slug?: string;
         address?: {
             street: string;
             street2?: string;
@@ -79,7 +110,9 @@ export interface ProductFormData {
         negotiable: boolean;
         additionalInfo?: string;
     };
+    quantity: number;
     isRentable: boolean;
+    isRentalEnabled: boolean;
     isForSale: boolean;
     productType?: 'rental' | 'sale';
     companyId: string;

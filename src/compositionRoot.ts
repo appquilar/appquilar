@@ -23,6 +23,7 @@ import {SeoService} from "@/core/application/SeoService.ts";
 import {ProductRepository} from "@/domain/repositories/ProductRepository.ts";
 import {ApiProductRepository} from "@/infrastructure/repositories/ApiProductRepository.ts";
 import {ProductService} from "@/application/services/ProductService.ts";
+import {ProductInventoryService} from "@/application/services/ProductInventoryService.ts";
 import {RentalRepository} from "@/domain/repositories/RentalRepository.ts";
 import {ApiRentalRepository} from "@/infrastructure/repositories/ApiRentalRepository.ts";
 import {RentalService} from "@/application/services/RentalService.ts";
@@ -59,6 +60,7 @@ import { BillingService } from "@/application/services/BillingService.ts";
 import { PublicCompanyProfileRepository } from "@/domain/repositories/PublicCompanyProfileRepository.ts";
 import { ApiPublicCompanyProfileRepository } from "@/infrastructure/repositories/ApiPublicCompanyProfileRepository.ts";
 import { PublicCompanyProfileService } from "@/application/services/PublicCompanyProfileService.ts";
+import { CapabilityService } from "@/application/services/CapabilityService.ts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -103,6 +105,7 @@ export const mediaService = new MediaService(mediaRepository);
 export const categoryService = new CategoryService(categoryRepository);
 export const siteService = new SiteService(siteRepository);
 export const productService = new ProductService(productRepository);
+export const productInventoryService = new ProductInventoryService(productRepository);
 export const rentalService = new RentalService(rentalRepository);
 export const blogService = new BlogService(blogRepository);
 export const captchaService = new CaptchaService(captchaRepository);
@@ -115,6 +118,7 @@ export const userEngagementService = new UserEngagementService(userEngagementRep
 export const companyAdminService = new CompanyAdminService(companyAdminRepository);
 export const billingService = new BillingService(billingRepository);
 export const publicCompanyProfileService = new PublicCompanyProfileService(publicCompanyProfileRepository);
+export const capabilityService = new CapabilityService();
 
 export const compositionRoot = {
     queryClient,
@@ -148,6 +152,7 @@ export const compositionRoot = {
     categoryService,
     siteService,
     productService,
+    productInventoryService,
     rentalService,
     blogService,
     captchaService,
@@ -160,6 +165,7 @@ export const compositionRoot = {
     companyAdminService,
     billingService,
     publicCompanyProfileService,
+    capabilityService,
 };
 
 export type CompositionRoot = typeof compositionRoot;

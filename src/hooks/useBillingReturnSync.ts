@@ -79,12 +79,7 @@ export const buildBillingCheckoutSuccessUrl = (
         BILLING_CHECKOUT_SESSION_PLACEHOLDER
     );
 
-    return url
-        .toString()
-        .replace(
-            encodeURIComponent(BILLING_CHECKOUT_SESSION_PLACEHOLDER),
-            BILLING_CHECKOUT_SESSION_PLACEHOLDER
-        );
+    return url.toString();
 };
 
 export const buildBillingBaseUrl = (baseUrl: string): string =>

@@ -23,6 +23,8 @@ import {
     extractBackendErrorCode,
     extractBackendErrorStatus,
 } from "@/utils/backendError";
+import { useCurrentUser } from "@/application/hooks/useCurrentUser";
+import { isPlatformAdminUser, isRegularUser } from "@/domain/models/User";
 
 const authService = compositionRoot.authService;
 const companyMembershipService = compositionRoot.companyMembershipService;
@@ -90,41 +92,36 @@ export const useAuth = (): AuthContextType => {
 // PROVIDER
 //
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
     const [authBlockMessage, setAuthBlockMessage] = useState<string | null>(null);
+    const { user: currentUser, isLoading: isCurrentUserLoading, error } = useCurrentUser();
 
-    //
-    // Carga inicial: si hay sesión válida, traemos /api/me
-    //
+    const isLoading = isCurrentUserLoading;
+
     useEffect(() => {
-        const init = async () => {
-            try {
-                const user = await authService.getCurrentUser();
-                setCurrentUser(user);
+        if (!error) {
+            if (currentUser) {
                 setAuthBlockMessage(null);
-            } catch (error) {
-                setCurrentUser(null);
-                setAuthBlockMessage(resolveAuthBlockMessage(error));
-            } finally {
-                setIsLoading(false);
             }
-        };
+            return;
+        }
 
-        void init();
-    }, []);
+        setAuthBlockMessage(resolveAuthBlockMessage(error));
+    }, [currentUser, error]);
 
     //
     // Refrescar /me manualmente
     //
     const refreshCurrentUser = async (): Promise<User | null> => {
         try {
-            const user = await authService.refreshCurrentUser();
-            setCurrentUser(user);
+            await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+            const user = await queryClient.fetchQuery({
+                queryKey: ["currentUser"],
+                queryFn: () => authService.getCurrentUser(),
+            });
             setAuthBlockMessage(null);
             return user;
         } catch (error) {
-            setCurrentUser(null);
+            queryClient.setQueryData(["currentUser"], null);
             setAuthBlockMessage(resolveAuthBlockMessage(error));
             return null;
         }
@@ -134,21 +131,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // LOGIN
     //
     const login = async (email: string, password: string): Promise<void> => {
-        setIsLoading(true);
         setAuthBlockMessage(null);
 
         try {
             const credentials: LoginCredentials = { email, password };
 
             await authService.login(credentials);
-            const user = await authService.getCurrentUser();
-            console.log("User logged in:", user);
-            setCurrentUser(user);
-
-            // Por si acaso alguien más usa la query "currentUser"
             await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-        } finally {
-            setIsLoading(false);
+            await queryClient.fetchQuery({
+                queryKey: ["currentUser"],
+                queryFn: () => authService.getCurrentUser(),
+            });
+        } catch (error) {
+            setAuthBlockMessage(resolveAuthBlockMessage(error));
+            throw error;
         }
     };
 
@@ -162,34 +158,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password: string,
         captchaToken: string,
     ): Promise<void> => {
-        setIsLoading(true);
+        const data: RegisterUserData = {
+            firstName,
+            lastName,
+            email,
+            password,
+            captchaToken,
+        };
 
-        try {
-            const data: RegisterUserData = {
-                firstName,
-                lastName,
-                email,
-                password,
-                captchaToken,
-            };
-
-            await authService.register(data);
-            // No autologin → el AuthModal cambiará a "login"
-        } finally {
-            setIsLoading(false);
-        }
+        await authService.register(data);
+        // No autologin → el AuthModal cambiará a "login"
     };
 
     //
     // FORGOT PASSWORD
     //
     const requestPasswordReset = async (email: string): Promise<void> => {
-        setIsLoading(true);
-        try {
-            await authService.requestPasswordReset(email);
-        } finally {
-            setIsLoading(false);
-        }
+        await authService.requestPasswordReset(email);
     };
 
     const resetPassword = async (
@@ -197,13 +182,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         token: string,
         newPassword: string
     ): Promise<void> => {
-        setIsLoading(true);
-        try {
-            const data: ResetPasswordData = { email, token, newPassword };
-            await authService.resetPassword(data);
-        } finally {
-            setIsLoading(false);
-        }
+        const data: ResetPasswordData = { email, token, newPassword };
+        await authService.resetPassword(data);
     };
 
     //
@@ -230,9 +210,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     //
     const logout = async () => {
         await authService.logout();
-        setCurrentUser(null);
         setAuthBlockMessage(null);
 
+        queryClient.setQueryData(["currentUser"], null);
         await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
         await queryClient.invalidateQueries();
     };
@@ -274,13 +254,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // ROLES
     //
     const hasRole = (role: UserRole): boolean => {
-        return currentUser?.roles?.includes(role) ?? false;
+        if (!currentUser) {
+            return false;
+        }
+
+        if (role === UserRole.ADMIN) {
+            return isPlatformAdminUser(currentUser);
+        }
+
+        if (role === UserRole.REGULAR_USER) {
+            return isRegularUser(currentUser);
+        }
+
+        return currentUser.roles?.includes(role) ?? false;
     };
 
     const canAccess = (required: UserRole[]): boolean => {
         if (!required || required.length === 0) return true;
         if (!currentUser) return false;
-        return required.some((r) => currentUser.roles.includes(r));
+
+        if (isPlatformAdminUser(currentUser)) {
+            return true;
+        }
+
+        return required.some((role) => hasRole(role));
     };
 
     return (

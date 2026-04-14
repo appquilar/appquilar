@@ -6,11 +6,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { CalendarIcon } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { formatDate } from '../utils/dateTimeUtils';
-import { RentalFormValues } from '@/domain/models/RentalForm';
+import { RentalFormSubmitValues, RentalFormValues } from '@/domain/models/RentalForm';
 import { es } from 'date-fns/locale';
 
 interface DateTimeFieldProps {
-  form: UseFormReturn<RentalFormValues>;
+  form: UseFormReturn<RentalFormValues, undefined, RentalFormSubmitValues>;
   name: "startDate" | "endDate";
   label: string;
   disabledDateFn?: (date: Date) => boolean;

@@ -1,4 +1,4 @@
-import { Product, ProductFormData } from '../models/Product';
+import { InventoryAllocation, Product, ProductFormData, ProductInventorySummary } from '../models/Product';
 
 export interface ProductSearchCriteria {
     text?: string;
@@ -126,4 +126,10 @@ export interface ProductRepository {
      * Calculate rental cost for a product in a date range
      */
     calculateRentalCost(id: string, startDate: string, endDate: string): Promise<RentalCostBreakdown>;
+
+    getInventorySummary(productId: string): Promise<ProductInventorySummary | null>;
+
+    getInventoryAllocations(productId: string): Promise<InventoryAllocation[]>;
+
+    adjustInventory(productId: string, totalQuantity: number): Promise<void>;
 }

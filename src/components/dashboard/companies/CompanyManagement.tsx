@@ -11,6 +11,7 @@ import type { CompanyAdminSummary } from "@/domain/models/CompanyAdminSummary";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/domain/models/UserRole";
 import DashboardSectionHeader from "@/components/dashboard/common/DashboardSectionHeader";
+import { getUserCompanyId } from "@/domain/models/User";
 
 const PLAN_LABELS: Record<CompanyAdminSummary["planType"], string> = {
     starter: "Starter",
@@ -32,8 +33,9 @@ const STATUS_STYLES: Record<CompanyAdminSummary["subscriptionStatus"], string> =
 
 const CompanyManagement = () => {
     const navigate = useNavigate();
-    const { currentUser, isLoading: isAuthLoading } = useAuth();
-    const isAdmin = currentUser?.roles.includes(UserRole.ADMIN) ?? false;
+    const { currentUser, isLoading: isAuthLoading, hasRole } = useAuth();
+    const isAdmin = hasRole(UserRole.ADMIN);
+    const userCompanyId = getUserCompanyId(currentUser);
     const [searchQuery, setSearchQuery] = useState("");
     const {
         companies,
@@ -49,11 +51,10 @@ const CompanyManagement = () => {
             return;
         }
 
-        const companyId = currentUser?.companyId;
-        if (companyId) {
-            navigate(`/dashboard/companies/${companyId}`, { replace: true });
+        if (userCompanyId) {
+            navigate(`/dashboard/companies/${userCompanyId}`, { replace: true });
         }
-    }, [currentUser?.companyId, isAdmin, navigate]);
+    }, [isAdmin, navigate, userCompanyId]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -136,7 +137,7 @@ const CompanyManagement = () => {
                 </div>
             )}
 
-            {!isAuthLoading && !isAdmin && !currentUser?.companyId && (
+            {!isAuthLoading && !isAdmin && !userCompanyId && (
                 <div className="rounded-md border p-4">
                     <p className="text-sm text-muted-foreground">
                         Esta vista de empresas esta disponible solo para administradores.

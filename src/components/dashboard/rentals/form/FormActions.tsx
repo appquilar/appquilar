@@ -5,9 +5,16 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface FormActionsProps {
   isSubmitting: boolean;
   onCancel: () => void;
+  submitDisabled?: boolean;
+  submitLabel?: string;
 }
 
-const FormActions = ({ isSubmitting, onCancel }: FormActionsProps) => {
+const FormActions = ({
+  isSubmitting,
+  onCancel,
+  submitDisabled = false,
+  submitLabel = 'Crear Alquiler',
+}: FormActionsProps) => {
   const isMobile = useIsMobile();
   
   return (
@@ -23,10 +30,10 @@ const FormActions = ({ isSubmitting, onCancel }: FormActionsProps) => {
       </Button>
       <Button 
         type="submit" 
-        disabled={isSubmitting}
+        disabled={isSubmitting || submitDisabled}
         className={isMobile ? 'flex-1' : ''}
       >
-        {isSubmitting ? "Guardando..." : "Crear Alquiler"}
+        {isSubmitting ? "Guardando..." : submitLabel}
       </Button>
     </div>
   );

@@ -14,6 +14,24 @@ const getBasePrice = (product: Product): number | null => {
   return tier ? tier.pricePerDay : null;
 };
 
+const getAvailabilityLabel = (product: Product): string => {
+  const availableQuantity = product.inventorySummary?.availableQuantity ?? Math.max(0, product.quantity ?? 1);
+
+  if (product.publicationStatus !== 'published') {
+    return 'No publicado';
+  }
+
+  if (!product.isRentalEnabled) {
+    return 'Alquiler pausado';
+  }
+
+  if (availableQuantity <= 0) {
+    return 'Sin stock';
+  }
+
+  return `Disponible (${availableQuantity})`;
+};
+
 const ProductSearch = ({
   productSearch,
   onSearchChange,
@@ -53,6 +71,9 @@ const ProductSearch = ({
                   {getBasePrice(product) !== null
                     ? `Desde ${getBasePrice(product)}€/día`
                     : 'Precio no disponible'}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {getAvailabilityLabel(product)}
                 </div>
               </div>
             ))

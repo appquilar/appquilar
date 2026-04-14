@@ -6,12 +6,21 @@ import {UserRole} from "@/domain/models/UserRole";
 import { useAuth } from "@/context/AuthContext";
 import { useOwnedProductsCount } from "@/application/hooks/useProducts";
 import { useOwnerRentalsCount } from "@/application/hooks/useRentals";
+import {
+    getUserCompanyId,
+    hasCompanyMembership,
+    isCompanyAdminUser,
+    isCompanyOwnerUser,
+    isPlatformAdminUser,
+    isRegularUser,
+} from "@/domain/models/User";
 
 export const useNavigation = () => {
     const location = useLocation();
     const { currentUser } = useAuth();
-    const ownerId = currentUser?.companyId || currentUser?.id;
-    const ownerType = currentUser?.companyId ? "company" : "user";
+    const companyId = getUserCompanyId(currentUser);
+    const ownerId = companyId || currentUser?.id;
+    const ownerType = companyId ? "company" : "user";
     const ownedPublishedProductsCountQuery = useOwnedProductsCount({
         ownerId,
         ownerType,
@@ -21,18 +30,16 @@ export const useNavigation = () => {
     });
     const ownerRentalsCountQuery = useOwnerRentalsCount({ ownerId });
 
-    const roles = currentUser?.roles ?? [];
-    const isAdmin = roles.includes(UserRole.ADMIN);
-    const isRegularUser = roles.includes(UserRole.REGULAR_USER);
-    const isCompanyMember = Boolean(currentUser?.companyId);
-    const isCompanyOwner = currentUser?.isCompanyOwner === true;
-    const isCompanyAdmin = currentUser?.companyRole === "ROLE_ADMIN";
-    const companyId = currentUser?.companyId ?? null;
+    const isAdmin = isPlatformAdminUser(currentUser);
+    const isRegularAccount = isRegularUser(currentUser);
+    const isCompanyMember = hasCompanyMembership(currentUser);
+    const isCompanyOwner = isCompanyOwnerUser(currentUser);
+    const isCompanyAdmin = isCompanyAdminUser(currentUser);
     const hasPublishedProductsToRent = (ownedPublishedProductsCountQuery.data ?? 0) > 0;
     const hasRentalsAsOwner = (ownerRentalsCountQuery.data ?? 0) > 0;
     const shouldShowRentalsItem = hasPublishedProductsToRent || hasRentalsAsOwner;
 
-    const canUpgradeToCompany = isRegularUser && !isAdmin && !isCompanyMember;
+    const canUpgradeToCompany = isRegularAccount && !isAdmin && !isCompanyMember;
 
     const navSections: NavSection[] = [
         {

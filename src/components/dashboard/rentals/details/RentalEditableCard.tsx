@@ -12,17 +12,60 @@ import { toast } from '@/components/ui/use-toast';
 import { Money } from '@/domain/models/Money';
 import { RentActorRole } from '@/domain/services/RentalStateMachineService';
 
+const normalizeDecimalInput = (value: string) => value.replace(',', '.').trim();
+
+const requiredNonNegativeAmountSchema = (requiredMessage: string, invalidMessage: string) =>
+  z.union([z.string(), z.number()]).transform((value, ctx) => {
+    if (typeof value === 'number') {
+      if (Number.isFinite(value) && value >= 0) {
+        return value;
+      }
+
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: invalidMessage,
+      });
+
+      return z.NEVER;
+    }
+
+    const normalized = normalizeDecimalInput(value);
+
+    if (normalized === '') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: requiredMessage,
+      });
+
+      return z.NEVER;
+    }
+
+    const parsedValue = Number(normalized);
+
+    if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: invalidMessage,
+      });
+
+      return z.NEVER;
+    }
+
+    return parsedValue;
+  });
+
 const rentalEditSchema = z.object({
   startDate: z.string().min(1, 'Fecha de inicio obligatoria'),
   endDate: z.string().min(1, 'Fecha de fin obligatoria'),
-  priceAmount: z.number().min(0, 'El precio no puede ser negativo'),
-  depositAmount: z.number().min(0, 'La fianza no puede ser negativa'),
+  priceAmount: requiredNonNegativeAmountSchema('El precio es obligatorio', 'El precio no puede ser negativo'),
+  depositAmount: requiredNonNegativeAmountSchema('La fianza es obligatoria', 'La fianza no puede ser negativa'),
 }).refine((data) => data.endDate >= data.startDate, {
   message: 'La fecha de fin debe ser igual o posterior a la de inicio',
   path: ['endDate'],
 });
 
-type RentalEditValues = z.infer<typeof rentalEditSchema>;
+type RentalEditValues = z.input<typeof rentalEditSchema>;
+type RentalEditSubmitValues = z.output<typeof rentalEditSchema>;
 
 interface RentalEditableCardProps {
   rental: Rental;
@@ -54,7 +97,7 @@ const toCents = (value: number): number => Math.round((Number.isFinite(value) ? 
 
 const RentalEditableCard = ({ rental, viewerRole, isSaving, onSave }: RentalEditableCardProps) => {
   const canEditPrice = viewerRole === 'owner' || viewerRole === 'admin';
-  const form = useForm<RentalEditValues>({
+  const form = useForm<RentalEditValues, undefined, RentalEditSubmitValues>({
     resolver: zodResolver(rentalEditSchema),
     defaultValues: {
       startDate: toDateInput(rental.startDate),
@@ -99,7 +142,7 @@ const RentalEditableCard = ({ rental, viewerRole, isSaving, onSave }: RentalEdit
     }
   };
 
-  const handleSubmit = async (values: RentalEditValues) => {
+  const handleSubmit = async (values: RentalEditSubmitValues) => {
     const payload: {
       startDate: Date;
       endDate: Date;
@@ -159,11 +202,11 @@ const RentalEditableCard = ({ rental, viewerRole, isSaving, onSave }: RentalEdit
               <Label htmlFor="edit-price">Precio ({rental.price.currency})</Label>
               <Input
                 id="edit-price"
-                type="number"
-                min={0}
-                step={0.01}
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
                 disabled={!canEditPrice}
-                {...form.register('priceAmount', { valueAsNumber: true })}
+                {...form.register('priceAmount')}
               />
               {form.formState.errors.priceAmount?.message && (
                 <p className="text-sm text-destructive">{form.formState.errors.priceAmount.message}</p>
@@ -173,11 +216,11 @@ const RentalEditableCard = ({ rental, viewerRole, isSaving, onSave }: RentalEdit
               <Label htmlFor="edit-deposit">Fianza ({rental.deposit.currency})</Label>
               <Input
                 id="edit-deposit"
-                type="number"
-                min={0}
-                step={0.01}
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
                 disabled={!canEditPrice}
-                {...form.register('depositAmount', { valueAsNumber: true })}
+                {...form.register('depositAmount')}
               />
               {form.formState.errors.depositAmount?.message && (
                 <p className="text-sm text-destructive">{form.formState.errors.depositAmount.message}</p>

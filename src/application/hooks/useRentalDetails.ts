@@ -4,9 +4,10 @@ import { Rental, RentStatus } from '@/domain/models/Rental';
 import { Money } from '@/domain/models/Money';
 import { RentalStatusService } from '@/domain/services/RentalStatusService';
 import { RentalStateMachineService, RentActorRole, RentTransitionOption } from '@/domain/services/RentalStateMachineService';
-import { UserRole } from '@/domain/models/UserRole';
+import { getUserCompanyId, isPlatformAdminUser } from '@/domain/models/User';
 import { toast } from '@/components/ui/use-toast';
 import { useCurrentUser } from './useCurrentUser';
+import { ApiError } from '@/infrastructure/http/ApiClient';
 
 interface UseRentalDetailsReturn {
   rental: Rental | null;
@@ -27,6 +28,12 @@ interface UseRentalDetailsReturn {
   calculateDurationDays: () => number;
   formatDate: (date: Date) => string;
 }
+
+const isInventoryUnavailableError = (error: unknown): boolean =>
+  error instanceof ApiError
+  && error.status === 409
+  && Array.isArray((error.payload as { error?: unknown[] } | undefined)?.error)
+  && ((error.payload as { error?: unknown[] }).error ?? []).includes('product.inventory.unavailable');
 
 export const useRentalDetails = (id: string | undefined): UseRentalDetailsReturn => {
   const queryClient = useQueryClient();
@@ -58,10 +65,12 @@ export const useRentalDetails = (id: string | undefined): UseRentalDetailsReturn
         description: `Se proceso la accion sobre ${RentalStatusService.getStatusLabel(input.status)}.`,
       });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         title: 'Error',
-        description: 'No se pudo actualizar el estado del alquiler',
+        description: isInventoryUnavailableError(error)
+          ? 'No hay stock disponible para confirmar o activar este alquiler.'
+          : 'No se pudo actualizar el estado del alquiler',
         variant: 'destructive',
       });
     },
@@ -106,7 +115,7 @@ export const useRentalDetails = (id: string | undefined): UseRentalDetailsReturn
       user &&
       rentalQuery.data.status === 'lead_pending' &&
       (
-        (rentalQuery.data.ownerType === 'company' && user.companyId === rentalQuery.data.ownerId) ||
+        (rentalQuery.data.ownerType === 'company' && getUserCompanyId(user) === rentalQuery.data.ownerId) ||
         (rentalQuery.data.ownerType === 'user' && user.id === rentalQuery.data.ownerId)
       )
   );
@@ -117,12 +126,13 @@ export const useRentalDetails = (id: string | undefined): UseRentalDetailsReturn
       return 'viewer';
     }
 
-    if (user.roles.includes(UserRole.ADMIN)) {
+    if (isPlatformAdminUser(user)) {
       return 'admin';
     }
 
+    const companyId = getUserCompanyId(user);
     const isOwner =
-      (rental.ownerType === 'company' && user.companyId === rental.ownerId) ||
+      (rental.ownerType === 'company' && companyId === rental.ownerId) ||
       (rental.ownerType === 'user' && user.id === rental.ownerId);
 
     if (isOwner) {

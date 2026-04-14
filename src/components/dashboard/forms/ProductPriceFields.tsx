@@ -4,7 +4,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, InfoIcon } from 'lucide-react';
-import { ProductFormValues } from './productFormSchema';
+import { ProductFormValues, createEmptyPriceTier } from './productFormSchema';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ProductPriceFieldsProps {
@@ -26,11 +26,7 @@ const ProductPriceFields = ({ control }: ProductPriceFieldsProps) => {
         const currentTiers = tiersValues || fields;
 
         if (currentTiers.length === 0) {
-            append({
-                daysFrom: 1,
-                daysTo: undefined,
-                pricePerDay: 0,
-            });
+            append(createEmptyPriceTier());
             return;
         }
 
@@ -42,9 +38,8 @@ const ProductPriceFields = ({ control }: ProductPriceFieldsProps) => {
         const nextFrom = lastDaysTo > 0 ? lastDaysTo + 1 : lastDaysFrom + 1;
 
         append({
+            ...createEmptyPriceTier(),
             daysFrom: nextFrom,
-            daysTo: undefined,
-            pricePerDay: 0,
         });
     };
 
@@ -59,20 +54,19 @@ const ProductPriceFields = ({ control }: ProductPriceFieldsProps) => {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel className="text-base font-medium">Fianza (Depósito) €</FormLabel>
-                            <FormControl>
-                                <div className="relative max-w-xs">
+                            <div className="relative max-w-xs">
+                                <FormControl>
                                     <Input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
+                                        type="text"
+                                        inputMode="decimal"
                                         placeholder="0.00"
                                         value={field.value ?? ''}
-                                        onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                                        onChange={(e) => field.onChange(e.target.value)}
                                         className="pl-7"
                                     />
-                                    <span className="absolute left-3 top-2.5 text-muted-foreground">€</span>
-                                </div>
-                            </FormControl>
+                                </FormControl>
+                                <span className="absolute left-3 top-2.5 text-muted-foreground">€</span>
+                            </div>
                             <Alert className="mt-2">
                                 <InfoIcon className="h-4 w-4" />
                                 <AlertDescription className="text-xs">
@@ -152,26 +146,34 @@ const ProductPriceFields = ({ control }: ProductPriceFieldsProps) => {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-sm">Precio por día (€)</FormLabel>
-                                        <FormControl>
-                                            <div className="relative">
+                                        <div className="relative">
+                                            <FormControl>
                                                 <Input
-                                                    type="number"
-                                                    step="0.01"
+                                                    type="text"
+                                                    inputMode="decimal"
                                                     placeholder="0.00"
                                                     value={field.value ?? ''}
-                                                    onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                                                    onChange={(e) => field.onChange(e.target.value)}
                                                     className="pl-7"
                                                 />
-                                                <span className="absolute left-3 top-2.5 text-muted-foreground">€</span>
-                                            </div>
-                                        </FormControl>
+                                            </FormControl>
+                                            <span className="absolute left-3 top-2.5 text-muted-foreground">€</span>
+                                        </div>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
 
                             <div className="flex items-end">
-                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="text-destructive hover:text-destructive">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => remove(index)}
+                                    className="text-destructive hover:text-destructive"
+                                    disabled={fields.length === 1}
+                                    aria-label={`Eliminar tramo ${index + 1}`}
+                                >
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>

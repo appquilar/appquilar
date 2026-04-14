@@ -81,6 +81,23 @@ const ProductCard = ({
     };
 
     const statusConfig = getStatusConfig(product.publicationStatus);
+    const inventorySummary = product.inventorySummary ?? null;
+    const availableQuantity = inventorySummary?.availableQuantity ?? Math.max(0, product.quantity ?? 1);
+    const reservedQuantity = inventorySummary?.reservedQuantity ?? 0;
+    const inventoryStatusLabel = product.publicationStatus !== "published"
+        ? "No publicado"
+        : !product.isRentalEnabled
+            ? "Alquiler pausado"
+            : availableQuantity <= 0
+                ? "Sin stock"
+                : "Disponible";
+    const inventoryStatusClassName = product.publicationStatus !== "published"
+        ? "border-slate-200 bg-slate-100/90 text-slate-700"
+        : !product.isRentalEnabled
+            ? "border-amber-200 bg-amber-100/90 text-amber-700"
+            : availableQuantity <= 0
+                ? "border-rose-200 bg-rose-100/90 text-rose-700"
+                : "border-emerald-200 bg-emerald-100/90 text-emerald-700";
     const firstTierPrice = useMemo(() => {
         const tiers = Array.isArray(product.price?.tiers) ? product.price.tiers : [];
         if (tiers.length === 0) return 0;
@@ -143,6 +160,9 @@ const ProductCard = ({
                             {product.category.name}
                         </span>
                     )}
+                    <Badge variant="outline" className={`px-1.5 py-0.5 text-[11px] ${inventoryStatusClassName}`}>
+                        {inventoryStatusLabel}
+                    </Badge>
                     <span className="font-medium text-foreground">
                         Desde {formattedBasePrice}€/día
                     </span>
@@ -153,6 +173,20 @@ const ProductCard = ({
                 <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
                     {product.description || "Sin descripción"}
                 </p>
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                    <div className="rounded-lg bg-muted/40 px-2 py-2">
+                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Total</p>
+                        <p className="text-sm font-semibold text-foreground">{inventorySummary?.totalQuantity ?? product.quantity ?? 1}</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/40 px-2 py-2">
+                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Ocupado</p>
+                        <p className="text-sm font-semibold text-foreground">{reservedQuantity}</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/40 px-2 py-2">
+                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Libre</p>
+                        <p className="text-sm font-semibold text-foreground">{availableQuantity}</p>
+                    </div>
+                </div>
             </CardContent>
 
             <CardFooter className="!p-3 bg-muted/20 border-t border-border/50">

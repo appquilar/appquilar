@@ -206,7 +206,7 @@ describe("useBillingReturnSync", () => {
             "https://appquilar.com/dashboard/config?foo=bar&aq_billing_sync=1&aq_billing_scope=company&aq_billing_plan=pro"
         );
         expect(checkoutSuccessUrl).toBe(
-            "https://appquilar.com/dashboard/config?foo=bar&aq_billing_sync=1&aq_billing_scope=user&aq_billing_plan=user_pro&session_id={CHECKOUT_SESSION_ID}"
+            "https://appquilar.com/dashboard/config?foo=bar&aq_billing_sync=1&aq_billing_scope=user&aq_billing_plan=user_pro&session_id=%7BCHECKOUT_SESSION_ID%7D"
         );
     });
 });

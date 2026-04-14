@@ -102,7 +102,7 @@ const CompanyInfo = ({ company, locationLabel, onContact, isLoggedIn }: CompanyI
           onClick={onContact}
         >
           <Phone size={16} />
-          Contactar para Alquilar
+          Contactar con el proveedor
         </Button>
         {!isLoggedIn && (
           <p className="text-xs text-muted-foreground">

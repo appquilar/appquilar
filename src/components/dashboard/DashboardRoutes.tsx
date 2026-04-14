@@ -52,8 +52,22 @@ const DashboardRoutes = () => {
             <Route path="rentals/new" element={withRouteSuspense(<CreateRental />)} />
             <Route path="rentals/:id" element={withRouteSuspense(<RentalDetails />)} />
 
-            <Route path="companies" element={withRouteSuspense(<CompanyManagement />)} />
-            <Route path="companies/new" element={withRouteSuspense(<CompanyFormPage />)} />
+            <Route
+                path="companies"
+                element={withRouteSuspense(
+                    <RoleGuard requiredRoles={[UserRole.ADMIN]}>
+                        <CompanyManagement />
+                    </RoleGuard>
+                )}
+            />
+            <Route
+                path="companies/new"
+                element={withRouteSuspense(
+                    <RoleGuard requiredRoles={[UserRole.ADMIN]}>
+                        <CompanyFormPage />
+                    </RoleGuard>
+                )}
+            />
             <Route path="companies/:id" element={withRouteSuspense(<CompanyFormPage />)} />
             <Route
                 path="companies/:companyId/products"

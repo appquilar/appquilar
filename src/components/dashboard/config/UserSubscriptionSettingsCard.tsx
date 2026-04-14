@@ -46,10 +46,10 @@ const statusBadgeClass = (status: string | null | undefined): string => {
 };
 
 const UserSubscriptionSettingsCard = () => {
-    const { currentUser } = useAuth();
+    const { currentUser, hasRole } = useAuth();
     const createPortalMutation = useCreateCustomerPortalSession();
     const createCheckoutMutation = useCreateCheckoutSession();
-    const isPlatformAdmin = currentUser?.roles?.includes(UserRole.ADMIN) ?? false;
+    const isPlatformAdmin = hasRole(UserRole.ADMIN);
 
     const hasCompanyProfile = Boolean(
         currentUser?.companyContext?.companyId ?? currentUser?.companyId

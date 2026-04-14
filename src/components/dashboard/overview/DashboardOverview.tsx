@@ -157,11 +157,11 @@ const explorerPreviewMessages: EngagementLineChartPoint[] = [
 ];
 
 const DashboardOverview = () => {
-    const { currentUser } = useAuth();
+    const { currentUser, hasRole } = useAuth();
     const companyContext = currentUser?.companyContext ?? null;
     const companyId = companyContext?.companyId ?? currentUser?.companyId ?? null;
     const userId = currentUser?.id ?? null;
-    const isPlatformAdmin = currentUser?.roles?.includes(UserRole.ADMIN) ?? false;
+    const isPlatformAdmin = hasRole(UserRole.ADMIN);
     const userPlan = getEffectiveUserPlan(
         currentUser?.planType,
         currentUser?.subscriptionStatus
@@ -180,7 +180,8 @@ const DashboardOverview = () => {
             ? (companyContext?.productSlotLimit ?? getCompanyPlanProductLimit(companyContext))
             : (currentUser?.productSlotLimit ?? getUserPlanProductLimit(
                 currentUser?.planType,
-                currentUser?.subscriptionStatus
+                currentUser?.subscriptionStatus,
+                currentUser?.entitlements ?? null
             ));
     const createCheckoutMutation = useCreateCheckoutSession();
     const activeProductsCountQuery = useActiveProductsCount({

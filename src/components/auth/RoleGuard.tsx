@@ -26,7 +26,7 @@ interface RoleGuardProps {
  * - Mientras isLoading === true no decide nada (evita parpadeos/loops).
  */
 const RoleGuard = ({ children, requiredRoles }: RoleGuardProps) => {
-    const { isAuthenticated, isLoading, currentUser } = useAuth();
+    const { isAuthenticated, isLoading, canAccess } = useAuth();
     const location = useLocation();
     const path = location.pathname;
 
@@ -45,8 +45,7 @@ const RoleGuard = ({ children, requiredRoles }: RoleGuardProps) => {
         return <>{children}</>;
     }
 
-    const roles = currentUser?.roles ?? [];
-    const hasPermission = roles.some((role) => requiredRoles.includes(role));
+    const hasPermission = canAccess(requiredRoles);
 
     // 4️⃣ Autenticado pero sin permiso suficiente
     if (!hasPermission) {

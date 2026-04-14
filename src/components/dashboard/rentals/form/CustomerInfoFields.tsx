@@ -1,10 +1,10 @@
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { UseFormReturn } from 'react-hook-form';
-import { RentalFormValues } from '@/domain/models/RentalForm';
+import { RentalFormSubmitValues, RentalFormValues } from '@/domain/models/RentalForm';
 
 interface CustomerInfoFieldsProps {
-  form: UseFormReturn<RentalFormValues>;
+  form: UseFormReturn<RentalFormValues, undefined, RentalFormSubmitValues>;
 }
 
 const CustomerInfoFields = ({ form }: CustomerInfoFieldsProps) => {

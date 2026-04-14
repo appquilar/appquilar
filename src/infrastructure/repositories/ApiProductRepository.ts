@@ -1,4 +1,10 @@
-import { Product, ProductFormData, PublicationStatusType } from '@/domain/models/Product';
+import {
+    InventoryAllocation,
+    Product,
+    ProductFormData,
+    ProductInventorySummary,
+    PublicationStatusType
+} from '@/domain/models/Product';
 import {
     ProductRepository,
     ProductSearchCriteria,
@@ -193,7 +199,7 @@ export class ApiProductRepository implements ProductRepository {
     }
 
     async updateProduct(id: string, data: ProductFormData): Promise<Product> {
-        const dto = this.mapToDto(data);
+        const dto = this.mapToDto(data, false);
 
         // 1. Update basic data
         await this.client.patch(
@@ -201,6 +207,8 @@ export class ApiProductRepository implements ProductRepository {
             dto,
             { headers: this.getAuthHeaders() }
         );
+
+        await this.adjustInventory(id, data.quantity);
 
         // 2. Handle Status Transition
         if (data.publicationStatus) {
@@ -281,6 +289,54 @@ export class ApiProductRepository implements ProductRepository {
         };
     }
 
+    async getInventorySummary(productId: string): Promise<ProductInventorySummary | null> {
+        try {
+            const response = await this.client.get<any>(
+                `/api/products/${productId}/inventory`,
+                { headers: this.getAuthHeaders() }
+            );
+
+            const payload = (response as any).data && (response as any).success !== undefined
+                ? (response as any).data
+                : response;
+
+            return this.mapInventorySummary(payload);
+        } catch (error) {
+            console.error(`Error fetching inventory summary for product ${productId}`, error);
+            return null;
+        }
+    }
+
+    async getInventoryAllocations(productId: string): Promise<InventoryAllocation[]> {
+        try {
+            const response = await this.client.get<any>(
+                `/api/products/${productId}/inventory/allocations`,
+                { headers: this.getAuthHeaders() }
+            );
+
+            const payload = (response as any).data && (response as any).success !== undefined
+                ? (response as any).data
+                : response;
+
+            const items = Array.isArray(payload?.data) ? payload.data : [];
+            return items.map((item: any) => this.mapInventoryAllocation(item));
+        } catch (error) {
+            console.error(`Error fetching inventory allocations for product ${productId}`, error);
+            return [];
+        }
+    }
+
+    async adjustInventory(productId: string, totalQuantity: number): Promise<void> {
+        await this.client.post<void>(
+            `/api/products/${productId}/inventory/adjustments`,
+            { total_quantity: totalQuantity },
+            {
+                headers: this.getAuthHeaders(),
+                skipParseJson: true,
+            }
+        );
+    }
+
     private mapToDomain(apiData: any): Product {
         const imageIds = Array.isArray(apiData.image_ids) ? apiData.image_ids : [];
         const primaryImageId = imageIds[0];
@@ -302,6 +358,8 @@ export class ApiProductRepository implements ProductRepository {
             name: apiData.name || '',
             slug: apiData.slug || '',
             description: apiData.description || '',
+            quantity: Number(apiData.quantity ?? apiData.inventory_summary?.total_quantity ?? 1),
+            isRentalEnabled: Boolean(apiData.is_rental_enabled ?? apiData.inventory_summary?.is_rental_enabled ?? true),
             imageUrl: primaryImageId ? `${this.baseUrl}/api/media/images/${primaryImageId}/MEDIUM` : '',
             thumbnailUrl: primaryImageId ? `${this.baseUrl}/api/media/images/${primaryImageId}/THUMBNAIL` : '',
 
@@ -331,6 +389,7 @@ export class ApiProductRepository implements ProductRepository {
             reviewCount: apiData.review_count || 0,
             createdAt: apiData.created_at,
             updatedAt: apiData.updated_at,
+            inventorySummary: this.mapInventorySummary(apiData.inventory_summary),
             circle: Array.isArray(apiData.circle)
                 ? apiData.circle.map((point: any) => ({
                     latitude: point.latitude,
@@ -343,6 +402,7 @@ export class ApiProductRepository implements ProductRepository {
                     type: apiData.owner_data.type,
                     name: apiData.owner_data.name,
                     lastName: apiData.owner_data?.last_name,
+                    slug: apiData.owner_data?.slug,
                     address: apiData.owner_data.address
                         ? {
                             street: apiData.owner_data.address.street,
@@ -364,16 +424,16 @@ export class ApiProductRepository implements ProductRepository {
         };
     }
 
-    private mapToDto(data: ProductFormData): any {
+    private mapToDto(data: ProductFormData, includeQuantity: boolean = true): any {
         const product = data as any;
 
-        return {
+        const dto: any = {
             product_id: product.id,
             name: data.name,
             slug: data.slug,
             internal_id: data.internalId || data.slug || product.id,
             description: data.description,
-            quantity: 1,
+            is_rental_enabled: data.isRentalEnabled,
             company_id: product.company?.id || data.companyId,
             category_id: product.category?.id || data.categoryId,
             image_ids: product.images?.map((img: any) => img.id).filter(Boolean) || [],
@@ -388,6 +448,45 @@ export class ApiProductRepository implements ProductRepository {
                 days_from: tier.daysFrom,
                 days_to: tier.daysTo
             }))
+        };
+
+        if (includeQuantity) {
+            dto.quantity = data.quantity;
+        }
+
+        return dto;
+    }
+
+    private mapInventorySummary(apiData: any): ProductInventorySummary | null {
+        if (!apiData || typeof apiData !== 'object') {
+            return null;
+        }
+
+        return {
+            productId: apiData.product_id ?? '',
+            productInternalId: apiData.product_internal_id ?? '',
+            totalQuantity: Number(apiData.total_quantity ?? 1),
+            reservedQuantity: Number(apiData.reserved_quantity ?? 0),
+            availableQuantity: Number(apiData.available_quantity ?? 0),
+            isRentalEnabled: Boolean(apiData.is_rental_enabled ?? true),
+            capabilityState: apiData.capability_state ?? 'disabled',
+            isRentableNow: Boolean(apiData.is_rentable_now ?? false),
+            unavailabilityReason: apiData.unavailability_reason ?? null,
+        };
+    }
+
+    private mapInventoryAllocation(apiData: any): InventoryAllocation {
+        return {
+            allocationId: apiData.allocation_id,
+            rentId: apiData.rent_id,
+            productId: apiData.product_id,
+            productInternalId: apiData.product_internal_id,
+            allocatedQuantity: Number(apiData.allocated_quantity ?? 1),
+            state: apiData.state,
+            startsAt: apiData.starts_at,
+            endsAt: apiData.ends_at,
+            createdAt: apiData.created_at,
+            releasedAt: apiData.released_at ?? null,
         };
     }
 }

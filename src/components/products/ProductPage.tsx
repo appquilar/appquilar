@@ -9,9 +9,11 @@ import ContactModal from "./ContactModal";
 
 import { useAuth } from "@/context/AuthContext";
 import { useProductBySlug } from "@/application/hooks/useProducts";
+import { useProductRentability } from "@/application/hooks/useProductInventory";
 import { useSeo } from "@/hooks/useSeo";
 import { RentalCostBreakdown } from "@/domain/repositories/ProductRepository";
 import { useTrackProductView } from "@/application/hooks/useTrackProductView";
+import type { Product } from "@/domain/models/Product";
 import PublicBreadcrumbs from "@/components/common/PublicBreadcrumbs";
 import {
     PUBLIC_PATHS,
@@ -20,20 +22,22 @@ import {
     buildProductPath,
 } from "@/domain/config/publicRoutes";
 
-// ViewModel simplificado para la vista
 type ProductPageVm = {
     id: string;
-    internalId?: string;
+    internalId: string;
     name: string;
     slug: string;
     description: string;
+    quantity: number;
+    isRentalEnabled: boolean;
+    inventorySummary: Product["inventorySummary"];
     company: { id: string; name: string; slug: string };
     category: { id: string; name: string; slug: string };
-    price: { daily: number; deposit?: number; tiers?: Array<{ daysFrom: number; daysTo?: number; pricePerDay: number }> };
+    price: Product["price"];
     imageIds: string[];
     rating: number;
     reviewCount: number;
-    publicationStatus?: string;
+    publicationStatus: Product["publicationStatus"];
     location?: {
         city: string;
         state: string;
@@ -43,79 +47,10 @@ type ProductPageVm = {
     providerLocationLabel?: string;
 };
 
-type RawProductImage = {
-    id?: string | null;
-};
-
-type RawProductOwnerAddress = {
-    city?: string | null;
-    state?: string | null;
-    country?: string | null;
-};
-
-type RawProductOwnerGeoLocation = {
-    latitude?: number | null;
-    longitude?: number | null;
-    circle?: Array<{ latitude: number; longitude: number }> | null;
-};
-
-type RawProductOwner = {
-    ownerId?: string | null;
-    name?: string | null;
-    lastName?: string | null;
-    slug?: string | null;
-    address?: RawProductOwnerAddress | null;
-    geoLocation?: RawProductOwnerGeoLocation | null;
-};
-
-type RawProductCategory = {
-    id?: string | null;
-    name?: string | null;
-    slug?: string | null;
-};
-
-type RawProductPriceTier = {
-    daysFrom: number;
-    daysTo?: number;
-    pricePerDay?: number;
-};
-
-type RawProductPrice = {
-    daily?: number;
-    deposit?: number;
-    tiers?: RawProductPriceTier[];
-};
-
-type RawProductPublicationStatus = {
-    status?: string | null;
-};
-
-type RawProductData = {
-    id?: string | null;
-    internalId?: string | null;
-    internal_id?: string | null;
-    name?: string | null;
-    slug?: string | null;
-    description?: string | null;
-    ownerData?: RawProductOwner | null;
-    companyId?: string | null;
-    companyName?: string | null;
-    companySlug?: string | null;
-    category?: RawProductCategory | null;
-    categoryId?: string | null;
-    categoryName?: string | null;
-    categorySlug?: string | null;
-    price?: RawProductPrice | null;
-    image_ids?: string[] | null;
-    imageIds?: string[] | null;
-    images?: RawProductImage[] | null;
-    rating?: number | null;
-    reviewCount?: number | null;
-    publication_status?: RawProductPublicationStatus | null;
-    publicationStatus?: string | null;
-};
-
-const getBaseTierDailyPrice = (tiers: Array<{ pricePerDay?: number }> | undefined, fallback: number): number => {
+const getBaseTierDailyPrice = (
+    tiers: Array<{ pricePerDay: number }> | undefined,
+    fallback: number
+): number => {
     if (!Array.isArray(tiers) || tiers.length === 0) {
         return fallback;
     }
@@ -126,90 +61,71 @@ const getBaseTierDailyPrice = (tiers: Array<{ pricePerDay?: number }> | undefine
 
 const ProductPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
-
     const { isLoggedIn } = useAuth();
 
     const [contactModalOpen, setContactModalOpen] = useState(false);
-    const [leadStartDate, setLeadStartDate] = useState('');
-    const [leadEndDate, setLeadEndDate] = useState('');
+    const [leadStartDate, setLeadStartDate] = useState("");
+    const [leadEndDate, setLeadEndDate] = useState("");
     const [leadCalculation, setLeadCalculation] = useState<RentalCostBreakdown | null>(null);
 
     const query = useProductBySlug(slug ?? null);
 
-    const product: ProductPageVm | null = useMemo(() => {
-        const raw = query.data as RawProductData | null;
-        if (!raw) return null;
-
-        const imageIds: string[] = Array.isArray(raw.image_ids)
-            ? raw.image_ids
-            : Array.isArray(raw.imageIds)
-                ? raw.imageIds
-                : Array.isArray(raw.images)
-                    ? raw.images
-                        .map((image) => image?.id)
-                        .filter((imageId): imageId is string => typeof imageId === "string" && imageId.length > 0)
-                    : [];
+    const product = useMemo<ProductPageVm | null>(() => {
+        const raw = query.data;
+        if (!raw) {
+            return null;
+        }
 
         const ownerAddress = raw.ownerData?.address;
         const ownerGeo = raw.ownerData?.geoLocation;
         const ownerName = [raw.ownerData?.name, raw.ownerData?.lastName]
-            .filter(Boolean)
+            .filter((value): value is string => Boolean(value && value.trim().length > 0))
             .join(" ")
             .trim();
-        const ownerCircle = Array.isArray(ownerGeo?.circle) ? ownerGeo.circle : undefined;
-        const hasOwnerCoordinates =
-            typeof ownerGeo?.latitude === "number" &&
-            typeof ownerGeo?.longitude === "number";
         const locationParts = [
             ownerAddress?.city,
             ownerAddress?.state,
             ownerAddress?.country,
-        ].filter(Boolean);
-
-        const location = {
-            city: ownerAddress?.city || "Ubicación desconocida",
-            state: ownerAddress?.state || ownerAddress?.country || "",
-            coordinates: hasOwnerCoordinates
-                ? ([ownerGeo.longitude, ownerGeo.latitude] as [number, number])
-                : undefined,
-            circle: ownerCircle,
-        };
+        ].filter((value): value is string => Boolean(value && value.trim().length > 0));
+        const hasOwnerCoordinates = typeof ownerGeo?.latitude === "number" && typeof ownerGeo?.longitude === "number";
 
         return {
-            id: raw.id ?? "",
-            internalId: raw.internalId ?? raw.internal_id ?? "",
-            name: raw.name ?? "",
-            slug: raw.slug ?? "",
-            description: raw.description ?? "",
+            id: raw.id,
+            internalId: raw.internalId,
+            name: raw.name,
+            slug: raw.slug,
+            description: raw.description,
+            quantity: raw.quantity,
+            isRentalEnabled: raw.isRentalEnabled,
+            inventorySummary: raw.inventorySummary ?? null,
             company: {
-                id: raw.ownerData?.ownerId ?? raw.companyId ?? "",
-                name: ownerName || raw.companyName || "—",
-                slug: raw.ownerData?.slug ?? raw.companySlug ?? "",
+                id: raw.ownerData?.ownerId ?? "",
+                name: ownerName || "Proveedor",
+                slug: raw.ownerData?.slug ?? "",
             },
-            category: {
-                id: raw.category?.id ?? raw.categoryId ?? "",
-                name: raw.category?.name ?? raw.categoryName ?? "—",
-                slug: raw.category?.slug ?? raw.categorySlug ?? "",
-            },
+            category: raw.category,
             price: {
                 daily: getBaseTierDailyPrice(raw.price?.tiers, raw.price?.daily ?? 0),
                 deposit: raw.price?.deposit,
-                tiers: Array.isArray(raw.price?.tiers)
-                    ? raw.price.tiers.map((tier) => ({
-                        daysFrom: tier.daysFrom,
-                        daysTo: tier.daysTo,
-                        pricePerDay: tier.pricePerDay ?? 0,
-                    }))
-                    : []
+                tiers: raw.price?.tiers ?? [],
             },
-            imageIds,
-            rating: raw.rating || 0,
-            reviewCount: raw.reviewCount || 0,
-            publicationStatus: raw.publication_status?.status || raw.publicationStatus || 'draft',
-            location: location,
+            imageIds: raw.image_ids ?? [],
+            rating: raw.rating,
+            reviewCount: raw.reviewCount,
+            publicationStatus: raw.publicationStatus,
+            location: {
+                city: ownerAddress?.city || "Ubicación desconocida",
+                state: ownerAddress?.state || ownerAddress?.country || "",
+                coordinates: hasOwnerCoordinates
+                    ? [ownerGeo!.longitude, ownerGeo!.latitude]
+                    : undefined,
+                circle: raw.circle ?? ownerGeo?.circle,
+            },
             providerLocationLabel: locationParts.join(", "),
         };
-    }, [query.data]); // Eliminada dependencia de currentUser para el cálculo del producto
+    }, [query.data]);
+
+    const rentability = useProductRentability(query.data ?? null);
 
     useTrackProductView(product?.id ?? null);
 
@@ -223,21 +139,24 @@ const ProductPage: React.FC = () => {
             const tomorrow = new Date(today);
             tomorrow.setDate(today.getDate() + 1);
             const toInput = (date: Date) => {
-                const y = date.getFullYear();
-                const m = String(date.getMonth() + 1).padStart(2, '0');
-                const d = String(date.getDate()).padStart(2, '0');
-                return `${y}-${m}-${d}`;
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, "0");
+                const day = String(date.getDate()).padStart(2, "0");
+                return `${year}-${month}-${day}`;
             };
+
             setLeadStartDate(toInput(today));
             setLeadEndDate(toInput(tomorrow));
         }
-    }, [product, leadStartDate, leadEndDate]);
+    }, [leadEndDate, leadStartDate, product]);
 
-    // Construir URLs de imágenes
     const galleryImages = useMemo(() => {
-        if (!product?.imageIds?.length) return [];
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-        return product.imageIds.map(id => `${baseUrl}/api/media/images/${id}/LARGE`);
+        if (!product?.imageIds?.length) {
+            return [];
+        }
+
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+        return product.imageIds.map((id) => `${baseUrl}/api/media/images/${id}/LARGE`);
     }, [product]);
 
     const breadcrumbItems = useMemo(() => {
@@ -273,6 +192,9 @@ const ProductPage: React.FC = () => {
         const description = product.providerLocationLabel
             ? `${product.name} disponible en alquiler en ${product.providerLocationLabel}. ${dailyPrice}.`
             : `${product.name} disponible en alquiler en Appquilar. ${dailyPrice}.`;
+        const availability = rentability.isRentableNow
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock";
 
         return {
             title: `${product.name} | Appquilar`,
@@ -300,23 +222,23 @@ const ProductPage: React.FC = () => {
                     image: galleryImages,
                     offers: product.price.daily > 0
                         ? {
-                              "@type": "Offer",
-                              priceCurrency: "EUR",
-                              price: product.price.daily,
-                              availability: "https://schema.org/InStock",
-                              url: buildAbsolutePublicUrl(canonicalPath),
-                          }
+                            "@type": "Offer",
+                            priceCurrency: "EUR",
+                            price: product.price.daily,
+                            availability,
+                            url: buildAbsolutePublicUrl(canonicalPath),
+                        }
                         : undefined,
                     brand: product.company?.name
                         ? {
-                              "@type": "Brand",
-                              name: product.company.name,
-                          }
+                            "@type": "Brand",
+                            name: product.company.name,
+                        }
                         : undefined,
                 },
             ],
         };
-    }, [breadcrumbItems, galleryImages, product, query.isError]);
+    }, [breadcrumbItems, galleryImages, product, query.isError, rentability.isRentableNow]);
 
     useSeo(seoConfig);
 
@@ -325,6 +247,7 @@ const ProductPage: React.FC = () => {
             toast.error("Debes iniciar sesión para contactar con el propietario");
             return;
         }
+
         setContactModalOpen(true);
     };
 
@@ -332,9 +255,9 @@ const ProductPage: React.FC = () => {
         return (
             <div className="public-main public-section">
                 <div className="public-container py-2">
-                <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
-                </div>
+                    <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
+                    </div>
                 </div>
             </div>
         );
@@ -344,10 +267,10 @@ const ProductPage: React.FC = () => {
         return (
             <div className="public-main public-section">
                 <div className="public-container py-2">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold mb-4">Producto no encontrado</h2>
-                    <p>Lo sentimos, el producto que estás buscando no existe o ha sido eliminado.</p>
-                </div>
+                    <div className="text-center">
+                        <h2 className="text-2xl font-bold mb-4">Producto no encontrado</h2>
+                        <p>Lo sentimos, el producto que estás buscando no existe o ha sido eliminado.</p>
+                    </div>
                 </div>
             </div>
         );
@@ -392,7 +315,6 @@ const ProductPage: React.FC = () => {
                         onLeadEndDateChange={setLeadEndDate}
                         onLeadCalculationChange={setLeadCalculation}
                     />
-
                 </div>
             </div>
 

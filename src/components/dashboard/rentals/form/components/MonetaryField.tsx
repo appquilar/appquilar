@@ -1,10 +1,10 @@
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { UseFormReturn } from 'react-hook-form';
-import { RentalFormValues } from '@/domain/models/RentalForm';
+import { RentalFormSubmitValues, RentalFormValues } from '@/domain/models/RentalForm';
 
 interface MonetaryFieldProps {
-  form: UseFormReturn<RentalFormValues>;
+  form: UseFormReturn<RentalFormValues, undefined, RentalFormSubmitValues>;
   amountName: 'priceAmount' | 'depositAmount';
   currencyName: 'priceCurrency' | 'depositCurrency';
   label: string;
@@ -23,14 +23,12 @@ const MonetaryField = ({ form, amountName, currencyName, label, description, dis
             <FormLabel>{label}</FormLabel>
             <FormControl>
               <Input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 placeholder="0.00"
                 {...field}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  field.onChange(Number.isNaN(value) ? 0 : value);
-                }}
-                min={0}
+                value={field.value ?? ''}
+                onChange={(e) => field.onChange(e.target.value)}
                 disabled={disabled}
               />
             </FormControl>

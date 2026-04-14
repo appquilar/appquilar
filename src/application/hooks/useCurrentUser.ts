@@ -3,23 +3,23 @@ import { authService } from "@/compositionRoot";
 
 export function useCurrentUser() {
     const session = authService.getCurrentSessionSync();
-
-    const token = session?.token ?? null;
+    const isAuthenticated = Boolean(session?.token);
 
     const query = useQuery({
-        queryKey: ["currentUser", token], // <-- depende del token
+        queryKey: ["currentUser"],
         queryFn: () => {
-            if (!token) return null;
+            if (!isAuthenticated) return null;
             return authService.getCurrentUser();
         },
-        enabled: Boolean(token),  // solo corre si hay token
+        enabled: isAuthenticated,
         staleTime: 1000 * 60 * 5,
     });
 
     return {
-        user: query.data,
-        isAuthenticated: Boolean(query.data),
+        user: query.data ?? null,
+        isAuthenticated: isAuthenticated && Boolean(query.data),
         isLoading: query.isLoading,
+        error: query.error,
         refetch: query.refetch,
     };
 }

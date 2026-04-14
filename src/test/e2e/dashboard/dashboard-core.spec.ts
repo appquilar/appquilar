@@ -1,4 +1,27 @@
-import { test, expect } from "./fixtures";
+import { test, expect, type Page } from "./fixtures";
+
+const jsonHeaders = { "content-type": "application/json" };
+
+const mockCurrentUserPayload = async (
+  page: Page,
+  mutate: (data: Record<string, unknown>) => Record<string, unknown> | void
+) => {
+  await page.route("**/api/me", async (route) => {
+    const response = await route.fetch();
+    const payload = await response.json();
+    const data = payload?.data && typeof payload.data === "object" ? { ...payload.data } : {};
+    const nextData = mutate(data) ?? data;
+
+    await route.fulfill({
+      status: response.status(),
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        ...payload,
+        data: nextData,
+      }),
+    });
+  });
+};
 
 test.describe("Dashboard Core (seeded API)", () => {
   test.beforeEach(async ({ seed, request, page }) => {
@@ -64,15 +87,220 @@ test.describe("Dashboard Core (seeded API)", () => {
   test("company admin is redirected when trying admin-only pages", async ({ page, request, seed }) => {
     await seed.loginAs(page, request, "company_admin");
 
+    await page.goto("/dashboard");
+    await expect(page.getByRole("link", { name: "Mi empresa" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Usuarios empresa" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Usuarios", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Empresas", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Categorías" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Blog" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Sitio" })).toHaveCount(0);
+
     await page.goto("/dashboard/users");
     await expect(page).toHaveURL(/\/dashboard$/);
     await expect(page.getByRole("heading", { name: "Resumen" })).toBeVisible();
+
+    await page.goto("/dashboard/companies");
+    await expect(page).toHaveURL(/\/dashboard$/);
 
     await page.goto("/dashboard/sites");
     await expect(page).toHaveURL(/\/dashboard$/);
 
     await page.goto("/dashboard/categories");
     await expect(page).toHaveURL(/\/dashboard$/);
+
+    await page.goto("/dashboard/blog");
+    await expect(page).toHaveURL(/\/dashboard$/);
+  });
+
+  test("sanitizes contaminated ROLE_ADMIN payload for a regular user", async ({ page, request, seed }) => {
+    await seed.loginAs(page, request, "user");
+
+    await mockCurrentUserPayload(page, (data) => {
+      data.roles = ["ROLE_ADMIN"];
+      data.plan_type = "user_pro";
+      data.subscription_status = "active";
+      data.entitlements = {
+        plan_type: "user_pro",
+        subscription_status: "active",
+        quotas: {
+          active_products: 5,
+          team_members: null,
+        },
+        capabilities: {},
+        overrides: {
+          is_platform_admin: false,
+          is_company_owner: false,
+          is_company_admin: false,
+          is_founding_account: false,
+        },
+      };
+      data.company_id = null;
+      data.company_name = null;
+      data.company_role = null;
+      data.is_company_owner = false;
+      data.company_context = null;
+
+      return data;
+    });
+
+    await page.goto("/dashboard");
+    await expect(page.getByRole("heading", { name: "Resumen" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Usuarios", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Empresas", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Categorías" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Blog" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Sitio" })).toHaveCount(0);
+
+    await page.goto("/dashboard/users");
+    await expect(page).toHaveURL(/\/dashboard$/);
+
+    await page.goto("/dashboard/blog");
+    await expect(page).toHaveURL(/\/dashboard$/);
+  });
+
+  test("sanitizes contaminated ROLE_ADMIN payload for a company admin", async ({ page, request, seed }) => {
+    await seed.loginAs(page, request, "company_admin");
+
+    await mockCurrentUserPayload(page, (data) => {
+      data.roles = ["ROLE_ADMIN"];
+      data.plan_type = "user_pro";
+      data.subscription_status = "active";
+      data.entitlements = {
+        plan_type: "user_pro",
+        subscription_status: "active",
+        quotas: {
+          active_products: 5,
+          team_members: null,
+        },
+        capabilities: {},
+        overrides: {
+          is_platform_admin: false,
+          is_company_owner: true,
+          is_company_admin: true,
+          is_founding_account: false,
+        },
+      };
+      data.company_id = "company-1";
+      data.company_name = "Herramientas Norte";
+      data.company_role = "ROLE_ADMIN";
+      data.is_company_owner = true;
+      data.company_plan_type = "pro";
+      data.company_subscription_status = "active";
+      data.company_is_founding_account = true;
+      data.company_product_slot_limit = 30;
+      data.company_context = {
+        company_id: "company-1",
+        company_name: "Herramientas Norte",
+        company_role: "ROLE_ADMIN",
+        is_company_owner: true,
+        plan_type: "pro",
+        subscription_status: "active",
+        is_founding_account: true,
+        product_slot_limit: 30,
+        capabilities: {},
+        entitlements: {
+          plan_type: "pro",
+          subscription_status: "active",
+          quotas: {
+            active_products: 30,
+            team_members: 5,
+          },
+          capabilities: {},
+          overrides: {
+            is_platform_admin: false,
+            is_company_owner: true,
+            is_company_admin: true,
+            is_founding_account: true,
+          },
+        },
+      };
+
+      return data;
+    });
+
+    await page.goto("/dashboard");
+    await expect(page.getByRole("link", { name: "Mi empresa" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Usuarios empresa" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Usuarios", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Empresas", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Categorías" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Blog" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Sitio" })).toHaveCount(0);
+
+    await page.goto("/dashboard/companies");
+    await expect(page).toHaveURL(/\/dashboard$/);
+
+    await page.goto("/dashboard/sites");
+    await expect(page).toHaveURL(/\/dashboard$/);
+  });
+
+  test("company contributor never sees or opens company user management", async ({ page, request, seed }) => {
+    await seed.loginAs(page, request, "user");
+
+    await mockCurrentUserPayload(page, (data) => {
+      data.roles = ["ROLE_USER"];
+      data.plan_type = "user_pro";
+      data.subscription_status = "active";
+      data.entitlements = {
+        plan_type: "user_pro",
+        subscription_status: "active",
+        quotas: {
+          active_products: 5,
+          team_members: null,
+        },
+        capabilities: {},
+        overrides: {
+          is_platform_admin: false,
+          is_company_owner: false,
+          is_company_admin: false,
+          is_founding_account: false,
+        },
+      };
+      data.company_id = "company-1";
+      data.company_name = "Herramientas Norte";
+      data.company_role = "ROLE_CONTRIBUTOR";
+      data.is_company_owner = false;
+      data.company_plan_type = "pro";
+      data.company_subscription_status = "active";
+      data.company_is_founding_account = true;
+      data.company_product_slot_limit = 30;
+      data.company_context = {
+        company_id: "company-1",
+        company_name: "Herramientas Norte",
+        company_role: "ROLE_CONTRIBUTOR",
+        is_company_owner: false,
+        plan_type: "pro",
+        subscription_status: "active",
+        is_founding_account: true,
+        product_slot_limit: 30,
+        capabilities: {},
+        entitlements: {
+          plan_type: "pro",
+          subscription_status: "active",
+          quotas: {
+            active_products: 30,
+            team_members: 5,
+          },
+          capabilities: {},
+          overrides: {
+            is_platform_admin: false,
+            is_company_owner: false,
+            is_company_admin: false,
+            is_founding_account: true,
+          },
+        },
+      };
+
+      return data;
+    });
+
+    await page.goto("/dashboard");
+    await expect(page.getByRole("link", { name: "Mi empresa" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Usuarios empresa" })).toHaveCount(0);
+
+    await page.goto("/dashboard/companies/company-1/users");
+    await expect(page.getByRole("heading", { name: "Acceso Restringido" })).toBeVisible();
   });
 
   test("company admin can use rentals flow and open details", async ({ page, request, seed }) => {
@@ -104,9 +332,20 @@ test.describe("Dashboard Core (seeded API)", () => {
   test("regular user can access personal configuration but not admin pages", async ({ page, request, seed }) => {
     await seed.loginAs(page, request, "user");
 
+    await page.goto("/dashboard");
+    await expect(page.getByRole("link", { name: "Usuarios", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Empresas", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Categorías" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Blog" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Sitio" })).toHaveCount(0);
+
     await page.goto("/dashboard/config");
     await expect(page).toHaveURL(/\/dashboard\/config$/);
     await expect(page.getByRole("heading", { name: "Configuración" })).toBeVisible();
+
+    await page.goto("/dashboard/companies");
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(page.getByRole("heading", { name: "Resumen" })).toBeVisible();
 
     await page.goto("/dashboard/blog");
     await expect(page).toHaveURL(/\/dashboard$/);

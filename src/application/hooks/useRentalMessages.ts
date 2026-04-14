@@ -2,10 +2,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { rentalService } from '@/compositionRoot';
 import { RentMessageListParams } from '@/domain/repositories/RentalRepository';
 import { RentStatus } from '@/domain/models/Rental';
+import { toast } from '@/components/ui/use-toast';
+import { ApiError } from '@/infrastructure/http/ApiClient';
 
 export const RENT_MESSAGES_KEY = 'rentMessages';
 export const RENT_UNREAD_KEY = 'rentUnreadMessages';
 export const RENT_CONVERSATIONS_KEY = 'rentConversations';
+
+const isInventoryUnavailableError = (error: unknown): boolean =>
+  error instanceof ApiError
+  && error.status === 409
+  && Array.isArray((error.payload as { error?: unknown[] } | undefined)?.error)
+  && ((error.payload as { error?: unknown[] }).error ?? []).includes('product.inventory.unavailable');
 
 export const useRentalMessages = (
   rentId: string | undefined,
@@ -196,6 +204,15 @@ export const useUpdateRentStatusFromMessages = (rentId: string | undefined) => {
 
       await queryClient.invalidateQueries({
         queryKey: ['rent', rentId],
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: isInventoryUnavailableError(error)
+          ? 'No hay stock disponible para confirmar o activar este alquiler.'
+          : 'No se pudo actualizar el estado del alquiler.',
+        variant: 'destructive',
       });
     },
   });

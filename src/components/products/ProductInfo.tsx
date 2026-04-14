@@ -1,6 +1,7 @@
 import React from 'react';
-import { Info, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Info } from 'lucide-react';
 import CompanyInfo from './CompanyInfo';
+import ProductRentalCostCalculator from './ProductRentalCostCalculator';
 import {
     Table,
     TableBody,
@@ -11,7 +12,10 @@ import {
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import ProductRentalCostCalculator from './ProductRentalCostCalculator';
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useProductRentability } from '@/application/hooks/useProductInventory';
+import type { ProductInventorySummary } from '@/domain/models/Product';
 import { RentalCostBreakdown } from '@/domain/repositories/ProductRepository';
 
 interface ProductInfoProps {
@@ -19,6 +23,9 @@ interface ProductInfoProps {
         id: string;
         name: string;
         publicationStatus?: string;
+        quantity: number;
+        isRentalEnabled: boolean;
+        inventorySummary?: ProductInventorySummary | null;
         category: {
             id: string;
             name: string;
@@ -59,6 +66,23 @@ const ProductInfo = ({
     onLeadEndDateChange,
     onLeadCalculationChange,
 }: ProductInfoProps) => {
+    const rentability = useProductRentability({
+        id: product.id,
+        internalId: product.inventorySummary?.productInternalId ?? "",
+        name: product.name,
+        slug: "",
+        description: "",
+        quantity: product.quantity,
+        isRentalEnabled: product.isRentalEnabled,
+        imageUrl: "",
+        thumbnailUrl: "",
+        publicationStatus: (product.publicationStatus as "draft" | "published" | "archived") ?? "draft",
+        price: product.price,
+        category: product.category,
+        rating: 0,
+        reviewCount: 0,
+        inventorySummary: product.inventorySummary ?? null,
+    });
 
     const handleContact = () => {
         if (!isLoggedIn) {
@@ -77,10 +101,12 @@ const ProductInfo = ({
     const price = product.price || { daily: 0, deposit: 0, tiers: [] };
     const tiers = price.tiers || [];
     const providerLocationLabel = product.providerLocationLabel;
+    const totalQuantity = product.inventorySummary?.totalQuantity ?? product.quantity ?? 1;
+    const reservedQuantity = product.inventorySummary?.reservedQuantity ?? 0;
+    const availableQuantity = product.inventorySummary?.availableQuantity ?? Math.max(0, totalQuantity - reservedQuantity);
 
     return (
         <div className="space-y-8">
-            {/* Draft/Archived Disclaimer */}
             {product.publicationStatus && product.publicationStatus !== 'published' && (
                 <Alert variant="warning" className="bg-yellow-50 border-yellow-200">
                     <AlertTriangle className="h-4 w-4 text-yellow-600" />
@@ -92,14 +118,25 @@ const ProductInfo = ({
                 </Alert>
             )}
 
-            {/* Header Info */}
             <div>
                 <div className="mb-3 flex items-center gap-2">
                     {product.category?.name && (
                         <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
-              {product.category.name}
-            </span>
+                            {product.category.name}
+                        </span>
                     )}
+                    <Badge
+                        variant="outline"
+                        className={
+                            rentability.availabilityTone === "success"
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                : rentability.availabilityTone === "warning"
+                                    ? "border-amber-200 bg-amber-50 text-amber-700"
+                                    : "border-slate-200 bg-slate-50 text-slate-700"
+                        }
+                    >
+                        {rentability.availabilityLabel}
+                    </Badge>
                 </div>
 
                 <h1 className="mb-3 text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground">
@@ -107,7 +144,37 @@ const ProductInfo = ({
                 </h1>
             </div>
 
-            {/* Pricing Section */}
+            <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-xl border border-border bg-muted/20 p-4">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Total</p>
+                    <p className="mt-1 text-2xl font-semibold">{totalQuantity}</p>
+                </div>
+                <div className="rounded-xl border border-border bg-muted/20 p-4">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Reservado</p>
+                    <p className="mt-1 text-2xl font-semibold">{reservedQuantity}</p>
+                </div>
+                <div className="rounded-xl border border-border bg-muted/20 p-4">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Disponible</p>
+                    <p className="mt-1 text-2xl font-semibold">{availableQuantity}</p>
+                </div>
+            </div>
+
+            {!rentability.isRentableNow && (
+                <Alert variant="warning" className="bg-amber-50/70 border-amber-200">
+                    <AlertTriangle className="h-4 w-4 text-amber-700" />
+                    <AlertTitle>{rentability.availabilityLabel}</AlertTitle>
+                    <AlertDescription className="space-y-3">
+                        <p>{rentability.availabilityMessage}</p>
+                        <Button type="button" disabled className="w-full sm:w-auto">
+                            Alquiler no disponible ahora
+                        </Button>
+                        <p className="text-xs text-muted-foreground">
+                            Puedes seguir contactando con el proveedor para consultar disponibilidad futura o condiciones.
+                        </p>
+                    </AlertDescription>
+                </Alert>
+            )}
+
             <div>
                 <h3 className="mb-3 flex items-center gap-2 text-base font-semibold">
                     Tarifas de Alquiler
@@ -120,9 +187,9 @@ const ProductInfo = ({
                             <p className="text-xs text-muted-foreground mt-0.5">Precio del primer tier disponible</p>
                         </div>
                         <div className="text-left sm:text-right">
-                    <span className="text-2xl font-bold text-foreground">
-                        {(price.daily || 0).toFixed(2)}€
-                    </span>
+                            <span className="text-2xl font-bold text-foreground">
+                                {(price.daily || 0).toFixed(2)}€
+                            </span>
                             <span className="text-muted-foreground ml-1">/ día</span>
                         </div>
                     </div>

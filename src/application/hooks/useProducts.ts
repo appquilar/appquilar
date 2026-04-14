@@ -167,6 +167,9 @@ export const useUpdateProduct = () => {
             toast.success('Producto actualizado correctamente');
             queryClient.invalidateQueries({ queryKey: ['products'] });
             queryClient.invalidateQueries({ queryKey: ['product', data.id] });
+            queryClient.invalidateQueries({ queryKey: ['product', 'slug', data.slug] });
+            queryClient.invalidateQueries({ queryKey: ['productInventory', data.id] });
+            queryClient.invalidateQueries({ queryKey: ['productInventory', data.id, 'allocations'] });
         },
         onError: (error) => {
             console.error('Error updating product:', error);

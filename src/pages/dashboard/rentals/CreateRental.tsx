@@ -4,6 +4,7 @@ import { Form } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
 import { useRentalForm } from '@/application/hooks/useRentalForm';
 import { useProductSelection } from '@/application/hooks/useProductSelection';
+import { useProductRentability } from '@/application/hooks/useProductInventory';
 import CreateRentalHeader from '@/components/dashboard/rentals/CreateRentalHeader';
 import ProductInfoFields from '@/components/dashboard/rentals/form/ProductInfoFields';
 import CustomerInfoFields from '@/components/dashboard/rentals/form/CustomerInfoFields';
@@ -23,6 +24,13 @@ const CreateRental = () => {
     isLoading, 
     handleProductSelect 
   } = useProductSelection(form);
+  const rentability = useProductRentability(selectedProduct);
+  const submitDisabled = !selectedProduct || !rentability.isRentableNow;
+  const submitLabel = !selectedProduct
+    ? 'Selecciona un producto'
+    : !rentability.isRentableNow
+      ? rentability.availabilityLabel
+      : 'Crear Alquiler';
 
   return (
     <div className={`space-y-6 ${isMobile ? 'pb-20' : ''}`}>
@@ -51,7 +59,9 @@ const CreateRental = () => {
 
             <FormActions 
               isSubmitting={isSubmitting} 
-              onCancel={() => navigate('/dashboard/rentals')} 
+              onCancel={() => navigate('/dashboard/rentals')}
+              submitDisabled={submitDisabled}
+              submitLabel={submitLabel}
             />
           </form>
         </Form>

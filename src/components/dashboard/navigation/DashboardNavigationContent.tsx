@@ -27,10 +27,9 @@ const DashboardNavigationContent = ({
     const { navSections, canUpgradeToCompany, isActive } = useNavigation();
     const { setOpenMobile } = useSidebar();
 
-    const { currentUser } = useAuth();
-    const roles = currentUser?.roles ?? [];
-    const isAdmin = roles.includes(UserRole.ADMIN);
-    const isRegularUser = roles.includes(UserRole.REGULAR_USER);
+    const { currentUser, hasRole, canAccess } = useAuth();
+    const isAdmin = hasRole(UserRole.ADMIN);
+    const isRegularUser = hasRole(UserRole.REGULAR_USER);
     const hasCompany = Boolean(currentUser?.companyContext?.companyId ?? currentUser?.companyId);
     const effectiveUserPlan = getEffectiveUserPlan(
         currentUser?.planType,
@@ -61,25 +60,9 @@ const DashboardNavigationContent = ({
         }
     };
 
-    /**
-     * Devuelve true si el usuario puede ver un item.
-     *
-     * - Sin requiredRoles → cualquiera logado.
-     * - Con requiredRoles → el usuario debe tener al menos uno.
-     */
-    const canSeeItem = (requiredRoles?: UserRole[]): boolean => {
-        if (!requiredRoles || requiredRoles.length === 0) {
-            return true;
-        }
-
-        return roles.some((role) => requiredRoles.includes(role));
-    };
-
     const filteredSections = navSections
         .map((section) => {
-            const visibleItems = section.items.filter((item) =>
-                canSeeItem(item.requiredRoles)
-            );
+            const visibleItems = section.items.filter((item) => canAccess(item.requiredRoles ?? []));
 
             return {
                 ...section,

@@ -2,12 +2,12 @@ import { FormField, FormItem, FormControl } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { UseFormReturn } from 'react-hook-form';
 import { Product } from '@/domain/models/Product';
-import { RentalFormValues } from '@/domain/models/RentalForm';
+import { RentalFormSubmitValues, RentalFormValues } from '@/domain/models/RentalForm';
 import ProductSearch from './ProductSearch';
 import SelectedProductDisplay from './SelectedProductDisplay';
 
 interface ProductInfoFieldsProps {
-  form: UseFormReturn<RentalFormValues>;
+  form: UseFormReturn<RentalFormValues, undefined, RentalFormSubmitValues>;
   productSearch: string;
   setProductSearch: (value: string) => void;
   selectedProduct: Product | null;

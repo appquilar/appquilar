@@ -11,9 +11,14 @@ import { ApiClient } from "@/infrastructure/http/ApiClient";
 import type { AuthSession } from "@/domain/models/AuthSession";
 import { toAuthorizationHeader } from "@/domain/models/AuthSession";
 import type {
+    CapabilityState,
+    FeatureCapability,
+    FeatureCapabilities,
     CompanyContext,
     CompanyPlanType,
     CompanyUserRoleType,
+    InventoryManagementCapability,
+    SubscriptionEntitlements,
     SubscriptionStatus,
     UserPlanType,
 } from "@/domain/models/Subscription";
@@ -37,6 +42,42 @@ interface LocationDto {
     longitude: number | null;
 }
 
+interface GenericCapabilityDto {
+    state: CapabilityState;
+    limits?: Record<string, number | null> | null;
+}
+
+interface InventoryManagementCapabilityDto extends GenericCapabilityDto {
+    limits?: {
+        max_products_with_inventory?: number | null;
+        max_quantity_per_product?: number | null;
+    } | null;
+}
+
+interface FeatureCapabilitiesDto {
+    inventory_management?: InventoryManagementCapabilityDto | null;
+    advanced_analytics?: GenericCapabilityDto | null;
+    custom_domain?: GenericCapabilityDto | null;
+    branding?: GenericCapabilityDto | null;
+    api_access?: GenericCapabilityDto | null;
+}
+
+interface EntitlementsDto<TPlanType extends string = string> {
+    plan_type: TPlanType;
+    subscription_status: SubscriptionStatus;
+    quotas?: {
+        active_products?: number | null;
+        team_members?: number | null;
+    } | null;
+    capabilities?: FeatureCapabilitiesDto | null;
+    overrides?: {
+        is_platform_admin?: boolean;
+        is_company_owner?: boolean;
+        is_company_admin?: boolean;
+        is_founding_account?: boolean;
+    } | null;
+}
+
 interface UserDto {
     id: string;
     user_id?: string;
@@ -55,6 +96,8 @@ interface UserDto {
     plan_type?: UserPlanType | null;
     subscription_status?: SubscriptionStatus | null;
     product_slot_limit?: number | null;
+    capabilities?: FeatureCapabilitiesDto | null;
+    entitlements?: EntitlementsDto<UserPlanType> | null;
     company_plan_type?: CompanyPlanType | null;
     company_subscription_status?: SubscriptionStatus | null;
     company_is_founding_account?: boolean | null;
@@ -68,6 +111,8 @@ interface UserDto {
         subscription_status: SubscriptionStatus;
         is_founding_account: boolean;
         product_slot_limit?: number | null;
+        capabilities?: FeatureCapabilitiesDto | null;
+        entitlements?: EntitlementsDto<CompanyPlanType> | null;
     } | null;
     company?: {
         company_id?: string;
@@ -137,6 +182,71 @@ function mapLocationDtoToDomain(dto: LocationDto | null): Location | null {
     };
 }
 
+function mapInventoryManagementCapability(
+    dto: InventoryManagementCapabilityDto | null | undefined
+): InventoryManagementCapability | null {
+    if (!dto) {
+        return null;
+    }
+
+    return {
+        state: dto.state,
+        limits: {
+            maxProductsWithInventory: dto.limits?.max_products_with_inventory ?? null,
+            maxQuantityPerProduct: dto.limits?.max_quantity_per_product ?? null,
+        },
+    };
+}
+
+function mapGenericCapability(dto: GenericCapabilityDto | null | undefined): FeatureCapability | null {
+    if (!dto) {
+        return null;
+    }
+
+    return {
+        state: dto.state,
+        limits: dto.limits ?? null,
+    };
+}
+
+function mapCapabilitiesDtoToDomain(dto: FeatureCapabilitiesDto | null | undefined): FeatureCapabilities | null {
+    if (!dto) {
+        return null;
+    }
+
+    return {
+        inventoryManagement: mapInventoryManagementCapability(dto.inventory_management),
+        advancedAnalytics: mapGenericCapability(dto.advanced_analytics),
+        customDomain: mapGenericCapability(dto.custom_domain),
+        branding: mapGenericCapability(dto.branding),
+        apiAccess: mapGenericCapability(dto.api_access),
+    };
+}
+
+function mapEntitlementsDtoToDomain<TPlanType extends string>(
+    dto: EntitlementsDto<TPlanType> | null | undefined
+): SubscriptionEntitlements<TPlanType> | null {
+    if (!dto) {
+        return null;
+    }
+
+    return {
+        planType: dto.plan_type,
+        subscriptionStatus: dto.subscription_status,
+        quotas: {
+            activeProducts: dto.quotas?.active_products ?? null,
+            teamMembers: dto.quotas?.team_members ?? null,
+        },
+        capabilities: mapCapabilitiesDtoToDomain(dto.capabilities) ?? {},
+        overrides: {
+            isPlatformAdmin: dto.overrides?.is_platform_admin === true,
+            isCompanyOwner: dto.overrides?.is_company_owner === true,
+            isCompanyAdmin: dto.overrides?.is_company_admin === true,
+            isFoundingAccount: dto.overrides?.is_founding_account === true,
+        },
+    };
+}
+
 function mapUserDtoToDomain(dto: UserDto): User {
     const roles: UserRole[] = Array.isArray(dto.roles)
         ? (dto.roles.filter((r) => typeof r === "string") as UserRole[])
@@ -144,16 +254,25 @@ function mapUserDtoToDomain(dto: UserDto): User {
     const companyId = dto.company_id ?? dto.company?.company_id ?? dto.company?.id ?? null;
     const companyName = dto.company_name ?? dto.company?.name ?? null;
     const companyRole = (dto.company_role as CompanyUserRoleType | null | undefined) ?? null;
+    const userEntitlements = mapEntitlementsDtoToDomain(dto.entitlements);
+    const companyEntitlements = mapEntitlementsDtoToDomain(dto.company_context?.entitlements);
     const companyContext: CompanyContext | null = dto.company_context
         ? {
             companyId: dto.company_context.company_id,
             companyName: dto.company_context.company_name,
             companyRole: dto.company_context.company_role,
             isCompanyOwner: dto.company_context.is_company_owner,
-            planType: dto.company_context.plan_type,
-            subscriptionStatus: dto.company_context.subscription_status,
+            planType: dto.company_context.plan_type ?? companyEntitlements?.planType ?? "starter",
+            subscriptionStatus: dto.company_context.subscription_status ?? companyEntitlements?.subscriptionStatus ?? "active",
             isFoundingAccount: dto.company_context.is_founding_account,
-            productSlotLimit: dto.company_context.product_slot_limit ?? dto.company_product_slot_limit ?? null,
+            productSlotLimit: dto.company_context.product_slot_limit
+                ?? companyEntitlements?.quotas.activeProducts
+                ?? dto.company_product_slot_limit
+                ?? null,
+            capabilities: mapCapabilitiesDtoToDomain(dto.company_context.capabilities)
+                ?? companyEntitlements?.capabilities
+                ?? null,
+            entitlements: companyEntitlements,
         }
         : companyId
             ? {
@@ -165,6 +284,8 @@ function mapUserDtoToDomain(dto: UserDto): User {
                 subscriptionStatus: dto.company_subscription_status ?? "active",
                 isFoundingAccount: dto.company_is_founding_account === true,
                 productSlotLimit: dto.company_product_slot_limit ?? null,
+                capabilities: null,
+                entitlements: null,
             }
             : null;
 
@@ -181,9 +302,11 @@ function mapUserDtoToDomain(dto: UserDto): User {
         companyRole,
         isCompanyOwner: dto.is_company_owner ?? null,
         companyContext,
-        planType: dto.plan_type ?? "explorer",
-        subscriptionStatus: dto.subscription_status ?? "active",
-        productSlotLimit: dto.product_slot_limit ?? null,
+        planType: dto.plan_type ?? userEntitlements?.planType ?? "explorer",
+        subscriptionStatus: dto.subscription_status ?? userEntitlements?.subscriptionStatus ?? "active",
+        productSlotLimit: dto.product_slot_limit ?? userEntitlements?.quotas.activeProducts ?? null,
+        capabilities: mapCapabilitiesDtoToDomain(dto.capabilities) ?? userEntitlements?.capabilities ?? null,
+        entitlements: userEntitlements,
         status: dto.status ?? null,
         dateAdded: dto.date_added ? new Date(dto.date_added) : null,
         // OpenAPI: profile_picture_id

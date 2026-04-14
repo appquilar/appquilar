@@ -1,4 +1,4 @@
-import { Product, ProductFormData } from '@/domain/models/Product';
+import { InventoryAllocation, Product, ProductFormData, ProductInventorySummary } from '@/domain/models/Product';
 import {
     ProductRepository,
     ProductSearchCriteria,
@@ -69,5 +69,17 @@ export class ProductService {
 
     async calculateRentalCost(id: string, startDate: string, endDate: string): Promise<RentalCostBreakdown> {
         return this.repository.calculateRentalCost(id, startDate, endDate);
+    }
+
+    async getInventorySummary(productId: string): Promise<ProductInventorySummary | null> {
+        return this.repository.getInventorySummary(productId);
+    }
+
+    async getInventoryAllocations(productId: string): Promise<InventoryAllocation[]> {
+        return this.repository.getInventoryAllocations(productId);
+    }
+
+    async adjustInventory(productId: string, totalQuantity: number): Promise<void> {
+        return this.repository.adjustInventory(productId, totalQuantity);
     }
 }

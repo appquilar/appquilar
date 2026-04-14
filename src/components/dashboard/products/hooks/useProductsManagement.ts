@@ -93,12 +93,14 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
         return normalizedUser?.productSlotLimit
             ?? getUserPlanProductLimit(
                 normalizedUser?.planType ?? "explorer",
-                normalizedUser?.subscriptionStatus ?? "active"
+                normalizedUser?.subscriptionStatus ?? "active",
+                normalizedUser?.entitlements ?? null
             );
     }, [
         companyId,
         normalizedUser?.companyContext,
         normalizedUser?.productSlotLimit,
+        normalizedUser?.entitlements,
         normalizedUser?.planType,
         normalizedUser?.subscriptionStatus,
         isPlatformAdmin,

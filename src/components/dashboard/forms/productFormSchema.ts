@@ -7,6 +7,87 @@ const productImageSchema = z.object({
     file: z.instanceof(File).optional(),
 });
 
+const normalizeDecimalInput = (value: string) => value.replace(',', '.').trim();
+
+const optionalNonNegativeNumberSchema = (message: string) =>
+    z.union([z.string(), z.number(), z.undefined()]).transform((value, ctx) => {
+        if (value === undefined) {
+            return undefined;
+        }
+
+        if (typeof value === 'number') {
+            if (Number.isFinite(value) && value >= 0) {
+                return value;
+            }
+
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message,
+            });
+
+            return z.NEVER;
+        }
+
+        const normalized = normalizeDecimalInput(value);
+
+        if (normalized === '') {
+            return undefined;
+        }
+
+        const parsedValue = Number(normalized);
+
+        if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message,
+            });
+
+            return z.NEVER;
+        }
+
+        return parsedValue;
+    });
+
+const requiredNonNegativeNumberSchema = (requiredMessage: string, invalidMessage = requiredMessage) =>
+    z.union([z.string(), z.number()]).transform((value, ctx) => {
+        if (typeof value === 'number') {
+            if (Number.isFinite(value) && value >= 0) {
+                return value;
+            }
+
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: invalidMessage,
+            });
+
+            return z.NEVER;
+        }
+
+        const normalized = normalizeDecimalInput(value);
+
+        if (normalized === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: requiredMessage,
+            });
+
+            return z.NEVER;
+        }
+
+        const parsedValue = Number(normalized);
+
+        if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: invalidMessage,
+            });
+
+            return z.NEVER;
+        }
+
+        return parsedValue;
+    });
+
 export const productFormSchema = z.object({
     internalId: z.string().optional(),
     name: z.string().min(1, { message: 'El nombre es obligatorio' }),
@@ -15,17 +96,17 @@ export const productFormSchema = z.object({
     imageUrl: z.string().optional(),
     thumbnailUrl: z.string().optional(),
     publicationStatus: z.enum(['draft', 'published', 'archived']).default('draft'),
+    quantity: z.coerce.number().int().min(1, { message: 'La capacidad debe ser al menos 1' }).default(1),
+    isRentalEnabled: z.boolean().default(true),
 
     price: z.object({
         daily: z.coerce.number().default(0),
-        deposit: z.coerce.number().optional(),
+        deposit: optionalNonNegativeNumberSchema('La fianza debe ser mayor o igual a 0'),
         tiers: z.array(z.object({
             daysFrom: z.coerce.number().min(1, { message: 'Debe ser al menos 1' }),
             daysTo: z.coerce.number().nullable().optional(),
-            pricePerDay: z.unknown()
-                .transform((val) => Number(val))
-                .refine((val) => !isNaN(val) && val >= 0, { message: 'Precio obligatorio' }),
-        })).optional(),
+            pricePerDay: requiredNonNegativeNumberSchema('Precio obligatorio', 'El precio debe ser mayor o igual a 0'),
+        })).min(1, { message: 'Añade al menos un tramo de precio' }),
     }),
     secondHand: z.object({
         price: z.coerce.number().optional(),
@@ -44,8 +125,15 @@ export const productFormSchema = z.object({
     images: z.array(productImageSchema).default([]),
 });
 
-export type ProductFormValues = z.infer<typeof productFormSchema>;
+export type ProductFormValues = z.input<typeof productFormSchema>;
+export type ProductFormSubmitValues = z.output<typeof productFormSchema>;
 export type ProductFormImage = z.infer<typeof productImageSchema>;
+
+export const createEmptyPriceTier = (): ProductFormValues['price']['tiers'][number] => ({
+    daysFrom: 1,
+    daysTo: undefined,
+    pricePerDay: '',
+});
 
 export const mapProductToFormValues = (product: Product): ProductFormValues => {
     let initialImages: ProductFormImage[] = [];
@@ -72,6 +160,8 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
         imageUrl: product.imageUrl || '',
         thumbnailUrl: product.thumbnailUrl || '',
         publicationStatus: product.publicationStatus || 'draft',
+        quantity: product.inventorySummary?.totalQuantity ?? product.quantity ?? 1,
+        isRentalEnabled: product.isRentalEnabled ?? true,
         price: {
             daily: product.price?.daily || 0,
             deposit: product.price?.deposit,
@@ -94,7 +184,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
     };
 };
 
-export const mapFormValuesToProduct = (values: ProductFormValues, originalProduct: Product): Partial<Product> => {
+export const mapFormValuesToProduct = (values: ProductFormSubmitValues, originalProduct: Product): Partial<Product> => {
     const category = values.category.id ? {
         id: values.category.id,
         name: values.category.name || '',
@@ -110,14 +200,16 @@ export const mapFormValuesToProduct = (values: ProductFormValues, originalProduc
         imageUrl: values.imageUrl,
         thumbnailUrl: values.thumbnailUrl,
         publicationStatus: values.publicationStatus,
+        quantity: values.quantity,
+        isRentalEnabled: values.isRentalEnabled,
         price: {
             daily: values.price.daily || 0,
             deposit: values.price.deposit,
-            tiers: values.price.tiers?.map(tier => ({
+            tiers: values.price.tiers.map(tier => ({
                 daysFrom: tier.daysFrom,
                 daysTo: tier.daysTo || undefined,
                 pricePerDay: tier.pricePerDay
-            })) || [],
+            })),
         },
         productType: 'rental',
         category,

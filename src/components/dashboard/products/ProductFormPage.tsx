@@ -19,6 +19,8 @@ const createDraftProduct = (): Product => ({
     name: '',
     slug: '',
     description: '',
+    quantity: 1,
+    isRentalEnabled: true,
     imageUrl: '',
     thumbnailUrl: '',
     publicationStatus: 'draft',
@@ -38,6 +40,7 @@ const ProductFormPage = () => {
     const navigate = useNavigate();
     const isAddMode = !productId || productId === 'new';
     const { currentUser } = useAuth();
+    const inventoryOwnerType: 'company' | 'user' = currentUser?.companyContext?.companyId ? 'company' : 'user';
     const canCreateProduct = hasMinimalAddress(currentUser?.address);
     const productQuery = useProduct(isAddMode ? undefined : productId);
     const product: Product | null = isAddMode
@@ -147,6 +150,8 @@ const ProductFormPage = () => {
                             onSave={handleSaveProduct}
                             onCancel={handleCancel}
                             disableSubmit={isAddMode && !canCreateProduct}
+                            inventoryOwnerType={inventoryOwnerType}
+                            enableInventoryQuery={!isAddMode}
                         />
                     </CardContent>
                 </Card>

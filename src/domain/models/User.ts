@@ -1,9 +1,11 @@
 import type {Location} from "./Location";
-import type {UserRole} from "./UserRole";
+import {UserRole} from "./UserRole";
 import type {Address} from "./Address";
 import type {
+    FeatureCapabilities,
     CompanyContext,
     CompanyUserRoleType,
+    SubscriptionEntitlements,
     SubscriptionStatus,
     UserPlanType,
 } from "./Subscription";
@@ -34,6 +36,8 @@ export interface User {
     planType?: UserPlanType | null;
     subscriptionStatus?: SubscriptionStatus | null;
     productSlotLimit?: number | null;
+    capabilities?: FeatureCapabilities | null;
+    entitlements?: SubscriptionEntitlements<UserPlanType> | null;
     status?: string | null;
     dateAdded?: Date | null;
 
@@ -60,6 +64,8 @@ export function createUser(params: {
     planType?: UserPlanType | null;
     subscriptionStatus?: SubscriptionStatus | null;
     productSlotLimit?: number | null;
+    capabilities?: FeatureCapabilities | null;
+    entitlements?: SubscriptionEntitlements<UserPlanType> | null;
     status?: string | null;
     dateAdded?: Date | null;
     profilePictureId?: string | null;
@@ -80,6 +86,8 @@ export function createUser(params: {
         planType: params.planType ?? null,
         subscriptionStatus: params.subscriptionStatus ?? null,
         productSlotLimit: params.productSlotLimit ?? null,
+        capabilities: params.capabilities ?? null,
+        entitlements: params.entitlements ?? null,
         status: params.status ?? null,
         dateAdded: params.dateAdded ?? null,
         profilePictureId: params.profilePictureId ?? null,
@@ -107,4 +115,71 @@ export function userHasAddress(user: User): boolean {
 
 export function userHasLocation(user: User): boolean {
     return Boolean(user.location);
+}
+
+export function isPlatformAdminUser(user: User | null | undefined): boolean {
+    if (!user) {
+        return false;
+    }
+
+    const entitlementOverride = user.entitlements?.overrides?.isPlatformAdmin;
+    if (typeof entitlementOverride === "boolean") {
+        return entitlementOverride;
+    }
+
+    return userHasRole(user, UserRole.ADMIN);
+}
+
+export function isRegularUser(user: User | null | undefined): boolean {
+    if (!user) {
+        return false;
+    }
+
+    if (userHasRole(user, UserRole.REGULAR_USER)) {
+        return true;
+    }
+
+    return !isPlatformAdminUser(user);
+}
+
+export function getUserCompanyId(user: User | null | undefined): string | null {
+    return user?.companyContext?.companyId ?? user?.companyId ?? null;
+}
+
+export function getUserCompanyName(user: User | null | undefined): string | null {
+    return user?.companyContext?.companyName ?? user?.companyName ?? null;
+}
+
+export function getUserCompanyRole(user: User | null | undefined): CompanyUserRoleType | null {
+    return user?.companyContext?.companyRole ?? user?.companyRole ?? null;
+}
+
+export function hasCompanyMembership(user: User | null | undefined): boolean {
+    return Boolean(getUserCompanyId(user));
+}
+
+export function isCompanyOwnerUser(user: User | null | undefined): boolean {
+    if (!user) {
+        return false;
+    }
+
+    const entitlementOverride = user.companyContext?.entitlements?.overrides?.isCompanyOwner;
+    if (typeof entitlementOverride === "boolean") {
+        return entitlementOverride;
+    }
+
+    return user.companyContext?.isCompanyOwner === true || user.isCompanyOwner === true;
+}
+
+export function isCompanyAdminUser(user: User | null | undefined): boolean {
+    if (!user) {
+        return false;
+    }
+
+    const entitlementOverride = user.companyContext?.entitlements?.overrides?.isCompanyAdmin;
+    if (typeof entitlementOverride === "boolean") {
+        return entitlementOverride;
+    }
+
+    return getUserCompanyRole(user) === "ROLE_ADMIN";
 }

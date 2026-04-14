@@ -4,20 +4,28 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
 import { rentalService } from '@/compositionRoot';
-import { RentalFormValues, rentalFormSchema, defaultRentalFormValues } from '@/domain/models/RentalForm';
+import { RentalFormSubmitValues, RentalFormValues, rentalFormSchema, defaultRentalFormValues } from '@/domain/models/RentalForm';
+import { ApiError } from '@/infrastructure/http/ApiClient';
 
 const toCents = (value: number) => Math.round((Number.isFinite(value) ? value : 0) * 100);
+const isInventoryUnavailableError = (error: unknown): boolean =>
+  error instanceof ApiError
+  && error.status === 409
+  && Array.isArray((error.payload as { error?: unknown[] } | undefined)?.error)
+  && ((error.payload as { error?: unknown[] }).error ?? []).includes('product.inventory.unavailable');
 
 export const useRentalForm = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const form = useForm<RentalFormValues>({
+  const form = useForm<RentalFormValues, undefined, RentalFormSubmitValues>({
     resolver: zodResolver(rentalFormSchema),
     defaultValues: defaultRentalFormValues,
   });
 
-  const onSubmit = async (data: RentalFormValues) => {
+  const onSubmit = async (data: RentalFormSubmitValues) => {
+    form.clearErrors();
+
     try {
       await rentalService.createRent({
         rentId: data.rentId,
@@ -48,6 +56,15 @@ export const useRentalForm = () => {
       navigate('/dashboard/rentals');
     } catch (error) {
       console.error('Error creating rental:', error);
+
+      if (isInventoryUnavailableError(error)) {
+        form.setError('productId', {
+          type: 'server',
+          message: 'No hay stock disponible para ese producto en este momento.',
+        });
+        return;
+      }
+
       toast({
         title: 'Error',
         description: 'No se pudo crear el alquiler',

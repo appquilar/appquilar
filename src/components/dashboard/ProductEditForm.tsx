@@ -7,15 +7,26 @@ interface ProductEditFormProps {
   onSave: (product: Partial<Product>) => void;
   onCancel: () => void;
   disableSubmit?: boolean;
+  inventoryOwnerType: 'company' | 'user';
+  enableInventoryQuery?: boolean;
 }
 
-const ProductEditForm = ({ product, onSave, onCancel, disableSubmit = false }: ProductEditFormProps) => {
+const ProductEditForm = ({
+  product,
+  onSave,
+  onCancel,
+  disableSubmit = false,
+  inventoryOwnerType,
+  enableInventoryQuery = true,
+}: ProductEditFormProps) => {
   return (
     <ProductForm 
       product={product}
       onSave={onSave}
       onCancel={onCancel}
       disableSubmit={disableSubmit}
+      inventoryOwnerType={inventoryOwnerType}
+      enableInventoryQuery={enableInventoryQuery}
     />
   );
 };

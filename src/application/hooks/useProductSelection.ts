@@ -1,15 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Product } from '@/domain/models/Product';
 import { UseFormReturn } from 'react-hook-form';
-import { RentalFormValues } from '@/domain/models/RentalForm';
+import { RentalFormSubmitValues, RentalFormValues } from '@/domain/models/RentalForm';
 import { useCurrentUser } from './useCurrentUser';
 import { useQuery } from '@tanstack/react-query';
 import { productService } from '@/compositionRoot';
 
-export const useProductSelection = (form: UseFormReturn<RentalFormValues>) => {
+export const useProductSelection = (form: UseFormReturn<RentalFormValues, undefined, RentalFormSubmitValues>) => {
   const [productSearch, setProductSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { user } = useCurrentUser();
+  const selectedProductId = form.watch('productId');
 
   const ownerId = user?.companyId ?? user?.id ?? null;
   const ownerType: 'company' | 'user' = user?.companyId ? 'company' : 'user';
@@ -31,6 +32,18 @@ export const useProductSelection = (form: UseFormReturn<RentalFormValues>) => {
     placeholderData: (previousData) => previousData,
   });
 
+  useEffect(() => {
+    const products = ownerProductsQuery.data ?? [];
+
+    if (!selectedProductId) {
+      setSelectedProduct(null);
+      return;
+    }
+
+    const matchingProduct = products.find((product) => product.id === selectedProductId) ?? null;
+    setSelectedProduct(matchingProduct);
+  }, [ownerProductsQuery.data, selectedProductId]);
+
   const filteredProducts = useMemo(() => {
     const products = ownerProductsQuery.data ?? [];
     const query = productSearch.trim().toLowerCase();
@@ -51,6 +64,7 @@ export const useProductSelection = (form: UseFormReturn<RentalFormValues>) => {
   const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
     form.setValue('productId', product.id, { shouldValidate: true, shouldDirty: true });
+    form.clearErrors('productId');
     setProductSearch('');
   };
 

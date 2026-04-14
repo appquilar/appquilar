@@ -19,7 +19,7 @@ const PlanGuard = ({
     requiredCompanyPlans,
     requireCompanyContext = false,
 }: PlanGuardProps) => {
-    const { currentUser, isLoading } = useAuth();
+    const { currentUser, isLoading, hasRole } = useAuth();
 
     if (isLoading) {
         return null;
@@ -29,7 +29,7 @@ const PlanGuard = ({
         return <>{fallback}</>;
     }
 
-    if (currentUser.roles.includes(UserRole.ADMIN)) {
+    if (hasRole(UserRole.ADMIN)) {
         return <>{children}</>;
     }
 

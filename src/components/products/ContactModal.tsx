@@ -110,6 +110,8 @@ const ContactModal = ({
   };
 
   const handleSubmit = async (data: ContactFormValues) => {
+    form.clearErrors('root');
+
     try {
       const computed = await ensureCalculation(data.startDate, data.endDate);
 
@@ -133,6 +135,10 @@ const ContactModal = ({
       });
       onClose();
     } catch (error) {
+      form.setError('root.server', {
+        type: 'server',
+        message: 'No se pudo enviar el mensaje. Revisa las fechas y vuelve a intentarlo.',
+      });
       toast.error('Error al enviar la solicitud');
     }
   };
@@ -152,6 +158,10 @@ const ContactModal = ({
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-4">
+          {form.formState.errors.root?.server?.message && (
+            <p className="text-sm text-destructive">{form.formState.errors.root.server.message}</p>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="lead-start-date">Fecha de inicio</Label>

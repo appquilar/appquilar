@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { RentalFormValues } from '@/domain/models/RentalForm';
+import { RentalFormSubmitValues, RentalFormValues } from '@/domain/models/RentalForm';
 import DateTimeField from './components/DateTimeField';
 import MonetaryField from './components/MonetaryField';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Product } from '@/domain/models/Product';
 import { useCalculateRentalCost } from '@/application/hooks/useProducts';
 import { RentalCostBreakdown } from '@/domain/repositories/ProductRepository';
+import { useProductRentability } from '@/application/hooks/useProductInventory';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 interface RentalDetailsFieldsProps {
-  form: UseFormReturn<RentalFormValues>;
+  form: UseFormReturn<RentalFormValues, undefined, RentalFormSubmitValues>;
   selectedProduct: Product | null;
 }
 
@@ -30,6 +33,7 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
   const { mutateAsync: calculateRentalCost, isPending: isCalculating } = useCalculateRentalCost();
   const [calculation, setCalculation] = useState<RentalCostBreakdown | null>(null);
   const [calculationError, setCalculationError] = useState<string | null>(null);
+  const rentability = useProductRentability(selectedProduct);
 
   const startDate = form.watch('startDate');
   const endDate = form.watch('endDate');
@@ -51,8 +55,9 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
     if (!isProductSelected) {
       setCalculation(null);
       setCalculationError(null);
-      form.setValue('priceAmount', 0, { shouldValidate: true });
-      form.setValue('depositAmount', 0, { shouldValidate: true });
+      form.setValue('priceAmount', '');
+      form.setValue('depositAmount', '');
+      form.clearErrors(['priceAmount', 'depositAmount']);
       return;
     }
 
@@ -107,13 +112,20 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
           Selecciona primero un producto publicado para habilitar fechas y cálculo automático del coste.
         </p>
       )}
+      {isProductSelected && !rentability.isRentableNow && (
+        <Alert variant="warning" className="bg-amber-50/70 border-amber-200">
+          <AlertTriangle className="h-4 w-4 text-amber-700" />
+          <AlertTitle>{rentability.availabilityLabel}</AlertTitle>
+          <AlertDescription>{rentability.availabilityMessage}</AlertDescription>
+        </Alert>
+      )}
       <div className="grid grid-cols-1 gap-4">
         <DateTimeField
           form={form}
           name="startDate"
           label="Fecha de Inicio"
           disabledDateFn={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-          disabled={!isProductSelected}
+          disabled={!isProductSelected || !rentability.isRentalEnabled}
         />
 
         <DateTimeField
@@ -124,7 +136,7 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
             const startDate = form.getValues('startDate');
             return date < startDate || date < new Date(new Date().setHours(0, 0, 0, 0));
           }}
-          disabled={!isProductSelected}
+          disabled={!isProductSelected || !rentability.isRentalEnabled}
         />
 
         <MonetaryField
@@ -133,7 +145,7 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
           currencyName="priceCurrency"
           label="Precio del alquiler"
           description="Importe total del alquiler"
-          disabled={!isProductSelected}
+          disabled={!isProductSelected || !rentability.isRentalEnabled}
         />
 
         <MonetaryField
@@ -142,7 +154,7 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
           currencyName="depositCurrency"
           label="Fianza"
           description="Importe de la fianza"
-          disabled={!isProductSelected}
+          disabled={!isProductSelected || !rentability.isRentalEnabled}
         />
 
         {isProductSelected && isCalculating && (
