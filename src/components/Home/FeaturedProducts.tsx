@@ -5,11 +5,6 @@ import type { Product } from '@/domain/models/Product';
 import { useLatestPublicProducts } from '@/application/hooks/useLatestPublicProducts';
 import { PUBLIC_PATHS } from '@/domain/config/publicRoutes';
 
-const getDailyPrice = (product: Product): number => {
-  const tiers = product.price?.tiers ?? [];
-  return tiers[0]?.pricePerDay ?? 0;
-};
-
 const FeaturedProducts = () => {
   const { data, isLoading } = useLatestPublicProducts();
 
@@ -24,8 +19,9 @@ const FeaturedProducts = () => {
       thumbnailUrl: product.thumbnailUrl,
       description: product.description ?? '',
       price: {
-        daily: getDailyPrice(product),
+        daily: product.price?.daily ?? 0,
         deposit: product.price?.deposit,
+        tiers: product.price?.tiers,
       },
       company: {
         id: product.ownerData?.ownerId ?? '',

@@ -15,8 +15,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useProductRentability } from '@/application/hooks/useProductInventory';
-import type { ProductInventorySummary } from '@/domain/models/Product';
+import type { ProductInventorySummary, ProductPublicAvailability } from '@/domain/models/Product';
 import { RentalCostBreakdown } from '@/domain/repositories/ProductRepository';
+import { getVisibleProductDailyPricing } from '@/domain/services/ProductPricingService';
+import { useAuthModalLauncher } from "@/hooks/useAuthModalLauncher";
 
 interface ProductInfoProps {
     product: {
@@ -25,6 +27,9 @@ interface ProductInfoProps {
         publicationStatus?: string;
         quantity: number;
         isRentalEnabled: boolean;
+        inventoryMode?: 'unmanaged' | 'managed_serialized';
+        bookingPolicy?: 'platform_managed' | 'owner_managed';
+        allowsQuantityRequest?: boolean;
         inventorySummary?: ProductInventorySummary | null;
         category: {
             id: string;
@@ -51,8 +56,11 @@ interface ProductInfoProps {
     isLoggedIn: boolean;
     leadStartDate: string;
     leadEndDate: string;
+    leadRequestedQuantity: number;
+    leadAvailability?: ProductPublicAvailability | null;
     onLeadStartDateChange: (value: string) => void;
     onLeadEndDateChange: (value: string) => void;
+    onLeadRequestedQuantityChange: (value: number) => void;
     onLeadCalculationChange: (value: RentalCostBreakdown | null) => void;
 }
 
@@ -62,10 +70,14 @@ const ProductInfo = ({
     isLoggedIn,
     leadStartDate,
     leadEndDate,
+    leadRequestedQuantity,
+    leadAvailability,
     onLeadStartDateChange,
     onLeadEndDateChange,
+    onLeadRequestedQuantityChange,
     onLeadCalculationChange,
 }: ProductInfoProps) => {
+    const { openSignIn, openSignUp } = useAuthModalLauncher();
     const rentability = useProductRentability({
         id: product.id,
         internalId: product.inventorySummary?.productInternalId ?? "",
@@ -74,6 +86,9 @@ const ProductInfo = ({
         description: "",
         quantity: product.quantity,
         isRentalEnabled: product.isRentalEnabled,
+        inventoryMode: product.inventoryMode,
+        bookingPolicy: product.bookingPolicy,
+        allowsQuantityRequest: product.allowsQuantityRequest,
         imageUrl: "",
         thumbnailUrl: "",
         publicationStatus: (product.publicationStatus as "draft" | "published" | "archived") ?? "draft",
@@ -86,12 +101,9 @@ const ProductInfo = ({
 
     const handleContact = () => {
         if (!isLoggedIn) {
-            sessionStorage.setItem(
-                "auth:infoMessage",
-                "Debes iniciar sesión para contactar con el propietario.",
+            openSignUp(
+                "Crea tu cuenta para contactar con el propietario.",
             );
-            const loginBtn = document.querySelector('[data-trigger-login]') as HTMLElement | null;
-            loginBtn?.click();
             return;
         }
 
@@ -100,11 +112,14 @@ const ProductInfo = ({
 
     const price = product.price || { daily: 0, deposit: 0, tiers: [] };
     const tiers = price.tiers || [];
+    const hasDeposit = typeof price.deposit === "number" && price.deposit > 0;
     const providerLocationLabel = product.providerLocationLabel;
-    const totalQuantity = product.inventorySummary?.totalQuantity ?? product.quantity ?? 1;
-    const reservedQuantity = product.inventorySummary?.reservedQuantity ?? 0;
-    const availableQuantity = product.inventorySummary?.availableQuantity ?? Math.max(0, totalQuantity - reservedQuantity);
-
+    const visibleDailyPricing = getVisibleProductDailyPricing(price);
+    const hasVisibleDailyPrice = visibleDailyPricing.amount !== null;
+    const pricingTitle = visibleDailyPricing.isFromLaterTier ? "Primera tarifa pública" : "Precio Base";
+    const pricingDescription = visibleDailyPricing.isFromLaterTier && visibleDailyPricing.daysFrom
+        ? `Disponible a partir de ${visibleDailyPricing.daysFrom} días`
+        : "Precio del primer tier disponible";
     return (
         <div className="space-y-8">
             {product.publicationStatus && product.publicationStatus !== 'published' && (
@@ -144,21 +159,6 @@ const ProductInfo = ({
                 </h1>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-xl border border-border bg-muted/20 p-4">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Total</p>
-                    <p className="mt-1 text-2xl font-semibold">{totalQuantity}</p>
-                </div>
-                <div className="rounded-xl border border-border bg-muted/20 p-4">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Reservado</p>
-                    <p className="mt-1 text-2xl font-semibold">{reservedQuantity}</p>
-                </div>
-                <div className="rounded-xl border border-border bg-muted/20 p-4">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Disponible</p>
-                    <p className="mt-1 text-2xl font-semibold">{availableQuantity}</p>
-                </div>
-            </div>
-
             {!rentability.isRentableNow && (
                 <Alert variant="warning" className="bg-amber-50/70 border-amber-200">
                     <AlertTriangle className="h-4 w-4 text-amber-700" />
@@ -176,82 +176,114 @@ const ProductInfo = ({
             )}
 
             <div>
-                <h3 className="mb-3 flex items-center gap-2 text-base font-semibold">
-                    Tarifas de Alquiler
-                </h3>
+                {isLoggedIn ? (
+                    <>
+                        <h3 className="mb-3 flex items-center gap-2 text-base font-semibold">
+                            Tarifas de Alquiler
+                        </h3>
 
-                <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-                    <div className="p-5 border-b border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Precio Base</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">Precio del primer tier disponible</p>
+                        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                            <div className="p-5 border-b border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{pricingTitle}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">{pricingDescription}</p>
+                                </div>
+                                <div className="text-left sm:text-right">
+                                    <span className="text-2xl font-bold text-foreground">
+                                        {hasVisibleDailyPrice ? `${visibleDailyPricing.amount!.toFixed(2)}€` : "Consultar"}
+                                    </span>
+                                    {hasVisibleDailyPrice && <span className="text-muted-foreground ml-1">/ día</span>}
+                                </div>
+                            </div>
+
+                            {hasDeposit && (
+                                <div className="px-5 py-3 border-b border-border flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-white">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-medium">Fianza</span>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <Info size={14} className="text-muted-foreground cursor-help" />
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Importe reembolsable al finalizar el alquiler</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </div>
+                                    <span className="font-medium text-foreground">{price.deposit!.toFixed(2)}€</span>
+                                </div>
+                            )}
+
+                            {tiers.length > 0 && (
+                                <div className="p-0">
+                                    <div className="px-5 py-3 bg-muted/10 border-b border-border">
+                                        <p className="text-sm font-semibold text-foreground">Descuentos por duración</p>
+                                    </div>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="hover:bg-transparent border-border">
+                                                <TableHead className="w-1/2 pl-5">Duración</TableHead>
+                                                <TableHead className="text-right pr-5">Precio por día</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {tiers.map((tier, index) => (
+                                                <TableRow key={index} className="hover:bg-muted/5 border-border">
+                                                    <TableCell className="pl-5 font-medium">
+                                                        {tier.daysFrom} {tier.daysTo ? `a ${tier.daysTo}` : '+'} días
+                                                    </TableCell>
+                                                    <TableCell className="text-right pr-5 text-foreground font-semibold">
+                                                        {Number(tier.pricePerDay || 0).toFixed(2)}€
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            )}
                         </div>
-                        <div className="text-left sm:text-right">
-                            <span className="text-2xl font-bold text-foreground">
-                                {(price.daily || 0).toFixed(2)}€
-                            </span>
-                            <span className="text-muted-foreground ml-1">/ día</span>
+                    </>
+                ) : (
+                    <div className="rounded-lg bg-secondary p-4 sm:p-5">
+                        <p className="max-w-xl text-[15px] leading-6 text-foreground">
+                            Crea tu cuenta para ver tarifas, calcular el alquiler y contactar con el proveedor.
+                        </p>
+                        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                            <Button
+                                type="button"
+                                className="h-10 px-4 text-sm sm:flex-1"
+                                onClick={() => openSignUp()}
+                            >
+                                Crear cuenta gratis
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="h-10 border-border/80 bg-background text-sm sm:flex-1"
+                                onClick={() => openSignIn()}
+                            >
+                                Ya tengo cuenta
+                            </Button>
                         </div>
                     </div>
-
-                    {price.deposit !== undefined && price.deposit > 0 && (
-                        <div className="px-5 py-3 border-b border-border flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-white">
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium">Fianza</span>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger>
-                                            <Info size={14} className="text-muted-foreground cursor-help" />
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Importe reembolsable al finalizar el alquiler</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                            <span className="font-medium text-foreground">{price.deposit.toFixed(2)}€</span>
-                        </div>
-                    )}
-
-                    {tiers.length > 0 && (
-                        <div className="p-0">
-                            <div className="px-5 py-3 bg-muted/10 border-b border-border">
-                                <p className="text-sm font-semibold text-foreground">Descuentos por duración</p>
-                            </div>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="hover:bg-transparent border-border">
-                                        <TableHead className="w-1/2 pl-5">Duración</TableHead>
-                                        <TableHead className="text-right pr-5">Precio por día</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {tiers.map((tier, index) => (
-                                        <TableRow key={index} className="hover:bg-muted/5 border-border">
-                                            <TableCell className="pl-5 font-medium">
-                                                {tier.daysFrom} {tier.daysTo ? `a ${tier.daysTo}` : '+'} días
-                                            </TableCell>
-                                            <TableCell className="text-right pr-5 text-foreground font-semibold">
-                                                {Number(tier.pricePerDay || 0).toFixed(2)}€
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    )}
-                </div>
+                )}
             </div>
 
-            <ProductRentalCostCalculator
-                productId={product.id}
-                isLoggedIn={isLoggedIn}
-                startDate={leadStartDate}
-                endDate={leadEndDate}
-                onStartDateChange={onLeadStartDateChange}
-                onEndDateChange={onLeadEndDateChange}
-                onCalculationChange={onLeadCalculationChange}
-            />
+            {isLoggedIn ? (
+                <ProductRentalCostCalculator
+                    productId={product.id}
+                    isLoggedIn={isLoggedIn}
+                    startDate={leadStartDate}
+                    endDate={leadEndDate}
+                    requestedQuantity={leadRequestedQuantity}
+                    availability={leadAvailability}
+                    onStartDateChange={onLeadStartDateChange}
+                    onEndDateChange={onLeadEndDateChange}
+                    onRequestedQuantityChange={onLeadRequestedQuantityChange}
+                    onCalculationChange={onLeadCalculationChange}
+                />
+            ) : null}
 
             <div className="pt-4 border-t border-border">
                 <CompanyInfo

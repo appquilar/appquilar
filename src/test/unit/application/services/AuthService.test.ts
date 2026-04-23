@@ -153,6 +153,35 @@ describe("AuthService", () => {
     expect(afterLogout).toBeNull();
   });
 
+  it("marks the user as loaded when refreshCurrentUser finds no session", async () => {
+    const authRepository = createAuthRepositoryMock();
+    const userRepository = createUserRepositoryMock();
+
+    vi.mocked(authRepository.getCurrentSession).mockResolvedValue(null);
+
+    const service = new AuthService(authRepository, userRepository);
+
+    await expect(service.refreshCurrentUser()).resolves.toBeNull();
+    await expect(service.getCurrentUser()).resolves.toBeNull();
+
+    expect(authRepository.getCurrentSession).toHaveBeenCalledTimes(1);
+    expect(userRepository.getCurrentUser).not.toHaveBeenCalled();
+  });
+
+  it("delegates current session lookups to the auth repository", async () => {
+    const authRepository = createAuthRepositoryMock();
+    const userRepository = createUserRepositoryMock();
+    const session = createAuthSession({ token: "sync-token" });
+
+    vi.mocked(authRepository.getCurrentSession).mockResolvedValue(session);
+    vi.mocked(authRepository.getCurrentSessionSync).mockReturnValue(session);
+
+    const service = new AuthService(authRepository, userRepository);
+
+    await expect(service.getCurrentSession()).resolves.toBe(session);
+    expect(service.getCurrentSessionSync()).toBe(session);
+  });
+
   it("delegates password and registration use cases", async () => {
     const authRepository = createAuthRepositoryMock();
     const userRepository = createUserRepositoryMock();
@@ -173,7 +202,6 @@ describe("AuthService", () => {
       token: "token",
     });
     await service.resetPassword({
-      email: "victor@appquilar.com",
       token: "reset-token",
       newPassword: "new123",
     });

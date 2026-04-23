@@ -1,4 +1,3 @@
-
 import { useParams } from 'react-router-dom';
 import { useRentalDetails } from '@/application/hooks/useRentalDetails';
 import RentalDetailsHeader from '@/components/dashboard/rentals/details/RentalDetailsHeader';
@@ -6,14 +5,13 @@ import RentalDetailsCard from '@/components/dashboard/rentals/details/RentalDeta
 import CustomerInfoCard from '@/components/dashboard/rentals/details/CustomerInfoCard';
 import RentalEditableCard from '@/components/dashboard/rentals/details/RentalEditableCard';
 import RentalStateWizard from '@/components/dashboard/rentals/details/RentalStateWizard';
+import RentalMessagesCard from '@/components/dashboard/rentals/details/RentalMessagesCard';
 import LoadingSpinner from '@/components/dashboard/rentals/details/LoadingSpinner';
 import ErrorDisplay from '@/components/dashboard/rentals/details/ErrorDisplay';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useEffect } from 'react';
 
 const RentalDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const isMobile = useIsMobile();
   const { 
     rental, 
     isLoading, 
@@ -50,36 +48,52 @@ const RentalDetails = () => {
   const formattedEndDate = formatDate(rental.endDate);
 
   return (
-    <div className={`space-y-6 ${isMobile ? 'pb-1 pt-2' : 'pb-2 pt-3'}`}>
+    <div className="space-y-4 pb-2 pt-2 md:space-y-6 md:pb-3 md:pt-3">
       <RentalDetailsHeader rental={rental} />
 
-      <div className="grid grid-cols-1 gap-4 md:gap-6">
-        <RentalStateWizard
-          rental={rental}
-          viewerRole={viewerRole}
-          transitions={nextTransitions}
-          isUpdatingStatus={isUpdatingStatus}
-          onTransition={handleStatusChange}
-        />
+      <div className="grid grid-cols-1 gap-4 md:gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.95fr)] xl:items-start">
+        <div className="contents xl:block xl:space-y-6">
+          <div className="order-1">
+            <RentalStateWizard
+              rental={rental}
+              viewerRole={viewerRole}
+              transitions={nextTransitions}
+              isUpdatingStatus={isUpdatingStatus}
+              onTransition={handleStatusChange}
+            />
+          </div>
 
-        <RentalDetailsCard 
-          rental={rental}
-          viewerRole={viewerRole}
-          durationDays={durationDays}
-          formattedStartDate={formattedStartDate}
-          formattedEndDate={formattedEndDate}
-        />
+          <div className={canEditRental ? 'order-4' : 'order-3'}>
+            <RentalMessagesCard rentId={rental.id} />
+          </div>
+        </div>
 
-        {canEditRental && (
-          <RentalEditableCard
-            rental={rental}
-            viewerRole={viewerRole}
-            isSaving={isUpdatingRental}
-            onSave={handleRentalUpdate}
-          />
-        )}
+        <div className="contents xl:block xl:space-y-6">
+          <div className="order-2">
+            <RentalDetailsCard 
+              rental={rental}
+              viewerRole={viewerRole}
+              durationDays={durationDays}
+              formattedStartDate={formattedStartDate}
+              formattedEndDate={formattedEndDate}
+            />
+          </div>
 
-        <CustomerInfoCard rental={rental} />
+          {canEditRental && (
+            <div className="order-3">
+              <RentalEditableCard
+                rental={rental}
+                viewerRole={viewerRole}
+                isSaving={isUpdatingRental}
+                onSave={handleRentalUpdate}
+              />
+            </div>
+          )}
+
+          <div className={canEditRental ? 'order-5' : 'order-4'}>
+            <CustomerInfoCard rental={rental} />
+          </div>
+        </div>
       </div>
     </div>
   );

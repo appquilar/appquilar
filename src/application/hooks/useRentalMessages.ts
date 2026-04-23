@@ -9,6 +9,10 @@ export const RENT_MESSAGES_KEY = 'rentMessages';
 export const RENT_UNREAD_KEY = 'rentUnreadMessages';
 export const RENT_CONVERSATIONS_KEY = 'rentConversations';
 
+type UnreadRentMessagesQueryOptions = {
+  enabled?: boolean;
+};
+
 const isInventoryUnavailableError = (error: unknown): boolean =>
   error instanceof ApiError
   && error.status === 409
@@ -107,10 +111,14 @@ export const useMarkRentMessagesAsRead = (rentId: string | undefined) => {
   });
 };
 
-export const useUnreadRentMessagesCount = () => {
+export const useUnreadRentMessagesCount = (
+  options: UnreadRentMessagesQueryOptions = {}
+) => {
+  const enabled = options.enabled ?? true;
   const query = useQuery({
     queryKey: [RENT_UNREAD_KEY],
     queryFn: () => rentalService.getUnreadRentMessagesCount(),
+    enabled,
     refetchInterval: 5000,
     refetchIntervalInBackground: true,
     placeholderData: (previousData) => previousData,
@@ -125,10 +133,14 @@ export const useUnreadRentMessagesCount = () => {
   };
 };
 
-export const useUnreadRentMessagesTotal = () => {
+export const useUnreadRentMessagesTotal = (
+  options: UnreadRentMessagesQueryOptions = {}
+) => {
+  const enabled = options.enabled ?? true;
   const query = useQuery({
     queryKey: [RENT_UNREAD_KEY],
     queryFn: () => rentalService.getUnreadRentMessagesCount(),
+    enabled,
     refetchInterval: 5000,
     refetchIntervalInBackground: true,
     placeholderData: (previousData) => previousData,

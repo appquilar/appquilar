@@ -1,13 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RentConversation } from '@/domain/models/RentConversation';
+import { RentalStateMachineService } from '@/domain/services/RentalStateMachineService';
 import { RentalStatusService } from '@/domain/services/RentalStatusService';
-import { useUpdateRentStatusFromMessages } from '@/application/hooks/useRentalMessages';
-import { useState } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { buildProductPath } from '@/domain/config/publicRoutes';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RentConversationSummaryProps {
   conversation: RentConversation;
@@ -27,28 +27,23 @@ const formatDate = (date: Date): string => {
   });
 };
 
-const RentConversationSummary = ({ conversation, onBackToConversation }: RentConversationSummaryProps) => {
+const RentConversationSummary = ({
+  conversation,
+  onBackToConversation,
+}: RentConversationSummaryProps) => {
   const isMobile = useIsMobile();
   const rental = conversation.rental;
   const publicProductHref = buildProductPath(rental.productSlug ?? rental.productId);
   const estimatedTotal = rental.price.amount + rental.deposit.amount;
   const ownerName = rental.ownerName ?? 'Sin nombre';
   const ownerAddress = rental.ownerLocation?.label ?? 'Direccion no disponible';
-  const updateStatusMutation = useUpdateRentStatusFromMessages(conversation.rentId);
-  const [cancelError, setCancelError] = useState<string | null>(null);
-  const canCancel = rental.status !== 'cancelled' && rental.status !== 'rental_completed';
-
-  const handleCancelRent = async () => {
-    setCancelError(null);
-
-    try {
-      await updateStatusMutation.mutateAsync({
-        status: 'cancelled',
-      });
-    } catch (_error) {
-      setCancelError('No se pudo cancelar el alquiler. Intentalo de nuevo.');
-    }
-  };
+  const nextStepInfo = RentalStateMachineService.getNextStepInfo(rental);
+  const actionRequiredLabel =
+    nextStepInfo.actionRequiredBy === 'owner'
+      ? 'Tienda'
+      : nextStepInfo.actionRequiredBy === 'renter'
+      ? 'Renter'
+      : 'Sin accion pendiente';
 
   return (
     <Card className="flex h-full min-h-0 flex-col overflow-hidden">
@@ -64,7 +59,7 @@ const RentConversationSummary = ({ conversation, onBackToConversation }: RentCon
               className="w-full"
               onClick={onBackToConversation}
             >
-              Volver a la conversación
+              Volver a la conversacion
             </Button>
           </div>
         )}
@@ -92,6 +87,13 @@ const RentConversationSummary = ({ conversation, onBackToConversation }: RentCon
           </Badge>
         </div>
 
+        <div className="rounded-md border border-border bg-background px-3 py-2">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Siguiente paso</p>
+          <p className="mt-1 font-semibold text-foreground">{nextStepInfo.title}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{nextStepInfo.description}</p>
+          <p className="mt-2 text-xs text-muted-foreground">Pendiente de: {actionRequiredLabel}</p>
+        </div>
+
         <div>
           <p className="text-muted-foreground mb-1">Precio (desglosado)</p>
           <div className="rounded-md border border-border bg-background">
@@ -117,37 +119,18 @@ const RentConversationSummary = ({ conversation, onBackToConversation }: RentCon
         </div>
 
         <div className="space-y-2 pt-1">
-          {conversation.role === 'renter' ? (
+          <Button asChild className="w-full">
+            <Link to={`/dashboard/rentals/${conversation.rentId}`}>
+              Abrir deal room
+            </Link>
+          </Button>
+
+          {conversation.role === 'renter' && (
             <Button asChild variant="outline" className="w-full">
               <a href={publicProductHref} target="_blank" rel="noopener noreferrer">
                 Ver producto publico
               </a>
             </Button>
-          ) : (
-            <Button asChild variant="outline" className="w-full">
-              <Link to={`/dashboard/rentals/${conversation.rentId}`}>
-                Ir al alquiler
-              </Link>
-            </Button>
-          )}
-
-          {canCancel && (
-            <div className="rounded-md border border-border bg-muted/30 p-3">
-              <p className="mb-2 text-xs font-medium text-muted-foreground">Acciones</p>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full border-border bg-background text-foreground hover:bg-muted"
-                onClick={handleCancelRent}
-                disabled={updateStatusMutation.isPending}
-              >
-                {updateStatusMutation.isPending ? 'Cancelando...' : 'Cancelar alquiler'}
-              </Button>
-            </div>
-          )}
-
-          {cancelError && (
-            <p className="text-xs text-destructive">{cancelError}</p>
           )}
         </div>
       </CardContent>

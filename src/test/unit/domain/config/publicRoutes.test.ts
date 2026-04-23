@@ -5,6 +5,8 @@ import {
   buildAbsolutePublicUrl,
   buildBlogPagePath,
   buildBlogPostPath,
+  buildCompanyPagePath,
+  buildCompanyPath,
   buildCategoryPath,
   buildProductPath,
   buildSearchPath,
@@ -14,6 +16,7 @@ describe("publicRoutes", () => {
   it("exposes Spanish canonical public paths", () => {
     expect(PUBLIC_PATHS.categories).toBe("/categorias");
     expect(PUBLIC_PATHS.search).toBe("/buscar");
+    expect(PUBLIC_PATHS.company).toBe("/empresa");
     expect(PUBLIC_PATHS.about).toBe("/quienes-somos");
     expect(PUBLIC_PATHS.contact).toBe("/contacto");
     expect(PUBLIC_PATHS.partners).toBe("/colabora-con-nosotros");
@@ -21,6 +24,7 @@ describe("publicRoutes", () => {
 
   it("keeps English legacy aliases for compatibility redirects", () => {
     expect(LEGACY_PUBLIC_PATHS.categories).toBe("/categories");
+    expect(LEGACY_PUBLIC_PATHS.company).toBe("/company/:slug");
     expect(LEGACY_PUBLIC_PATHS.category).toBe("/category/:slug");
     expect(LEGACY_PUBLIC_PATHS.product).toBe("/product/:slug");
     expect(LEGACY_PUBLIC_PATHS.search).toBe("/search");
@@ -29,6 +33,9 @@ describe("publicRoutes", () => {
   it("builds canonical Spanish urls for categories, products, blog and search", () => {
     expect(buildCategoryPath("taladros")).toBe("/categoria/taladros");
     expect(buildProductPath("taladro-bosch")).toBe("/producto/taladro-bosch");
+    expect(buildCompanyPath("empresote")).toBe("/empresa/empresote");
+    expect(buildCompanyPagePath("empresote", 1)).toBe("/empresa/empresote");
+    expect(buildCompanyPagePath("empresote", 3)).toBe("/empresa/empresote?page=3");
     expect(buildBlogPostPath("guias/taladro-bosch")).toBe("/blog/guias/taladro-bosch");
     expect(buildSearchPath("taladro bosch")).toBe("/buscar?q=taladro%20bosch");
     expect(buildBlogPagePath(1)).toBe("/blog");

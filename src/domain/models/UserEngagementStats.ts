@@ -24,6 +24,7 @@ export interface UserEngagementByProduct {
     productId: string;
     productName: string;
     productSlug: string;
+    productInternalId: string;
     totalViews: number;
     uniqueVisitors: number;
     messagesTotal: number;
@@ -38,4 +39,3 @@ export interface UserEngagementStats {
     dailyMessages: UserEngagementSeriesPointMessages[];
     byProduct: UserEngagementByProduct[];
 }
-

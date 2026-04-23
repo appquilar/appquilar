@@ -19,6 +19,8 @@ interface ProductGridProps {
     onAdd?: () => void;
     isAddDisabled?: boolean;
     shouldShowMissingAddressMessage?: boolean;
+    missingAddressHref?: string;
+    missingAddressOwnerType?: "company" | "user";
 }
 
 const ProductGrid = ({
@@ -33,6 +35,8 @@ const ProductGrid = ({
     onAdd,
     isAddDisabled = false,
     shouldShowMissingAddressMessage = false,
+    missingAddressHref = "/dashboard/config?tab=address",
+    missingAddressOwnerType = "user",
 }: ProductGridProps) => {
     if (products.length === 0) {
         return (
@@ -45,11 +49,19 @@ const ProductGrid = ({
                 {shouldShowMissingAddressMessage && (
                     <Alert variant="warning" className="text-left">
                         <MapPin className="h-4 w-4" />
-                        <AlertTitle>Necesitas una dirección para crear productos</AlertTitle>
+                        <AlertTitle>
+                            {missingAddressOwnerType === "company"
+                                ? "Necesitas la dirección de la empresa para crear productos"
+                                : "Necesitas una dirección para crear productos"}
+                        </AlertTitle>
                         <AlertDescription>
-                            Completa tu dirección de perfil para poder crear tu primer producto.{' '}
-                            <Link to="/dashboard/config?tab=address" className="underline font-medium">
-                                Ir a Configuración de dirección
+                            {missingAddressOwnerType === "company"
+                                ? "Completa la dirección de la empresa para poder crear tu primer producto. "
+                                : "Completa tu dirección de perfil para poder crear tu primer producto. "}
+                            <Link to={missingAddressHref} className="underline font-medium">
+                                {missingAddressOwnerType === "company"
+                                    ? "Ir a la empresa"
+                                    : "Ir a Configuración de dirección"}
                             </Link>
                             .
                         </AlertDescription>

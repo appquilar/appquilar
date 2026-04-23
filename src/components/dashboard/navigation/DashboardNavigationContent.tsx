@@ -13,6 +13,7 @@ import {useAuth} from "@/context/AuthContext";
 import {UserRole} from "@/domain/models/UserRole";
 import { useSidebar } from "@/components/ui/sidebar";
 import { getEffectiveUserPlan } from "@/domain/models/Subscription";
+import { useProductOwnerAddress } from "@/application/hooks/useProductOwnerAddress";
 
 /**
  * Contenido principal de la navegación del panel de control
@@ -28,6 +29,12 @@ const DashboardNavigationContent = ({
     const { setOpenMobile } = useSidebar();
 
     const { currentUser, hasRole, canAccess } = useAuth();
+    const {
+        hasRequiredAddress,
+        isLoading: isProductOwnerAddressLoading,
+        ownerType,
+        settingsHref,
+    } = useProductOwnerAddress();
     const isAdmin = hasRole(UserRole.ADMIN);
     const isRegularUser = hasRole(UserRole.REGULAR_USER);
     const hasCompany = Boolean(currentUser?.companyContext?.companyId ?? currentUser?.companyId);
@@ -37,15 +44,6 @@ const DashboardNavigationContent = ({
     );
     const isUserPro = effectiveUserPlan === "user_pro";
     const canUpgradeToUserPro = isRegularUser && !isAdmin && !hasCompany && !isUserPro;
-
-    // El usuario se considera "con dirección" si tiene address
-    // y al menos uno de los campos básicos relleno.
-    const hasAddress = Boolean(
-        currentUser?.address &&
-        (currentUser.address.street ||
-            currentUser.address.city ||
-            currentUser.address.postalCode)
-    );
 
     const handleTabChange = (href: string) => {
         const tabName =
@@ -89,12 +87,12 @@ const DashboardNavigationContent = ({
             </nav>
 
             {/* Alerta de dirección vacía */}
-            {!hasAddress && (
+            {!isProductOwnerAddressLoading && !hasRequiredAddress && (
                 <div className="px-2 mb-2">
                     <Alert
                         className="cursor-pointer rounded-2xl border border-slate-200/80 bg-white/80 hover:bg-white transition-colors shadow-sm"
                         onClick={() => {
-                            navigate("/dashboard/config?tab=address");
+                            navigate(settingsHref);
                             if (isMobile) {
                                 setOpenMobile(false);
                             }
@@ -102,7 +100,9 @@ const DashboardNavigationContent = ({
                     >
                         <MapPin className="h-4 w-4" />
                         <AlertDescription className="text-xs">
-                            Añade tu dirección en Configuración
+                            {ownerType === "company"
+                                ? "Añade la dirección de la empresa"
+                                : "Añade tu dirección en Configuración"}
                         </AlertDescription>
                     </Alert>
                 </div>

@@ -24,24 +24,14 @@ const createWrapper = () => {
 describe("usePublicCompanyProfile", () => {
   it("fetches public company profile when slug exists", async () => {
     getBySlugMock.mockResolvedValueOnce({
-      id: "company-1",
       name: "Alquileres Norte",
       slug: "alquileres-norte",
       description: null,
       profilePictureId: null,
-      location: { city: null, state: null, country: null },
-      trustMetrics: {
-        activeProductsCount: 1,
-        totalProductsCount: 2,
-        completedRentalsCount: 3,
-        totalRentsCount: 4,
-        averageFirstResponseMinutes30d: 12,
-        responseRate24h30d: 98,
-        views30d: 100,
-        uniqueVisitors30d: 80,
-        loggedViews30d: 40,
-        anonymousViews30d: 60,
-      },
+      headerImageId: null,
+      location: { city: null, state: null, country: null, displayLabel: null },
+      address: null,
+      geoLocation: null,
     });
 
     const { result } = renderHook(() => usePublicCompanyProfile("alquileres-norte"), {

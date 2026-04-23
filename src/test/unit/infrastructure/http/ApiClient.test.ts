@@ -15,6 +15,23 @@ describe("ApiClient", () => {
     expect(fetchMock).toHaveBeenCalledWith("https://api.example.com/status", {
       method: "GET",
       headers: {},
+      cache: undefined,
+    });
+  });
+
+  it("forwards fetch cache options on GET requests", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+    const client = new ApiClient({ baseUrl: "https://api.example.com" });
+
+    await client.get<{ ok: boolean }>("/me", { cache: "no-store" });
+
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example.com/me", {
+      method: "GET",
+      headers: {},
+      cache: "no-store",
     });
   });
 

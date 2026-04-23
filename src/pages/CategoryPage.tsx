@@ -6,12 +6,17 @@ import Footer from "@/components/layout/Footer";
 
 import CategoryHeader from "@/components/category/CategoryHeader";
 import CategorySearch from "@/components/category/CategorySearch";
+import DynamicPropertyFiltersSection, {
+    type DynamicRangeFilters,
+    type DynamicValueFilters,
+} from "@/components/category/DynamicPropertyFiltersSection";
 import ProductGrid from "@/components/category/ProductGrid";
 import NoProductsFound from "@/components/category/NoProductsFound";
 import LoadingState from "@/components/category/LoadingState";
 
 import type { Product as DomainProduct } from "@/domain/models/Product";
 import { useCategoryWithProductsByText } from "@/application/hooks/useCategoryWithProducts";
+import { useCategoryDynamicProperties } from "@/application/hooks/useCategoryDynamicProperties";
 import { usePublicSiteCategories } from "@/application/hooks/usePublicSiteCategories";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSeo } from "@/hooks/useSeo";
@@ -29,11 +34,6 @@ const DISTANCE_OPTIONS = [
     { value: "100", label: "Dentro de 100 km" },
 ] as const;
 
-const getDailyPrice = (product: DomainProduct): number => {
-    const tiers = product.price?.tiers ?? [];
-    return tiers[0]?.pricePerDay ?? 0;
-};
-
 const stripHtml = (value: string | null | undefined): string =>
     (value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 
@@ -44,6 +44,14 @@ const CategoryPage = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedRadius, setSelectedRadius] = useState<string>("any");
     const [appliedRadius, setAppliedRadius] = useState<string>("any");
+    const [selectedDynamicValueFilters, setSelectedDynamicValueFilters] =
+        useState<DynamicValueFilters>({});
+    const [appliedDynamicValueFilters, setAppliedDynamicValueFilters] =
+        useState<DynamicValueFilters>({});
+    const [selectedDynamicRangeFilters, setSelectedDynamicRangeFilters] =
+        useState<DynamicRangeFilters>({});
+    const [appliedDynamicRangeFilters, setAppliedDynamicRangeFilters] =
+        useState<DynamicRangeFilters>({});
     const [userLocation, setUserLocation] = useState<{
         latitude: number;
         longitude: number;
@@ -64,11 +72,22 @@ const CategoryPage = () => {
     const { data, isLoading, isFetching } = useCategoryWithProductsByText(
         slug,
         debouncedSearchQuery,
-        geoFilters
+        geoFilters,
+        {
+            propertyValues: appliedDynamicValueFilters,
+            propertyRanges: appliedDynamicRangeFilters,
+        }
     );
     const category = data?.category ?? null;
     const domainProducts = data?.products ?? EMPTY_DOMAIN_PRODUCTS;
+    const availableDynamicFilters = data?.availableDynamicFilters ?? [];
+    const dynamicPropertiesQuery = useCategoryDynamicProperties(
+        category?.id ? [category.id] : []
+    );
     const notFound = !isLoading && !category;
+    const showDynamicFilterBlock =
+        Boolean(dynamicPropertiesQuery.data?.dynamicFiltersEnabled)
+        && availableDynamicFilters.length > 0;
     const categoryById = useMemo(() => {
         const map = new Map<string, typeof category>();
         allCategories.forEach((item) => map.set(item.id, item));
@@ -80,6 +99,13 @@ const CategoryPage = () => {
         window.scrollTo(0, 0);
     }, []);
 
+    useEffect(() => {
+        setSelectedDynamicValueFilters({});
+        setAppliedDynamicValueFilters({});
+        setSelectedDynamicRangeFilters({});
+        setAppliedDynamicRangeFilters({});
+    }, [slug]);
+
     const searchProducts = useMemo(() => {
         return domainProducts.map((product) => ({
             id: product.id,
@@ -90,8 +116,9 @@ const CategoryPage = () => {
             thumbnailUrl: product.thumbnailUrl,
             description: product.description ?? "",
             price: {
-                daily: getDailyPrice(product),
+                daily: product.price?.daily ?? 0,
                 deposit: product.price?.deposit,
+                tiers: product.price?.tiers,
             },
             company: {
                 id: product.ownerData?.ownerId ?? "",
@@ -120,10 +147,7 @@ const CategoryPage = () => {
     }, [category]);
 
     const breadcrumbItems = useMemo(() => {
-        const items: Array<{ label: string; to?: string }> = [
-            { label: "Inicio", to: "/" },
-            { label: "Categorías", to: PUBLIC_PATHS.categories },
-        ];
+        const items: Array<{ label: string; to?: string }> = [{ label: "Inicio", to: "/" }];
 
         if (!category) {
             return items;
@@ -165,7 +189,6 @@ const CategoryPage = () => {
                 title: "Categoría de alquiler | Appquilar",
                 description: "Explora productos en alquiler por categoría en Appquilar.",
                 canonicalUrl: buildAbsolutePublicUrl(PUBLIC_PATHS.categories),
-                robots: "noindex,follow" as const,
             };
         }
 
@@ -247,6 +270,8 @@ const CategoryPage = () => {
 
         if (selectedRadius === "any") {
             setAppliedRadius("any");
+            setAppliedDynamicValueFilters(selectedDynamicValueFilters);
+            setAppliedDynamicRangeFilters(selectedDynamicRangeFilters);
             return;
         }
 
@@ -270,6 +295,47 @@ const CategoryPage = () => {
         }
 
         setAppliedRadius(selectedRadius);
+        setAppliedDynamicValueFilters(selectedDynamicValueFilters);
+        setAppliedDynamicRangeFilters(selectedDynamicRangeFilters);
+    };
+
+    const toggleDynamicOption = (filterCode: string, optionValue: string, checked: boolean) => {
+        setSelectedDynamicValueFilters((previous) => {
+            const currentValues = previous[filterCode] ?? [];
+            const nextValues = checked
+                ? Array.from(new Set([...currentValues, optionValue]))
+                : currentValues.filter((value) => value !== optionValue);
+
+            if (nextValues.length === 0) {
+                const { [filterCode]: _removed, ...rest } = previous;
+                return rest;
+            }
+
+            return {
+                ...previous,
+                [filterCode]: nextValues,
+            };
+        });
+    };
+
+    const updateDynamicRangeFilter = (filterCode: string, boundary: "min" | "max", rawValue: string) => {
+        setSelectedDynamicRangeFilters((previous) => {
+            const parsedValue = rawValue.trim().length === 0 ? undefined : Number.parseFloat(rawValue);
+            const nextRange = {
+                ...(previous[filterCode] ?? {}),
+                [boundary]: Number.isFinite(parsedValue as number) ? parsedValue : undefined,
+            };
+
+            if (nextRange.min === undefined && nextRange.max === undefined) {
+                const { [filterCode]: _removed, ...rest } = previous;
+                return rest;
+            }
+
+            return {
+                ...previous,
+                [filterCode]: nextRange,
+            };
+        });
     };
 
     if (isLoading && !data) {
@@ -349,6 +415,18 @@ const CategoryPage = () => {
 
                                 {locationError && (
                                     <div className="mt-3 text-sm text-destructive">{locationError}</div>
+                                )}
+
+                                {showDynamicFilterBlock && (
+                                    <div className="mt-4">
+                                        <DynamicPropertyFiltersSection
+                                            availableDynamicFilters={availableDynamicFilters}
+                                            selectedDynamicRangeFilters={selectedDynamicRangeFilters}
+                                            selectedDynamicValueFilters={selectedDynamicValueFilters}
+                                            onToggleDynamicOption={toggleDynamicOption}
+                                            onUpdateDynamicRangeFilter={updateDynamicRangeFilter}
+                                        />
+                                    </div>
                                 )}
                             </aside>
 

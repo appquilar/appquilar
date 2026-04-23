@@ -10,6 +10,7 @@ const createRental = (partial: Partial<Rental>): Rental => ({
   renterId: partial.renterId ?? "renter-1",
   startDate: partial.startDate ?? new Date("2026-02-10T10:00:00.000Z"),
   endDate: partial.endDate ?? new Date("2026-02-15T10:00:00.000Z"),
+  requestedQuantity: partial.requestedQuantity ?? 1,
   deposit: partial.deposit ?? { amount: 10000, currency: "EUR" },
   price: partial.price ?? { amount: 5000, currency: "EUR" },
   status: partial.status ?? "rental_confirmed",

@@ -4,6 +4,21 @@ const isCoverageRun = process.env.E2E_COVERAGE === "1";
 const isCiRun = !!process.env.CI;
 const siteId = process.env.VITE_APPQUILAR_SITE_ID ?? "test-site";
 
+const resolveWorkers = (value: string | undefined): number | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return undefined;
+  }
+
+  return parsed;
+};
+
+const configuredWorkers = resolveWorkers(process.env.PLAYWRIGHT_WORKERS);
+
 export default defineConfig({
   testDir: "./src/test/e2e",
   // Dashboard seeded suite has its own config and environment.
@@ -11,7 +26,7 @@ export default defineConfig({
   fullyParallel: !isCoverageRun,
   forbidOnly: isCiRun,
   retries: isCiRun ? 1 : 0,
-  workers: isCiRun || isCoverageRun ? 1 : undefined,
+  workers: isCoverageRun ? 1 : configuredWorkers,
   reporter: isCiRun ? "github" : "list",
   use: {
     baseURL: "http://127.0.0.1:4173",

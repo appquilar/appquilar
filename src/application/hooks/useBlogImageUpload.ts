@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { mediaService } from '@/compositionRoot';
-import { Uuid } from '@/domain/valueObject/uuidv4';
 
 export const useBlogImageUpload = () => {
     const [isUploading, setIsUploading] = useState(false);
@@ -9,10 +8,7 @@ export const useBlogImageUpload = () => {
         setIsUploading(true);
 
         try {
-            const imageId = Uuid.generate().toString();
-            await mediaService.uploadImage(file, imageId);
-
-            return imageId;
+            return await mediaService.uploadImage(file);
         } finally {
             setIsUploading(false);
         }

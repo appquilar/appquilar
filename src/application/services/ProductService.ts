@@ -1,9 +1,17 @@
-import { InventoryAllocation, Product, ProductFormData, ProductInventorySummary } from '@/domain/models/Product';
+import {
+    InventoryAllocation,
+    InventoryUnit,
+    Product,
+    ProductFormData,
+    ProductInventorySummary,
+    ProductPublicAvailability,
+} from '@/domain/models/Product';
 import {
     ProductRepository,
     ProductSearchCriteria,
     ProductListResponse,
     ProductFilters,
+    ProductOwnerSummary,
     RentalCostBreakdown
 } from '@/domain/repositories/ProductRepository';
 
@@ -47,6 +55,10 @@ export class ProductService {
         return this.repository.listByOwnerPaginated(ownerId, ownerType, page, perPage, filters);
     }
 
+    async getOwnerSummary(ownerId: string, ownerType: 'company' | 'user'): Promise<ProductOwnerSummary> {
+        return this.repository.getOwnerSummary(ownerId, ownerType);
+    }
+
     async getProductsByCategoryId(categoryId: string): Promise<Product[]> {
         return this.repository.getProductsByCategoryId(categoryId);
     }
@@ -67,8 +79,12 @@ export class ProductService {
         return this.repository.publishProduct(id);
     }
 
-    async calculateRentalCost(id: string, startDate: string, endDate: string): Promise<RentalCostBreakdown> {
-        return this.repository.calculateRentalCost(id, startDate, endDate);
+    async calculateRentalCost(id: string, startDate: string, endDate: string, quantity: number): Promise<RentalCostBreakdown> {
+        return this.repository.calculateRentalCost(id, startDate, endDate, quantity);
+    }
+
+    async checkAvailability(productId: string, startDate: string, endDate: string, quantity: number): Promise<ProductPublicAvailability> {
+        return this.repository.checkAvailability(productId, startDate, endDate, quantity);
     }
 
     async getInventorySummary(productId: string): Promise<ProductInventorySummary | null> {
@@ -77,6 +93,18 @@ export class ProductService {
 
     async getInventoryAllocations(productId: string): Promise<InventoryAllocation[]> {
         return this.repository.getInventoryAllocations(productId);
+    }
+
+    async getInventoryUnits(productId: string): Promise<InventoryUnit[]> {
+        return this.repository.getInventoryUnits(productId);
+    }
+
+    async updateInventoryUnit(
+        productId: string,
+        unitId: string,
+        data: { code?: string; status?: InventoryUnit['status'] }
+    ): Promise<InventoryUnit> {
+        return this.repository.updateInventoryUnit(productId, unitId, data);
     }
 
     async adjustInventory(productId: string, totalQuantity: number): Promise<void> {

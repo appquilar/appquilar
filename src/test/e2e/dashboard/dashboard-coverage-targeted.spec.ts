@@ -5,11 +5,6 @@ const invitationPath = "/company-invitation?company_id=company-1&token=seed-toke
 test.describe("Dashboard Coverage Targeted", () => {
   test.describe.configure({ mode: "parallel" });
 
-  test.skip(
-    process.env.E2E_COVERAGE !== "1",
-    "Targeted coverage tests are only executed during coverage collection."
-  );
-
   test.beforeEach(async ({ seed, request, page }) => {
     await seed.reset(request);
     await seed.clearToken(page);
@@ -44,7 +39,12 @@ test.describe("Dashboard Coverage Targeted", () => {
     await expect(page.getByRole("heading", { name: "Resumen" })).toBeVisible();
   });
 
-  test("search page applies radius filter with geolocation success", async ({ page }) => {
+  test("search page applies radius filter with geolocation success", async ({ page }, testInfo) => {
+    testInfo.annotations.push({
+      type: "skipCoverageExploration",
+      description: "Geolocation filter test already completes on a terminal routed state.",
+    });
+
     await page.addInitScript(() => {
       const mockGeolocation: Geolocation = {
         getCurrentPosition: (success) => {
@@ -82,7 +82,12 @@ test.describe("Dashboard Coverage Targeted", () => {
     await expect(page).toHaveURL(/longitude=/);
   });
 
-  test("search page shows location error when geolocation fails", async ({ page }) => {
+  test("search page shows location error when geolocation fails", async ({ page }, testInfo) => {
+    testInfo.annotations.push({
+      type: "skipCoverageExploration",
+      description: "Geolocation error test ends on an explicit inline error state.",
+    });
+
     await page.addInitScript(() => {
       const mockGeolocation: Geolocation = {
         getCurrentPosition: (_success, error) => {

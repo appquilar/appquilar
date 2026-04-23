@@ -1,3 +1,5 @@
+import type { DynamicPropertyDefinition } from "@/domain/models/DynamicProperty";
+
 export interface Category {
     id: string; // backend: category_id
 
@@ -11,6 +13,16 @@ export interface Category {
     iconName?: string | null; // icon_name
     featuredImageId?: string | null; // featured_image_id
     landscapeImageId?: string | null; // landscape_image_id
+    dynamicPropertyDefinitions?: DynamicPropertyDefinition[];
+}
+
+export interface CategoryBreadcrumbItem {
+    id: string;
+    name: string;
+    slug: string;
+    parentId?: string | null;
+    iconName?: string | null;
+    depth?: number;
 }
 
 export interface CategoryListFilters {
@@ -36,4 +48,5 @@ export type CategoryUpsertPayload = {
     iconName?: string | null;
     featuredImageId?: string | null;
     landscapeImageId?: string | null;
+    dynamicPropertyDefinitions?: DynamicPropertyDefinition[];
 };

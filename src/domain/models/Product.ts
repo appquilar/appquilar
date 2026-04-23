@@ -1,6 +1,11 @@
+import type { ProductDynamicProperties } from "@/domain/models/DynamicProperty";
+
 export type PublicationStatusType = 'draft' | 'published' | 'archived';
 export type InventoryCapabilityState = 'enabled' | 'read_only' | 'disabled';
-export type ProductInventoryUnavailabilityReason = 'unpublished' | 'rental_paused' | 'out_of_stock';
+export type InventoryMode = 'unmanaged' | 'managed_serialized';
+export type PublicBookingPolicy = 'platform_managed' | 'owner_managed';
+export type InventoryUnitStatus = 'available' | 'maintenance' | 'retired';
+export type ProductInventoryUnavailabilityReason = 'unpublished' | 'out_of_stock';
 
 export interface ProductInventorySummary {
     productId: string;
@@ -9,7 +14,9 @@ export interface ProductInventorySummary {
     reservedQuantity: number;
     availableQuantity: number;
     isRentalEnabled: boolean;
+    isInventoryEnabled: boolean;
     capabilityState: InventoryCapabilityState;
+    inventoryMode: InventoryMode;
     isRentableNow: boolean;
     unavailabilityReason: ProductInventoryUnavailabilityReason | null;
 }
@@ -20,11 +27,33 @@ export interface InventoryAllocation {
     productId: string;
     productInternalId: string;
     allocatedQuantity: number;
+    assignedUnitIds?: string[];
     state: 'reserved' | 'active' | 'released';
     startsAt: string;
     endsAt: string;
     createdAt: string;
     releasedAt: string | null;
+}
+
+export interface InventoryUnit {
+    unitId: string;
+    productId: string;
+    code: string;
+    status: InventoryUnitStatus;
+    sortOrder: number;
+    nextAllocation?: {
+        rentId: string;
+        startsAt: string;
+        endsAt: string;
+        state: 'reserved' | 'active' | 'released';
+    } | null;
+}
+
+export interface ProductPublicAvailability {
+    canRequest: boolean;
+    status: 'available' | 'unavailable' | 'owner_confirmation';
+    message: string;
+    managedByPlatform: boolean;
 }
 
 /**
@@ -38,6 +67,10 @@ export interface Product {
     description: string;
     quantity: number;
     isRentalEnabled: boolean;
+    isInventoryEnabled?: boolean;
+    inventoryMode?: InventoryMode;
+    bookingPolicy?: PublicBookingPolicy;
+    allowsQuantityRequest?: boolean;
     imageUrl: string;
     thumbnailUrl: string;
     publicationStatus: PublicationStatusType;
@@ -61,6 +94,7 @@ export interface Product {
     createdAt?: string;
     updatedAt?: string;
     inventorySummary?: ProductInventorySummary | null;
+    dynamicProperties?: ProductDynamicProperties;
     // Explicitly add image_ids to the domain model for editing
     image_ids?: string[];
     circle?: { latitude: number; longitude: number }[];
@@ -113,6 +147,8 @@ export interface ProductFormData {
     quantity: number;
     isRentable: boolean;
     isRentalEnabled: boolean;
+    isInventoryEnabled?: boolean;
+    inventoryMode?: InventoryMode;
     isForSale: boolean;
     productType?: 'rental' | 'sale';
     companyId: string;
@@ -120,4 +156,5 @@ export interface ProductFormData {
     currentTab: string;
     images: Array<{ id: string; url?: string; file?: File }>;
     internalId?: string;
+    dynamicProperties?: ProductDynamicProperties;
 }

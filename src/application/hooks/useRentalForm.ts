@@ -34,6 +34,7 @@ export const useRentalForm = () => {
         renterName: data.renterName || null,
         startDate: data.startDate,
         endDate: data.endDate,
+        requestedQuantity: data.requestedQuantity,
         deposit: {
           amount: toCents(data.depositAmount),
           currency: data.depositCurrency.toUpperCase(),

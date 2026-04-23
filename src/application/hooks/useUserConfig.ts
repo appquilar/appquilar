@@ -12,7 +12,6 @@ import {
     profileFormSchema,
     ProfileFormValues,
 } from "@/domain/schemas/userConfigSchema";
-import { Uuid } from "@/domain/valueObject/uuidv4";
 import { userService, mediaService } from "@/compositionRoot";
 
 const toFormString = (value: string | null | undefined): string => value ?? "";
@@ -115,16 +114,8 @@ export const useUserConfig = () => {
         const toastId = toast.loading("Actualizando foto de perfil...");
 
         try {
-            if (currentUser.profilePictureId) {
-                try {
-                    await mediaService.deleteImage(currentUser.profilePictureId);
-                } catch (error) {
-                    console.warn("Failed to delete old image, continuing with upload.", error);
-                }
-            }
-
-            const newImageId = Uuid.generate().toString();
-            await mediaService.uploadImage(file, newImageId);
+            const previousImageId = currentUser.profilePictureId ?? null;
+            const newImageId = await mediaService.uploadImage(file);
 
             await userService.updateUser(currentUser.id, {
                 firstName: currentUser.firstName,
@@ -132,6 +123,14 @@ export const useUserConfig = () => {
                 email: currentUser.email,
                 profilePictureId: newImageId,
             });
+
+            if (previousImageId) {
+                try {
+                    await mediaService.deleteImage(previousImageId);
+                } catch (error) {
+                    console.warn("Failed to delete old image after unlinking it from the user.", error);
+                }
+            }
 
             await refreshCurrentUser();
             toast.success("Foto de perfil actualizada", { id: toastId });
@@ -151,7 +150,7 @@ export const useUserConfig = () => {
         const toastId = toast.loading("Eliminando foto de perfil...");
 
         try {
-            await mediaService.deleteImage(currentUser.profilePictureId);
+            const previousImageId = currentUser.profilePictureId;
 
             await userService.updateUser(currentUser.id, {
                 firstName: currentUser.firstName,
@@ -159,6 +158,12 @@ export const useUserConfig = () => {
                 email: currentUser.email,
                 profilePictureId: null,
             });
+
+            try {
+                await mediaService.deleteImage(previousImageId);
+            } catch (error) {
+                console.warn("Failed to delete unlinked profile image.", error);
+            }
 
             await refreshCurrentUser();
             profileForm.setValue("profilePicture", "");

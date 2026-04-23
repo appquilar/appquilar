@@ -135,4 +135,29 @@ describe("ApiAuthRepository integration", () => {
 
     expect(localStorage.getItem("auth_token")).toBeNull();
   });
+
+  it("resets password using only token and password", async () => {
+    server.use(
+      http.post(`${apiBaseUrl}/api/auth/change-password`, async ({ request }) => {
+        const body = await request.json();
+
+        expect(body).toEqual({
+          token: "reset-token",
+          password: "new-password",
+        });
+
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    const repository = new ApiAuthRepository(
+      new ApiClient({ baseUrl: apiBaseUrl }),
+      new AuthSessionStorage()
+    );
+
+    await repository.resetPassword({
+      token: "reset-token",
+      newPassword: "new-password",
+    });
+  });
 });

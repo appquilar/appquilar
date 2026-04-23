@@ -22,6 +22,7 @@ interface UseRentalDetailsReturn {
   handleRentalUpdate: (data: {
     startDate: Date;
     endDate: Date;
+    requestedQuantity: number;
     deposit?: Money;
     price?: Money;
   }) => Promise<void>;
@@ -80,6 +81,7 @@ export const useRentalDetails = (id: string | undefined): UseRentalDetailsReturn
     mutationFn: async (data: {
       startDate: Date;
       endDate: Date;
+      requestedQuantity: number;
       deposit?: Money;
       price?: Money;
     }) => {
@@ -87,6 +89,7 @@ export const useRentalDetails = (id: string | undefined): UseRentalDetailsReturn
       await rentalService.updateRent(id, {
         startDate: data.startDate,
         endDate: data.endDate,
+        requestedQuantity: data.requestedQuantity,
         deposit: data.deposit,
         price: data.price,
       });
@@ -147,9 +150,7 @@ export const useRentalDetails = (id: string | undefined): UseRentalDetailsReturn
   })();
 
   const nextTransitions = rentalQuery.data
-    ? (viewerRole === 'renter'
-      ? []
-      : RentalStateMachineService.getNextTransitions(rentalQuery.data, viewerRole))
+    ? RentalStateMachineService.getNextTransitions(rentalQuery.data, viewerRole)
     : [];
 
   const calculateDurationDays = (): number => {

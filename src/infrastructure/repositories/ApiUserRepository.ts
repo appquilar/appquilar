@@ -56,7 +56,9 @@ interface InventoryManagementCapabilityDto extends GenericCapabilityDto {
 
 interface FeatureCapabilitiesDto {
     inventory_management?: InventoryManagementCapabilityDto | null;
+    basic_analytics?: GenericCapabilityDto | null;
     advanced_analytics?: GenericCapabilityDto | null;
+    team_management?: GenericCapabilityDto | null;
     custom_domain?: GenericCapabilityDto | null;
     branding?: GenericCapabilityDto | null;
     api_access?: GenericCapabilityDto | null;
@@ -95,11 +97,13 @@ interface UserDto {
     is_company_owner?: boolean | null;
     plan_type?: UserPlanType | null;
     subscription_status?: SubscriptionStatus | null;
+    subscription_cancel_at_period_end?: boolean | null;
     product_slot_limit?: number | null;
     capabilities?: FeatureCapabilitiesDto | null;
     entitlements?: EntitlementsDto<UserPlanType> | null;
     company_plan_type?: CompanyPlanType | null;
     company_subscription_status?: SubscriptionStatus | null;
+    company_subscription_cancel_at_period_end?: boolean | null;
     company_is_founding_account?: boolean | null;
     company_product_slot_limit?: number | null;
     company_context?: {
@@ -109,6 +113,7 @@ interface UserDto {
         is_company_owner: boolean;
         plan_type: CompanyPlanType;
         subscription_status: SubscriptionStatus;
+        subscription_cancel_at_period_end?: boolean | null;
         is_founding_account: boolean;
         product_slot_limit?: number | null;
         capabilities?: FeatureCapabilitiesDto | null;
@@ -216,7 +221,9 @@ function mapCapabilitiesDtoToDomain(dto: FeatureCapabilitiesDto | null | undefin
 
     return {
         inventoryManagement: mapInventoryManagementCapability(dto.inventory_management),
+        basicAnalytics: mapGenericCapability(dto.basic_analytics),
         advancedAnalytics: mapGenericCapability(dto.advanced_analytics),
+        teamManagement: mapGenericCapability(dto.team_management),
         customDomain: mapGenericCapability(dto.custom_domain),
         branding: mapGenericCapability(dto.branding),
         apiAccess: mapGenericCapability(dto.api_access),
@@ -264,6 +271,8 @@ function mapUserDtoToDomain(dto: UserDto): User {
             isCompanyOwner: dto.company_context.is_company_owner,
             planType: dto.company_context.plan_type ?? companyEntitlements?.planType ?? "starter",
             subscriptionStatus: dto.company_context.subscription_status ?? companyEntitlements?.subscriptionStatus ?? "active",
+            subscriptionCancelAtPeriodEnd:
+                dto.company_context.subscription_cancel_at_period_end === true,
             isFoundingAccount: dto.company_context.is_founding_account,
             productSlotLimit: dto.company_context.product_slot_limit
                 ?? companyEntitlements?.quotas.activeProducts
@@ -282,6 +291,8 @@ function mapUserDtoToDomain(dto: UserDto): User {
                 isCompanyOwner: dto.is_company_owner === true,
                 planType: dto.company_plan_type ?? "starter",
                 subscriptionStatus: dto.company_subscription_status ?? "active",
+                subscriptionCancelAtPeriodEnd:
+                    dto.company_subscription_cancel_at_period_end === true,
                 isFoundingAccount: dto.company_is_founding_account === true,
                 productSlotLimit: dto.company_product_slot_limit ?? null,
                 capabilities: null,
@@ -304,6 +315,8 @@ function mapUserDtoToDomain(dto: UserDto): User {
         companyContext,
         planType: dto.plan_type ?? userEntitlements?.planType ?? "explorer",
         subscriptionStatus: dto.subscription_status ?? userEntitlements?.subscriptionStatus ?? "active",
+        subscriptionCancelAtPeriodEnd:
+            dto.subscription_cancel_at_period_end === true,
         productSlotLimit: dto.product_slot_limit ?? userEntitlements?.quotas.activeProducts ?? null,
         capabilities: mapCapabilitiesDtoToDomain(dto.capabilities) ?? userEntitlements?.capabilities ?? null,
         entitlements: userEntitlements,
@@ -353,7 +366,10 @@ export class ApiUserRepository implements UserRepository {
         const headers = await this.authHeaders();
         const response = await this.apiClient.get<ApiResponse<UserDto>>(
             "/api/me",
-            { headers }
+            {
+                headers,
+                cache: "no-store",
+            }
         );
         return mapUserDtoToDomain(response.data);
     }

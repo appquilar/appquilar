@@ -29,11 +29,13 @@ const companyFormSchema = z.object({
   state: z.string().min(1),
   country: z.string().min(1),
   postalCode: z.string().min(1),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   contactEmail: z.string().email(),
   contactPhoneCountryCode: z.string().min(2),
   contactPhonePrefix: z.string().min(2),
   contactPhoneNumber: z.string().min(6),
-  selectedPlan: z.enum(['starter', 'pro', 'enterprise'])
+  selectedPlan: z.enum(['starter', 'pro', 'enterprise', 'early_bird'])
 });
 
 export type CompanyFormData = z.infer<typeof companyFormSchema>;
@@ -57,6 +59,8 @@ const UpgradePage = () => {
     state: '',
     country: '',
     postalCode: '',
+    latitude: undefined,
+    longitude: undefined,
     contactEmail: '',
     contactPhoneCountryCode: 'ES',
     contactPhonePrefix: '+34',
@@ -92,7 +96,14 @@ const UpgradePage = () => {
           postalCode: formData.postalCode.trim(),
           state: formData.state.trim(),
           country: formData.country.trim()
-        }
+        },
+        location:
+          typeof formData.latitude === 'number' && typeof formData.longitude === 'number'
+            ? {
+                latitude: formData.latitude,
+                longitude: formData.longitude,
+              }
+            : null,
       });
 
       const refreshedUser = await refreshCurrentUser();
@@ -148,7 +159,7 @@ const UpgradePage = () => {
         </div>
 
         <div className="w-full">
-          <div className="flex justify-between mb-2 px-1 text-xs sm:text-sm">
+          <div className="mb-2 grid grid-cols-3 gap-3 px-1 text-left text-xs sm:text-sm">
             <div className={`font-medium ${currentStep === 'info' ? 'text-primary' : ''}`}>
               Información
             </div>

@@ -1,7 +1,7 @@
 export type BillingScope = "user" | "company";
 
 export type UserBillingPlanType = "user_pro";
-export type CompanyBillingPlanType = "starter" | "pro" | "enterprise";
+export type CompanyBillingPlanType = "starter" | "pro" | "enterprise" | "early_bird";
 export type BillingPlanType = UserBillingPlanType | CompanyBillingPlanType;
 
 export interface CreateCheckoutSessionInput {
@@ -14,6 +14,10 @@ export interface CreateCheckoutSessionInput {
 export interface CreateCustomerPortalSessionInput {
     scope: BillingScope;
     returnUrl: string;
+}
+
+export interface ReactivateSubscriptionInput {
+    scope: BillingScope;
 }
 
 export interface SynchronizeCheckoutSessionInput {
@@ -37,4 +41,8 @@ export interface BillingSessionResult {
 
 export interface CheckoutSessionSynchronizationResult {
     synchronized: boolean;
+}
+
+export interface SubscriptionReactivationResult {
+    reactivated: boolean;
 }

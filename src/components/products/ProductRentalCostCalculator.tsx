@@ -1,17 +1,23 @@
 import { useMemo, useState } from "react";
 import { Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useCalculateRentalCost } from "@/application/hooks/useProducts";
 import { RentalCostBreakdown } from "@/domain/repositories/ProductRepository";
-import SpanishDateInput from "./SpanishDateInput";
+import { ProductPublicAvailability } from "@/domain/models/Product";
+import SpanishDateRangePicker from "./SpanishDateRangePicker";
+import { useAuthModalLauncher } from "@/hooks/useAuthModalLauncher";
 
 type ProductRentalCostCalculatorProps = {
     productId: string;
     isLoggedIn: boolean;
     startDate?: string;
     endDate?: string;
+    requestedQuantity?: number;
+    availability?: ProductPublicAvailability | null;
     onStartDateChange?: (value: string) => void;
     onEndDateChange?: (value: string) => void;
+    onRequestedQuantityChange?: (value: number) => void;
     onCalculationChange?: (value: RentalCostBreakdown | null) => void;
 };
 
@@ -25,31 +31,35 @@ const ProductRentalCostCalculator = ({
     isLoggedIn,
     startDate: controlledStartDate,
     endDate: controlledEndDate,
+    requestedQuantity: controlledRequestedQuantity,
+    availability,
     onStartDateChange,
     onEndDateChange,
+    onRequestedQuantityChange,
     onCalculationChange,
 }: ProductRentalCostCalculatorProps) => {
     const [internalStartDate, setInternalStartDate] = useState<string>("");
     const [internalEndDate, setInternalEndDate] = useState<string>("");
+    const [internalRequestedQuantity, setInternalRequestedQuantity] = useState<number>(1);
     const [lastCalculation, setLastCalculation] = useState<RentalCostBreakdown | null>(null);
+    const { openSignUp } = useAuthModalLauncher();
 
     const { mutateAsync: calculateRentalCost, isPending } = useCalculateRentalCost();
     const startDate = controlledStartDate ?? internalStartDate;
     const endDate = controlledEndDate ?? internalEndDate;
+    const requestedQuantity = controlledRequestedQuantity ?? internalRequestedQuantity;
+    const hasSelectedDateRange = startDate.length > 0 && endDate.length > 0 && endDate > startDate;
 
     const canCalculate = useMemo(() => {
-        return productId.length > 0 && startDate.length > 0 && endDate.length > 0;
-    }, [productId, startDate, endDate]);
+        return productId.length > 0 && hasSelectedDateRange && requestedQuantity > 0;
+    }, [hasSelectedDateRange, productId, requestedQuantity]);
 
     const handleCalculate = async () => {
         if (!canCalculate) return;
         if (!isLoggedIn) {
-            sessionStorage.setItem(
-                "auth:infoMessage",
-                "Debes iniciar sesión para calcular el coste del alquiler.",
+            openSignUp(
+                "Crea tu cuenta para calcular el coste del alquiler.",
             );
-            const loginBtn = document.querySelector('[data-trigger-login]') as HTMLElement | null;
-            loginBtn?.click();
             return;
         }
 
@@ -57,6 +67,7 @@ const ProductRentalCostCalculator = ({
             productId,
             startDate,
             endDate,
+            quantity: requestedQuantity,
         });
 
         setLastCalculation(result);
@@ -70,43 +81,67 @@ const ProductRentalCostCalculator = ({
                 <h4 className="font-semibold">Calcula tu alquiler</h4>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                    <label htmlFor="rental-start-date" className="text-sm text-muted-foreground">
-                        Fecha de inicio
-                    </label>
-                    <SpanishDateInput
-                        id="rental-start-date"
-                        value={startDate}
-                        onChange={(value) => {
-                            setLastCalculation(null);
-                            onCalculationChange?.(null);
-                            if (controlledStartDate === undefined) {
-                                setInternalStartDate(value);
-                            }
-                            onStartDateChange?.(value);
-                        }}
-                    />
-                </div>
-
-                <div className="space-y-1">
-                    <label htmlFor="rental-end-date" className="text-sm text-muted-foreground">
-                        Fecha de fin
-                    </label>
-                    <SpanishDateInput
-                        id="rental-end-date"
-                        value={endDate}
-                        onChange={(value) => {
-                            setLastCalculation(null);
-                            onCalculationChange?.(null);
-                            if (controlledEndDate === undefined) {
-                                setInternalEndDate(value);
-                            }
-                            onEndDateChange?.(value);
-                        }}
-                    />
-                </div>
+            <div className="space-y-1">
+                <label htmlFor="rental-date-range" className="text-sm text-muted-foreground">
+                    Fechas del alquiler
+                </label>
+                <SpanishDateRangePicker
+                    id="rental-date-range"
+                    startDate={startDate}
+                    endDate={endDate}
+                    onStartDateChange={(value) => {
+                        setLastCalculation(null);
+                        onCalculationChange?.(null);
+                        if (controlledStartDate === undefined) {
+                            setInternalStartDate(value);
+                        }
+                        onStartDateChange?.(value);
+                    }}
+                    onEndDateChange={(value) => {
+                        setLastCalculation(null);
+                        onCalculationChange?.(null);
+                        if (controlledEndDate === undefined) {
+                            setInternalEndDate(value);
+                        }
+                        onEndDateChange?.(value);
+                    }}
+                />
             </div>
+
+            <div className="space-y-1">
+                <label htmlFor="rental-requested-quantity" className="text-sm text-muted-foreground">
+                    Cantidad
+                </label>
+                <Input
+                    id="rental-requested-quantity"
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={requestedQuantity}
+                    onChange={(event) => {
+                        const nextValue = Number.parseInt(event.target.value, 10);
+                        const safeValue = Number.isNaN(nextValue) ? 1 : nextValue;
+                        setLastCalculation(null);
+                        onCalculationChange?.(null);
+                        if (controlledRequestedQuantity === undefined) {
+                            setInternalRequestedQuantity(safeValue);
+                        }
+                        onRequestedQuantityChange?.(safeValue);
+                    }}
+                />
+            </div>
+
+            {hasSelectedDateRange && availability && (
+                <div className={`rounded-lg border p-3 text-sm ${
+                    availability.canRequest
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                        : availability.managedByPlatform
+                            ? "border-amber-200 bg-amber-50 text-amber-800"
+                            : "border-slate-200 bg-slate-50 text-slate-700"
+                }`}>
+                    {availability.message}
+                </div>
+            )}
 
             <Button
                 type="button"
@@ -119,6 +154,10 @@ const ProductRentalCostCalculator = ({
 
             {lastCalculation && (
                 <div className="rounded-lg border border-border bg-muted/20 p-4 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Cantidad</span>
+                        <span className="font-medium">{lastCalculation.requestedQuantity}</span>
+                    </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Días de alquiler</span>
                         <span className="font-medium">{lastCalculation.days}</span>

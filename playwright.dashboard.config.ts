@@ -8,13 +8,28 @@ const siteId = process.env.VITE_APPQUILAR_SITE_ID ?? "550e8400-e29b-41d4-a716-44
 const isCoverageRun = process.env.E2E_COVERAGE === "1";
 const isCiRun = !!process.env.CI;
 
+const resolveWorkers = (value: string | undefined): number | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return undefined;
+  }
+
+  return parsed;
+};
+
+const configuredWorkers = resolveWorkers(process.env.PLAYWRIGHT_WORKERS);
+
 export default defineConfig({
   testDir: "./src/test/e2e/dashboard",
   // Needed for real test-level sharding (otherwise sharding is file-based).
   fullyParallel: !isCoverageRun,
   forbidOnly: isCiRun,
   retries: isCiRun ? 1 : 0,
-  workers: isCiRun || isCoverageRun ? 1 : undefined,
+  workers: isCoverageRun ? 1 : configuredWorkers,
   reporter: isCiRun ? "github" : "list",
   use: {
     baseURL: appUrl,

@@ -2,12 +2,11 @@ import { useForm } from "react-hook-form";
 import { useAuth } from "@/context/AuthContext";
 
 interface ResetPasswordFormProps {
-    email: string;
     token: string;
     onSuccess?: () => void;
 }
 
-const ResetPasswordForm = ({ email, token, onSuccess }: ResetPasswordFormProps) => {
+const ResetPasswordForm = ({ token, onSuccess }: ResetPasswordFormProps) => {
     const { resetPassword } = useAuth();
 
     const { register, handleSubmit, formState: { isSubmitting } } = useForm<{
@@ -21,7 +20,7 @@ const ResetPasswordForm = ({ email, token, onSuccess }: ResetPasswordFormProps) 
         if (password !== repeatPassword) {
             throw new Error('Passwords does not match, please try again');
         } else {
-            await resetPassword(email, token, password);
+            await resetPassword(token, password);
             onSuccess?.();
         }
     };

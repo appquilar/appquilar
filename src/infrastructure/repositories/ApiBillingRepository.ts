@@ -5,6 +5,8 @@ import type {
     CreateCheckoutSessionInput,
     CreateCustomerPortalSessionInput,
     MigrateCompanyToExplorerInput,
+    ReactivateSubscriptionInput,
+    SubscriptionReactivationResult,
     SynchronizeCheckoutSessionInput,
 } from "@/domain/models/Billing";
 import type { BillingRepository } from "@/domain/repositories/BillingRepository";
@@ -50,6 +52,14 @@ interface SynchronizeCheckoutSessionRequestDto {
 
 interface SynchronizeCheckoutSessionResponseDto {
     synchronized: boolean;
+}
+
+interface ReactivateSubscriptionRequestDto {
+    scope: "user" | "company";
+}
+
+interface ReactivateSubscriptionResponseDto {
+    reactivated: boolean;
 }
 
 export class ApiBillingRepository implements BillingRepository {
@@ -108,6 +118,26 @@ export class ApiBillingRepository implements BillingRepository {
 
         return {
             url: response.data.url,
+        };
+    }
+
+    async reactivateSubscription(
+        input: ReactivateSubscriptionInput
+    ): Promise<SubscriptionReactivationResult> {
+        const headers = await this.authHeaders();
+
+        const payload: ReactivateSubscriptionRequestDto = {
+            scope: input.scope,
+        };
+
+        const response = await this.apiClient.post<ApiResponse<ReactivateSubscriptionResponseDto>>(
+            "/api/billing/subscription/reactivate",
+            payload,
+            { headers }
+        );
+
+        return {
+            reactivated: response.data.reactivated,
         };
     }
 

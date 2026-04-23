@@ -35,8 +35,14 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
     useEffect(() => {
         if (isOpen) {
-            // Siempre abrimos en login
-            setActiveTab("signin");
+            const requestedTab = sessionStorage.getItem("auth:initialTab");
+            if (requestedTab === "signup") {
+                setActiveTab("signup");
+            } else {
+                // Siempre abrimos en login salvo que se solicite registro explícitamente
+                setActiveTab("signin");
+            }
+            sessionStorage.removeItem("auth:initialTab");
 
             // Leer mensaje informativo (si existe)
             const infoMessageFromSession =
@@ -56,6 +62,8 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             setInfoMessage(null);
         }
     }, [isOpen]);
+
+    const isSignInFlowActive = activeTab === "signin" || activeTab === "forgot";
 
     return (
         <Dialog open={isOpen} onOpenChange={(v) => !v && onClose()}>
@@ -93,14 +101,18 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                             </DialogClose>
                         </div>
 
-                        <div className="px-5 pb-4">
-                            <div className="grid grid-cols-2 rounded-xl border border-border/70 bg-muted/40 p-1">
+                        <div className="px-5 pb-1">
+                            <div
+                                aria-label="Seleccionar modo de autenticación"
+                                className="grid grid-cols-2"
+                            >
                                 <button
                                     type="button"
-                                    className={`h-9 rounded-lg text-sm font-medium transition-colors ${
-                                        activeTab === "signin"
-                                            ? "bg-white text-foreground shadow-sm"
-                                            : "text-muted-foreground hover:text-foreground"
+                                    aria-pressed={isSignInFlowActive}
+                                    className={`relative flex h-11 items-center justify-center text-sm font-medium transition-colors after:absolute after:bottom-[-1px] after:left-5 after:right-5 after:h-0.5 after:rounded-full ${
+                                        isSignInFlowActive
+                                            ? "text-foreground after:bg-primary"
+                                            : "text-muted-foreground hover:text-foreground after:bg-transparent"
                                     }`}
                                     onClick={() => setActiveTab("signin")}
                                 >
@@ -109,10 +121,11 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
                                 <button
                                     type="button"
-                                    className={`h-9 rounded-lg text-sm font-medium transition-colors ${
+                                    aria-pressed={activeTab === "signup"}
+                                    className={`relative flex h-11 items-center justify-center text-sm font-medium transition-colors after:absolute after:bottom-[-1px] after:left-5 after:right-5 after:h-0.5 after:rounded-full ${
                                         activeTab === "signup"
-                                            ? "bg-white text-foreground shadow-sm"
-                                            : "text-muted-foreground hover:text-foreground"
+                                            ? "text-foreground after:bg-primary"
+                                            : "text-muted-foreground hover:text-foreground after:bg-transparent"
                                     }`}
                                     onClick={() => setActiveTab("signup")}
                                 >

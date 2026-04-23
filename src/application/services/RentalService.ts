@@ -6,6 +6,7 @@ import {
   RentMessageListResponse,
   RentUnreadMessagesCount,
   RentListResponse,
+  RentSummary,
   RentalRepository,
   UpdateRentData,
   UpdateRentStatusData
@@ -21,6 +22,10 @@ export class RentalService {
 
   listRents(params?: RentListParams): Promise<RentListResponse> {
     return this.repository.listRents(params);
+  }
+
+  getSummary(ownerId?: string): Promise<RentSummary> {
+    return this.repository.getSummary(ownerId);
   }
 
   getRentById(id: string): Promise<Rental | null> {

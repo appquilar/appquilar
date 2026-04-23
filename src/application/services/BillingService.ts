@@ -5,6 +5,8 @@ import type {
     CreateCheckoutSessionInput,
     CreateCustomerPortalSessionInput,
     MigrateCompanyToExplorerInput,
+    ReactivateSubscriptionInput,
+    SubscriptionReactivationResult,
     SynchronizeCheckoutSessionInput,
 } from "@/domain/models/Billing";
 import type { BillingRepository } from "@/domain/repositories/BillingRepository";
@@ -22,6 +24,12 @@ export class BillingService {
         input: CreateCustomerPortalSessionInput
     ): Promise<BillingSessionResult> {
         return this.billingRepository.createCustomerPortalSession(input);
+    }
+
+    async reactivateSubscription(
+        input: ReactivateSubscriptionInput
+    ): Promise<SubscriptionReactivationResult> {
+        return this.billingRepository.reactivateSubscription(input);
     }
 
     async synchronizeCheckoutSession(

@@ -7,8 +7,6 @@ import { useAuth } from "@/context/AuthContext";
 const ResetPasswordPage = () => {
     const { resetPassword } = useAuth();
     const [params] = useSearchParams();
-    // Backward-compatible fix: old links may include "+" unescaped, and URLSearchParams decodes it as space.
-    const email = (params.get("email") ?? "").replace(/ /g, "+");
     const token = params.get("token") ?? "";
 
     const [password, setPassword] = useState("");
@@ -27,7 +25,7 @@ const ResetPasswordPage = () => {
         }
 
         try {
-            await resetPassword(email, token, password);
+            await resetPassword(token, password);
             setSuccess(true);
         } catch (e) {
             setError("No se pudo actualizar la contraseña. Intenta de nuevo.");

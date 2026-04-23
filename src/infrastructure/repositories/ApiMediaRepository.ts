@@ -2,6 +2,13 @@ import {ImageSize, MediaRepository} from "@/domain/repositories/MediaRepository"
 import {ApiClient} from "@/infrastructure/http/ApiClient";
 import {AuthSession, toAuthorizationHeader} from "@/domain/models/AuthSession";
 
+interface UploadImageResponseDto {
+    success: boolean;
+    data?: {
+        image_id?: string;
+    };
+}
+
 export class ApiMediaRepository implements MediaRepository {
     private readonly apiClient: ApiClient;
     private readonly getSession: () => AuthSession | null;
@@ -27,19 +34,24 @@ export class ApiMediaRepository implements MediaRepository {
         };
     }
 
-    async uploadImage(file: File, imageId: string): Promise<void> {
+    async uploadImage(file: File): Promise<string> {
         const headers = await this.authHeaders();
         const formData = new FormData();
 
         formData.append("file", file);
-        // We send the generated ID to satisfy the "image.upload.image_id.not_blank" validation
-        formData.append("image_id", imageId);
 
-        await this.apiClient.post(
+        const response = await this.apiClient.post<UploadImageResponseDto>(
             "/api/media/images/upload",
             formData,
             { headers }
         );
+
+        const imageId = response.data?.image_id;
+        if (!imageId) {
+            throw new Error("Image upload response did not contain image_id");
+        }
+
+        return imageId;
     }
 
     async deleteImage(imageId: string): Promise<void> {

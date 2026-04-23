@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
 import { compositionRoot, queryClient } from "@/compositionRoot";
-import { Uuid } from "@/domain/valueObject/uuidv4";
 import { UserRole } from "@/domain/models/UserRole";
 import {
     addressFormSchema,
@@ -16,6 +15,7 @@ import {
 } from "@/domain/schemas/adminUserEditSchema";
 
 import { useUserById } from "@/application/hooks/useUserById";
+import { useAuth } from "@/context/AuthContext";
 
 const userService = compositionRoot.userService;
 const mediaService = compositionRoot.mediaService;
@@ -40,6 +40,7 @@ function normalizeRoles(input: UserRole[] | undefined): UserRole[] {
  */
 export function useAdminUserEditor(userId: string | undefined) {
     const { user, isLoading, error } = useUserById(userId);
+    const { currentUser, refreshCurrentUser } = useAuth();
 
     // -------------------------------
     // Form Perfil (incluye roles)
@@ -102,6 +103,14 @@ export function useAdminUserEditor(userId: string | undefined) {
         await queryClient.invalidateQueries({ queryKey: ["userById", userId] });
     };
 
+    const refreshCurrentUserIfEditingSelf = async () => {
+        if (!userId || currentUser?.id !== userId) {
+            return;
+        }
+
+        await refreshCurrentUser();
+    };
+
     // -------------------------------
     // Imagen: subir
     // -------------------------------
@@ -111,28 +120,23 @@ export function useAdminUserEditor(userId: string | undefined) {
         const toastId = toast.loading("Actualizando foto de perfil…");
 
         try {
-            // 1) borrar imagen anterior (si existe)
-            if (user.profilePictureId) {
-                try {
-                    await mediaService.deleteImage(user.profilePictureId);
-                } catch (e) {
-                    console.warn("No se pudo borrar la imagen anterior, continuamos.", e);
-                }
-            }
+            const previousImageId = user.profilePictureId ?? null;
+            const newImageId = await mediaService.uploadImage(file);
 
-            // 2) generar UUID FE
-            const newImageId = Uuid.generate().toString();
-
-            // 3) upload
-            await mediaService.uploadImage(file, newImageId);
-
-            // 4) patch del usuario
             await userService.updateUser(userId, {
                 profilePictureId: newImageId,
             });
 
-            // 5) refrescar cache
+            if (previousImageId) {
+                try {
+                    await mediaService.deleteImage(previousImageId);
+                } catch (e) {
+                    console.warn("No se pudo borrar la imagen antigua tras desvincularla.", e);
+                }
+            }
+
             await invalidateUser();
+            await refreshCurrentUserIfEditingSelf();
 
             toast.success("Foto de perfil actualizada", { id: toastId });
         } catch (e) {
@@ -159,13 +163,20 @@ export function useAdminUserEditor(userId: string | undefined) {
         const toastId = toast.loading("Eliminando foto de perfil…");
 
         try {
-            await mediaService.deleteImage(user.profilePictureId);
+            const previousImageId = user.profilePictureId;
 
             await userService.updateUser(userId, {
                 profilePictureId: null,
             });
 
+            try {
+                await mediaService.deleteImage(previousImageId);
+            } catch (e) {
+                console.warn("No se pudo borrar la imagen ya desvinculada.", e);
+            }
+
             await invalidateUser();
+            await refreshCurrentUserIfEditingSelf();
 
             profileForm.setValue("profilePicture", "");
             toast.success("Foto de perfil eliminada", { id: toastId });
@@ -195,6 +206,7 @@ export function useAdminUserEditor(userId: string | undefined) {
             });
 
             await invalidateUser();
+            await refreshCurrentUserIfEditingSelf();
 
             toast.success("Perfil actualizado correctamente");
         } catch (e) {
@@ -226,6 +238,7 @@ export function useAdminUserEditor(userId: string | undefined) {
             });
 
             await invalidateUser();
+            await refreshCurrentUserIfEditingSelf();
 
             toast.success("Dirección guardada correctamente");
         } catch (e) {

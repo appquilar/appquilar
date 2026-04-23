@@ -17,7 +17,7 @@ const OPEN_EXCLUDED_STATUSES: RentStatus[] = ['rental_completed', 'cancelled'];
 const MessagesDashboard = () => {
   useSeo({
     title: "Mensajes | Dashboard Appquilar",
-    description: "Conversaciones de alquiler entre tienda y cliente.",
+    description: "Inbox de conversaciones de alquiler.",
     canonicalUrl: buildAbsolutePublicUrl("/dashboard/messages"),
     robots: "noindex,nofollow",
   });
@@ -127,7 +127,7 @@ const MessagesDashboard = () => {
     >
       <DashboardSectionHeader
         title="Mensajes"
-        description="Conversaciones de alquiler entre tienda y cliente."
+        description="Inbox de conversaciones. Los estados y acciones viven en el detalle del alquiler."
         icon={MessageCircle}
       />
 

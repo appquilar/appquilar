@@ -39,6 +39,7 @@ export type ResponseFormat = 'json' | 'blob' | 'text';
 
 export interface RequestOptions {
     headers?: Record<string, string>;
+    cache?: RequestCache;
     /**
      * If true, the client will not send a body (useful for 204 responses).
      */
@@ -125,6 +126,7 @@ export class ApiClient {
         const init: RequestInit = {
             method,
             headers,
+            cache: options?.cache,
         };
 
         if (body !== undefined) {

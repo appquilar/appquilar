@@ -4,6 +4,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import BlogMediaImage from '@/components/blog/BlogMediaImage';
 import { Button } from '@/components/ui/button';
+import SafeHtml from '@/components/shared/SafeHtml';
 import { usePublicBlogPost } from '@/application/hooks/useBlog';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { useSeo } from '@/hooks/useSeo';
@@ -73,6 +74,12 @@ const BlogPostPage = () => {
                       },
                   ],
               }
+            : isLoading
+              ? {
+                    title: "Artículo del blog | Appquilar",
+                    description: "Contenido y guias sobre alquiler, herramientas y marketplace en Appquilar.",
+                    canonicalUrl: buildAbsolutePublicUrl(slug ? buildBlogPostPath(slug) : PUBLIC_PATHS.blog),
+                }
             : {
                   title: "Artículo no encontrado | Blog Appquilar",
                   description: "El artículo que buscas no existe o ya no está disponible.",
@@ -148,9 +155,9 @@ const BlogPostPage = () => {
                                 fallbackText=""
                             />
 
-                            <section
+                            <SafeHtml
+                                html={post.body}
                                 className="prose prose-neutral max-w-none"
-                                dangerouslySetInnerHTML={{ __html: post.body ?? '' }}
                             />
                         </article>
                     )}

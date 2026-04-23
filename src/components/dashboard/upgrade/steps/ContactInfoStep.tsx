@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useAddressMap } from '@/components/dashboard/hooks/useAddressMap';
+import { PhoneNumberInput } from '@/components/ui/phone-number-input';
 import { CompanyFormData } from '../UpgradePage';
 
 // Validation schema for contact info
@@ -15,6 +17,8 @@ const contactInfoSchema = z.object({
   state: z.string().min(1, { message: 'La provincia/estado es obligatoria' }),
   country: z.string().min(1, { message: 'El país es obligatorio' }),
   postalCode: z.string().min(1, { message: 'El código postal es obligatorio' }),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   contactEmail: z.string().email({ message: 'Debe ser un email válido' }),
   contactPhoneCountryCode: z.string().min(2, { message: 'País obligatorio' }),
   contactPhonePrefix: z.string().min(2, { message: 'Prefijo obligatorio' }),
@@ -38,12 +42,24 @@ const ContactInfoStep = ({ formData, onUpdateFormData, onNext, onBack }: Contact
       state: formData.state,
       country: formData.country,
       postalCode: formData.postalCode,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
       contactEmail: formData.contactEmail,
       contactPhoneCountryCode: formData.contactPhoneCountryCode,
       contactPhonePrefix: formData.contactPhonePrefix,
       contactPhoneNumber: formData.contactPhoneNumber,
     }
   });
+  const { autocompleteContainerRef, mapContainerRef, mapsError } = useAddressMap(form);
+  const latitude = form.watch('latitude');
+  const longitude = form.watch('longitude');
+  const phoneCountryCode = form.watch('contactPhoneCountryCode');
+  const phonePrefix = form.watch('contactPhonePrefix');
+  const phoneNumber = form.watch('contactPhoneNumber');
+  const phoneError =
+    form.formState.errors.contactPhoneCountryCode?.message ||
+    form.formState.errors.contactPhonePrefix?.message ||
+    form.formState.errors.contactPhoneNumber?.message;
 
   const handleSubmit = (values: z.infer<typeof contactInfoSchema>) => {
     onUpdateFormData(values);
@@ -59,6 +75,19 @@ const ContactInfoStep = ({ formData, onUpdateFormData, onNext, onBack }: Contact
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <div className="space-y-1">
+            <FormLabel>Buscar dirección</FormLabel>
+            <div ref={autocompleteContainerRef} className="min-h-10" />
+            <p className="text-xs text-muted-foreground">
+              Empieza a escribir y selecciona tu dirección. Después puedes mover el pin para afinar la posición.
+            </p>
+            {mapsError && (
+              <p className="text-xs text-destructive">
+                {mapsError}
+              </p>
+            )}
+          </div>
+
           <FormField
             control={form.control}
             name="street"
@@ -81,7 +110,7 @@ const ContactInfoStep = ({ formData, onUpdateFormData, onNext, onBack }: Contact
                 <FormItem>
                   <FormLabel>Dirección adicional (opcional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Piso, puerta, escalera..." {...field} />
+                    <Input placeholder="Piso, puerta, escalera..." {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -147,62 +176,69 @@ const ContactInfoStep = ({ formData, onUpdateFormData, onNext, onBack }: Contact
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="contactEmail"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email de Contacto</FormLabel>
-                <FormControl>
-                  <Input placeholder="contacto@miempresa.com" type="email" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="space-y-2">
+            <FormLabel>Ubicación en el mapa</FormLabel>
+            <p className="text-xs text-muted-foreground">
+              Nunca mostraremos la dirección exacta; sólo una ubicación aproximada cercana a tu empresa.
+            </p>
+            <div
+              ref={mapContainerRef}
+              className="h-[320px] w-full overflow-hidden rounded-md border"
+            />
+            {typeof latitude === 'number' && typeof longitude === 'number' && (
+              <p className="text-xs text-muted-foreground">
+                Coordenadas: {latitude.toFixed(6)}, {longitude.toFixed(6)}
+              </p>
             )}
-          />
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormField
               control={form.control}
-              name="contactPhoneCountryCode"
+              name="contactEmail"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>País teléfono</FormLabel>
+                  <FormLabel>Email de Contacto</FormLabel>
                   <FormControl>
-                    <Input placeholder="ES" {...field} />
+                    <Input
+                      placeholder="contacto@miempresa.com"
+                      type="email"
+                      {...field}
+                      value={field.value ?? ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="contactPhonePrefix"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Prefijo</FormLabel>
-                  <FormControl>
-                    <Input placeholder="+34" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+            <div className="space-y-2">
+              <label
+                htmlFor="contact-phone-number"
+                className="text-sm font-medium leading-none"
+              >
+                Teléfono de Contacto
+              </label>
+              <PhoneNumberInput
+                id="contact-phone-number"
+                countryCode={phoneCountryCode}
+                prefix={phonePrefix}
+                number={phoneNumber}
+                invalid={Boolean(phoneError)}
+                onCountryChange={({ countryCode, prefix }) => {
+                  form.setValue('contactPhoneCountryCode', countryCode, { shouldValidate: true });
+                  form.setValue('contactPhonePrefix', prefix, { shouldValidate: true });
+                }}
+                onNumberChange={(value) => {
+                  form.setValue('contactPhoneNumber', value, { shouldValidate: true });
+                }}
+              />
+              {phoneError && (
+                <p className="text-sm font-medium text-destructive">
+                  {phoneError}
+                </p>
               )}
-            />
-
-            <FormField
-              control={form.control}
-              name="contactPhoneNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Número</FormLabel>
-                  <FormControl>
-                    <Input placeholder="612345678" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            </div>
           </div>
 
           <div className="flex justify-between pt-4">

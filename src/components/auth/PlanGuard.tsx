@@ -1,22 +1,32 @@
 import type { ReactNode } from "react";
 import { useAuth } from "@/context/AuthContext";
-import type { CompanyPlanType, UserPlanType } from "@/domain/models/Subscription";
-import { getEffectiveUserPlan, isSubscriptionActive } from "@/domain/models/Subscription";
+import type { CapabilityKey, CapabilityState } from "@/domain/models/Subscription";
+import {
+    hasCompanyCapabilityAccess,
+    hasUserCapabilityAccess,
+} from "@/domain/models/Subscription";
 import { UserRole } from "@/domain/models/UserRole";
+
+interface CapabilityRequirement {
+    key: CapabilityKey;
+    states?: CapabilityState[];
+}
 
 interface PlanGuardProps {
     children: ReactNode;
     fallback?: ReactNode;
-    requiredUserPlans?: UserPlanType[];
-    requiredCompanyPlans?: CompanyPlanType[];
+    requiredUserCapabilities?: CapabilityRequirement[];
+    requiredCompanyCapabilities?: CapabilityRequirement[];
     requireCompanyContext?: boolean;
 }
+
+const DEFAULT_ALLOWED_STATES: CapabilityState[] = ["enabled", "read_only"];
 
 const PlanGuard = ({
     children,
     fallback = null,
-    requiredUserPlans,
-    requiredCompanyPlans,
+    requiredUserCapabilities,
+    requiredCompanyCapabilities,
     requireCompanyContext = false,
 }: PlanGuardProps) => {
     const { currentUser, isLoading, hasRole } = useAuth();
@@ -39,28 +49,34 @@ const PlanGuard = ({
         return <>{fallback}</>;
     }
 
-    if (requiredCompanyPlans && requiredCompanyPlans.length > 0) {
+    if (requiredCompanyCapabilities && requiredCompanyCapabilities.length > 0) {
         if (!companyContext) {
             return <>{fallback}</>;
         }
 
-        const effectiveCompanyPlan = companyContext.isFoundingAccount
-            ? "enterprise"
-            : (isSubscriptionActive(companyContext.subscriptionStatus)
-                ? companyContext.planType
-                : "starter");
+        const hasRequiredCompanyCapabilities = requiredCompanyCapabilities.every((requirement) =>
+            hasCompanyCapabilityAccess(
+                companyContext,
+                requirement.key,
+                requirement.states ?? DEFAULT_ALLOWED_STATES
+            )
+        );
 
-        if (!requiredCompanyPlans.includes(effectiveCompanyPlan)) {
+        if (!hasRequiredCompanyCapabilities) {
             return <>{fallback}</>;
         }
     }
 
-    if (requiredUserPlans && requiredUserPlans.length > 0) {
-        const userPlan = getEffectiveUserPlan(
-            currentUser.planType,
-            currentUser.subscriptionStatus
+    if (requiredUserCapabilities && requiredUserCapabilities.length > 0) {
+        const hasRequiredUserCapabilities = requiredUserCapabilities.every((requirement) =>
+            hasUserCapabilityAccess(
+                currentUser,
+                requirement.key,
+                requirement.states ?? DEFAULT_ALLOWED_STATES
+            )
         );
-        if (!requiredUserPlans.includes(userPlan)) {
+
+        if (!hasRequiredUserCapabilities) {
             return <>{fallback}</>;
         }
     }

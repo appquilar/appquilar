@@ -2,10 +2,11 @@ import { describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createTestQueryClient } from "@/test/utils/renderWithProviders";
-import { useCreateLead, useOwnerRentalsCount, useRentals } from "@/application/hooks/useRentals";
+import { useCreateLead, useOwnerRentalsCount, useRentSummary, useRentals } from "@/application/hooks/useRentals";
 
-const { listRentsMock, createRentMock, createRentMessageMock } = vi.hoisted(() => ({
+const { listRentsMock, getSummaryMock, createRentMock, createRentMessageMock } = vi.hoisted(() => ({
   listRentsMock: vi.fn(),
+  getSummaryMock: vi.fn(),
   createRentMock: vi.fn(),
   createRentMessageMock: vi.fn(),
 }));
@@ -13,6 +14,7 @@ const { listRentsMock, createRentMock, createRentMessageMock } = vi.hoisted(() =
 vi.mock("@/compositionRoot", () => ({
   rentalService: {
     listRents: listRentsMock,
+    getSummary: getSummaryMock,
     createRent: createRentMock,
     createRentMessage: createRentMessageMock,
   },
@@ -55,12 +57,27 @@ describe("useRentals hooks", () => {
     expect(listRentsMock).toHaveBeenCalledWith({ role: "owner", page: 1, perPage: 10 });
   });
 
-  it("gets owner rentals count from list endpoint", async () => {
-    listRentsMock.mockResolvedValueOnce({
-      data: [{ id: "rent-1" }],
-      total: 11,
-      page: 1,
-      perPage: 1,
+  it("loads rent summary and derives the owner rentals count from it", async () => {
+    getSummaryMock.mockResolvedValue({
+      owner: {
+        total: 11,
+        upcoming: 7,
+        past: 4,
+      },
+      renter: {
+        total: 3,
+        upcoming: 2,
+        past: 1,
+      },
+    });
+
+    const { result: summaryResult } = renderHook(
+      () => useRentSummary({ ownerId: "owner-1" }),
+      { wrapper: createWrapper() }
+    );
+
+    await waitFor(() => {
+      expect(summaryResult.current.data?.owner.total).toBe(11);
     });
 
     const { result } = renderHook(() => useOwnerRentalsCount({ ownerId: "owner-1" }), {
@@ -71,12 +88,7 @@ describe("useRentals hooks", () => {
       expect(result.current.data).toBe(11);
     });
 
-    expect(listRentsMock).toHaveBeenCalledWith({
-      role: "owner",
-      ownerId: "owner-1",
-      page: 1,
-      perPage: 1,
-    });
+    expect(getSummaryMock).toHaveBeenCalledWith("owner-1");
   });
 
   it("creates rental lead and sends first message", async () => {
@@ -92,6 +104,7 @@ describe("useRentals hooks", () => {
         productId: "product-1",
         startDate: "2026-02-20",
         endDate: "2026-02-25",
+        requestedQuantity: 2,
         deposit: { amount: 10000, currency: "EUR" },
         price: { amount: 50000, currency: "EUR" },
         message: "Hola, quiero alquilar",
@@ -104,6 +117,7 @@ describe("useRentals hooks", () => {
         renterEmail: "renter@appquilar.com",
         startDate: new Date(2026, 1, 20, 0, 0, 0),
         endDate: new Date(2026, 1, 25, 23, 59, 59),
+        requestedQuantity: 2,
         isLead: true,
       })
     );

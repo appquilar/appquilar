@@ -2,11 +2,9 @@ export type ImageSize = 'ORIGINAL' | 'LARGE' | 'MEDIUM' | 'THUMBNAIL';
 
 export interface MediaRepository {
     /**
-     * Uploads an image file with a pre-generated ID.
-     * @param file The file to upload
-     * @param imageId The UUID generated in the FE
+     * Uploads an image file and returns the backend-generated image ID.
      */
-    uploadImage(file: File, imageId: string): Promise<void>;
+    uploadImage(file: File): Promise<string>;
 
     /**
      * Deletes an image by its ID.

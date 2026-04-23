@@ -20,4 +20,31 @@ test("hero search navigates to search page and shows results", async ({ page }) 
     })
     .toBe(buildSearchPath("taladro"));
   await expect(page.getByRole("heading", { name: "Taladro profesional" })).toBeVisible();
+  await expect(page.getByTestId("product-card-public-price-mask").first()).toBeVisible();
+
+  await page.getByRole("link", { name: "Ver producto" }).first().click();
+
+  await expect
+    .poll(() => {
+      const url = new URL(page.url());
+      return url.pathname;
+    })
+    .toBe("/producto/taladro-profesional");
+
+  await expect(page.getByRole("heading", { name: "Taladro profesional" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ver empresa" })).toBeVisible();
+
+  await page.getByRole("link", { name: "Ver empresa" }).click();
+
+  await expect
+    .poll(() => {
+      const url = new URL(page.url());
+      return url.pathname;
+    })
+    .toBe("/empresa/alquileres-norte");
+
+  await expect(page.getByRole("heading", { name: "Alquileres Norte" })).toBeVisible();
+  await expect(page.getByText("Ubicación aproximada")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Crear cuenta gratis" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ya tengo cuenta" })).toBeVisible();
 });

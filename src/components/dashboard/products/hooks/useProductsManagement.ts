@@ -1,19 +1,27 @@
 import { useCallback, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { UserRole } from "@/domain/models/UserRole";
 import { useDashboardProducts, useDeleteProduct, usePublishProduct, useActiveProductsCount } from "@/application/hooks/useProducts";
 import { useCreateCheckoutSession, useCreateCustomerPortalSession } from "@/application/hooks/useBilling";
-import type { ProductFilters } from "@/domain/repositories/ProductRepository";
+import {
+    DEFAULT_PRODUCT_PUBLICATION_STATUSES,
+    type ProductFilters
+} from "@/domain/repositories/ProductRepository";
 import { getCompanyPlanProductLimit, getEffectiveUserPlan, getUserPlanProductLimit } from "@/domain/models/Subscription";
 import { toast } from "sonner";
 import type { CompanyUserRoleType } from "@/domain/models/Subscription";
+import { isPlatformAdminUser } from "@/domain/models/User";
 import {
     buildBillingBaseUrl,
     buildBillingCheckoutSuccessUrl,
+    buildBillingPortalReturnUrl,
     buildBillingReturnUrl,
 } from "@/hooks/useBillingReturnSync";
 import { extractBackendErrorMessage } from "@/utils/backendError";
+import {
+    getUserProCheckoutErrorMessage,
+    useUserProCheckout,
+} from "@/hooks/useUserProCheckout";
 
 type UseProductsManagementOptions = {
     initialPage?: number;
@@ -43,7 +51,10 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
     const { currentUser, isLoading: isAuthLoading } = useAuth();
     const { initialPage = 1, perPage = 10 } = options;
 
-    const [filters, setFilters] = useState<ProductFilters>({});
+    const defaultFilters = useMemo<ProductFilters>(() => ({
+        publicationStatus: [...DEFAULT_PRODUCT_PUBLICATION_STATUSES],
+    }), []);
+    const [filters, setFilters] = useState<ProductFilters>(defaultFilters);
     const [currentPage, setCurrentPage] = useState(initialPage);
 
     // Delete modal state
@@ -58,7 +69,7 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
     }) | null;
     const companyId = normalizedUser?.companyId ?? normalizedUser?.company_id ?? null;
     const userId = normalizedUser?.id ?? normalizedUser?.user_id ?? null;
-    const isPlatformAdmin = normalizedUser?.roles?.includes(UserRole.ADMIN) ?? false;
+    const isPlatformAdmin = isPlatformAdminUser(normalizedUser);
     const ownerId = companyId ?? userId;
     const ownerType = companyId ? 'company' : 'user';
     const effectiveUserPlan = getEffectiveUserPlan(
@@ -79,6 +90,7 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
     const publishProductMutation = usePublishProduct();
     const createCheckoutMutation = useCreateCheckoutSession();
     const createPortalMutation = useCreateCustomerPortalSession();
+    const userProCheckout = useUserProCheckout();
 
     const slotLimit = useMemo(() => {
         if (isPlatformAdmin) {
@@ -240,6 +252,14 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
 
         try {
             if (publicationLimitCta.action === "upgrade_user_pro") {
+                if (!userProCheckout.isCheckoutAvailable) {
+                    toast.error(
+                        userProCheckout.unavailableMessage ??
+                            "User Pro no esta disponible para activar ahora mismo."
+                    );
+                    return;
+                }
+
                 const checkoutSession = await createCheckoutMutation.mutateAsync({
                     scope: "user",
                     planType: "user_pro",
@@ -265,7 +285,15 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
             try {
                 const portalSession = await createPortalMutation.mutateAsync({
                     scope: "company",
-                    returnUrl: buildBillingReturnUrl(currentBaseUrl, "company"),
+                    returnUrl: normalizedUser?.companyContext
+                        ? buildBillingPortalReturnUrl(currentBaseUrl, "company", {
+                              planType: normalizedUser.companyContext.planType,
+                              subscriptionStatus:
+                                  normalizedUser.companyContext.subscriptionStatus,
+                              subscriptionCancelAtPeriodEnd:
+                                  normalizedUser.companyContext.subscriptionCancelAtPeriodEnd,
+                          })
+                        : buildBillingReturnUrl(currentBaseUrl, "company"),
                 });
 
                 newTab.location.href = portalSession.url;
@@ -274,12 +302,25 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
                 throw error;
             }
         } catch (error) {
-            const backendError = extractBackendErrorMessage(error);
             toast.error(
-                backendError ?? "No se pudo iniciar el proceso de mejora del plan."
+                publicationLimitCta.action === "upgrade_user_pro"
+                    ? getUserProCheckoutErrorMessage(
+                          error,
+                          "No se pudo iniciar el proceso de mejora del plan."
+                      )
+                    : (extractBackendErrorMessage(error) ??
+                      "No se pudo iniciar el proceso de mejora del plan.")
             );
         }
-    }, [createCheckoutMutation, createPortalMutation, navigate, publicationLimitCta]);
+    }, [
+        createCheckoutMutation,
+        createPortalMutation,
+        navigate,
+        normalizedUser?.companyContext,
+        publicationLimitCta,
+        userProCheckout.isCheckoutAvailable,
+        userProCheckout.unavailableMessage,
+    ]);
 
     return {
         // Expose filters instead of simple searchQuery
@@ -305,7 +346,10 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
         publicationLimitCtaLabel: publicationLimitCta?.label ?? null,
         hasReachedProductPublicationLimit,
         handlePublicationLimitCta,
-        isProcessingPublicationLimitCta: createCheckoutMutation.isPending || createPortalMutation.isPending,
+        isProcessingPublicationLimitCta:
+            createCheckoutMutation.isPending ||
+            createPortalMutation.isPending ||
+            userProCheckout.isLoading,
 
         isDeleteModalOpen,
         productToDeleteId,
@@ -313,5 +357,6 @@ export function useProductsManagement(options: UseProductsManagementOptions = {}
         openDeleteModal,
         closeDeleteModal,
         confirmDeleteProduct,
+        defaultFilters,
     };
 }

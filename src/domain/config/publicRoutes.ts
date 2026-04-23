@@ -1,5 +1,6 @@
 export const PUBLIC_PATHS = {
     home: "/",
+    company: "/empresa",
     categories: "/categorias",
     search: "/buscar",
     about: "/quienes-somos",
@@ -16,6 +17,7 @@ export const PUBLIC_PATHS = {
 } as const;
 
 export const LEGACY_PUBLIC_PATHS = {
+    company: "/company/:slug",
     categories: "/categories",
     category: "/category/:slug",
     product: "/product/:slug",
@@ -40,6 +42,18 @@ export const resolvePublicSiteOrigin = (): string => {
 export const buildCategoryPath = (slug: string): string => `/categoria/${encodeURIComponent(slug)}`;
 
 export const buildProductPath = (slug: string): string => `/producto/${encodeURIComponent(slug)}`;
+
+export const buildCompanyPath = (slug: string): string =>
+    `${PUBLIC_PATHS.company}/${encodeURIComponent(slug)}`;
+
+export const buildCompanyPagePath = (slug: string, page?: number): string => {
+    const base = buildCompanyPath(slug);
+    if (!page || page <= 1) {
+        return base;
+    }
+
+    return `${base}?page=${page}`;
+};
 
 export const buildBlogPostPath = (slugPath: string): string => {
     const normalized = slugPath.replace(/^\/+/, "");
@@ -67,4 +81,3 @@ export const buildAbsolutePublicUrl = (path: string): string => {
     const normalizedPath = path.startsWith("/") ? path : `/${path}`;
     return `${resolvePublicSiteOrigin()}${normalizedPath}`;
 };
-

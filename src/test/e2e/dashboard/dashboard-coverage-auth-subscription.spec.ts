@@ -67,11 +67,6 @@ const getPopupState = async (
 test.describe("Dashboard Coverage Auth + Subscription Matrix", () => {
   test.describe.configure({ mode: "parallel" });
 
-  test.skip(
-    process.env.E2E_COVERAGE !== "1",
-    "Auth/subscription coverage matrix is only executed during coverage collection."
-  );
-
   test.beforeEach(async ({ seed, request, page }) => {
     await seed.reset(request);
     await seed.clearToken(page);
@@ -106,7 +101,12 @@ test.describe("Dashboard Coverage Auth + Subscription Matrix", () => {
 
   test("auth modal covers session notice, login failures, signup server errors and forgot flow", async ({
     page,
-  }) => {
+  }, testInfo) => {
+    testInfo.annotations.push({
+      type: "skipCoverageExploration",
+      description: "Modal branch test already exercises the terminal states explicitly.",
+    });
+
     let loginAttempts = 0;
     await page.route("**/api/auth/login", async (route) => {
       loginAttempts += 1;
@@ -193,12 +193,9 @@ test.describe("Dashboard Coverage Auth + Subscription Matrix", () => {
       );
     });
 
-    const modal = page.getByRole("dialog");
+    const modal = page.getByRole("dialog").last();
     await page.goto("/");
-
-    if (!(await modal.isVisible())) {
-      await page.locator("[data-trigger-login]:visible").click();
-    }
+    await expect(modal).toBeVisible();
 
     await expect(modal.getByText(/Contrasena actualizada correctamente/i)).toBeVisible();
 
@@ -210,12 +207,12 @@ test.describe("Dashboard Coverage Auth + Subscription Matrix", () => {
     await modal.getByPlaceholder("••••••••").fill("E2Epass!123");
     await modal.locator("button[type='submit']").first().click();
     await expect(
-      modal.getByText(/correo electr[oó]nico o la contrase(?:n|ñ)a no son correctos/i)
+      modal.getByText(/No se pudo iniciar sesi[oó]n\. Int[ée]ntalo de nuevo\./i)
     ).toBeVisible();
 
     await modal.locator("button[type='submit']").first().click();
     await expect(
-      modal.getByText(/correo electr[oó]nico o la contrase(?:n|ñ)a no son correctos/i)
+      modal.getByText(/(correo electr[oó]nico o la contrase(?:n|ñ)a no son correctos|No se pudo iniciar sesi[oó]n\. Int[ée]ntalo de nuevo\.)/i)
     ).toBeVisible();
 
     await modal.getByRole("button", { name: "Registrarse" }).click();
@@ -251,7 +248,12 @@ test.describe("Dashboard Coverage Auth + Subscription Matrix", () => {
     ).toBeVisible();
   });
 
-  test("reset password covers mismatch, backend error and success branches", async ({ page }) => {
+  test("reset password covers mismatch, backend error and success branches", async ({ page }, testInfo) => {
+    testInfo.annotations.push({
+      type: "skipCoverageExploration",
+      description: "Reset-password flow ends on a simple confirmation screen after explicit assertions.",
+    });
+
     let resetAttempts = 0;
 
     await page.route("**/api/auth/change-password", async (route) => {
@@ -272,7 +274,7 @@ test.describe("Dashboard Coverage Auth + Subscription Matrix", () => {
       await route.fulfill({ status: 204 });
     });
 
-    await page.goto("/reset-password?email=user.e2e%40appquilar.test&token=seed-reset-token");
+    await page.goto("/reset-password?token=seed-reset-token");
 
     const passwordInputs = page.locator("input[type='password']");
 

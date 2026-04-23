@@ -25,6 +25,8 @@ const UserProductsPage = lazy(() => import("./users/UserProductsPage"));
 const SiteSettingsPage = lazy(() => import("./sites/SiteSettingsPage"));
 const BlogManagementPage = lazy(() => import("@/components/dashboard/blog/BlogManagementPage"));
 const BlogEditorPage = lazy(() => import("@/components/dashboard/blog/BlogEditorPage"));
+const PlatformAnalyticsPage = lazy(() => import("@/components/dashboard/analytics/PlatformAnalyticsPage"));
+const PaymentPlansManagementPage = lazy(() => import("@/components/dashboard/billing/PaymentPlansManagementPage"));
 
 const DashboardRouteFallback = () => (
     <div className="flex min-h-[40vh] items-center justify-center">
@@ -165,6 +167,22 @@ const DashboardRoutes = () => {
             <Route path="messages" element={withRouteSuspense(<MessagesDashboard />)} />
             <Route path="config" element={withRouteSuspense(<UserConfigPage />)} />
             <Route path="upgrade" element={withRouteSuspense(<UpgradePage />)} />
+            <Route
+                path="platform-analytics"
+                element={withRouteSuspense(
+                    <RoleGuard requiredRoles={[UserRole.ADMIN]}>
+                        <PlatformAnalyticsPage />
+                    </RoleGuard>
+                )}
+            />
+            <Route
+                path="payment-plans"
+                element={withRouteSuspense(
+                    <RoleGuard requiredRoles={[UserRole.ADMIN]}>
+                        <PaymentPlansManagementPage />
+                    </RoleGuard>
+                )}
+            />
 
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

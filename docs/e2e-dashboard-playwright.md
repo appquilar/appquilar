@@ -186,3 +186,9 @@ The test matrix includes:
 Each shard executes:
 
 - `npm run test:e2e:dashboard -- --shard=<n>/4`
+
+Playwright parallelism in CI:
+
+- CI dashboard shards run with `PLAYWRIGHT_WORKERS=2`
+- CI public Playwright also runs with `PLAYWRIGHT_WORKERS=2`
+- Coverage runs remain single-worker because instrumentation is enabled

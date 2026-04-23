@@ -3,7 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Product, ProductFormData } from '@/domain/models/Product';
 import { productService } from '@/compositionRoot';
 import { toast } from 'sonner';
-import { ProductFilters } from '@/domain/repositories/ProductRepository';
+import { ProductFilters, ProductOwnerSummary } from '@/domain/repositories/ProductRepository';
+import { ApiError } from '@/infrastructure/http/ApiClient';
+import { extractBackendErrorCode, extractBackendErrorMessage, getErrorMessage } from '@/utils/backendError';
 
 interface UseDashboardProductsParams {
     page?: number;
@@ -24,6 +26,101 @@ interface UseActiveProductsCountParams {
     ownerId?: string | null;
     ownerType?: 'company' | 'user';
 }
+
+interface UseOwnerProductSummaryParams {
+    ownerId?: string | null;
+    ownerType?: 'company' | 'user';
+    enabled?: boolean;
+}
+
+const EMPTY_OWNER_PRODUCT_SUMMARY: ProductOwnerSummary = {
+    total: 0,
+    draft: 0,
+    published: 0,
+    archived: 0,
+    active: 0,
+};
+
+const isMachineReadableBackendCode = (value: string): boolean => /^[a-z0-9_.-]+$/i.test(value);
+
+const getProductPlanLimitErrorMessage = (error: unknown): string | null => {
+    const backendCode = extractBackendErrorCode(error);
+
+    if (backendCode === 'subscription.user.product_limit_reached') {
+        return 'Has alcanzado el limite de productos publicados de tu plan. Puedes seguir guardando borradores, pero para publicar otro producto necesitas liberar uno ya publicado o mejorar tu plan.';
+    }
+
+    if (backendCode === 'subscription.company.product_limit_reached') {
+        return 'Tu empresa ha alcanzado el limite de productos publicados del plan actual. Puedes seguir guardando borradores, pero para publicar otro producto necesitas despublicar uno existente o mejorar el plan.';
+    }
+
+    return null;
+};
+
+const getProductMutationErrorMessage = (error: unknown, fallback: string): string => {
+    const productPlanLimitMessage = getProductPlanLimitErrorMessage(error);
+    if (productPlanLimitMessage) {
+        return productPlanLimitMessage;
+    }
+
+    const backendMessage = extractBackendErrorMessage(error);
+    if (backendMessage && !isMachineReadableBackendCode(backendMessage)) {
+        return backendMessage;
+    }
+
+    return fallback;
+};
+
+const getProductPublishAfterSaveErrorMessage = (error: unknown): string => {
+    const backendCode = extractBackendErrorCode(error);
+
+    if (backendCode === 'subscription.user.product_limit_reached') {
+        return 'Has alcanzado el limite de productos publicados de tu plan. Los cambios se han guardado, pero el producto sigue en borrador hasta que liberes uno ya publicado o mejores tu plan.';
+    }
+
+    if (backendCode === 'subscription.company.product_limit_reached') {
+        return 'Tu empresa ha alcanzado el limite de productos publicados del plan actual. Los cambios se han guardado, pero el producto sigue en borrador hasta que despubliques uno existente o mejores el plan.';
+    }
+
+    return getProductMutationErrorMessage(
+        error,
+        'No se pudo publicar el producto. Revisa tu limite de productos publicados e intentalo de nuevo.'
+    );
+};
+
+const canUseOwnerSummaryForFilters = (filters?: ProductFilters): boolean => {
+    if (!filters) {
+        return true;
+    }
+
+    return Object.keys(filters).every((key) => key === 'publicationStatus');
+};
+
+const countFromSummary = (
+    summary: ProductOwnerSummary,
+    filters?: ProductFilters
+): number => {
+    if (!filters?.publicationStatus) {
+        return summary.total;
+    }
+
+    const publicationStatuses = Array.isArray(filters.publicationStatus)
+        ? filters.publicationStatus
+        : [filters.publicationStatus];
+
+    return publicationStatuses.reduce((total, status) => {
+        switch (status) {
+            case 'draft':
+                return total + summary.draft;
+            case 'published':
+                return total + summary.published;
+            case 'archived':
+                return total + summary.archived;
+            default:
+                return total;
+        }
+    }, 0);
+};
 
 /**
  * Hook for the Product Dashboard List (Pagination + Search + Owner Filter)
@@ -56,13 +153,38 @@ export const useDashboardProducts = ({
     });
 };
 
+export const useOwnerProductSummary = ({
+    ownerId,
+    ownerType = 'company',
+    enabled = true,
+}: UseOwnerProductSummaryParams) => {
+    return useQuery({
+        queryKey: ['products', 'owner-summary', ownerId, ownerType],
+        queryFn: async () => {
+            if (!ownerId) {
+                return EMPTY_OWNER_PRODUCT_SUMMARY;
+            }
+
+            return productService.getOwnerSummary(ownerId, ownerType);
+        },
+        enabled: enabled && Boolean(ownerId),
+        placeholderData: (previousData) => previousData,
+    });
+};
+
 export const useOwnedProductsCount = ({
     ownerId,
     ownerType = 'company',
     filters,
 }: UseOwnedProductsCountParams) => {
-    return useQuery({
-        queryKey: ['products', 'owned-count', ownerId, ownerType, filters],
+    const canUseSummary = canUseOwnerSummaryForFilters(filters);
+    const ownerSummaryQuery = useOwnerProductSummary({
+        ownerId,
+        ownerType,
+        enabled: canUseSummary,
+    });
+    const listCountQuery = useQuery({
+        queryKey: ['products', 'owned-count-fallback', ownerId, ownerType, filters],
         queryFn: async () => {
             if (!ownerId) {
                 return 0;
@@ -78,35 +200,30 @@ export const useOwnedProductsCount = ({
 
             return response.total ?? response.data.length;
         },
-        enabled: Boolean(ownerId),
+        enabled: Boolean(ownerId) && !canUseSummary,
         placeholderData: (previousData) => previousData,
     });
+
+    if (canUseSummary) {
+        return {
+            ...ownerSummaryQuery,
+            data: countFromSummary(ownerSummaryQuery.data ?? EMPTY_OWNER_PRODUCT_SUMMARY, filters),
+        };
+    }
+
+    return listCountQuery;
 };
 
 export const useActiveProductsCount = ({
     ownerId,
     ownerType = 'company',
 }: UseActiveProductsCountParams) => {
-    return useQuery({
-        queryKey: ['products', 'active-count', ownerId, ownerType],
-        queryFn: async () => {
-            if (!ownerId) {
-                return 0;
-            }
+    const ownerSummaryQuery = useOwnerProductSummary({ ownerId, ownerType });
 
-            const published = await productService.listByOwnerPaginated(
-                ownerId,
-                ownerType,
-                1,
-                1,
-                { publicationStatus: 'published' }
-            );
-
-            return published.total ?? 0;
-        },
-        enabled: Boolean(ownerId),
-        placeholderData: (previousData) => previousData,
-    });
+    return {
+        ...ownerSummaryQuery,
+        data: ownerSummaryQuery.data?.active ?? 0,
+    };
 };
 
 /**
@@ -145,12 +262,20 @@ export const useCreateProduct = () => {
     return useMutation({
         mutationFn: (data: ProductFormData) => productService.createProduct(data),
         onSuccess: () => {
-            toast.success('Producto creado correctamente');
+            toast.success('Guardado correcto');
             queryClient.invalidateQueries({ queryKey: ['products'] });
         },
         onError: (error) => {
             console.error('Error creating product:', error);
-            toast.error('Error al crear el producto');
+            if (error instanceof ApiError && error.payload?.errors) {
+                return;
+            }
+            toast.error(
+                getProductMutationErrorMessage(
+                    error,
+                    'No se pudo crear el producto. Intentalo de nuevo en unos minutos.'
+                )
+            );
         }
     });
 };
@@ -164,15 +289,25 @@ export const useUpdateProduct = () => {
         mutationFn: ({ id, data }: { id: string; data: ProductFormData }) =>
             productService.updateProduct(id, data),
         onSuccess: (data) => {
-            toast.success('Producto actualizado correctamente');
+            toast.success('Guardado correcto');
             queryClient.invalidateQueries({ queryKey: ['products'] });
             queryClient.invalidateQueries({ queryKey: ['product', data.id] });
             queryClient.invalidateQueries({ queryKey: ['product', 'slug', data.slug] });
             queryClient.invalidateQueries({ queryKey: ['productInventory', data.id] });
             queryClient.invalidateQueries({ queryKey: ['productInventory', data.id, 'allocations'] });
+            queryClient.invalidateQueries({ queryKey: ['productInventory', data.id, 'units'] });
         },
-        onError: (error) => {
+        onError: (error, variables) => {
             console.error('Error updating product:', error);
+            if (error instanceof ApiError && error.payload?.errors) {
+                return;
+            }
+
+            if (variables.data.publicationStatus === 'published') {
+                toast.error(getProductPublishAfterSaveErrorMessage(error));
+                return;
+            }
+
             toast.error('Error al actualizar el producto');
         }
     });
@@ -186,12 +321,18 @@ export const useDeleteProduct = () => {
     return useMutation({
         mutationFn: (id: string) => productService.deleteProduct(id),
         onSuccess: () => {
-            toast.success('Producto archivado correctamente');
+            toast.success('Producto eliminado correctamente');
             queryClient.invalidateQueries({ queryKey: ['products'] });
         },
         onError: (error) => {
             console.error('Error deleting product:', error);
-            toast.error('Error al archivar el producto');
+            const backendCode = extractBackendErrorCode(error);
+            if (backendCode === 'product.delete.has_rents') {
+                toast.error('No puedes eliminar este producto porque ya tiene alquileres asociados.');
+                return;
+            }
+
+            toast.error(getErrorMessage(error, 'Error al eliminar el producto'));
         }
     });
 };
@@ -200,18 +341,18 @@ export const usePublishProduct = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (id: string) => productService.publishProduct(id),
-        onSuccess: (published) => {
-            if (published) {
-                toast.success('Producto publicado correctamente');
-                queryClient.invalidateQueries({ queryKey: ['products'] });
-                return;
-            }
-
-            toast.error('No se pudo publicar el producto');
+        onSuccess: () => {
+            toast.success('Producto publicado correctamente');
+            queryClient.invalidateQueries({ queryKey: ['products'] });
         },
         onError: (error) => {
             console.error('Error publishing product:', error);
-            toast.error('Error al publicar el producto');
+            toast.error(
+                getProductMutationErrorMessage(
+                    error,
+                    'No se pudo publicar el producto. Revisa tu limite de productos publicados e intentalo de nuevo.'
+                )
+            );
         }
     });
 };
@@ -222,11 +363,13 @@ export const useCalculateRentalCost = () => {
             productId,
             startDate,
             endDate,
+            quantity,
         }: {
             productId: string;
             startDate: string;
             endDate: string;
-        }) => productService.calculateRentalCost(productId, startDate, endDate),
+            quantity: number;
+        }) => productService.calculateRentalCost(productId, startDate, endDate, quantity),
         onError: (error) => {
             console.error('Error calculating rental cost:', error);
             toast.error('No se pudo calcular el coste del alquiler');

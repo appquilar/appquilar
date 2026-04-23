@@ -905,11 +905,6 @@ const handleApiRequest = async (req, res, parsedUrl) => {
   }
 
   if (pathname === "/api/categories" && method === "GET") {
-    const authenticated = requireAuth(req, res);
-    if (!authenticated) {
-      return;
-    }
-
     const id = normalize(searchParams.get("id"));
     const name = normalize(searchParams.get("name"));
 
@@ -1465,6 +1460,42 @@ const handleApiRequest = async (req, res, parsedUrl) => {
     return;
   }
 
+  if (pathname === "/api/rents/summary" && method === "GET") {
+    const authenticated = requireAuth(req, res);
+    if (!authenticated) {
+      return;
+    }
+
+    const ownerId = normalize(searchParams.get("owner_id"));
+    const scopedRents = ownerId
+      ? state.rents.filter((rent) => normalize(rent.owner_id) === ownerId)
+      : state.rents;
+
+    const today = new Date("2026-03-03T00:00:00Z");
+    const isUpcoming = (rent) => new Date(`${rent.end_date}T23:59:59Z`) >= today;
+    const ownerRents = scopedRents;
+    const renterRents = authenticated
+      ? state.rents.filter((rent) => normalize(rent.renter_id) === normalize(authenticated.id))
+      : [];
+
+    sendJson(res, 200, {
+      success: true,
+      data: {
+        owner: {
+          total: ownerRents.length,
+          upcoming: ownerRents.filter(isUpcoming).length,
+          past: ownerRents.filter((rent) => !isUpcoming(rent)).length,
+        },
+        renter: {
+          total: renterRents.length,
+          upcoming: renterRents.filter(isUpcoming).length,
+          past: renterRents.filter((rent) => !isUpcoming(rent)).length,
+        },
+      },
+    });
+    return;
+  }
+
   if (pathname === "/api/rents" && method === "POST") {
     const user = requireAuth(req, res);
     if (!user) {
@@ -1563,6 +1594,50 @@ const handleApiRequest = async (req, res, parsedUrl) => {
     return;
   }
 
+  if (pathname === "/api/billing/plans" && method === "GET") {
+    const scope = normalize(searchParams.get("scope")) || "company";
+    const plans = state.paymentPlans.filter(
+      (plan) =>
+        normalize(plan.scope) === scope &&
+        plan.is_active === true &&
+        plan.is_visible_in_checkout === true
+    );
+
+    sendJson(res, 200, {
+      success: true,
+      data: plans,
+      total: plans.length,
+    });
+    return;
+  }
+
+  if (pathname === "/api/admin/payment-plans" && method === "GET") {
+    const user = requireAuth(req, res);
+    if (!user) {
+      return;
+    }
+
+    const scope = normalize(searchParams.get("scope")) || "company";
+    const plans = state.paymentPlans.filter((plan) => normalize(plan.scope) === scope);
+
+    sendJson(res, 200, {
+      success: true,
+      data: plans,
+      total: plans.length,
+    });
+    return;
+  }
+
+  if (pathname.match(/^\/api\/admin\/payment-plans\/[^/]+$/) && method === "PATCH") {
+    const user = requireAuth(req, res);
+    if (!user) {
+      return;
+    }
+
+    sendNoContent(res, 204);
+    return;
+  }
+
   if (pathname === "/api/billing/checkout-session" && method === "POST") {
     const user = requireAuth(req, res);
     if (!user) {
@@ -1572,7 +1647,7 @@ const handleApiRequest = async (req, res, parsedUrl) => {
     sendJson(res, 200, {
       success: true,
       data: {
-        checkout_url: "https://example.test/checkout",
+        url: "https://example.test/checkout",
       },
     });
     return;
@@ -1587,7 +1662,37 @@ const handleApiRequest = async (req, res, parsedUrl) => {
     sendJson(res, 200, {
       success: true,
       data: {
-        portal_url: "https://example.test/portal",
+        url: "https://example.test/portal",
+      },
+    });
+    return;
+  }
+
+  if (pathname === "/api/billing/checkout-session/sync" && method === "POST") {
+    const user = requireAuth(req, res);
+    if (!user) {
+      return;
+    }
+
+    sendJson(res, 200, {
+      success: true,
+      data: {
+        synchronized: true,
+      },
+    });
+    return;
+  }
+
+  if (pathname === "/api/billing/subscription/reactivate" && method === "POST") {
+    const user = requireAuth(req, res);
+    if (!user) {
+      return;
+    }
+
+    sendJson(res, 200, {
+      success: true,
+      data: {
+        reactivated: true,
       },
     });
     return;

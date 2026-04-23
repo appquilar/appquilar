@@ -1,4 +1,5 @@
 import { Product } from '@/domain/models/Product';
+import { getProductAvailabilityLabel } from '@/application/hooks/useProductInventory';
 
 interface SelectedProductDisplayProps {
   product: Product;
@@ -7,24 +8,6 @@ interface SelectedProductDisplayProps {
 const getBasePrice = (product: Product): number | null => {
   const tier = product.price?.tiers?.[0];
   return tier ? tier.pricePerDay : null;
-};
-
-const getAvailabilityLabel = (product: Product): string => {
-  const availableQuantity = product.inventorySummary?.availableQuantity ?? Math.max(0, product.quantity ?? 1);
-
-  if (product.publicationStatus !== 'published') {
-    return 'No publicado';
-  }
-
-  if (!product.isRentalEnabled) {
-    return 'Alquiler pausado';
-  }
-
-  if (availableQuantity <= 0) {
-    return 'Sin stock';
-  }
-
-  return `Disponible (${availableQuantity})`;
 };
 
 const SelectedProductDisplay = ({ product }: SelectedProductDisplayProps) => {
@@ -43,7 +26,7 @@ const SelectedProductDisplay = ({ product }: SelectedProductDisplayProps) => {
         )}
       </div>
       <p className="mt-2 text-xs text-muted-foreground">
-        Estado: {getAvailabilityLabel(product)}
+        Estado: {getProductAvailabilityLabel(product, true)}
       </p>
     </div>
   );

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -57,6 +57,7 @@ const requiredNonNegativeAmountSchema = (requiredMessage: string, invalidMessage
 const rentalEditSchema = z.object({
   startDate: z.string().min(1, 'Fecha de inicio obligatoria'),
   endDate: z.string().min(1, 'Fecha de fin obligatoria'),
+  requestedQuantity: z.coerce.number().int().min(1, 'La cantidad debe ser al menos 1'),
   priceAmount: requiredNonNegativeAmountSchema('El precio es obligatorio', 'El precio no puede ser negativo'),
   depositAmount: requiredNonNegativeAmountSchema('La fianza es obligatoria', 'La fianza no puede ser negativa'),
 }).refine((data) => data.endDate >= data.startDate, {
@@ -74,6 +75,7 @@ interface RentalEditableCardProps {
   onSave: (data: {
     startDate: Date;
     endDate: Date;
+    requestedQuantity: number;
     deposit?: Money;
     price?: Money;
   }) => Promise<void>;
@@ -102,6 +104,7 @@ const RentalEditableCard = ({ rental, viewerRole, isSaving, onSave }: RentalEdit
     defaultValues: {
       startDate: toDateInput(rental.startDate),
       endDate: toDateInput(rental.endDate),
+      requestedQuantity: rental.requestedQuantity,
       priceAmount: rental.price.amount / 100,
       depositAmount: rental.deposit.amount / 100,
     },
@@ -113,6 +116,7 @@ const RentalEditableCard = ({ rental, viewerRole, isSaving, onSave }: RentalEdit
     form.reset({
       startDate: toDateInput(rental.startDate),
       endDate: toDateInput(rental.endDate),
+      requestedQuantity: rental.requestedQuantity,
       priceAmount: rental.price.amount / 100,
       depositAmount: rental.deposit.amount / 100,
     });
@@ -129,6 +133,7 @@ const RentalEditableCard = ({ rental, viewerRole, isSaving, onSave }: RentalEdit
         productId: rental.productId,
         startDate: values.startDate,
         endDate: values.endDate,
+        quantity: values.requestedQuantity,
       });
 
       form.setValue('priceAmount', result.rentalPrice.amount / 100, { shouldValidate: true });
@@ -146,11 +151,13 @@ const RentalEditableCard = ({ rental, viewerRole, isSaving, onSave }: RentalEdit
     const payload: {
       startDate: Date;
       endDate: Date;
+      requestedQuantity: number;
       deposit?: Money;
       price?: Money;
     } = {
       startDate: fromDateInput(values.startDate, false),
       endDate: fromDateInput(values.endDate, true),
+      requestedQuantity: values.requestedQuantity,
     };
 
     if (canEditPrice) {
@@ -171,14 +178,14 @@ const RentalEditableCard = ({ rental, viewerRole, isSaving, onSave }: RentalEdit
 
   return (
     <Card>
-      <CardContent className="p-6 space-y-4">
-        <div>
-          <h3 className="text-lg font-semibold">Editar Fechas y Precio</h3>
-          <p className="text-sm text-muted-foreground">
-            Puedes ajustar este lead o alquiler y guardar cambios.
-          </p>
-        </div>
+      <CardHeader className="space-y-2 p-5 pb-4 sm:p-6 sm:pb-4">
+        <CardTitle className="text-lg font-semibold">Editar condiciones</CardTitle>
+        <CardDescription>
+          Ajusta fechas, cantidad y precios desde esta misma vista.
+        </CardDescription>
+      </CardHeader>
 
+      <CardContent className="space-y-4 px-5 pb-5 pt-0 sm:px-6 sm:pb-6">
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
@@ -195,6 +202,20 @@ const RentalEditableCard = ({ rental, viewerRole, isSaving, onSave }: RentalEdit
                 <p className="text-sm text-destructive">{form.formState.errors.endDate.message}</p>
               )}
             </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="edit-requested-quantity">Cantidad solicitada</Label>
+            <Input
+              id="edit-requested-quantity"
+              type="number"
+              min={1}
+              step={1}
+              {...form.register('requestedQuantity')}
+            />
+            {form.formState.errors.requestedQuantity?.message && (
+              <p className="text-sm text-destructive">{form.formState.errors.requestedQuantity.message}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -14,6 +14,7 @@ const EMPTY_CATEGORY_VALUES: CategoryFormValues = {
     iconName: null,
     featuredImageId: null,
     landscapeImageId: null,
+    dynamicPropertyDefinitions: [],
 };
 
 const mapCategoryToFormValues = (category: Category): CategoryFormValues => ({
@@ -24,6 +25,7 @@ const mapCategoryToFormValues = (category: Category): CategoryFormValues => ({
     iconName: category.iconName ?? null,
     featuredImageId: category.featuredImageId ?? null,
     landscapeImageId: category.landscapeImageId ?? null,
+    dynamicPropertyDefinitions: category.dynamicPropertyDefinitions ?? [],
 });
 
 export const useCategoryEditor = (categoryId?: string) => {

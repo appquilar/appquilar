@@ -112,7 +112,7 @@ const CompanyProductsPage = () => {
             onClick: (product) => handleEditProduct(product.id),
           },
           {
-            label: 'Archivar',
+            label: 'Eliminar',
             icon: <Trash size={16} />,
             onClick: (product) => {
               void handleDeleteProduct(product.id);

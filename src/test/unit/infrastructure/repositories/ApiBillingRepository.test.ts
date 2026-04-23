@@ -75,6 +75,36 @@ describe("ApiBillingRepository", () => {
     );
   });
 
+  it("reactivates subscriptions with the scope-only payload", async () => {
+    const apiClient = createApiClientMock();
+    apiClient.post.mockResolvedValue({
+      success: true,
+      data: { reactivated: true },
+    });
+
+    const repository = new ApiBillingRepository(
+      apiClient as any,
+      () => createAuthSession({ token: "jwt-token" })
+    );
+
+    const result = await repository.reactivateSubscription({
+      scope: "user",
+    });
+
+    expect(result).toEqual({ reactivated: true });
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/api/billing/subscription/reactivate",
+      {
+        scope: "user",
+      },
+      {
+        headers: {
+          Authorization: "Bearer jwt-token",
+        },
+      }
+    );
+  });
+
   it("synchronizes checkout session with snake_case payload", async () => {
     const apiClient = createApiClientMock();
     apiClient.post.mockResolvedValue({

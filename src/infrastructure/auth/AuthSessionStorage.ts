@@ -1,4 +1,8 @@
-import { type AuthSession, createAuthSession } from "@/domain/models/AuthSession";
+import {
+    type AuthSession,
+    createAuthSession,
+    isSessionExpired,
+} from "@/domain/models/AuthSession";
 import { UserRole } from "@/domain/models/UserRole";
 
 const STORAGE_KEY = "auth_token";
@@ -107,17 +111,7 @@ export class AuthSessionStorage {
      * Restores the current session from storage, if present.
      */
     getCurrentSession(): AuthSession | null {
-        const storage = getStorage();
-        if (!storage) {
-            return null;
-        }
-
-        const token = storage.getItem(STORAGE_KEY);
-        if (!token) {
-            return null;
-        }
-
-        return this.buildSessionFromToken(token);
+        return this.restoreSessionFromStorage(getStorage());
     }
 
     /**
@@ -152,11 +146,31 @@ export class AuthSessionStorage {
     }
 
     getCurrentSessionSync(): AuthSession | null {
-        const token = localStorage.getItem("auth_token");
+        return this.restoreSessionFromStorage(getStorage());
+    }
+
+    private restoreSessionFromStorage(storage: Storage | null): AuthSession | null {
+        if (!storage) {
+            return null;
+        }
+
+        const token = storage.getItem(STORAGE_KEY);
         if (!token) {
             return null;
         }
 
-        return this.buildSessionFromToken(token);
+        const session = this.buildSessionFromToken(token);
+
+        if (!isSessionExpired(session)) {
+            return session;
+        }
+
+        try {
+            storage.removeItem(STORAGE_KEY);
+        } catch {
+            // Ignore storage cleanup failures and just treat the session as missing.
+        }
+
+        return null;
     }
 }

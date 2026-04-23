@@ -7,10 +7,12 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
-import { queryClient } from "@/compositionRoot.ts";
+import { queryClient } from "@/composition/queryClient";
+import { useRouteCurrentUserRefresh } from "@/hooks/useRouteCurrentUserRefresh";
 import {
     LEGACY_PUBLIC_PATHS,
     PUBLIC_PATHS,
+    buildCompanyPath,
     buildCategoryPath,
     buildProductPath,
 } from "@/domain/config/publicRoutes";
@@ -28,6 +30,7 @@ const ContactPage = lazy(() => import("@/pages/ContactPage"));
 const PartnersPage = lazy(() => import("@/pages/PartnersPage"));
 const BlogPage = lazy(() => import("@/pages/BlogPage"));
 const BlogPostPage = lazy(() => import("@/pages/BlogPostPage"));
+const PublicCompanyPage = lazy(() => import("@/pages/PublicCompanyPage"));
 const CompanyInvitationPage = lazy(() => import("@/pages/CompanyInvitationPage"));
 const LegalNoticePage = lazy(() => import("@/pages/legal/LegalNoticePage"));
 const TermsPage = lazy(() => import("@/pages/legal/TermsPage"));
@@ -48,6 +51,12 @@ const withRouteSuspense = (element: ReactNode) => (
     </Suspense>
 );
 
+const AppRouteEffects = () => {
+    useRouteCurrentUserRefresh();
+
+    return null;
+};
+
 const App = () => (
     <QueryClientProvider client={queryClient}>
         <TooltipProvider>
@@ -57,12 +66,14 @@ const App = () => (
             {/* 🔒 ÚNICO AuthProvider global */}
             <AuthProvider>
                 <BrowserRouter>
+                    <AppRouteEffects />
                     <Routes>
                         <Route path="/" element={withRouteSuspense(<Index />)} />
                         <Route path={PUBLIC_PATHS.categories} element={withRouteSuspense(<CategoriesPage />)} />
                         <Route path={PUBLIC_PATHS.search} element={withRouteSuspense(<SearchPage />)} />
                         <Route path="/producto/:slug" element={withRouteSuspense(<ProductDetail />)} />
                         <Route path="/categoria/:slug" element={withRouteSuspense(<CategoryPage />)} />
+                        <Route path={`${PUBLIC_PATHS.company}/:slug`} element={withRouteSuspense(<PublicCompanyPage />)} />
 
                         {/* Info */}
                         <Route path={PUBLIC_PATHS.about} element={withRouteSuspense(<AboutPage />)} />
@@ -74,6 +85,10 @@ const App = () => (
                         {/* English compatibility aliases */}
                         <Route path={LEGACY_PUBLIC_PATHS.categories} element={<RedirectTo to={PUBLIC_PATHS.categories} />} />
                         <Route path={LEGACY_PUBLIC_PATHS.search} element={<RedirectTo to={PUBLIC_PATHS.search} />} />
+                        <Route
+                            path={LEGACY_PUBLIC_PATHS.company}
+                            element={<RouteAliasRedirect buildTarget={(slug) => buildCompanyPath(slug)} />}
+                        />
                         <Route
                             path="/product/:slug"
                             element={<RouteAliasRedirect buildTarget={(slug) => buildProductPath(slug)} />}

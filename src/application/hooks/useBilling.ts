@@ -21,6 +21,13 @@ export const useCreateCustomerPortalSession = () => {
     });
 };
 
+export const useReactivateSubscription = () => {
+    return useMutation({
+        mutationFn: (input: { scope: "user" | "company" }) =>
+            billingService.reactivateSubscription(input),
+    });
+};
+
 export const useSynchronizeCheckoutSession = () => {
     return useMutation({
         mutationFn: (input: SynchronizeCheckoutSessionInput) =>

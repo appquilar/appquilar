@@ -1,22 +1,25 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import ProductImageGallery from "./ProductImageGallery";
+import ProductDynamicPropertiesSummary from "./ProductDynamicPropertiesSummary";
 import ProductInfo from "./ProductInfo";
 import ProductLocationMap from "./ProductLocationMap";
 import ContactModal from "./ContactModal";
 
 import { useAuth } from "@/context/AuthContext";
+import { useCategoryBreadcrumbs } from "@/application/hooks/useCategoryBreadcrumbs";
+import { useCategoryDynamicProperties } from "@/application/hooks/useCategoryDynamicProperties";
 import { useProductBySlug } from "@/application/hooks/useProducts";
-import { useProductRentability } from "@/application/hooks/useProductInventory";
+import { useProductAvailability, useProductRentability } from "@/application/hooks/useProductInventory";
 import { useSeo } from "@/hooks/useSeo";
 import { RentalCostBreakdown } from "@/domain/repositories/ProductRepository";
 import { useTrackProductView } from "@/application/hooks/useTrackProductView";
 import type { Product } from "@/domain/models/Product";
+import { resolveDynamicPropertyDisplayItems } from "@/domain/services/DynamicPropertyService";
 import PublicBreadcrumbs from "@/components/common/PublicBreadcrumbs";
 import {
-    PUBLIC_PATHS,
     buildAbsolutePublicUrl,
     buildCategoryPath,
     buildProductPath,
@@ -30,11 +33,15 @@ type ProductPageVm = {
     description: string;
     quantity: number;
     isRentalEnabled: boolean;
+    inventoryMode?: Product["inventoryMode"];
+    bookingPolicy?: Product["bookingPolicy"];
+    allowsQuantityRequest?: Product["allowsQuantityRequest"];
     inventorySummary: Product["inventorySummary"];
     company: { id: string; name: string; slug: string };
     category: { id: string; name: string; slug: string };
     price: Product["price"];
     imageIds: string[];
+    dynamicProperties: Product["dynamicProperties"];
     rating: number;
     reviewCount: number;
     publicationStatus: Product["publicationStatus"];
@@ -66,9 +73,14 @@ const ProductPage: React.FC = () => {
     const [contactModalOpen, setContactModalOpen] = useState(false);
     const [leadStartDate, setLeadStartDate] = useState("");
     const [leadEndDate, setLeadEndDate] = useState("");
+    const [leadRequestedQuantity, setLeadRequestedQuantity] = useState(1);
     const [leadCalculation, setLeadCalculation] = useState<RentalCostBreakdown | null>(null);
 
     const query = useProductBySlug(slug ?? null);
+    const categoryBreadcrumbsQuery = useCategoryBreadcrumbs(query.data?.category?.id ?? null);
+    const dynamicPropertiesQuery = useCategoryDynamicProperties(
+        query.data?.category?.id ? [query.data.category.id] : []
+    );
 
     const product = useMemo<ProductPageVm | null>(() => {
         const raw = query.data;
@@ -97,6 +109,9 @@ const ProductPage: React.FC = () => {
             description: raw.description,
             quantity: raw.quantity,
             isRentalEnabled: raw.isRentalEnabled,
+            inventoryMode: raw.inventoryMode,
+            bookingPolicy: raw.bookingPolicy,
+            allowsQuantityRequest: raw.allowsQuantityRequest,
             inventorySummary: raw.inventorySummary ?? null,
             company: {
                 id: raw.ownerData?.ownerId ?? "",
@@ -110,6 +125,7 @@ const ProductPage: React.FC = () => {
                 tiers: raw.price?.tiers ?? [],
             },
             imageIds: raw.image_ids ?? [],
+            dynamicProperties: raw.dynamicProperties ?? {},
             rating: raw.rating,
             reviewCount: raw.reviewCount,
             publicationStatus: raw.publicationStatus,
@@ -126,29 +142,23 @@ const ProductPage: React.FC = () => {
     }, [query.data]);
 
     const rentability = useProductRentability(query.data ?? null);
+    const hasValidLeadDateRange = leadStartDate.length > 0 && leadEndDate.length > 0 && leadEndDate > leadStartDate;
+    const availabilityQuery = useProductAvailability(
+        product?.id ?? null,
+        leadStartDate || null,
+        leadEndDate || null,
+        leadRequestedQuantity,
+        Boolean(product && hasValidLeadDateRange)
+    );
+    const dynamicPropertyItems = useMemo(
+        () => resolveDynamicPropertyDisplayItems(
+            product?.dynamicProperties ?? {},
+            dynamicPropertiesQuery.data?.definitions ?? []
+        ),
+        [dynamicPropertiesQuery.data?.definitions, product?.dynamicProperties]
+    );
 
     useTrackProductView(product?.id ?? null);
-
-    useEffect(() => {
-        if (!product) {
-            return;
-        }
-
-        if (!leadStartDate || !leadEndDate) {
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 1);
-            const toInput = (date: Date) => {
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, "0");
-                const day = String(date.getDate()).padStart(2, "0");
-                return `${year}-${month}-${day}`;
-            };
-
-            setLeadStartDate(toInput(today));
-            setLeadEndDate(toInput(tomorrow));
-        }
-    }, [leadEndDate, leadStartDate, product]);
 
     const galleryImages = useMemo(() => {
         if (!product?.imageIds?.length) {
@@ -159,14 +169,27 @@ const ProductPage: React.FC = () => {
         return product.imageIds.map((id) => `${baseUrl}/api/media/images/${id}/LARGE`);
     }, [product]);
 
+    const categoryBreadcrumbs = useMemo(() => {
+        if (Array.isArray(categoryBreadcrumbsQuery.data) && categoryBreadcrumbsQuery.data.length > 0) {
+            return categoryBreadcrumbsQuery.data;
+        }
+
+        if (product?.category?.name) {
+            return [product.category];
+        }
+
+        return [];
+    }, [categoryBreadcrumbsQuery.data, product?.category]);
+
     const breadcrumbItems = useMemo(() => {
         const items: Array<{ label: string; to?: string }> = [{ label: "Inicio", to: "/" }];
 
-        if (product?.category?.name) {
-            items.push({ label: "Categorías", to: PUBLIC_PATHS.categories });
-            items.push({
-                label: product.category.name,
-                to: product.category.slug ? buildCategoryPath(product.category.slug) : undefined,
+        if (categoryBreadcrumbs.length > 0) {
+            categoryBreadcrumbs.forEach((categoryBreadcrumb) => {
+                items.push({
+                    label: categoryBreadcrumb.name,
+                    to: categoryBreadcrumb.slug ? buildCategoryPath(categoryBreadcrumb.slug) : undefined,
+                });
             });
         }
 
@@ -175,15 +198,23 @@ const ProductPage: React.FC = () => {
         }
 
         return items;
-    }, [product]);
+    }, [categoryBreadcrumbs, product?.name]);
 
     const seoConfig = useMemo(() => {
-        if (query.isError || !product) {
+        if (query.isError || (!query.isLoading && !product)) {
             return {
                 title: "Producto no encontrado | Appquilar",
                 description: "El producto que buscas no existe o ya no está disponible.",
-                canonicalUrl: buildAbsolutePublicUrl(product?.slug ? buildProductPath(product.slug) : "/"),
+                canonicalUrl: buildAbsolutePublicUrl(slug ? buildProductPath(slug) : "/"),
                 robots: "noindex,follow" as const,
+            };
+        }
+
+        if (!product) {
+            return {
+                title: "Producto en alquiler | Appquilar",
+                description: "Consulta fichas de producto y disponibilidad de alquiler en Appquilar.",
+                canonicalUrl: buildAbsolutePublicUrl(slug ? buildProductPath(slug) : "/"),
             };
         }
 
@@ -238,7 +269,7 @@ const ProductPage: React.FC = () => {
                 },
             ],
         };
-    }, [breadcrumbItems, galleryImages, product, query.isError, rentability.isRentableNow]);
+    }, [breadcrumbItems, galleryImages, product, query.isError, query.isLoading, rentability.isRentableNow, slug]);
 
     useSeo(seoConfig);
 
@@ -293,6 +324,11 @@ const ProductPage: React.FC = () => {
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{product.description}</p>
                     </div>
 
+                    <ProductDynamicPropertiesSummary
+                        items={dynamicPropertyItems}
+                        isLoading={dynamicPropertiesQuery.isLoading || dynamicPropertiesQuery.isFetching}
+                    />
+
                     <div className="mt-6">
                         <h2 className="mb-3 text-lg font-semibold">Ubicación</h2>
                         <ProductLocationMap
@@ -311,8 +347,11 @@ const ProductPage: React.FC = () => {
                         isLoggedIn={isLoggedIn}
                         leadStartDate={leadStartDate}
                         leadEndDate={leadEndDate}
+                        leadRequestedQuantity={leadRequestedQuantity}
+                        leadAvailability={availabilityQuery.data}
                         onLeadStartDateChange={setLeadStartDate}
                         onLeadEndDateChange={setLeadEndDate}
+                        onLeadRequestedQuantityChange={setLeadRequestedQuantity}
                         onLeadCalculationChange={setLeadCalculation}
                     />
                 </div>
@@ -326,6 +365,7 @@ const ProductPage: React.FC = () => {
                 ownerName={product.company.name}
                 initialStartDate={leadStartDate}
                 initialEndDate={leadEndDate}
+                initialRequestedQuantity={leadRequestedQuantity}
                 initialCalculation={leadCalculation}
             />
         </div>

@@ -3,11 +3,12 @@ import { UseFormReturn } from 'react-hook-form';
 import { RentalFormSubmitValues, RentalFormValues } from '@/domain/models/RentalForm';
 import DateTimeField from './components/DateTimeField';
 import MonetaryField from './components/MonetaryField';
+import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Product } from '@/domain/models/Product';
 import { useCalculateRentalCost } from '@/application/hooks/useProducts';
 import { RentalCostBreakdown } from '@/domain/repositories/ProductRepository';
-import { useProductRentability } from '@/application/hooks/useProductInventory';
+import { useProductAvailability, useProductRentability } from '@/application/hooks/useProductInventory';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
@@ -37,6 +38,7 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
 
   const startDate = form.watch('startDate');
   const endDate = form.watch('endDate');
+  const requestedQuantity = form.watch('requestedQuantity') ?? 1;
 
   const selectedProductId = selectedProduct?.id ?? null;
   const isProductSelected = Boolean(selectedProductId);
@@ -50,6 +52,13 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
 
   const startDateKey = hasValidDates && startDate ? formatDateToApi(startDate) : '';
   const endDateKey = hasValidDates && endDate ? formatDateToApi(endDate) : '';
+  const availabilityQuery = useProductAvailability(
+    selectedProductId,
+    startDateKey || null,
+    endDateKey || null,
+    requestedQuantity,
+    isProductSelected && hasValidDates
+  );
 
   useEffect(() => {
     if (!isProductSelected) {
@@ -76,6 +85,7 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
           productId: selectedProductId,
           startDate: startDateKey,
           endDate: endDateKey,
+          quantity: requestedQuantity,
         });
 
         if (isCancelled) {
@@ -102,7 +112,7 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
     return () => {
       isCancelled = true;
     };
-  }, [calculateRentalCost, endDateKey, form, hasValidDates, isProductSelected, selectedProductId, startDateKey]);
+  }, [calculateRentalCost, endDateKey, form, hasValidDates, isProductSelected, requestedQuantity, selectedProductId, startDateKey]);
 
   return (
     <>
@@ -119,13 +129,20 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
           <AlertDescription>{rentability.availabilityMessage}</AlertDescription>
         </Alert>
       )}
+      {isProductSelected && hasValidDates && availabilityQuery.data && !availabilityQuery.data.canRequest && (
+        <Alert variant="warning" className="bg-amber-50/70 border-amber-200">
+          <AlertTriangle className="h-4 w-4 text-amber-700" />
+          <AlertTitle>Disponibilidad</AlertTitle>
+          <AlertDescription>{availabilityQuery.data.message}</AlertDescription>
+        </Alert>
+      )}
       <div className="grid grid-cols-1 gap-4">
         <DateTimeField
           form={form}
           name="startDate"
           label="Fecha de Inicio"
           disabledDateFn={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-          disabled={!isProductSelected || !rentability.isRentalEnabled}
+          disabled={!isProductSelected || !rentability.isRentableNow}
         />
 
         <DateTimeField
@@ -136,8 +153,33 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
             const startDate = form.getValues('startDate');
             return date < startDate || date < new Date(new Date().setHours(0, 0, 0, 0));
           }}
-          disabled={!isProductSelected || !rentability.isRentalEnabled}
+          disabled={!isProductSelected || !rentability.isRentableNow}
         />
+
+        <div className="space-y-1">
+          <label htmlFor="requested-quantity" className="text-sm font-medium">Cantidad solicitada</label>
+          <Input
+            id="requested-quantity"
+            type="number"
+            min={1}
+            step={1}
+            value={requestedQuantity}
+            onChange={(event) => {
+              const nextValue = Number.parseInt(event.target.value, 10);
+              form.setValue('requestedQuantity', Number.isNaN(nextValue) ? 1 : nextValue, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+            }}
+            disabled={!isProductSelected || !rentability.isRentableNow}
+          />
+          <p className="text-xs text-muted-foreground">
+            Indica cuántas unidades del producto quieres incluir en este alquiler.
+          </p>
+          {form.formState.errors.requestedQuantity?.message && (
+            <p className="text-sm text-destructive">{form.formState.errors.requestedQuantity.message}</p>
+          )}
+        </div>
 
         <MonetaryField
           form={form}
@@ -145,7 +187,7 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
           currencyName="priceCurrency"
           label="Precio del alquiler"
           description="Importe total del alquiler"
-          disabled={!isProductSelected || !rentability.isRentalEnabled}
+          disabled={!isProductSelected || !rentability.isRentableNow}
         />
 
         <MonetaryField
@@ -154,7 +196,7 @@ const RentalDetailsFields = ({ form, selectedProduct }: RentalDetailsFieldsProps
           currencyName="depositCurrency"
           label="Fianza"
           description="Importe de la fianza"
-          disabled={!isProductSelected || !rentability.isRentalEnabled}
+          disabled={!isProductSelected || !rentability.isRentableNow}
         />
 
         {isProductSelected && isCalculating && (

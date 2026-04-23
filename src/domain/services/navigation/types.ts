@@ -1,15 +1,29 @@
 import type { UserRole } from "@/domain/models/UserRole";
 
+export type NavigationIconKey =
+    | "home"
+    | "package"
+    | "calendar"
+    | "message-circle"
+    | "grid-2x2-plus"
+    | "newspaper"
+    | "building-2"
+    | "users"
+    | "credit-card"
+    | "bar-chart-3"
+    | "settings";
+
 /**
  * Item de navegación del dashboard.
  *
  * Importante: esto es dominio → nada de React ni imports de lucide aquí.
- * La capa de presentación decide cómo usar `icon`.
+ * La capa de presentación decide cómo resolver `iconKey` y cómo usar `icon`.
  */
 export interface NavItem {
     id: string;
     title: string;
     href: string;
+    iconKey?: NavigationIconKey;
     icon?: unknown;
     exact?: boolean;
     badge?: string;

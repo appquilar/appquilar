@@ -2,7 +2,6 @@ import {
     createContext,
     ReactNode,
     useContext,
-    useEffect,
     useState,
 } from "react";
 
@@ -14,7 +13,8 @@ import type {
     ResetPasswordData,
 } from "@/domain/models/AuthCredentials";
 
-import { compositionRoot, queryClient } from "@/compositionRoot";
+import { authService, companyMembershipService } from "@/composition/auth";
+import { queryClient } from "@/composition/queryClient";
 import { UserRole } from "@/domain/models/UserRole";
 import type { AuthSession } from "@/domain/models/AuthSession";
 import { Uuid } from "@/domain/valueObject/uuidv4";
@@ -25,9 +25,6 @@ import {
 } from "@/utils/backendError";
 import { useCurrentUser } from "@/application/hooks/useCurrentUser";
 import { isPlatformAdminUser, isRegularUser } from "@/domain/models/User";
-
-const authService = compositionRoot.authService;
-const companyMembershipService = compositionRoot.companyMembershipService;
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -50,7 +47,6 @@ interface AuthContextType {
     ) => Promise<void>;
     requestPasswordReset: (email: string) => Promise<void>;
     resetPassword: (
-        email: string,
         token: string,
         newPassword: string
     ) => Promise<void>;
@@ -94,34 +90,26 @@ export const useAuth = (): AuthContextType => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [authBlockMessage, setAuthBlockMessage] = useState<string | null>(null);
     const { user: currentUser, isLoading: isCurrentUserLoading, error } = useCurrentUser();
-
+    const resolvedAuthBlockMessage = error
+        ? resolveAuthBlockMessage(error)
+        : authBlockMessage;
     const isLoading = isCurrentUserLoading;
 
-    useEffect(() => {
-        if (!error) {
-            if (currentUser) {
-                setAuthBlockMessage(null);
-            }
-            return;
-        }
-
-        setAuthBlockMessage(resolveAuthBlockMessage(error));
-    }, [currentUser, error]);
+    const setCurrentUserQueryData = (user: User | null) => {
+        queryClient.setQueryData(["currentUser"], user);
+    };
 
     //
     // Refrescar /me manualmente
     //
     const refreshCurrentUser = async (): Promise<User | null> => {
         try {
-            await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-            const user = await queryClient.fetchQuery({
-                queryKey: ["currentUser"],
-                queryFn: () => authService.getCurrentUser(),
-            });
+            const user = await authService.refreshCurrentUser();
+            setCurrentUserQueryData(user);
             setAuthBlockMessage(null);
             return user;
         } catch (error) {
-            queryClient.setQueryData(["currentUser"], null);
+            setCurrentUserQueryData(null);
             setAuthBlockMessage(resolveAuthBlockMessage(error));
             return null;
         }
@@ -136,12 +124,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             const credentials: LoginCredentials = { email, password };
 
-            await authService.login(credentials);
-            await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-            await queryClient.fetchQuery({
-                queryKey: ["currentUser"],
-                queryFn: () => authService.getCurrentUser(),
-            });
+            const user = await authService.login(credentials);
+            setCurrentUserQueryData(user);
+            await queryClient.invalidateQueries({ queryKey: ["product"] });
+            await queryClient.invalidateQueries({ queryKey: ["products"] });
+            await queryClient.invalidateQueries({ queryKey: ["category", "public"] });
         } catch (error) {
             setAuthBlockMessage(resolveAuthBlockMessage(error));
             throw error;
@@ -178,11 +165,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const resetPassword = async (
-        email: string,
         token: string,
         newPassword: string
     ): Promise<void> => {
-        const data: ResetPasswordData = { email, token, newPassword };
+        const data: ResetPasswordData = { token, newPassword };
         await authService.resetPassword(data);
     };
 
@@ -286,7 +272,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 isLoggedIn: Boolean(currentUser),
                 isAuthenticated: Boolean(currentUser),
                 currentUser,
-                authBlockMessage,
+                authBlockMessage: resolvedAuthBlockMessage,
                 isLoading,
                 login,
                 logout,

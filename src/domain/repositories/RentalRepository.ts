@@ -27,6 +27,17 @@ export interface RentListResponse {
   perPage: number;
 }
 
+export interface RentRoleSummary {
+  total: number;
+  upcoming: number;
+  past: number;
+}
+
+export interface RentSummary {
+  owner: RentRoleSummary;
+  renter: RentRoleSummary;
+}
+
 export interface RentMessageListParams {
   page?: number;
   perPage?: number;
@@ -54,6 +65,7 @@ export interface CreateRentData {
   productId: string;
   startDate: Date;
   endDate: Date;
+  requestedQuantity: number;
   deposit: Money;
   price: Money;
   renterEmail: string;
@@ -64,6 +76,7 @@ export interface CreateRentData {
 export interface UpdateRentData {
   startDate?: Date | null;
   endDate?: Date | null;
+  requestedQuantity?: number | null;
   deposit?: Money | null;
   price?: Money | null;
   depositReturned?: Money | null;
@@ -82,6 +95,7 @@ export interface CreateRentMessageData {
 
 export interface RentalRepository {
   listRents(params?: RentListParams): Promise<RentListResponse>;
+  getSummary(ownerId?: string): Promise<RentSummary>;
   getRentById(id: string): Promise<Rental | null>;
   listRentMessages(rentId: string, params?: RentMessageListParams): Promise<RentMessageListResponse>;
   createRentMessage(rentId: string, data: CreateRentMessageData): Promise<void>;

@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { authService } from "@/compositionRoot";
+import { authService } from "@/composition/auth";
+import { isAuthenticated as hasAuthenticatedSession } from "@/domain/models/AuthSession";
 
 export function useCurrentUser() {
     const session = authService.getCurrentSessionSync();
-    const isAuthenticated = Boolean(session?.token);
+    const isAuthenticated = hasAuthenticatedSession(session);
 
     const query = useQuery({
         queryKey: ["currentUser"],

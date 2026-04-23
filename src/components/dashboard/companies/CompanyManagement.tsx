@@ -17,6 +17,7 @@ const PLAN_LABELS: Record<CompanyAdminSummary["planType"], string> = {
     starter: "Starter",
     pro: "Pro",
     enterprise: "Enterprise",
+    early_bird: "Early Bird",
 };
 
 const STATUS_LABELS: Record<CompanyAdminSummary["subscriptionStatus"], string> = {
@@ -95,7 +96,7 @@ const CompanyManagement = () => {
         },
         {
             key: "founding",
-            header: "Early Bird",
+            header: "Cuenta fundadora",
             cell: (company: CompanyAdminSummary) =>
                 company.isFoundingAccount ? "Si" : "No",
         },

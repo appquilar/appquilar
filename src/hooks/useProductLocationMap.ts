@@ -11,8 +11,11 @@ type UseProductLocationMapOptions = {
     containerRef: RefObject<HTMLDivElement | null>;
     city: string;
     state: string;
-    coordinates: [number, number];
+    coordinates?: [number, number] | null;
     polygon?: ProductLocationPolygonPoint[];
+    locationLabel?: string;
+    zoom?: number;
+    onError?: (message: string | null) => void;
 };
 
 type GoogleMapOverlay = google.maps.Polygon | google.maps.marker.AdvancedMarkerElement;
@@ -34,8 +37,11 @@ export const useProductLocationMap = ({
     containerRef,
     city,
     state,
-    coordinates,
+    coordinates = null,
     polygon,
+    locationLabel,
+    zoom,
+    onError,
 }: UseProductLocationMapOptions) => {
     const mapRef = useRef<google.maps.Map | null>(null);
     const overlayRef = useRef<GoogleMapOverlay | null>(null);
@@ -49,12 +55,21 @@ export const useProductLocationMap = ({
 
         const initMap = async () => {
             try {
+                onError?.(null);
                 const googleMaps = await loadGoogleMaps(["maps", "marker"]);
                 if (cancelled || !containerRef.current) {
                     return;
                 }
 
-                const center = { lat: coordinates[1], lng: coordinates[0] };
+                const resolvedLocationLabel =
+                    locationLabel?.trim() || [city, state].filter(Boolean).join(", ").trim();
+                const center = coordinates
+                    ? { lat: coordinates[1], lng: coordinates[0] }
+                    : await geocodeLocationLabel(googleMaps, resolvedLocationLabel);
+
+                if (!center) {
+                    throw new Error("No se pudo resolver una ubicación válida para mostrar el mapa.");
+                }
 
                 if (!mapRef.current) {
                     const { Map } = await googleMaps.maps.importLibrary("maps") as google.maps.MapsLibrary;
@@ -65,7 +80,7 @@ export const useProductLocationMap = ({
 
                     mapRef.current = new Map(containerRef.current, {
                         center,
-                        zoom: 13,
+                        zoom: zoom ?? (coordinates ? 13 : 10),
                         mapId: getGoogleMapsMapId(),
                         disableDefaultUI: false,
                         streetViewControl: false,
@@ -73,7 +88,7 @@ export const useProductLocationMap = ({
                     });
                 } else {
                     mapRef.current.setCenter(center);
-                    mapRef.current.setZoom(13);
+                    mapRef.current.setZoom(zoom ?? (coordinates ? 13 : 10));
                 }
 
                 clearOverlay(overlayRef.current);
@@ -113,7 +128,7 @@ export const useProductLocationMap = ({
                 const marker = new AdvancedMarkerElement({
                     position: center,
                     map: mapRef.current,
-                    title: `${city}, ${state}`,
+                    title: resolvedLocationLabel || `${city}, ${state}`,
                 });
 
                 marker.append(
@@ -127,6 +142,7 @@ export const useProductLocationMap = ({
                 overlayRef.current = marker;
             } catch (error) {
                 console.error("Error initializing Google Maps:", error);
+                onError?.("No se pudo cargar el mapa en esta ficha. Puedes abrir la ubicación en Google Maps.");
             }
         };
 
@@ -137,5 +153,33 @@ export const useProductLocationMap = ({
             clearOverlay(overlayRef.current);
             overlayRef.current = null;
         };
-    }, [city, containerRef, coordinates, polygon, state]);
+    }, [city, containerRef, coordinates, locationLabel, onError, polygon, state, zoom]);
+};
+
+const geocodeLocationLabel = async (
+    googleMaps: typeof google,
+    locationLabel: string
+): Promise<{ lat: number; lng: number } | null> => {
+    if (!locationLabel) {
+        return null;
+    }
+
+    const geocoder = new googleMaps.maps.Geocoder();
+
+    return new Promise((resolve) => {
+        geocoder.geocode({ address: locationLabel }, (results, status) => {
+            if (status !== "OK" || !results?.length) {
+                resolve(null);
+                return;
+            }
+
+            const location = results[0]?.geometry?.location;
+            if (!location) {
+                resolve(null);
+                return;
+            }
+
+            resolve({ lat: location.lat(), lng: location.lng() });
+        });
+    });
 };

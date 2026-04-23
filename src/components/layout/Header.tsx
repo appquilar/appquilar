@@ -7,6 +7,7 @@ import AuthModal from "../auth/AuthModal";
 import { useAuth } from "@/context/AuthContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCurrentUser } from "@/application/hooks/useCurrentUser";
+import { useUnreadRentMessagesTotal } from "@/application/hooks/useRentalMessages";
 
 import AppLogo from "@/components/common/AppLogo";
 import { usePublicSiteCategories } from "@/application/hooks/usePublicSiteCategories";
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/sheet";
 
 import { CategoryDrawerTree } from "@/components/layout/CategoryDrawerTree";
+import PublicSessionMessagesLink from "@/components/layout/PublicSessionMessagesLink";
 
 type DesktopCategoriesMode = "top" | "side";
 
@@ -41,6 +43,9 @@ const Header = () => {
     const navigate = useNavigate();
     const { user: currentUser, isAuthenticated } = useCurrentUser();
     const { logout } = useAuth();
+    const { totalUnread: unreadMessagesTotal } = useUnreadRentMessagesTotal({
+        enabled: isAuthenticated && Boolean(currentUser),
+    });
 
     const {
         menuCategories,     // 👉 SOLO navbar chips
@@ -251,6 +256,12 @@ const Header = () => {
                                                     Ir al dashboard
                                                 </Link>
 
+                                                <PublicSessionMessagesLink
+                                                    mobile
+                                                    onNavigate={() => setMobileSessionOpen(false)}
+                                                    unreadCount={unreadMessagesTotal}
+                                                />
+
                                                 <button
                                                     type="button"
                                                     onClick={async () => {
@@ -336,6 +347,8 @@ const Header = () => {
                                             <LayoutDashboard size={16} />
                                             Panel de control
                                         </Link>
+
+                                        <PublicSessionMessagesLink unreadCount={unreadMessagesTotal} />
 
                                         <button
                                             onClick={handleLogout}

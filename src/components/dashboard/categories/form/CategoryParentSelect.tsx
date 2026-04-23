@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/command";
 
 import { usePlatformCategories } from "@/application/hooks/usePlatformCategories";
+import { useCategoryById } from "@/application/hooks/useCategoryById";
 import type { Category } from "@/domain/models/Category";
 import { buildCategoryBreadcrumbName } from "@/utils/categoryBreadcrumb";
 
@@ -44,20 +45,18 @@ interface Props {
 }
 
 const CategoryParentSelect = ({
-                                  value,
-                                  onChange,
-                                  disabled,
-                                  excludeCategoryId,
-
-                                  hideLabel = false,
-                                  hideHelp = false,
-                                  labelText = "Categoría padre",
-                                  noneOptionLabel = "Sin categoría padre",
-                                  searchPlaceholder = "Buscar categorías...",
-                                  helpText = "Usa el buscador para encontrar la categoría (pueden crecer indefinidamente).",
-
-                                  showBreadcrumbs = true,
-                              }: Props) => {
+    value,
+    onChange,
+    disabled,
+    excludeCategoryId,
+    hideLabel = false,
+    hideHelp = false,
+    labelText = "Categoría padre",
+    noneOptionLabel = "Sin categoría padre",
+    searchPlaceholder = "Buscar categorías...",
+    helpText = "Usa el buscador para encontrar la categoría (pueden crecer indefinidamente).",
+    showBreadcrumbs = true,
+}: Props) => {
     const [open, setOpen] = useState(false);
 
     const { categories, isLoading, applyFilters, setPerPage } = usePlatformCategories();
@@ -71,15 +70,40 @@ const CategoryParentSelect = ({
         return categories.filter((c) => c.id !== excludeCategoryId);
     }, [categories, excludeCategoryId]);
 
+    const selectedCategoryIdToResolve = useMemo(() => {
+        if (!value || value === excludeCategoryId) {
+            return null;
+        }
+
+        const isCategoryAlreadyLoaded = filteredCategories.some((category) => category.id === value);
+        return isCategoryAlreadyLoaded ? null : value;
+    }, [excludeCategoryId, filteredCategories, value]);
+
+    const { category: resolvedSelectedCategory } = useCategoryById(selectedCategoryIdToResolve);
+
+    const availableCategories = useMemo(() => {
+        const mergedCategories = new Map<string, Category>();
+
+        if (resolvedSelectedCategory && resolvedSelectedCategory.id !== excludeCategoryId) {
+            mergedCategories.set(resolvedSelectedCategory.id, resolvedSelectedCategory);
+        }
+
+        for (const category of filteredCategories) {
+            mergedCategories.set(category.id, category);
+        }
+
+        return Array.from(mergedCategories.values());
+    }, [excludeCategoryId, filteredCategories, resolvedSelectedCategory]);
+
     const byId = useMemo(() => {
         const map = new Map<string, Category>();
-        for (const c of filteredCategories) map.set(c.id, c);
+        for (const c of availableCategories) map.set(c.id, c);
         return map;
-    }, [filteredCategories]);
+    }, [availableCategories]);
 
     const selected = useMemo(() => {
-        return filteredCategories.find((c) => c.id === value) ?? null;
-    }, [filteredCategories, value]);
+        return availableCategories.find((c) => c.id === value) ?? null;
+    }, [availableCategories, value]);
 
     // Si por cualquier motivo el parentId actual coincide con la categoría que estamos editando,
     // lo limpiamos automáticamente.
@@ -142,7 +166,7 @@ const CategoryParentSelect = ({
                                     </div>
                                 </CommandItem>
 
-                                {filteredCategories.map((c) => {
+                                {availableCategories.map((c) => {
                                     const breadcrumb = showBreadcrumbs ? buildCategoryBreadcrumbName(c, byId) : null;
 
                                     return (
@@ -156,8 +180,8 @@ const CategoryParentSelect = ({
                                                 <span className="text-sm font-medium truncate">{c.name}</span>
                                                 {showBreadcrumbs && breadcrumb ? (
                                                     <span className="text-xs text-muted-foreground truncate">
-                            {breadcrumb}
-                          </span>
+                                                        {breadcrumb}
+                                                    </span>
                                                 ) : null}
                                             </div>
                                         </CommandItem>

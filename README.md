@@ -9,6 +9,36 @@ The project supports:
 - **Production builds served via Nginx**
 - A modular, scalable architecture structured around **domain modules**
 
+## Inventory model
+
+The active product inventory contract has only two modes:
+
+- `unmanaged`: the owner manages availability manually.
+- `managed_serialized`: Appquilar manages uniquely identified units and their date availability.
+
+`managed_bulk` is removed from the codebase and must not be used in UI, DTOs, mocks, or tests.
+In the dashboard, serialized inventory lives in its own product tab so units and agenda are mounted only when the user opens `Inventario`.
+Serialized units must refresh immediately after saving, allow inline code editing, and expose a human-friendly occupancy agenda per unit.
+
+### Inventory endpoint map
+
+Dashboard inventory only loads after the user opens the product `Inventario` tab. The active FE contract is:
+
+- `GET /api/products/{product_id}/inventory`: operational summary for the tab, returned as `{ success: true, data: ProductInventorySummary }`.
+- `GET /api/products/{product_id}/inventory/allocations`: agenda feed with `assigned_unit_ids`, returned as `{ success: true, data: InventoryAllocation[] }`.
+- `GET /api/products/{product_id}/inventory/units`: internal serialized units list, returned as `{ success: true, data: InventoryUnit[] }`.
+- `PATCH /api/products/{product_id}/inventory/units/{unit_id}`: inline unit code/status edits, returned as `{ success: true, data: InventoryUnit }`.
+- `POST /api/products/{product_id}/inventory/adjustments`: sync operational quantity after saving the product.
+- `GET /api/products/{product_id}/availability`: public date + quantity validation without exposing stock counts.
+
+The product editor still saves general product data through `POST /api/products` and `PATCH /api/products/{product_id}`. If quantity changes, the FE then calls `inventory/adjustments` so Appquilar can create or retire serialized units until the stored unit list matches the requested total. A new serialized product will not show editable unit rows until that first save has created the persisted units in the backend.
+
+## Product management endpoints
+
+- `DELETE /api/products/{product_id}` permanently deletes a product from dashboard flows when it has no rents. If the backend returns `product.delete.has_rents`, the FE must keep the product and show an explanatory error.
+- `GET /api/companies/{owner_id}/products` and `GET /api/users/{owner_id}/products` accept `publicationStatus` as a comma-separated multi-filter such as `draft,published`.
+- Dashboard product listings default to `publicationStatus=draft,published`, so archived products stay hidden until the user explicitly includes them.
+
 
 ---
 

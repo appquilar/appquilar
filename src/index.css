@@ -300,6 +300,13 @@
     color: #0f172a;
   }
 
+  .dashboard-premium .ui-textarea {
+    border-radius: 0.4rem;
+    border-color: rgba(148, 163, 184, 0.3);
+    background: #fff;
+    color: #0f172a;
+  }
+
   .dashboard-premium .ui-select-trigger {
     border-radius: 0.4rem;
     border-color: rgba(148, 163, 184, 0.3);
@@ -307,7 +314,31 @@
     color: #0f172a;
   }
 
+  .dashboard-premium .ui-phone-number-input {
+    border-radius: 0.4rem;
+    border-color: rgba(148, 163, 184, 0.3);
+    background: #fff;
+  }
+
+  .dashboard-premium .ui-phone-number-input-country {
+    background: #fff;
+  }
+
+  .dashboard-premium .ui-phone-number-input-country:hover {
+    background: rgba(248, 250, 252, 1);
+  }
+
+  .dashboard-premium .ui-phone-number-input-field {
+    background: #fff;
+    color: #0f172a;
+  }
+
   .dashboard-premium .ui-input::placeholder {
+    color: rgba(15, 23, 42, 0.48);
+  }
+
+  .dashboard-premium .ui-textarea::placeholder,
+  .dashboard-premium .ui-phone-number-input-field::placeholder {
     color: rgba(15, 23, 42, 0.48);
   }
 

@@ -7,12 +7,16 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Send } from 'lucide-react';
-import { useCreateRentalMessage, useRentalMessages } from '@/application/hooks/useRentalMessages';
+import {
+  useCreateRentalMessage,
+  useMarkRentMessagesAsRead,
+  useRentalMessages,
+} from '@/application/hooks/useRentalMessages';
 
 interface RentalMessagesCardProps {
   rentId: string;
@@ -23,10 +27,12 @@ interface RentalMessageFormValues {
 }
 
 const formatTimestamp = (date: Date): string =>
-  date.toLocaleDateString('es-ES', {
+  date.toLocaleString('es-ES', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 
 const senderRoleLabel: Record<'owner' | 'renter', string> = {
@@ -37,7 +43,10 @@ const senderRoleLabel: Record<'owner' | 'renter', string> = {
 const RentalMessagesCard = ({ rentId }: RentalMessagesCardProps) => {
   const { messages, isLoading, error } = useRentalMessages(rentId, { page: 1, perPage: 200 });
   const createMessageMutation = useCreateRentalMessage(rentId);
+  const markAsReadMutation = useMarkRentMessagesAsRead(rentId);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const hasMarkedAsReadRef = useRef<string | null>(null);
+  const hasMessages = messages.length > 0;
 
   const form = useForm<RentalMessageFormValues>({
     defaultValues: {
@@ -50,6 +59,24 @@ const RentalMessagesCard = ({ rentId }: RentalMessagesCardProps) => {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages.length]);
+
+  useEffect(() => {
+    hasMarkedAsReadRef.current = null;
+  }, [rentId]);
+
+  useEffect(() => {
+    if (
+      isLoading
+      || error
+      || markAsReadMutation.isPending
+      || hasMarkedAsReadRef.current === rentId
+    ) {
+      return;
+    }
+
+    hasMarkedAsReadRef.current = rentId;
+    markAsReadMutation.mutate();
+  }, [rentId, isLoading, error, markAsReadMutation]);
 
   const onSubmit = async (values: RentalMessageFormValues) => {
     const content = values.content.trim();
@@ -75,27 +102,36 @@ const RentalMessagesCard = ({ rentId }: RentalMessagesCardProps) => {
 
   return (
     <Card>
-      <CardContent className="p-6 space-y-4">
+      <CardHeader className="space-y-2 p-5 pb-4 sm:p-6 sm:pb-4">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold">Conversacion</h3>
+          <CardTitle className="text-lg font-semibold">Conversacion</CardTitle>
         </div>
+        <CardDescription>
+          Resuelve el alquiler desde aqui sin tener que volver al inbox.
+        </CardDescription>
+      </CardHeader>
 
-        <ScrollArea className="h-[340px] rounded-md border px-3 py-2">
+      <CardContent className="space-y-4 px-5 pb-5 pt-0 sm:px-6 sm:pb-6">
+        <ScrollArea
+          className={`rounded-2xl border px-3 py-2 ${
+            hasMessages ? 'h-[240px] sm:h-[320px]' : 'min-h-[160px]'
+          }`}
+        >
           {isLoading && (
-            <div className="h-full min-h-24 flex items-center justify-center text-sm text-muted-foreground">
+            <div className="flex h-full min-h-24 items-center justify-center text-sm text-muted-foreground">
               Cargando mensajes...
             </div>
           )}
 
           {!isLoading && error && (
-            <div className="h-full min-h-24 flex items-center justify-center text-sm text-destructive">
+            <div className="flex h-full min-h-24 items-center justify-center text-sm text-destructive">
               {error}
             </div>
           )}
 
           {!isLoading && !error && messages.length === 0 && (
-            <div className="h-full min-h-24 flex items-center justify-center text-sm text-muted-foreground">
+            <div className="flex h-full min-h-24 items-center justify-center text-sm text-muted-foreground">
               Todavia no hay mensajes en este alquiler.
             </div>
           )}
@@ -108,17 +144,17 @@ const RentalMessagesCard = ({ rentId }: RentalMessagesCardProps) => {
                   className={`flex ${message.isMine ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-lg px-3 py-2 ${
+                    className={`max-w-[90%] rounded-2xl px-3 py-2 sm:max-w-[80%] ${
                       message.isMine
-                        ? 'bg-primary text-primary-foreground rounded-tr-none'
-                        : 'bg-secondary text-secondary-foreground rounded-tl-none'
+                        ? 'bg-primary text-primary-foreground rounded-tr-md'
+                        : 'bg-secondary text-secondary-foreground rounded-tl-md'
                     }`}
                   >
-                    <p className="text-xs font-medium opacity-85 mb-1">
+                    <p className="mb-1 text-xs font-medium opacity-85">
                       {message.senderName} · {senderRoleLabel[message.senderRole]}
                     </p>
                     <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                    <p className="text-[11px] opacity-75 mt-1">
+                    <p className="mt-1 text-[11px] opacity-75">
                       {formatTimestamp(message.createdAt)}
                     </p>
                   </div>
@@ -146,7 +182,7 @@ const RentalMessagesCard = ({ rentId }: RentalMessagesCardProps) => {
                     <Textarea
                       {...field}
                       placeholder="Escribe un mensaje para este alquiler..."
-                      className="min-h-[90px] resize-y"
+                      className="min-h-[90px] resize-y rounded-2xl"
                       disabled={createMessageMutation.isPending}
                     />
                   </FormControl>
@@ -159,7 +195,7 @@ const RentalMessagesCard = ({ rentId }: RentalMessagesCardProps) => {
               <Button
                 type="submit"
                 disabled={createMessageMutation.isPending}
-                className="inline-flex items-center gap-2"
+                className="inline-flex w-full items-center gap-2 sm:w-auto"
               >
                 <Send className="h-4 w-4" />
                 {createMessageMutation.isPending ? 'Enviando...' : 'Enviar mensaje'}

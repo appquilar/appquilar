@@ -1,15 +1,14 @@
-import { Plus, X } from 'lucide-react';
+import { ChevronDown, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ProductFilters } from '@/domain/repositories/ProductRepository';
-import CategorySelect from './CategorySelect';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+    DEFAULT_PRODUCT_PUBLICATION_STATUSES,
+    ProductFilters
+} from '@/domain/repositories/ProductRepository';
+import CategorySelect from './CategorySelect';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import type { PublicationStatusType } from '@/domain/models/Product';
 
 interface SearchToolbarProps {
     filters: ProductFilters;
@@ -19,26 +18,84 @@ interface SearchToolbarProps {
     isAddDisabled?: boolean;
 }
 
-const SearchToolbar = ({
-                           filters,
-                           onFilterChange,
-                           onAddProduct,
-                           onSearch,
-                           isAddDisabled = false,
-                       }: SearchToolbarProps) => {
+const PUBLICATION_STATUS_OPTIONS: Array<{
+    value: PublicationStatusType;
+    label: string;
+}> = [
+    { value: 'draft', label: 'Borrador' },
+    { value: 'published', label: 'Publicado' },
+    { value: 'archived', label: 'Archivado' },
+];
 
-    const handleInputChange = (field: keyof ProductFilters, value: string) => {
+const SearchToolbar = ({
+    filters,
+    onFilterChange,
+    onAddProduct,
+    onSearch,
+    isAddDisabled = false,
+}: SearchToolbarProps) => {
+    const handleInputChange = (
+        field: Exclude<keyof ProductFilters, 'publicationStatus'>,
+        value: string
+    ) => {
         onFilterChange({
             ...filters,
-            [field]: value || undefined
+            [field]: value || undefined,
+        });
+    };
+
+    const selectedStatuses = Array.isArray(filters.publicationStatus)
+        ? filters.publicationStatus
+        : filters.publicationStatus
+            ? [filters.publicationStatus]
+            : [...DEFAULT_PRODUCT_PUBLICATION_STATUSES];
+
+    const handlePublicationStatusToggle = (status: PublicationStatusType, checked: boolean) => {
+        const nextStatuses = checked
+            ? Array.from(new Set([...selectedStatuses, status]))
+            : selectedStatuses.filter((currentStatus) => currentStatus !== status);
+
+        onFilterChange({
+            ...filters,
+            publicationStatus: nextStatuses.length > 0 ? nextStatuses : undefined,
         });
     };
 
     const handleClearFilters = () => {
-        onFilterChange({});
+        onFilterChange({
+            publicationStatus: [...DEFAULT_PRODUCT_PUBLICATION_STATUSES],
+        });
     };
 
-    const hasActiveFilters = Object.values(filters).some(Boolean);
+    const hasNonDefaultStatuses =
+        selectedStatuses.length !== DEFAULT_PRODUCT_PUBLICATION_STATUSES.length
+        || selectedStatuses.some((status) => !DEFAULT_PRODUCT_PUBLICATION_STATUSES.includes(status));
+
+    const hasActiveFilters = Boolean(
+        filters.name
+        || filters.id
+        || filters.internalId
+        || filters.categoryId
+        || hasNonDefaultStatuses
+    );
+
+    const publicationStatusLabel = (() => {
+        if (selectedStatuses.length === 0) {
+            return 'Todos los estados';
+        }
+
+        if (
+            selectedStatuses.length === DEFAULT_PRODUCT_PUBLICATION_STATUSES.length
+            && DEFAULT_PRODUCT_PUBLICATION_STATUSES.every((status) => selectedStatuses.includes(status))
+        ) {
+            return 'Borrador + Publicado';
+        }
+
+        return PUBLICATION_STATUS_OPTIONS
+            .filter((option) => selectedStatuses.includes(option.value))
+            .map((option) => option.label)
+            .join(', ');
+    })();
 
     return (
         <form className="dashboard-filter-panel mb-6" onSubmit={onSearch}>
@@ -67,25 +124,51 @@ const SearchToolbar = ({
                     onChange={(id) => handleInputChange('categoryId', id || '')}
                 />
 
-                <Select
-                    value={filters.publicationStatus || 'all'}
-                    onValueChange={(value) =>
-                        handleInputChange(
-                            'publicationStatus',
-                            value === 'all' ? '' : value
-                        )
-                    }
-                >
-                    <SelectTrigger>
-                        <SelectValue placeholder="Estado de publicación" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Todos los estados</SelectItem>
-                        <SelectItem value="published">Publicado</SelectItem>
-                        <SelectItem value="draft">Borrador</SelectItem>
-                        <SelectItem value="archived">Archivado</SelectItem>
-                    </SelectContent>
-                </Select>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button type="button" variant="outline" className="justify-between font-normal">
+                            <span className="truncate text-left">
+                                Estado: {publicationStatusLabel}
+                            </span>
+                            <ChevronDown size={16} className="ml-2 shrink-0 text-muted-foreground" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-[260px] p-3">
+                        <div className="space-y-3">
+                            <div>
+                                <p className="text-sm font-medium">Estados visibles</p>
+                                <p className="text-xs text-muted-foreground">
+                                    Elige uno o varios estados para el listado.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                {PUBLICATION_STATUS_OPTIONS.map((option) => (
+                                    <label
+                                        key={option.value}
+                                        className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm hover:bg-muted/40"
+                                    >
+                                        <Checkbox
+                                            checked={selectedStatuses.includes(option.value)}
+                                            onCheckedChange={(checked) =>
+                                                handlePublicationStatusToggle(option.value, Boolean(checked))
+                                            }
+                                        />
+                                        <span>{option.label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="w-full"
+                                onClick={handleClearFilters}
+                            >
+                                Restaurar borrador + publicado
+                            </Button>
+                        </div>
+                    </PopoverContent>
+                </Popover>
             </div>
 
             <div className="dashboard-filter-actions">

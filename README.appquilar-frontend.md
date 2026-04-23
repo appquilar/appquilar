@@ -42,6 +42,41 @@ frontend/
 
 ## Architecture Overview
 
+## Inventory Modes
+
+Product inventory has only two supported modes in the frontend contract:
+
+- `unmanaged`: the provider confirms requests manually and the platform does not block stock.
+- `managed_serialized`: the platform manages real serialized units with unique codes and date-based occupancy.
+
+The removed `managed_bulk` mode is intentionally unsupported in the frontend and should not be reintroduced in DTOs, mocks, or UI fallbacks.
+The serialized dashboard flow now lives behind the product `Inventario` tab so inventory queries and agenda UI mount only on demand.
+It must show persisted units right after saving, allow inline code renaming, and render a unit-by-unit occupancy agenda that stays understandable on mobile.
+
+### Inventory endpoint map
+
+The frontend contract currently relies on these backend routes:
+
+- `GET /api/products/{product_id}/inventory` for the dashboard summary card, wrapped as `{ success: true, data: ProductInventorySummary }`.
+- `GET /api/products/{product_id}/inventory/allocations` for the serialized agenda/timeline, wrapped as `{ success: true, data: InventoryAllocation[] }`.
+- `GET /api/products/{product_id}/inventory/units` for the persisted serialized units list, wrapped as `{ success: true, data: InventoryUnit[] }`.
+- `PATCH /api/products/{product_id}/inventory/units/{unit_id}` for inline unit code/status edits, wrapped as `{ success: true, data: InventoryUnit }`.
+- `POST /api/products/{product_id}/inventory/adjustments` to synchronize operational quantity after a product save.
+- `GET /api/products/{product_id}/availability` for public and mobile date + quantity validation without leaking stock counts.
+
+Important behavior:
+
+- The product form only mounts inventory queries after the user opens the `Inventario` tab.
+- Public product detail flows must never call inventory summary/units endpoints.
+- Quantity changes are persisted through the product save flow and then synchronized through `inventory/adjustments`, which is what creates or retires serialized units in the backend.
+- Newly created serialized products show the informational empty state until that first save has generated the persisted units. After saving, the inventory tab must reload the units list and agenda from those dashboard endpoints.
+
+## Product management contract
+
+- `DELETE /api/products/{product_id}` is the destructive dashboard action. The FE must not emulate deletion by archiving. When the backend answers with `product.delete.has_rents`, the UI should keep the product visible and explain why it cannot be deleted.
+- `GET /api/companies/{owner_id}/products` and `GET /api/users/{owner_id}/products` support `publicationStatus` as a comma-separated list, for example `draft,published`.
+- Dashboard product filters should boot with `draft,published` selected so archived products are excluded by default but can still be recovered through the multi-select filter.
+
 ### Domain Layer (`src/domain`)
 
 Pure business and core concepts:
@@ -266,6 +301,23 @@ Notes:
 
 ## Dashboard E2E Suite (Seeded)
 
+Default commands already include the dashboard suite:
+
+```bash
+npm test
+npm run test:e2e
+make test
+make test-e2e
+```
+
+Run only the public Playwright suite:
+
+```bash
+npm run test:e2e:public
+```
+
+In CI, Playwright runs in parallel contexts using `PLAYWRIGHT_WORKERS=2` for both the public suite and dashboard shards.
+
 For deterministic dashboard E2E tests and manual QA with seeded data:
 
 ```bash
@@ -306,6 +358,7 @@ Coverage files:
 Detailed setup and CSV import flow:
 
 - `docs/e2e-dashboard-playwright.md`
+- `docs/frontend-test-coverage-matrix.md`
 
 ### Import manual CSV cases
 

@@ -98,6 +98,8 @@ export const productFormSchema = z.object({
     publicationStatus: z.enum(['draft', 'published', 'archived']).default('draft'),
     quantity: z.coerce.number().int().min(1, { message: 'La capacidad debe ser al menos 1' }).default(1),
     isRentalEnabled: z.boolean().default(true),
+    isInventoryEnabled: z.boolean().default(false),
+    inventoryMode: z.enum(['unmanaged', 'managed_serialized']).default('unmanaged'),
 
     price: z.object({
         daily: z.coerce.number().default(0),
@@ -123,6 +125,7 @@ export const productFormSchema = z.object({
     }),
     currentTab: z.string().optional(),
     images: z.array(productImageSchema).default([]),
+    dynamicProperties: z.record(z.string(), z.unknown()).default({}),
 });
 
 export type ProductFormValues = z.input<typeof productFormSchema>;
@@ -161,7 +164,11 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
         thumbnailUrl: product.thumbnailUrl || '',
         publicationStatus: product.publicationStatus || 'draft',
         quantity: product.inventorySummary?.totalQuantity ?? product.quantity ?? 1,
-        isRentalEnabled: product.isRentalEnabled ?? true,
+        isRentalEnabled: true,
+        isInventoryEnabled: product.inventorySummary?.isInventoryEnabled ?? product.isInventoryEnabled ?? true,
+        inventoryMode: product.inventorySummary?.inventoryMode
+            ?? product.inventoryMode
+            ?? ((product.inventorySummary?.isInventoryEnabled ?? product.isInventoryEnabled) ? 'managed_serialized' : 'unmanaged'),
         price: {
             daily: product.price?.daily || 0,
             deposit: product.price?.deposit,
@@ -181,6 +188,7 @@ export const mapProductToFormValues = (product: Product): ProductFormValues => {
             slug: product.category?.slug || '',
         },
         images: initialImages,
+        dynamicProperties: product.dynamicProperties ?? {},
     };
 };
 
@@ -201,7 +209,9 @@ export const mapFormValuesToProduct = (values: ProductFormSubmitValues, original
         thumbnailUrl: values.thumbnailUrl,
         publicationStatus: values.publicationStatus,
         quantity: values.quantity,
-        isRentalEnabled: values.isRentalEnabled,
+        isRentalEnabled: true,
+        isInventoryEnabled: values.inventoryMode !== 'unmanaged',
+        inventoryMode: values.inventoryMode,
         price: {
             daily: values.price.daily || 0,
             deposit: values.price.deposit,
@@ -213,5 +223,6 @@ export const mapFormValuesToProduct = (values: ProductFormSubmitValues, original
         },
         productType: 'rental',
         category,
+        dynamicProperties: (values.dynamicProperties ?? {}) as Product["dynamicProperties"],
     };
 };

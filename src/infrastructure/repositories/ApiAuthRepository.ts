@@ -41,7 +41,6 @@ interface ForgotPasswordDto {
  * El backend obtiene el email a partir del token.
  */
 interface ResetPasswordDto {
-    email: string;
     token: string;
     password: string;
 }
@@ -179,7 +178,6 @@ export class ApiAuthRepository implements AuthRepository {
      */
     async resetPassword(data: ResetPasswordData): Promise<void> {
         const payload: ResetPasswordDto = {
-            email: data.email,
             token: data.token,
             password: data.newPassword,
         };

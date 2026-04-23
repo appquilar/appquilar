@@ -9,6 +9,11 @@ interface UseRentalsOptions {
   enabled?: boolean;
 }
 
+interface UseRentSummaryParams {
+  ownerId?: string | null;
+  enabled?: boolean;
+}
+
 export const useRentals = (params: RentListParams = {}, options: UseRentalsOptions = {}) => {
   const enabled = options.enabled ?? true;
 
@@ -29,6 +34,18 @@ export const useRentals = (params: RentListParams = {}, options: UseRentalsOptio
   };
 };
 
+export const useRentSummary = ({
+  ownerId,
+  enabled = true,
+}: UseRentSummaryParams = {}) => {
+  return useQuery({
+    queryKey: ['rents', 'summary', ownerId ?? null],
+    queryFn: () => rentalService.getSummary(ownerId ?? undefined),
+    enabled,
+    placeholderData: (previousData) => previousData,
+  });
+};
+
 interface UseOwnerRentalsCountParams {
   ownerId?: string | null;
 }
@@ -36,25 +53,15 @@ interface UseOwnerRentalsCountParams {
 export const useOwnerRentalsCount = ({
   ownerId,
 }: UseOwnerRentalsCountParams) => {
-  return useQuery({
-    queryKey: ['rents', 'owner-count', ownerId],
-    queryFn: async () => {
-      if (!ownerId) {
-        return 0;
-      }
-
-      const response = await rentalService.listRents({
-        role: 'owner',
-        ownerId,
-        page: 1,
-        perPage: 1,
-      });
-
-      return response.total ?? response.data.length;
-    },
+  const rentSummaryQuery = useRentSummary({
+    ownerId,
     enabled: Boolean(ownerId),
-    placeholderData: (previousData) => previousData,
   });
+
+  return {
+    ...rentSummaryQuery,
+    data: rentSummaryQuery.data?.owner.total ?? 0,
+  };
 };
 
 export const useCreateLead = () => {
@@ -78,10 +85,12 @@ export const useCreateLead = () => {
       message,
       renterEmail,
       renterName,
+      requestedQuantity,
     }: {
       productId: string;
       startDate: string;
       endDate: string;
+      requestedQuantity: number;
       deposit: Money;
       price: Money;
       message: string;
@@ -102,6 +111,7 @@ export const useCreateLead = () => {
         renterName: renterName?.trim() || undefined,
         startDate: toDateAtTime(startDate, false),
         endDate: toDateAtTime(endDate, true),
+        requestedQuantity,
         deposit,
         price,
         isLead: true,

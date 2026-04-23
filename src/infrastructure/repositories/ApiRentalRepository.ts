@@ -8,6 +8,7 @@ import {
   RentMessageListResponse,
   RentUnreadMessagesCount,
   RentListResponse,
+  RentSummary,
   RentalRepository,
   UpdateRentData,
   UpdateRentStatusData
@@ -41,6 +42,7 @@ interface RentDto {
   } | null;
   start_date: string;
   end_date: string;
+  requested_quantity?: number;
   deposit: Money;
   price: Money;
   deposit_returned?: Money | null;
@@ -83,6 +85,17 @@ interface RentUnreadByRentDto {
 interface RentUnreadMessagesCountDto {
   total_unread: number;
   by_rent: RentUnreadByRentDto[];
+}
+
+interface RentRoleSummaryDto {
+  total?: number;
+  upcoming?: number;
+  past?: number;
+}
+
+interface RentSummaryDto {
+  owner?: RentRoleSummaryDto;
+  renter?: RentRoleSummaryDto;
 }
 
 export class ApiRentalRepository implements RentalRepository {
@@ -182,6 +195,7 @@ export class ApiRentalRepository implements RentalRepository {
         : null,
       startDate: this.parseApiDate(dto.start_date, false),
       endDate: this.parseApiDate(dto.end_date, true),
+      requestedQuantity: Number(dto.requested_quantity ?? 1),
       deposit: dto.deposit,
       price: dto.price,
       depositReturned: dto.deposit_returned ?? null,
@@ -242,6 +256,35 @@ export class ApiRentalRepository implements RentalRepository {
       total: payload.total ?? items.length,
       page: payload.page ?? 1,
       perPage: payload.per_page ?? params.perPage ?? items.length,
+    };
+  }
+
+  async getSummary(ownerId?: string): Promise<RentSummary> {
+    const queryParams = new URLSearchParams();
+
+    if (ownerId) {
+      queryParams.append("owner_id", ownerId);
+    }
+
+    const querySuffix = queryParams.toString();
+    const response = await this.client.get<RentSummaryDto>(
+      `/api/rents/summary${querySuffix ? `?${querySuffix}` : ""}`,
+      { headers: this.getAuthHeaders() }
+    );
+
+    const payload = (response as any).data ? (response as any).data : response;
+
+    return {
+      owner: {
+        total: Number(payload?.owner?.total ?? 0),
+        upcoming: Number(payload?.owner?.upcoming ?? 0),
+        past: Number(payload?.owner?.past ?? 0),
+      },
+      renter: {
+        total: Number(payload?.renter?.total ?? 0),
+        upcoming: Number(payload?.renter?.upcoming ?? 0),
+        past: Number(payload?.renter?.past ?? 0),
+      },
     };
   }
 
@@ -338,6 +381,7 @@ export class ApiRentalRepository implements RentalRepository {
       product_id: data.productId,
       start_date: this.formatApiDate(data.startDate),
       end_date: this.formatApiDate(data.endDate),
+      requested_quantity: Math.max(1, data.requestedQuantity),
       deposit: data.deposit,
       price: data.price,
       renter_email: data.renterEmail,
@@ -359,6 +403,9 @@ export class ApiRentalRepository implements RentalRepository {
     }
     if (data.endDate !== undefined) {
       dto.end_date = data.endDate ? this.formatApiDate(data.endDate) : null;
+    }
+    if (data.requestedQuantity !== undefined) {
+      dto.requested_quantity = data.requestedQuantity === null ? null : Math.max(1, data.requestedQuantity);
     }
     if (data.deposit !== undefined) {
       dto.deposit = data.deposit;

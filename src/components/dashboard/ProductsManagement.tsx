@@ -5,16 +5,20 @@ import SearchToolbar from "@/components/dashboard/products/SearchToolbar";
 import ProductsHeader from "@/components/dashboard/products/ProductsHeader";
 import ProductPagination from "@/components/dashboard/products/ProductPagination";
 import DeleteConfirmationModal from "@/components/dashboard/products/DeleteConfirmationModal";
+import { useProductOwnerAddress } from "@/application/hooks/useProductOwnerAddress";
 
 import { useProductsManagement } from "@/components/dashboard/products/hooks/useProductsManagement";
-import { useAuth } from "@/context/AuthContext";
-import { hasMinimalAddress } from "@/domain/models/Address";
 import { toast } from "sonner";
 
 const ProductsManagement = () => {
     const navigate = useNavigate();
-    const { currentUser } = useAuth();
-    const canCreateProduct = hasMinimalAddress(currentUser?.address);
+    const {
+        hasRequiredAddress,
+        isLoading: isProductOwnerAddressLoading,
+        ownerType,
+        settingsHref,
+    } = useProductOwnerAddress();
+    const canCreateProduct = !isProductOwnerAddressLoading && hasRequiredAddress;
 
     const {
         filters,
@@ -42,7 +46,11 @@ const ProductsManagement = () => {
 
     const handleAddProduct = () => {
         if (!canCreateProduct) {
-            toast.error("Debes añadir una dirección en tu perfil antes de crear productos.");
+            toast.error(
+                ownerType === "company"
+                    ? "Debes añadir la dirección de la empresa antes de crear productos."
+                    : "Debes añadir una dirección en tu perfil antes de crear productos."
+            );
             return;
         }
 
@@ -88,7 +96,9 @@ const ProductsManagement = () => {
                 onDelete={openDeleteModal}
                 onAdd={handleAddProduct}
                 isAddDisabled={!canCreateProduct}
-                shouldShowMissingAddressMessage={!canCreateProduct}
+                shouldShowMissingAddressMessage={!isProductOwnerAddressLoading && !hasRequiredAddress}
+                missingAddressHref={settingsHref}
+                missingAddressOwnerType={ownerType}
             />
 
             <ProductPagination

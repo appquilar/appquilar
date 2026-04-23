@@ -12,6 +12,7 @@ type CompanyEngagementByProductDto = {
     product_id: string;
     product_name: string;
     product_slug: string;
+    product_internal_id?: string;
     total_views: number;
     unique_visitors: number;
     logged_views: number;
@@ -152,6 +153,7 @@ export class ApiCompanyEngagementRepository implements CompanyEngagementReposito
             productId: dto.product_id,
             productName: dto.product_name,
             productSlug: dto.product_slug,
+            productInternalId: dto.product_internal_id ?? "",
             totalViews: dto.total_views,
             uniqueVisitors: dto.unique_visitors,
             loggedViews: dto.logged_views,
@@ -182,4 +184,3 @@ export class ApiCompanyEngagementRepository implements CompanyEngagementReposito
         };
     }
 }
-

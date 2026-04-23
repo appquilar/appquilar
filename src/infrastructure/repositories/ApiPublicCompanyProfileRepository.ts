@@ -1,4 +1,7 @@
 import { ApiClient } from "@/infrastructure/http/ApiClient";
+import type { Address } from "@/domain/models/Address";
+import type { AuthSession } from "@/domain/models/AuthSession";
+import { toAuthorizationHeader } from "@/domain/models/AuthSession";
 import type { PublicCompanyProfile } from "@/domain/models/PublicCompanyProfile";
 import type { PublicCompanyProfileRepository } from "@/domain/repositories/PublicCompanyProfileRepository";
 
@@ -6,29 +9,32 @@ type PublicCompanyLocationDto = {
   city?: string | null;
   state?: string | null;
   country?: string | null;
+  display_label?: string | null;
 };
 
-type PublicCompanyTrustMetricsDto = {
-  active_products_count?: number;
-  total_products_count?: number;
-  completed_rentals_count?: number;
-  total_rents_count?: number;
-  average_first_response_minutes_30d?: number | null;
-  response_rate_24h_30d?: number;
-  views_30d?: number;
-  unique_visitors_30d?: number;
-  logged_views_30d?: number;
-  anonymous_views_30d?: number;
+type AddressDto = {
+  street?: string | null;
+  street2?: string | null;
+  city?: string | null;
+  postal_code?: string | null;
+  state?: string | null;
+  country?: string | null;
+};
+
+type GeoLocationDto = {
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 type PublicCompanyProfileDto = {
-  company_id: string;
   name: string;
   slug: string;
   description?: string | null;
   profile_picture_id?: string | null;
+  header_image_id?: string | null;
   location?: PublicCompanyLocationDto;
-  trust_metrics?: PublicCompanyTrustMetricsDto;
+  address?: AddressDto | null;
+  geo_location?: GeoLocationDto | null;
 };
 
 type WrappedPublicCompanyResponse = {
@@ -37,40 +43,61 @@ type WrappedPublicCompanyResponse = {
 };
 
 export class ApiPublicCompanyProfileRepository implements PublicCompanyProfileRepository {
-  constructor(private readonly apiClient: ApiClient) {}
+  constructor(
+    private readonly apiClient: ApiClient,
+    private readonly getSession: () => AuthSession | null
+  ) {}
 
   async getBySlug(slug: string): Promise<PublicCompanyProfile> {
+    const authHeader = toAuthorizationHeader(this.getSession());
     const raw = await this.apiClient.get<PublicCompanyProfileDto | WrappedPublicCompanyResponse>(
-      `/api/public/companies/${encodeURIComponent(slug)}`
+      `/api/public/companies/${encodeURIComponent(slug)}`,
+      {
+        headers: authHeader ? { Authorization: authHeader } : {},
+      }
     );
 
     const dto = this.unwrap(raw);
-    const trust = dto.trust_metrics ?? {};
 
     return {
-      id: dto.company_id,
       name: dto.name,
       slug: dto.slug,
       description: dto.description ?? null,
       profilePictureId: dto.profile_picture_id ?? null,
+      headerImageId: dto.header_image_id ?? null,
       location: {
         city: dto.location?.city ?? null,
         state: dto.location?.state ?? null,
         country: dto.location?.country ?? null,
+        displayLabel: dto.location?.display_label ?? null,
       },
-      trustMetrics: {
-        activeProductsCount: trust.active_products_count ?? 0,
-        totalProductsCount: trust.total_products_count ?? 0,
-        completedRentalsCount: trust.completed_rentals_count ?? 0,
-        totalRentsCount: trust.total_rents_count ?? 0,
-        averageFirstResponseMinutes30d: trust.average_first_response_minutes_30d ?? null,
-        responseRate24h30d: trust.response_rate_24h_30d ?? 0,
-        views30d: trust.views_30d ?? 0,
-        uniqueVisitors30d: trust.unique_visitors_30d ?? 0,
-        loggedViews30d: trust.logged_views_30d ?? 0,
-        anonymousViews30d: trust.anonymous_views_30d ?? 0,
-      },
+      address: this.mapAddress(dto.address),
+      geoLocation:
+        typeof dto.geo_location?.latitude === "number" &&
+        typeof dto.geo_location?.longitude === "number"
+          ? {
+              latitude: dto.geo_location.latitude,
+              longitude: dto.geo_location.longitude,
+            }
+          : null,
     };
+  }
+
+  private mapAddress(dto: AddressDto | null | undefined): Address | null {
+    if (!dto) {
+      return null;
+    }
+
+    const address: Address = {
+      street: dto.street ?? null,
+      street2: dto.street2 ?? null,
+      city: dto.city ?? null,
+      postalCode: dto.postal_code ?? null,
+      state: dto.state ?? null,
+      country: dto.country ?? null,
+    };
+
+    return Object.values(address).some((value) => value !== null) ? address : null;
   }
 
   private unwrap(

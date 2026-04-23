@@ -2,9 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, MessageCircle } from 'lucide-react';
 import { Rental } from '@/domain/models/Rental';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Badge } from '@/components/ui/badge';
-import { RentalStatusService } from '@/domain/services/RentalStatusService';
 
 interface RentalDetailsHeaderProps {
   rental: Rental;
@@ -12,40 +9,40 @@ interface RentalDetailsHeaderProps {
 
 const RentalDetailsHeader = ({ rental }: RentalDetailsHeaderProps) => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
 
   return (
-    <div className={`flex flex-col ${isMobile ? 'space-y-3 mb-3' : 'items-center justify-between mb-6'} md:flex-row`}>
-      <div className="flex items-center space-x-3">
+    <div className="mb-4 flex flex-col gap-4 md:mb-6 md:flex-row md:items-start md:justify-between">
+      <div className="flex min-w-0 items-start gap-3">
         <Button
           variant="outline"
           size="icon"
           onClick={() => navigate('/dashboard/rentals')}
-          className="h-8 w-8 flex-shrink-0"
+          className="h-10 w-10 flex-shrink-0 rounded-xl"
+          aria-label="Volver al listado de alquileres"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-5 w-5" />
         </Button>
-        <div>
-          <h1 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-display font-semibold line-clamp-1`}>
-            Detalles del Alquiler
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-muted-foreground">Deal room</p>
+          <h1 className="line-clamp-2 font-display text-2xl font-semibold leading-tight text-foreground md:text-4xl md:leading-tight">
+            {rental.productName || 'Producto sin nombre'}
           </h1>
-          <p className="text-muted-foreground text-sm">{rental.productName || 'Producto sin nombre'}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Gestiona el estado, la conversacion y las acciones del alquiler desde aqui.
+          </p>
         </div>
       </div>
 
-      <div className={`${isMobile ? 'w-full' : ''} mt-2 md:mt-0 flex flex-col md:flex-row gap-2 md:items-center md:justify-end`}>
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row md:justify-end">
         <Button
           type="button"
           variant="outline"
-          className={isMobile ? 'w-full' : ''}
+          className="w-full sm:w-auto"
           onClick={() => navigate(`/dashboard/messages?rent_id=${rental.id}`)}
         >
           <MessageCircle className="h-4 w-4 mr-2" />
-          Ver mensajes
+          Ir al inbox
         </Button>
-        <Badge className={`inline-flex items-center ${RentalStatusService.getStatusBadgeClasses(rental.status)}`}>
-          {RentalStatusService.getStatusLabel(rental.status)}
-        </Badge>
       </div>
     </div>
   );

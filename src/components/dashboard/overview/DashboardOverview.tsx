@@ -18,6 +18,7 @@ import {
     Eye,
     Home,
     MessageCircle,
+    RefreshCw,
     Repeat,
     Timer,
     X,
@@ -44,25 +45,30 @@ import { useAuth } from "@/context/AuthContext";
 import { useCompanyEngagementStats } from "@/application/hooks/useCompanyEngagementStats";
 import { useUserEngagementStats } from "@/application/hooks/useUserEngagementStats";
 import { useCreateCheckoutSession } from "@/application/hooks/useBilling";
-import { useActiveProductsCount, useDashboardProducts } from "@/application/hooks/useProducts";
+import { useActiveProductsCount } from "@/application/hooks/useProducts";
 import EngagementLineChart, { EngagementLineChartPoint } from "@/components/dashboard/stats/EngagementLineChart";
+import { CompanyAdvancedStatsPremium } from "@/components/dashboard/stats/CompanyAdvancedStatsPremium";
 import SpanishDateInput from "@/components/products/SpanishDateInput";
 import {
-    getEffectiveUserPlan,
     getCompanyPlanProductLimit,
     getUserPlanProductLimit,
     isCompanyAdvancedAnalyticsEnabled,
+    isCompanyPremiumAdvancedStatsEnabled,
+    isUserBasicAnalyticsEnabled,
 } from "@/domain/models/Subscription";
 import { UserRole } from "@/domain/models/UserRole";
 import DashboardSectionHeader from "@/components/dashboard/common/DashboardSectionHeader";
+import AdminPlatformAnalyticsHomeSection from "@/components/dashboard/analytics/AdminPlatformAnalyticsHomeSection";
 import {
     buildBillingBaseUrl,
     buildBillingCheckoutSuccessUrl,
 } from "@/hooks/useBillingReturnSync";
-import { extractBackendErrorMessage } from "@/utils/backendError";
+import {
+    getUserProCheckoutErrorMessage,
+    useUserProCheckout,
+} from "@/hooks/useUserProCheckout";
 
 const MAX_RANGE_DAYS = 30;
-const OWNER_PRODUCTS_LOOKUP_PAGE_SIZE = 500;
 
 type ProductSortField =
     | "productName"
@@ -162,17 +168,19 @@ const DashboardOverview = () => {
     const companyId = companyContext?.companyId ?? currentUser?.companyId ?? null;
     const userId = currentUser?.id ?? null;
     const isPlatformAdmin = hasRole(UserRole.ADMIN);
-    const userPlan = getEffectiveUserPlan(
-        currentUser?.planType,
-        currentUser?.subscriptionStatus
-    );
     const isCompanyScope = Boolean(companyId);
-    const isUserProScope = !isCompanyScope && (isPlatformAdmin || userPlan === "user_pro");
-    const isExplorerScope = !isCompanyScope && !isPlatformAdmin && !isUserProScope;
+    const isAdminOverview = !isCompanyScope && isPlatformAdmin;
+    const hasUserAnalyticsAccess = isUserBasicAnalyticsEnabled(currentUser);
+    const isUserAnalyticsScope = !isCompanyScope && !isPlatformAdmin && hasUserAnalyticsAccess;
+    const isExplorerScope = !isCompanyScope && !isPlatformAdmin && !isUserAnalyticsScope;
     const isAdvancedCompanyAnalytics = isPlatformAdmin || isCompanyAdvancedAnalyticsEnabled(companyContext);
+    const isPremiumAdvancedStats = isCompanyPremiumAdvancedStatsEnabled(
+        companyContext,
+        isPlatformAdmin
+    );
 
-    const ownerId = companyId ?? userId;
-    const ownerType = companyId ? "company" : "user";
+    const ownerId = isCompanyScope ? companyId : isAdminOverview ? null : userId;
+    const ownerType = isCompanyScope ? "company" : "user";
 
     const slotLimit = isPlatformAdmin
         ? null
@@ -184,6 +192,7 @@ const DashboardOverview = () => {
                 currentUser?.entitlements ?? null
             ));
     const createCheckoutMutation = useCreateCheckoutSession();
+    const userProCheckout = useUserProCheckout();
     const activeProductsCountQuery = useActiveProductsCount({
         ownerId,
         ownerType,
@@ -204,7 +213,7 @@ const DashboardOverview = () => {
     const [productPage, setProductPage] = useState(1);
     const [rangeError, setRangeError] = useState<string | null>(null);
     const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
-    const ownerProductsFilters = useMemo(() => ({}), []);
+    const [isRefreshingDashboardData, setIsRefreshingDashboardData] = useState(false);
 
     const period = useMemo(() => {
         if (!range.from || !range.to) {
@@ -219,21 +228,13 @@ const DashboardOverview = () => {
 
     const companyStatsQuery = useCompanyEngagementStats(companyId, period);
     const userStatsQuery = useUserEngagementStats(
-        isUserProScope ? userId : null,
+        isUserAnalyticsScope ? userId : null,
         period
     );
-    const ownerProductsQuery = useDashboardProducts({
-        page: 1,
-        perPage: OWNER_PRODUCTS_LOOKUP_PAGE_SIZE,
-        ownerId,
-        ownerType,
-        filters: ownerProductsFilters,
-        enabled: Boolean(ownerId) && !isExplorerScope,
-    });
 
     const isLoading = isCompanyScope
         ? companyStatsQuery.isLoading
-        : isUserProScope
+        : isUserAnalyticsScope
             ? userStatsQuery.isLoading
             : false;
 
@@ -287,28 +288,17 @@ const DashboardOverview = () => {
         () => messagesChartData.some((point) => point.value > 0),
         [messagesChartData]
     );
-    const productMetaById = useMemo(() => {
-        const map = new Map<string, { internalId: string; slug: string }>();
-        (ownerProductsQuery.data?.data ?? []).forEach((product) => {
-            map.set(product.id, {
-                internalId: (product.internalId ?? "").trim(),
-                slug: (product.slug ?? "").trim(),
-            });
-        });
-        return map;
-    }, [ownerProductsQuery.data?.data]);
     const breakdownRows = useMemo<ProductBreakdownRow[]>(() => {
         const rawRows = isCompanyScope
             ? (companyStatsQuery.data?.byProduct ?? [])
             : (userStatsQuery.data?.byProduct ?? []);
 
         return rawRows.map((row) => {
-            const meta = productMetaById.get(row.productId);
             return {
                 productId: row.productId,
                 productName: row.productName,
-                productSlug: (row.productSlug || meta?.slug || "").trim(),
-                productInternalId: (meta?.internalId ?? "").trim(),
+                productSlug: (row.productSlug ?? "").trim(),
+                productInternalId: (row.productInternalId ?? "").trim(),
                 totalViews: row.totalViews,
                 uniqueVisitors: row.uniqueVisitors,
                 messagesTotal: row.messagesTotal,
@@ -318,7 +308,7 @@ const DashboardOverview = () => {
                 messageToRentalRatio: Number("messageToRentalRatio" in row ? row.messageToRentalRatio : 0),
             };
         });
-    }, [companyStatsQuery.data?.byProduct, isCompanyScope, productMetaById, userStatsQuery.data?.byProduct]);
+    }, [companyStatsQuery.data?.byProduct, isCompanyScope, userStatsQuery.data?.byProduct]);
     const sortedBreakdownRows = useMemo(() => {
         const rows = [...breakdownRows];
         const factor = productSort.direction === "asc" ? 1 : -1;
@@ -449,6 +439,14 @@ const DashboardOverview = () => {
     const currentUrl = typeof window !== "undefined" ? window.location.href : "";
     const currentBaseUrl = buildBillingBaseUrl(currentUrl);
     const handleUpgradeToUserPro = async () => {
+        if (!userProCheckout.isCheckoutAvailable) {
+            toast.error(
+                userProCheckout.unavailableMessage ??
+                    "User Pro no esta disponible para activar ahora mismo."
+            );
+            return;
+        }
+
         try {
             const response = await createCheckoutMutation.mutateAsync({
                 scope: "user",
@@ -463,17 +461,50 @@ const DashboardOverview = () => {
 
             window.location.assign(response.url);
         } catch (error) {
-            const backendError = extractBackendErrorMessage(error);
             toast.error(
-                backendError ?? "No se pudo iniciar el checkout para User Pro."
+                getUserProCheckoutErrorMessage(
+                    error,
+                    "No se pudo iniciar el checkout para User Pro."
+                )
             );
         }
     };
 
-    const overviewTitle = isCompanyScope ? "Rendimiento global y equipo" : "Mis productos";
+    const handleRefreshDashboardData = async () => {
+        if (isRefreshingDashboardData) {
+            return;
+        }
+
+        setIsRefreshingDashboardData(true);
+
+        try {
+            const refreshTasks: Array<Promise<unknown>> = [
+                activeProductsCountQuery.refetch(),
+            ];
+
+            if (isCompanyScope) {
+                refreshTasks.push(companyStatsQuery.refetch());
+            } else if (isUserAnalyticsScope) {
+                refreshTasks.push(userStatsQuery.refetch());
+            }
+
+            await Promise.all(refreshTasks);
+        } catch (error) {
+            console.error("Error refreshing dashboard data:", error);
+            toast.error("No se pudieron refrescar los datos del dashboard.");
+        } finally {
+            setIsRefreshingDashboardData(false);
+        }
+    };
+
+    const overviewTitle = isAdminOverview
+        ? "Señales rápidas de plataforma para admins."
+        : isCompanyScope
+            ? "Rendimiento global y equipo"
+            : "Mis productos";
     const slotUsageText = slotLimit == null
-        ? `${activeProductsCountQuery.data ?? 0} productos activos (sin límite)`
-        : `${activeProductsCountQuery.data ?? 0} de ${slotLimit} productos activos usados`;
+        ? `${activeProductsCountQuery.data ?? 0} productos publicados (sin limite)`
+        : `${activeProductsCountQuery.data ?? 0} de ${slotLimit} productos publicados`;
 
     return (
         <div className="space-y-6">
@@ -483,7 +514,7 @@ const DashboardOverview = () => {
                     description={overviewTitle}
                     icon={Home}
                 />
-                {!isExplorerScope && (
+                {!isExplorerScope && !isAdminOverview && (
                     <div className="dashboard-toolbar rounded-xl border border-slate-200/80 bg-white/80 p-2.5 shadow-sm backdrop-blur-md">
                         <div className="flex items-center gap-2 overflow-x-auto pb-1">
                             <Button
@@ -560,6 +591,22 @@ const DashboardOverview = () => {
                                     </div>
                                 </PopoverContent>
                             </Popover>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="shrink-0 border-slate-200 bg-white px-4 text-[#0F172A] hover:bg-slate-50"
+                                onClick={() => {
+                                    void handleRefreshDashboardData();
+                                }}
+                                disabled={isRefreshingDashboardData}
+                                aria-label="Refrescar datos"
+                            >
+                                <RefreshCw
+                                    className={`h-4 w-4 text-[#F19D70] ${isRefreshingDashboardData ? "animate-spin" : ""}`}
+                                />
+                                {isRefreshingDashboardData ? "Refrescando..." : "Refrescar"}
+                            </Button>
                             <span className="inline-flex shrink-0 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-[#0F172A]/70">
                                 {selectedRangeDays} días
                             </span>
@@ -582,14 +629,16 @@ const DashboardOverview = () => {
                 )}
             </div>
 
-            <Card>
-                <CardHeader className="pb-1">
-                    <CardTitle className="text-sm font-semibold text-[#0F172A]">Capacidad de catálogo</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-[#0F172A]/55">{slotUsageText}</p>
-                </CardContent>
-            </Card>
+            {!isAdminOverview && slotLimit != null && (
+                <Card>
+                    <CardHeader className="pb-1">
+                        <CardTitle className="text-sm font-semibold text-[#0F172A]">Capacidad de catálogo</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-[#0F172A]/55">{slotUsageText}</p>
+                    </CardContent>
+                </Card>
+            )}
 
             {isExplorerScope && (
                 <Card className="mt-1 overflow-hidden">
@@ -628,7 +677,7 @@ const DashboardOverview = () => {
                                     Ventajas de User Pro
                                 </p>
                                 <ul className="mt-2 space-y-1 text-sm leading-relaxed text-[#0F172A]/60 list-disc pl-5">
-                                    <li>Amplia tu límite de 2 a 5 productos activos.</li>
+                                    <li>Amplia tu limite de 2 a 5 productos publicados.</li>
                                     <li>Consulta visitas y mensajes reales por producto.</li>
                                     <li>Detecta qué productos convierten mejor.</li>
                                     <li>Gestiona tu suscripción desde Stripe Customer Portal.</li>
@@ -639,9 +688,16 @@ const DashboardOverview = () => {
                                     onClick={() => {
                                         void handleUpgradeToUserPro();
                                     }}
-                                    disabled={createCheckoutMutation.isPending}
+                                    disabled={
+                                        createCheckoutMutation.isPending ||
+                                        userProCheckout.isLoading
+                                    }
                                 >
-                                    {createCheckoutMutation.isPending ? "Redirigiendo..." : "Hazte User Pro"}
+                                    {createCheckoutMutation.isPending
+                                        ? "Redirigiendo..."
+                                        : userProCheckout.isLoading
+                                            ? "Cargando plan..."
+                                            : "Hazte User Pro"}
                                 </Button>
                             </div>
                         </div>
@@ -657,7 +713,7 @@ const DashboardOverview = () => {
                 </Card>
             )}
 
-            {(isCompanyScope || isUserProScope) && (
+            {(isCompanyScope || isUserAnalyticsScope) && (
                 <>
                     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                         <Card>
@@ -704,7 +760,7 @@ const DashboardOverview = () => {
 
                         {isCompanyScope && (
                             <PlanGuard
-                                requiredCompanyPlans={["pro", "enterprise"]}
+                                requiredCompanyCapabilities={[{ key: "advancedAnalytics" }]}
                                 requireCompanyContext
                                 fallback={
                                     <Card>
@@ -712,7 +768,7 @@ const DashboardOverview = () => {
                                             <CardTitle className="text-sm font-medium text-[#0F172A]">Analítica avanzada</CardTitle>
                                         </CardHeader>
                                         <CardContent className="text-xs text-[#0F172A]/55">
-                                            Disponible en plan Empresa Pro o superior.
+                                            Disponible cuando tu plan tenga analítica avanzada habilitada.
                                         </CardContent>
                                     </Card>
                                 }
@@ -754,6 +810,14 @@ const DashboardOverview = () => {
                             </PlanGuard>
                         )}
                     </div>
+
+                    {isCompanyScope && companyId && (
+                        <CompanyAdvancedStatsPremium
+                            companyId={companyId}
+                            period={period}
+                            hasAccess={isPremiumAdvancedStats}
+                        />
+                    )}
 
                     <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
                         <Card className="w-full overflow-hidden">
@@ -944,22 +1008,22 @@ const DashboardOverview = () => {
 
                         {isCompanyScope && (
                             <PlanGuard
-                                requiredCompanyPlans={["pro", "enterprise"]}
+                                requiredCompanyCapabilities={[{ key: "advancedAnalytics" }]}
                                 requireCompanyContext
                                 fallback={
                                     <Card>
                                         <CardHeader>
-                                            <CardTitle>Origen de visitas</CardTitle>
+                                            <CardTitle>Top ubicaciones</CardTitle>
                                         </CardHeader>
                                         <CardContent className="text-sm text-[#0F172A]/55">
-                                            Disponible en plan Empresa Pro o superior.
+                                            Disponible cuando tu plan tenga analítica avanzada habilitada.
                                         </CardContent>
                                     </Card>
                                 }
                             >
                                 <Card>
                                     <CardHeader>
-                                        <CardTitle>Origen de visitas</CardTitle>
+                                        <CardTitle>Top ubicaciones</CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-3 text-sm">
                                         {!isLoading && (companyStatsQuery.data?.topLocations.length ?? 0) === 0 && (
@@ -1003,6 +1067,10 @@ const DashboardOverview = () => {
                         </Card>
                     )}
                 </>
+            )}
+
+            {isPlatformAdmin && (
+                <AdminPlatformAnalyticsHomeSection />
             )}
         </div>
     );

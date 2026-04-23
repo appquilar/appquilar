@@ -45,10 +45,16 @@ const readCoverageChunk = async (
   }
 };
 
-export const persistPageCoverage = async (page: Page, testInfo: TestInfo): Promise<void> => {
+export const persistPageCoverage = async (
+  page: Page,
+  testInfo: TestInfo,
+  options: { budgetMs?: number } = {}
+): Promise<void> => {
   if (!isCoverageEnabled) {
     return;
   }
+
+  const budgetEnd = Date.now() + resolvePersistBudgetMs(options.budgetMs);
 
   const coverageKeys = await page
     .evaluate(() =>
@@ -63,7 +69,11 @@ export const persistPageCoverage = async (page: Page, testInfo: TestInfo): Promi
     return;
   }
 
-  const coverage = await readCoverageChunk(page, coverageKeys);
+  if (getTimeBudgetRemaining(budgetEnd) <= 0) {
+    return;
+  }
+
+  const coverage = await readCoverageWithinBudget(page, coverageKeys, budgetEnd);
 
   if (Object.keys(coverage).length === 0) {
     if (isCoverageDebugEnabled) {
@@ -89,6 +99,19 @@ export const persistPageCoverage = async (page: Page, testInfo: TestInfo): Promi
       `[e2e-coverage] persisted ${Object.keys(coverage).length} files for: ${testInfo.title}`
     );
   }
+};
+
+const resolvePersistBudgetMs = (requestedBudgetMs?: number): number => {
+  const envBudgetMs = Number(process.env.E2E_COVERAGE_PERSIST_MS ?? 5000);
+  const fallbackBudget = Number.isFinite(envBudgetMs) && envBudgetMs > 500 ? envBudgetMs : 5000;
+
+  if (typeof requestedBudgetMs !== "number") {
+    return fallbackBudget;
+  }
+
+  return Number.isFinite(requestedBudgetMs) && requestedBudgetMs > 500
+    ? requestedBudgetMs
+    : fallbackBudget;
 };
 
 const getTimeBudgetRemaining = (budgetEnd: number): number => Math.max(0, budgetEnd - Date.now());
@@ -293,6 +316,28 @@ const resolveExplorationBudgetMs = (requestedBudgetMs?: number): number => {
     : fallbackBudget;
 };
 
+const readCoverageWithinBudget = async (
+  page: Page,
+  coverageKeys: string[],
+  budgetEnd: number
+): Promise<Record<string, unknown>> => {
+  const mergedCoverage: Record<string, unknown> = {};
+  const chunkSize = Number(process.env.E2E_COVERAGE_PERSIST_CHUNK_SIZE ?? 40);
+  const safeChunkSize = Number.isFinite(chunkSize) && chunkSize > 0 ? chunkSize : 40;
+
+  for (let startIndex = 0; startIndex < coverageKeys.length; startIndex += safeChunkSize) {
+    if (getTimeBudgetRemaining(budgetEnd) <= 0) {
+      break;
+    }
+
+    const chunk = coverageKeys.slice(startIndex, startIndex + safeChunkSize);
+    const partialCoverage = await readCoverageChunk(page, chunk).catch(() => ({}));
+    Object.assign(mergedCoverage, partialCoverage);
+  }
+
+  return mergedCoverage;
+};
+
 export const exercisePageInteractions = async (
   page: Page,
   options: { budgetMs?: number } = {}
@@ -315,10 +360,13 @@ export const exercisePageInteractions = async (
   }
 };
 
-export const explorePageForCoverage = async (page: Page): Promise<void> => {
+export const explorePageForCoverage = async (
+  page: Page,
+  options: { budgetMs?: number } = {}
+): Promise<void> => {
   if (!isCoverageExplorationEnabled) {
     return;
   }
 
-  await exercisePageInteractions(page);
+  await exercisePageInteractions(page, options);
 };

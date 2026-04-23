@@ -80,7 +80,6 @@ export class ApiSiteRepository implements SiteRepository {
 
     async getById(siteId: string): Promise<Site> {
         const headers = await this.authHeaders();
-
         const response = await this.apiClient.get<SiteGetResponseDto>(
             `/api/sites/${encodeURIComponent(siteId)}`,
             { headers }

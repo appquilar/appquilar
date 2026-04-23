@@ -73,7 +73,7 @@ const UserProductsPage = () => {
             onClick: (product: Product) => navigate(`/dashboard/products/${product.id}/edit`),
         },
         {
-            label: "Archivar",
+            label: "Eliminar",
             icon: <Trash size={16} />,
             onClick: async (product: Product) => {
                 await deleteProduct.mutateAsync(product.id);

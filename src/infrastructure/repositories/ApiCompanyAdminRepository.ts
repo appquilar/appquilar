@@ -16,7 +16,7 @@ interface CompanyAdminDto {
     description: string | null;
     fiscal_identifier?: string | null;
     contact_email?: string | null;
-    plan_type: "starter" | "pro" | "enterprise";
+    plan_type: "starter" | "pro" | "enterprise" | "early_bird";
     subscription_status: "active" | "paused" | "canceled";
     is_founding_account: boolean;
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
@@ -18,6 +18,7 @@ interface DashboardLayoutProps {
  */
 const DashboardLayoutContent = ({ sidebar, content }: DashboardLayoutProps) => {
     const { toggleSidebar, isMobile } = useSidebar();
+    const location = useLocation();
     useBillingReturnSync();
 
     React.useEffect(() => {
@@ -27,6 +28,45 @@ const DashboardLayoutContent = ({ sidebar, content }: DashboardLayoutProps) => {
             document.body.classList.remove("dashboard-premium-active");
         };
     }, []);
+
+    React.useEffect(() => {
+        if (!location.hash) {
+            return;
+        }
+
+        let isCancelled = false;
+        let attempt = 0;
+        let timeoutId: number | null = null;
+
+        const tryScrollToHashTarget = () => {
+            if (isCancelled) {
+                return;
+            }
+
+            const targetId = decodeURIComponent(location.hash.slice(1));
+            const target = document.getElementById(targetId);
+
+            if (target) {
+                target.scrollIntoView({ behavior: "smooth", block: "start" });
+                return;
+            }
+
+            attempt += 1;
+            if (attempt < 8) {
+                timeoutId = window.setTimeout(tryScrollToHashTarget, 50);
+            }
+        };
+
+        const frameId = window.requestAnimationFrame(tryScrollToHashTarget);
+
+        return () => {
+            isCancelled = true;
+            window.cancelAnimationFrame(frameId);
+            if (timeoutId !== null) {
+                window.clearTimeout(timeoutId);
+            }
+        };
+    }, [location.hash, location.pathname]);
 
     return (
         <div className="dashboard-premium flex h-full min-h-0 w-full overflow-hidden font-sans text-[#0F172A]">

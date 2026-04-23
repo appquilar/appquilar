@@ -19,8 +19,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAdminUserEditor } from "@/application/hooks/useAdminUserEditor";
 import AdminUserProfileTab from "@/components/dashboard/users/admin/AdminUserProfileTab";
 import AddressTab from "@/components/dashboard/config/tabs/AddressTab";
+import { AdminUserStatsSection } from "@/components/dashboard/stats/AdminUserStatsSection";
 
-type TabKey = "profile" | "address";
+type TabKey = "profile" | "address" | "stats";
 
 const EditUserPage: React.FC = () => {
     const { userId } = useParams<{ userId: string }>();
@@ -126,6 +127,7 @@ const EditUserPage: React.FC = () => {
                         <SelectContent>
                             <SelectItem value="profile">Perfil</SelectItem>
                             <SelectItem value="address">Dirección</SelectItem>
+                            <SelectItem value="stats">Estadísticas</SelectItem>
                         </SelectContent>
                     </Select>
 
@@ -142,12 +144,17 @@ const EditUserPage: React.FC = () => {
                     {activeTab === "address" && (
                         <AddressTab addressForm={addressForm} onAddressSubmit={onAddressSubmit} />
                     )}
+
+                    {activeTab === "stats" && (
+                        <AdminUserStatsSection userId={user.id} userLabel={userLabel} />
+                    )}
                 </div>
             ) : (
                 <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)}>
-                    <TabsList className="grid grid-cols-2 md:w-[420px]">
+                    <TabsList className="grid grid-cols-3 md:w-[520px]">
                         <TabsTrigger value="profile">Perfil</TabsTrigger>
                         <TabsTrigger value="address">Dirección</TabsTrigger>
+                        <TabsTrigger value="stats">Estadísticas</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="profile" className="mt-6">
@@ -162,6 +169,10 @@ const EditUserPage: React.FC = () => {
 
                     <TabsContent value="address" className="mt-6">
                         <AddressTab addressForm={addressForm} onAddressSubmit={onAddressSubmit} />
+                    </TabsContent>
+
+                    <TabsContent value="stats" className="mt-6">
+                        <AdminUserStatsSection userId={user.id} userLabel={userLabel} />
                     </TabsContent>
                 </Tabs>
             )}

@@ -1,11 +1,24 @@
 import {useLocation} from "react-router-dom";
 import { useMemo } from "react";
-import {Calendar, Home, MessageCircle, Package, Settings, Users, Grid2X2Plus, Building2, Newspaper} from "lucide-react";
-import type {NavSection} from "@/domain/services/navigation/types";
-import {UserRole} from "@/domain/models/UserRole";
+import {
+    BarChart3,
+    Building2,
+    Calendar,
+    CreditCard,
+    Grid2X2Plus,
+    Home,
+    MessageCircle,
+    Newspaper,
+    Package,
+    Settings,
+    Users,
+    type LucideIcon,
+} from "lucide-react";
+import type { NavigationIconKey, NavSection } from "@/domain/services/navigation/types";
 import { useAuth } from "@/context/AuthContext";
 import { useOwnedProductsCount } from "@/application/hooks/useProducts";
 import { useOwnerRentalsCount } from "@/application/hooks/useRentals";
+import { buildDashboardNavigationSections } from "@/domain/services/navigation/NavigationConfig";
 import {
     getUserCompanyId,
     hasCompanyMembership,
@@ -14,6 +27,20 @@ import {
     isPlatformAdminUser,
     isRegularUser,
 } from "@/domain/models/User";
+
+const navigationIcons: Record<NavigationIconKey, LucideIcon> = {
+    home: Home,
+    package: Package,
+    calendar: Calendar,
+    "message-circle": MessageCircle,
+    "grid-2x2-plus": Grid2X2Plus,
+    newspaper: Newspaper,
+    "building-2": Building2,
+    users: Users,
+    "credit-card": CreditCard,
+    "bar-chart-3": BarChart3,
+    settings: Settings,
+};
 
 export const useNavigation = () => {
     const location = useLocation();
@@ -38,121 +65,27 @@ export const useNavigation = () => {
     const hasPublishedProductsToRent = (ownedPublishedProductsCountQuery.data ?? 0) > 0;
     const hasRentalsAsOwner = (ownerRentalsCountQuery.data ?? 0) > 0;
     const shouldShowRentalsItem = hasPublishedProductsToRent || hasRentalsAsOwner;
+    const showCompanyManagement = !isAdmin && isCompanyMember && Boolean(companyId);
+    const canManageCompanyUsers = showCompanyManagement && (isCompanyOwner || isCompanyAdmin);
 
     const canUpgradeToCompany = isRegularAccount && !isAdmin && !isCompanyMember;
 
-    const navSections: NavSection[] = [
-        {
-            id: "main",
-            title: "General",
-            items: [
-                {
-                    id: "overview",
-                    title: "Resumen",
-                    href: "/dashboard",
-                    icon: Home,
-                    exact: true,
-                    // sin requiredRoles => visible para cualquiera logado
-                },
-                {
-                    id: "products",
-                    title: "Productos",
-                    href: "/dashboard/products",
-                    icon: Package,
-                },
-                ...(shouldShowRentalsItem
-                    ? [{
-                        id: "rentals",
-                        title: "Alquileres",
-                        href: "/dashboard/rentals",
-                        icon: Calendar,
-                    }]
-                    : []),
-                {
-                    id: "messages",
-                    title: "Mensajes",
-                    href: "/dashboard/messages",
-                    icon: MessageCircle,
-                },
-            ],
-        },
-        ...(isCompanyMember && companyId
-            ? [{
-                id: "company",
-                title: "Empresa",
-                items: [
-                    {
-                        id: "company-edit",
-                        title: "Mi empresa",
-                        href: `/dashboard/companies/${companyId}`,
-                        icon: Building2,
-                        exact: true,
-                    },
-                    ...((isCompanyOwner || isCompanyAdmin)
-                        ? [{
-                            id: "company-users",
-                            title: "Usuarios empresa",
-                            href: `/dashboard/companies/${companyId}/users`,
-                            icon: Users,
-                        }]
-                        : []),
-                ],
-            }]
-            : []),
-        {
-            id: "admin",
-            title: "Administración",
-            items: [
-                {
-                    id: "users",
-                    title: "Usuarios",
-                    href: "/dashboard/users",
-                    icon: Users,
-                    requiredRoles: [UserRole.ADMIN],
-                },
-                {
-                    id: "companies",
-                    title: "Empresas",
-                    href: "/dashboard/companies",
-                    icon: Building2,
-                    requiredRoles: [UserRole.ADMIN],
-                },
-                {
-                    id: "categories",
-                    title: "Categorías",
-                    href: "/dashboard/categories",
-                    icon: Grid2X2Plus,
-                    requiredRoles: [UserRole.ADMIN],
-                },
-                {
-                    id: "blog",
-                    title: "Blog",
-                    href: "/dashboard/blog",
-                    icon: Newspaper,
-                    requiredRoles: [UserRole.ADMIN],
-                },
-            ],
-        },
-        {
-            id: "settings",
-            title: "Configuración",
-            items: [
-                {
-                    id: "config",
-                    title: "Configuración",
-                    href: "/dashboard/config",
-                    icon: Settings,
-                },
-                {
-                    id: "sites",
-                    title: "Sitio",
-                    href: "/dashboard/sites",
-                    icon: Building2,
-                    requiredRoles: [UserRole.ADMIN],
-                },
-            ],
-        },
-    ];
+    const navSections: NavSection[] = useMemo(() => {
+        const sections = buildDashboardNavigationSections({
+            companyId,
+            shouldShowRentalsItem,
+            showCompanyManagement,
+            canManageCompanyUsers,
+        });
+
+        return sections.map((section) => ({
+            ...section,
+            items: section.items.map((item) => ({
+                ...item,
+                icon: item.iconKey ? navigationIcons[item.iconKey] : undefined,
+            })),
+        }));
+    }, [canManageCompanyUsers, companyId, shouldShowRentalsItem, showCompanyManagement]);
 
     const normalizePath = (path: string): string => {
         if (path.length > 1 && path.endsWith("/")) {

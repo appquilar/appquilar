@@ -8,10 +8,9 @@ import ProductEditForm from '@/components/dashboard/ProductEditForm';
 import { toast } from 'sonner';
 import { Uuid } from '@/domain/valueObject/uuidv4';
 import { useCreateProduct, useProduct, useUpdateProduct } from '@/application/hooks/useProducts';
-import { useAuth } from '@/context/AuthContext';
-import { hasMinimalAddress } from '@/domain/models/Address';
 import FormHeader from '@/components/dashboard/common/FormHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import { useProductOwnerAddress } from '@/application/hooks/useProductOwnerAddress';
 
 const createDraftProduct = (): Product => ({
     id: Uuid.generate().toString(),
@@ -21,6 +20,8 @@ const createDraftProduct = (): Product => ({
     description: '',
     quantity: 1,
     isRentalEnabled: true,
+    isInventoryEnabled: false,
+    inventoryMode: 'unmanaged',
     imageUrl: '',
     thumbnailUrl: '',
     publicationStatus: 'draft',
@@ -29,6 +30,7 @@ const createDraftProduct = (): Product => ({
         deposit: 0,
         tiers: []
     },
+    dynamicProperties: {},
     category: { id: '', name: '', slug: '' },
     rating: 0,
     reviewCount: 0,
@@ -39,9 +41,15 @@ const ProductFormPage = () => {
     const { productId } = useParams();
     const navigate = useNavigate();
     const isAddMode = !productId || productId === 'new';
-    const { currentUser } = useAuth();
-    const inventoryOwnerType: 'company' | 'user' = currentUser?.companyContext?.companyId ? 'company' : 'user';
-    const canCreateProduct = hasMinimalAddress(currentUser?.address);
+    const {
+        hasRequiredAddress,
+        isLoading: isProductOwnerAddressLoading,
+        ownerType,
+        companyId,
+        settingsHref,
+    } = useProductOwnerAddress();
+    const inventoryOwnerType: 'company' | 'user' = ownerType;
+    const canCreateProduct = !isProductOwnerAddressLoading && hasRequiredAddress;
     const productQuery = useProduct(isAddMode ? undefined : productId);
     const product: Product | null = isAddMode
         ? createDraftProduct()
@@ -65,23 +73,40 @@ const ProductFormPage = () => {
     const handleSaveProduct = async (updatedProduct: Partial<Product>) => {
         try {
             if (isAddMode && !canCreateProduct) {
-                toast.error('Debes añadir una dirección en tu perfil antes de crear productos.');
+                toast.error(
+                    ownerType === "company"
+                        ? "Debes añadir la dirección de la empresa antes de crear productos."
+                        : "Debes añadir una dirección en tu perfil antes de crear productos."
+                );
                 return;
             }
 
+            const savedProductId = typeof updatedProduct.id === 'string' && updatedProduct.id.length > 0
+                ? updatedProduct.id
+                : productId;
+
             if (isAddMode) {
+                const createPayload = {
+                    ...(updatedProduct as Partial<ProductFormData>),
+                };
+
+                if (ownerType === "company" && companyId) {
+                    createPayload.companyId = companyId;
+                } else {
+                    delete createPayload.companyId;
+                }
+
                 // Al usar mutateAsync, se ejecutará el onSuccess del hook que hace invalidateQueries(['products'])
-                await createProduct(updatedProduct as ProductFormData);
-                // El hook ya muestra el toast de éxito
+                await createProduct(createPayload as ProductFormData);
+                if (savedProductId) {
+                    navigate(`/dashboard/products/${encodeURIComponent(savedProductId)}`, { replace: true });
+                }
             } else {
                 await updateProduct({
                     id: productId as string,
                     data: updatedProduct as ProductFormData
                 });
-                // El hook ya muestra el toast de éxito
             }
-
-            navigate('/dashboard/products');
         } catch (error) {
             console.error("Error saving product:", error);
             // El hook ya muestra el toast de error, pero si fallara algo antes de la llamada:
@@ -128,14 +153,22 @@ const ProductFormPage = () => {
                 backUrl="/dashboard/products"
             />
 
-            {isAddMode && !canCreateProduct && (
+            {isAddMode && !isProductOwnerAddressLoading && !hasRequiredAddress && (
                 <Alert variant="warning" className="mb-6">
                     <MapPin className="h-4 w-4" />
-                    <AlertTitle>Necesitas una dirección para publicar productos</AlertTitle>
+                    <AlertTitle>
+                        {ownerType === "company"
+                            ? "Necesitas la dirección de la empresa para publicar productos"
+                            : "Necesitas una dirección para publicar productos"}
+                    </AlertTitle>
                     <AlertDescription>
-                        Antes de crear un producto, debes completar tu dirección en el perfil.{' '}
-                        <Link to="/dashboard/config?tab=address" className="underline font-medium">
-                            Ir a Configuración de dirección
+                        {ownerType === "company"
+                            ? "Antes de crear un producto, debes completar la dirección de la empresa. "
+                            : "Antes de crear un producto, debes completar tu dirección en el perfil. "}
+                        <Link to={settingsHref} className="underline font-medium">
+                            {ownerType === "company"
+                                ? "Ir a la empresa"
+                                : "Ir a Configuración de dirección"}
                         </Link>
                         .
                     </AlertDescription>

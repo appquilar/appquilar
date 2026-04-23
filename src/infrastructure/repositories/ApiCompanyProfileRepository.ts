@@ -38,7 +38,9 @@ type CompanyProfileDto = {
     phone_number?: CompanyPhoneNumberDto;
     address?: AddressDto;
     location?: LocationDto;
-    plan_type?: "starter" | "pro" | "enterprise";
+    profile_picture_id?: string | null;
+    header_image_id?: string | null;
+    plan_type?: "starter" | "pro" | "enterprise" | "early_bird";
     subscription_status?: "active" | "paused" | "canceled";
     is_founding_account?: boolean;
 };
@@ -94,6 +96,8 @@ export class ApiCompanyProfileRepository implements CompanyProfileRepository {
                     longitude: dto.location.longitude ?? null,
                 }
                 : null,
+            profilePictureId: dto.profile_picture_id ?? null,
+            headerImageId: dto.header_image_id ?? null,
             planType: dto.plan_type ?? null,
             subscriptionStatus: dto.subscription_status ?? null,
             isFoundingAccount: dto.is_founding_account ?? null,
@@ -138,6 +142,14 @@ export class ApiCompanyProfileRepository implements CompanyProfileRepository {
                 latitude: input.location.latitude,
                 longitude: input.location.longitude,
             };
+        }
+
+        if (input.profilePictureId !== undefined) {
+            payload.profile_picture_id = input.profilePictureId ?? null;
+        }
+
+        if (input.headerImageId !== undefined) {
+            payload.header_image_id = input.headerImageId ?? null;
         }
 
         await this.apiClient.patch<void>(

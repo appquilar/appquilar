@@ -47,10 +47,10 @@ help:
 	@echo "  make destroy     - Remove containers, images and volumes"
 	@echo "  make rebuild     - Equivalent to clean + build + up"
 	@echo "  make shell       - Enter the FE container to execute npm or other commands"
-	@echo "  make test        - Run all FE tests (unit + integration + e2e)"
+	@echo "  make test        - Run all FE tests (unit + integration + public e2e + dashboard e2e)"
 	@echo "  make test-unit   - Run FE unit tests"
 	@echo "  make test-integration - Run FE integration tests"
-	@echo "  make test-e2e    - Run FE end-to-end tests"
+	@echo "  make test-e2e    - Run all FE end-to-end tests (public + dashboard)"
 	@echo "  make test-e2e-dashboard - Run seeded Dashboard Playwright suite"
 	@echo "  make test-e2e-dashboard-shard SHARD=1 TOTAL=4 - Run one seeded dashboard shard"
 	@echo "  make test-e2e-dashboard-ui - Run seeded Dashboard suite in Playwright UI mode"
@@ -233,7 +233,7 @@ test-integration:
 test-e2e:
 	@echo "${GREEN}Ensuring Playwright Chromium is installed...${NC}"
 	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
-	@echo "${GREEN}Running FE E2E tests...${NC}"
+	@echo "${GREEN}Running all FE E2E tests (public + dashboard)...${NC}"
 	$(NPM) run test:e2e
 
 test-e2e-dashboard:

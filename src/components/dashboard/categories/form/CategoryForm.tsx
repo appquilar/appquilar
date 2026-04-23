@@ -24,10 +24,60 @@ import CategoryParentSelect from "@/components/dashboard/categories/form/Categor
 import CategoryLandscapeUpload from "@/components/dashboard/categories/form/CategoryLandscapeUpload";
 import CategoryFeaturedUpload from "@/components/dashboard/categories/form/CategoryFeaturedUpload";
 import CategoryDescriptionEditor from "@/components/dashboard/categories/form/CategoryDescriptionEditor";
+import CategoryDynamicPropertyDefinitionsFields from "@/components/dashboard/categories/form/CategoryDynamicPropertyDefinitionsFields";
 import IconPicker from "@/components/dashboard/categories/icon-picker/IconPicker";
 import { useMediaActions } from "@/application/hooks/useMediaActions";
 
 type FormValues = Omit<CategoryUpsertPayload, "id">;
+
+const dynamicPropertyOptionSchema = z.object({
+    value: z.string().min(1, "El valor es obligatorio"),
+    label: z.string().min(1, "La etiqueta es obligatoria"),
+});
+
+const dynamicPropertyDefinitionSchema = z.object({
+    code: z
+        .string()
+        .min(1, "El código es obligatorio")
+        .regex(/^[a-z0-9_]+$/, "Usa minúsculas, números y guiones bajos"),
+    label: z.string().min(1, "La etiqueta es obligatoria"),
+    type: z.enum(["boolean", "select", "multi_select", "integer", "decimal"]),
+    filterable: z.boolean().default(true),
+    unit: z.string().nullable().optional(),
+    options: z.array(dynamicPropertyOptionSchema).default([]),
+}).superRefine((definition, context) => {
+    if (definition.type === "select" || definition.type === "multi_select") {
+        if (definition.options.length === 0) {
+            context.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["options"],
+                message: "Añade al menos una opción.",
+            });
+        }
+
+        const seenOptionValues = new Set<string>();
+        definition.options.forEach((option, index) => {
+            if (seenOptionValues.has(option.value)) {
+                context.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ["options", index, "value"],
+                    message: "Este valor ya existe en la lista.",
+                });
+            }
+            seenOptionValues.add(option.value);
+        });
+
+        return;
+    }
+
+    if (definition.options.length > 0) {
+        context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["options"],
+            message: "Este tipo no usa opciones.",
+        });
+    }
+});
 
 const schema = z.object({
     name: z.string().min(1, "El nombre es obligatorio"),
@@ -37,6 +87,21 @@ const schema = z.object({
     iconName: z.string().nullable().optional(),
     featuredImageId: z.string().nullable().optional(),
     landscapeImageId: z.string().nullable().optional(),
+    dynamicPropertyDefinitions: z.array(dynamicPropertyDefinitionSchema).default([]),
+}).superRefine((values, context) => {
+    const seenCodes = new Set<string>();
+
+    values.dynamicPropertyDefinitions.forEach((definition, index) => {
+        if (seenCodes.has(definition.code)) {
+            context.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["dynamicPropertyDefinitions", index, "code"],
+                message: "Este código ya existe en la categoría.",
+            });
+        }
+
+        seenCodes.add(definition.code);
+    });
 });
 
 type Props = {
@@ -80,24 +145,58 @@ const CategoryForm: React.FC<Props> = ({
 
     const uploadReplace = async (
         currentId: string | null,
+        originalId: string | null | undefined,
         setId: (id: string | null) => void,
         file: File
     ) => {
         const newId = await replaceImage({ currentId, file });
+        if (currentId && currentId !== originalId) {
+            try {
+                await deleteImage(currentId);
+            } catch (error) {
+                console.warn("Failed to delete temporary category image after replacement.", error);
+            }
+        }
         setId(newId);
     };
 
-    const removeCurrent = async (currentId: string | null, setId: (id: string | null) => void) => {
+    const removeCurrent = async (
+        currentId: string | null,
+        originalId: string | null | undefined,
+        setId: (id: string | null) => void
+    ) => {
         if (!currentId) {
             setId(null);
             return;
         }
-        await deleteImage(currentId);
+        if (currentId !== originalId) {
+            await deleteImage(currentId);
+        }
         setId(null);
     };
 
     const submit = form.handleSubmit(async (values) => {
+        const previousImageIds = [
+            defaultValues.featuredImageId && defaultValues.featuredImageId !== values.featuredImageId
+                ? defaultValues.featuredImageId
+                : null,
+            defaultValues.landscapeImageId && defaultValues.landscapeImageId !== values.landscapeImageId
+                ? defaultValues.landscapeImageId
+                : null,
+        ].filter((imageId): imageId is string => imageId !== null);
+
         await onSubmit(values);
+
+        const uniquePreviousImageIds = Array.from(new Set(previousImageIds));
+        await Promise.allSettled(
+            uniquePreviousImageIds.map(async (imageId) => {
+                try {
+                    await deleteImage(imageId);
+                } catch (error) {
+                    console.warn("Failed to delete replaced category image after saving the category.", error);
+                }
+            })
+        );
     });
 
     return (
@@ -197,7 +296,12 @@ const CategoryForm: React.FC<Props> = ({
                                         onSelectFile={async (file) => {
                                             setFeaturedUploading(true);
                                             try {
-                                                await uploadReplace(field.value ?? null, field.onChange, file);
+                                                await uploadReplace(
+                                                    field.value ?? null,
+                                                    defaultValues.featuredImageId,
+                                                    field.onChange,
+                                                    file
+                                                );
                                                 toast.success("Featured image subida");
                                             } catch (e) {
                                                 console.error(e);
@@ -209,7 +313,11 @@ const CategoryForm: React.FC<Props> = ({
                                         onRemove={async () => {
                                             setFeaturedUploading(true);
                                             try {
-                                                await removeCurrent(field.value ?? null, field.onChange);
+                                                await removeCurrent(
+                                                    field.value ?? null,
+                                                    defaultValues.featuredImageId,
+                                                    field.onChange
+                                                );
                                                 toast.success("Featured image eliminada");
                                             } catch (e) {
                                                 console.error(e);
@@ -237,7 +345,12 @@ const CategoryForm: React.FC<Props> = ({
                                         onSelectFile={async (file) => {
                                             setLandscapeUploading(true);
                                             try {
-                                                await uploadReplace(field.value ?? null, field.onChange, file);
+                                                await uploadReplace(
+                                                    field.value ?? null,
+                                                    defaultValues.landscapeImageId,
+                                                    field.onChange,
+                                                    file
+                                                );
                                                 toast.success("Landscape subida");
                                             } catch (e) {
                                                 console.error(e);
@@ -249,7 +362,11 @@ const CategoryForm: React.FC<Props> = ({
                                         onRemove={async () => {
                                             setLandscapeUploading(true);
                                             try {
-                                                await removeCurrent(field.value ?? null, field.onChange);
+                                                await removeCurrent(
+                                                    field.value ?? null,
+                                                    defaultValues.landscapeImageId,
+                                                    field.onChange
+                                                );
                                                 toast.success("Landscape eliminada");
                                             } catch (e) {
                                                 console.error(e);
@@ -289,6 +406,14 @@ const CategoryForm: React.FC<Props> = ({
                         )}
                     />
                 </div>
+
+                <Separator />
+
+                <CategoryDynamicPropertyDefinitionsFields
+                    control={form.control}
+                    getValues={form.getValues}
+                    setValue={form.setValue}
+                />
 
                 {/* Actions */}
                 <div className="flex justify-end gap-2">

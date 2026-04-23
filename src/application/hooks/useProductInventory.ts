@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { productInventoryService } from "@/compositionRoot";
-import type {
-    Product,
-    ProductInventoryUnavailabilityReason,
-} from "@/domain/models/Product";
+import type { InventoryUnit, Product } from "@/domain/models/Product";
+import {
+    formatProductAvailabilityLabel,
+    resolveProductRentability,
+} from "@/domain/services/ProductRentabilityService";
 
 export const useProductInventory = (productId?: string | null, enabled: boolean = true) => {
     return useQuery({
@@ -33,6 +34,40 @@ export const useProductInventoryAllocations = (productId?: string | null, enable
     });
 };
 
+export const useProductInventoryUnits = (productId?: string | null, enabled: boolean = true) => {
+    return useQuery({
+        queryKey: ["productInventory", productId, "units"],
+        queryFn: async () => {
+            if (!productId) {
+                return [];
+            }
+
+            return productInventoryService.getInventoryUnits(productId);
+        },
+        enabled: enabled && Boolean(productId),
+    });
+};
+
+export const useProductAvailability = (
+    productId?: string | null,
+    startDate?: string | null,
+    endDate?: string | null,
+    quantity: number = 1,
+    enabled: boolean = true,
+) => {
+    return useQuery({
+        queryKey: ["productAvailability", productId, startDate, endDate, quantity],
+        queryFn: async () => {
+            if (!productId || !startDate || !endDate) {
+                return null;
+            }
+
+            return productInventoryService.checkAvailability(productId, startDate, endDate, quantity);
+        },
+        enabled: enabled && Boolean(productId && startDate && endDate),
+    });
+};
+
 export const useAdjustProductInventory = () => {
     const queryClient = useQueryClient();
 
@@ -42,90 +77,41 @@ export const useAdjustProductInventory = () => {
         onSuccess: async (_data, variables) => {
             await queryClient.invalidateQueries({ queryKey: ["productInventory", variables.productId] });
             await queryClient.invalidateQueries({ queryKey: ["productInventory", variables.productId, "allocations"] });
+            await queryClient.invalidateQueries({ queryKey: ["productInventory", variables.productId, "units"] });
             await queryClient.invalidateQueries({ queryKey: ["product", variables.productId] });
             await queryClient.invalidateQueries({ queryKey: ["products"] });
         },
     });
 };
 
-const getAvailabilityLabel = (reason: ProductInventoryUnavailabilityReason | null, isRentableNow: boolean) => {
-    if (isRentableNow) {
-        return "Disponible";
-    }
+export const useUpdateInventoryUnit = () => {
+    const queryClient = useQueryClient();
 
-    switch (reason) {
-        case "rental_paused":
-            return "Alquiler pausado";
-        case "out_of_stock":
-            return "Sin stock";
-        case "unpublished":
-            return "No publicado";
-        default:
-            return "No disponible";
-    }
+    return useMutation({
+        mutationFn: ({
+            productId,
+            unitId,
+            data,
+        }: {
+            productId: string;
+            unitId: string;
+            data: { code?: string; status?: InventoryUnit["status"] };
+        }) => productInventoryService.updateInventoryUnit(productId, unitId, data),
+        onSuccess: async (_data, variables) => {
+            await queryClient.invalidateQueries({ queryKey: ["productInventory", variables.productId] });
+            await queryClient.invalidateQueries({ queryKey: ["productInventory", variables.productId, "units"] });
+        },
+    });
 };
 
-const getAvailabilityMessage = (reason: ProductInventoryUnavailabilityReason | null, isRentableNow: boolean) => {
-    if (isRentableNow) {
-        return "El producto está visible y con capacidad disponible para nuevas reservas.";
-    }
-
-    switch (reason) {
-        case "rental_paused":
-            return "El producto sigue visible, pero el alquiler está pausado manualmente.";
-        case "out_of_stock":
-            return "Ahora mismo no quedan huecos libres para nuevas reservas.";
-        case "unpublished":
-            return "El producto no está publicado y por eso no se puede alquilar.";
-        default:
-            return "El producto no está disponible para nuevas reservas en este momento.";
-    }
-};
-
-const getAvailabilityTone = (reason: ProductInventoryUnavailabilityReason | null, isRentableNow: boolean) => {
-    if (isRentableNow) {
-        return "success" as const;
-    }
-
-    switch (reason) {
-        case "rental_paused":
-        case "out_of_stock":
-            return "warning" as const;
-        case "unpublished":
-            return "muted" as const;
-        default:
-            return "muted" as const;
-    }
-};
+export const getProductAvailabilityLabel = (product: Product | null, includeQuantity: boolean = false) =>
+    formatProductAvailabilityLabel(product, { includeQuantity });
 
 export const useProductRentability = (product: Product | null) => {
-    const inventorySummary = product?.inventorySummary ?? null;
-    const availableQuantity = inventorySummary?.availableQuantity ?? Math.max(0, product?.quantity ?? 0);
-    const unavailabilityReason = inventorySummary?.unavailabilityReason
-        ?? (
-            product?.publicationStatus !== "published"
-                ? "unpublished"
-                : !product?.isRentalEnabled
-                    ? "rental_paused"
-                    : availableQuantity <= 0
-                        ? "out_of_stock"
-                        : null
-        );
-    const isRentableNow = inventorySummary?.isRentableNow
-        ?? Boolean(
-            product
-            && product.publicationStatus === "published"
-            && product.isRentalEnabled
-            && availableQuantity > 0
-        );
+    const rentability = resolveProductRentability(product);
 
     return {
-        isRentableNow,
-        availableQuantity,
-        unavailabilityReason,
-        isRentalEnabled: product?.isRentalEnabled ?? false,
-        availabilityLabel: getAvailabilityLabel(unavailabilityReason, isRentableNow),
-        availabilityMessage: getAvailabilityMessage(unavailabilityReason, isRentableNow),
-        availabilityTone: getAvailabilityTone(unavailabilityReason, isRentableNow),
+        ...rentability,
+        isRentalEnabled: rentability.isRentableNow,
     };
 };

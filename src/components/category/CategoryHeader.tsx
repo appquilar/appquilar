@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import SafeHtml from "@/components/shared/SafeHtml";
 
 interface Props {
     name: string;
@@ -38,9 +39,9 @@ const CategoryHeader = ({ name, description, imageUrl }: Props) => {
 
             {html ? (
                 <div className="border-t border-border/60 bg-card/95 px-6 py-5 md:px-8 md:py-6">
-                    <div
+                    <SafeHtml
+                        html={html}
                         className="prose prose-sm max-w-none text-sm leading-relaxed text-muted-foreground"
-                        dangerouslySetInnerHTML={{ __html: html }}
                     />
                 </div>
             ) : null}

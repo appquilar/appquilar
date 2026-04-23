@@ -40,7 +40,7 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
                                 <FormLabel>Nombre del Producto</FormLabel>
                                 <FormControl>
                                     <Input
-                                        placeholder="Nombre de Herramienta Profesional"
+                                        placeholder="Nombre del producto"
                                         {...field}
                                         onChange={(e) => {
                                             field.onChange(e);

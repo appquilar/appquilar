@@ -4,10 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash } from "lucide-react";
 import { Link } from "react-router-dom";
 import { buildProductPath } from "@/domain/config/publicRoutes";
+import { getVisibleProductDailyPricing } from "@/domain/services/ProductPricingService";
+import { useAuth } from "@/context/AuthContext";
 
 export interface ProductPrice {
     daily: number; // (en tu UI ahora mismo lo estás mostrando directo)
     deposit?: number;
+    tiers?: Array<{
+        daysFrom: number;
+        daysTo?: number;
+        pricePerDay: number;
+    }>;
 }
 
 export interface ProductCompany {
@@ -44,10 +51,20 @@ interface ProductCardProps {
 }
 
 const PLACEHOLDER = "/placeholder.svg";
+const formatCompactEuroAmount = (amount: number): string => (
+    Number.isInteger(amount) ? amount.toString() : amount.toFixed(2)
+);
 
 const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
+    const { isAuthenticated } = useAuth();
     const raw = product.thumbnailUrl || product.imageUrl || "";
     const imgSrc = raw.trim().length > 0 ? raw : PLACEHOLDER;
+    const shouldBlurPricing = !isAuthenticated;
+    const hasDeposit = typeof product.price.deposit === "number" && product.price.deposit > 0;
+    const visibleDailyPricing = getVisibleProductDailyPricing(product.price);
+    const pricingLabel = visibleDailyPricing.amount === null
+        ? "Precio a consultar"
+        : `${visibleDailyPricing.isFromLaterTier ? "Desde " : ""}${formatCompactEuroAmount(visibleDailyPricing.amount)}€/día`;
 
     return (
         <Card className="overflow-hidden rounded-xl border-border/70 hover:shadow-sm transition-shadow">
@@ -73,8 +90,22 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
             <CardContent className="px-4 py-1">
                 <p className="mb-1 text-[12px] text-muted-foreground">
                     {product.category?.name ? `${product.category.name} • ` : ""}
-                    {product.price.daily}€/día
-                    {product.price.deposit != null ? ` • ${product.price.deposit}€ fianza` : ""}
+                    {shouldBlurPricing ? (
+                        <span
+                            data-testid="product-card-public-price-mask"
+                            aria-hidden="true"
+                            className="inline-flex items-center gap-1 blur-[5px] select-none"
+                        >
+                            <span>149€/día</span>
+                            <span>•</span>
+                            <span>450€ fianza</span>
+                        </span>
+                    ) : (
+                        <>
+                            {pricingLabel}
+                            {hasDeposit ? ` • ${product.price.deposit}€ fianza` : ""}
+                        </>
+                    )}
                 </p>
                 <p className="text-[13px] leading-snug line-clamp-2">{product.description}</p>
             </CardContent>

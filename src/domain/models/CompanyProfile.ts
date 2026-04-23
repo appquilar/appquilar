@@ -19,6 +19,8 @@ export interface CompanyProfile {
     phoneNumber: CompanyPhoneNumber | null;
     address: Address | null;
     location: Location | null;
+    profilePictureId: string | null;
+    headerImageId: string | null;
     planType?: CompanyPlanType | null;
     subscriptionStatus?: SubscriptionStatus | null;
     isFoundingAccount?: boolean | null;
@@ -34,4 +36,6 @@ export interface UpdateCompanyProfileInput {
     phoneNumber?: CompanyPhoneNumber | null;
     address?: Address | null;
     location?: Location | null;
+    profilePictureId?: string | null;
+    headerImageId?: string | null;
 }

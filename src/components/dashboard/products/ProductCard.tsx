@@ -7,6 +7,7 @@ import { useMediaUrl } from "@/application/hooks/useMediaUrl";
 import { Badge } from "@/components/ui/badge";
 import type { Product, PublicationStatusType } from "@/domain/models/Product";
 import { buildProductPath } from "@/domain/config/publicRoutes";
+import { getProductAvailabilityLabel, useProductRentability } from "@/application/hooks/useProductInventory";
 
 interface ProductCardProps {
     product: Product;
@@ -82,22 +83,15 @@ const ProductCard = ({
 
     const statusConfig = getStatusConfig(product.publicationStatus);
     const inventorySummary = product.inventorySummary ?? null;
-    const availableQuantity = inventorySummary?.availableQuantity ?? Math.max(0, product.quantity ?? 1);
+    const rentability = useProductRentability(product);
+    const availableQuantity = rentability.availableQuantity;
     const reservedQuantity = inventorySummary?.reservedQuantity ?? 0;
-    const inventoryStatusLabel = product.publicationStatus !== "published"
-        ? "No publicado"
-        : !product.isRentalEnabled
-            ? "Alquiler pausado"
-            : availableQuantity <= 0
-                ? "Sin stock"
-                : "Disponible";
+    const inventoryStatusLabel = getProductAvailabilityLabel(product, true);
     const inventoryStatusClassName = product.publicationStatus !== "published"
         ? "border-slate-200 bg-slate-100/90 text-slate-700"
-        : !product.isRentalEnabled
-            ? "border-amber-200 bg-amber-100/90 text-amber-700"
-            : availableQuantity <= 0
-                ? "border-rose-200 bg-rose-100/90 text-rose-700"
-                : "border-emerald-200 bg-emerald-100/90 text-emerald-700";
+        : !rentability.isRentableNow
+            ? "border-rose-200 bg-rose-100/90 text-rose-700"
+            : "border-emerald-200 bg-emerald-100/90 text-emerald-700";
     const firstTierPrice = useMemo(() => {
         const tiers = Array.isArray(product.price?.tiers) ? product.price.tiers : [];
         if (tiers.length === 0) return 0;
@@ -114,7 +108,7 @@ const ProductCard = ({
         maximumFractionDigits: 2,
     }).format(product.price?.deposit ?? 0);
     const canPublish = product.publicationStatus === "draft";
-    const canArchive = product.publicationStatus !== "archived";
+    const showDeleteButton = Boolean(onDelete);
     const isPublishBlockedByPlan = canPublish && isPublicationLimitReached;
     const showPublishButton = canPublish && Boolean(onPublish) && !isPublishBlockedByPlan;
     const showUpgradeButton = canPublish
@@ -122,7 +116,13 @@ const ProductCard = ({
         && Boolean(publicationLimitCtaLabel)
         && isPublishBlockedByPlan;
     const showLimitReachedButton = canPublish && isPublishBlockedByPlan && !showUpgradeButton;
-    const hasSecondaryActions = showPublishButton || showUpgradeButton || showLimitReachedButton || (canArchive && Boolean(onDelete));
+    const hasSecondaryActions = showPublishButton || showUpgradeButton || showLimitReachedButton || showDeleteButton;
+    const secondaryActionsCount = [
+        showPublishButton,
+        showUpgradeButton,
+        showLimitReachedButton,
+        showDeleteButton,
+    ].filter(Boolean).length;
 
     return (
         <Card className="overflow-hidden hover:shadow-md transition-all duration-200 group border-border/60">
@@ -217,7 +217,7 @@ const ProductCard = ({
                     </div>
 
                     {hasSecondaryActions && (
-                        <div className={`grid gap-2 ${canPublish && onPublish && canArchive && onDelete ? "grid-cols-2" : "grid-cols-1"}`}>
+                        <div className={`grid gap-2 ${secondaryActionsCount > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
                             {showPublishButton && (
                                 <Button
                                     variant="outline"
@@ -237,7 +237,7 @@ const ProductCard = ({
                                     className="h-9 text-xs gap-1.5 border-[#F19D70]/60 text-[#D9743F] hover:bg-[#F19D70]/10"
                                     onClick={onPublicationLimitCta}
                                     disabled={isProcessingPublicationLimitCta}
-                                    title="Has alcanzado el límite de productos activos"
+                                    title="Has alcanzado el limite de productos publicados"
                                 >
                                     <Rocket size={14} />
                                     {isProcessingPublicationLimitCta ? "Redirigiendo..." : publicationLimitCtaLabel}
@@ -249,22 +249,22 @@ const ProductCard = ({
                                     size="sm"
                                     className="h-9 text-xs gap-1.5 border-slate-300 text-slate-500"
                                     disabled
-                                    title="Has alcanzado el límite de productos activos para tu plan"
+                                    title="Has alcanzado el limite de productos publicados para tu plan"
                                 >
                                     <Rocket size={14} />
                                     Límite alcanzado
                                 </Button>
                             )}
-                            {canArchive && onDelete && (
+                            {showDeleteButton && (
                                 <Button
                                     variant="outline"
                                     size="sm"
                                     className="h-9 text-xs gap-1.5 border-red-300 text-red-700 hover:bg-red-50"
                                     onClick={onDelete}
-                                    title="Archivar para ocultar este producto del catálogo"
+                                    title="Eliminar definitivamente si el producto no tiene alquileres"
                                 >
                                     <Trash size={14} />
-                                    Archivar (ocultar)
+                                    Eliminar
                                 </Button>
                             )}
                         </div>

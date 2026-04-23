@@ -38,6 +38,7 @@ export interface EngagementByProduct {
     productId: string;
     productName: string;
     productSlug: string;
+    productInternalId: string;
     totalViews: number;
     uniqueVisitors: number;
     loggedViews: number;
@@ -70,4 +71,3 @@ export interface TrackProductViewInput {
     dwellTimeMs: number;
     occurredAt: string;
 }
-

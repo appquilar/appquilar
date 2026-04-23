@@ -4,7 +4,7 @@ import { Form } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
 import { useRentalForm } from '@/application/hooks/useRentalForm';
 import { useProductSelection } from '@/application/hooks/useProductSelection';
-import { useProductRentability } from '@/application/hooks/useProductInventory';
+import { useProductAvailability, useProductRentability } from '@/application/hooks/useProductInventory';
 import CreateRentalHeader from '@/components/dashboard/rentals/CreateRentalHeader';
 import ProductInfoFields from '@/components/dashboard/rentals/form/ProductInfoFields';
 import CustomerInfoFields from '@/components/dashboard/rentals/form/CustomerInfoFields';
@@ -25,11 +25,38 @@ const CreateRental = () => {
     handleProductSelect 
   } = useProductSelection(form);
   const rentability = useProductRentability(selectedProduct);
-  const submitDisabled = !selectedProduct || !rentability.isRentableNow;
+  const startDate = form.watch('startDate');
+  const endDate = form.watch('endDate');
+  const requestedQuantity = form.watch('requestedQuantity') ?? 1;
+  const hasValidDates = Boolean(
+    startDate instanceof Date
+      && !Number.isNaN(startDate.getTime())
+      && endDate instanceof Date
+      && !Number.isNaN(endDate.getTime())
+      && endDate >= startDate
+  );
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const availabilityQuery = useProductAvailability(
+    selectedProduct?.id ?? null,
+    hasValidDates && startDate ? formatDate(startDate) : null,
+    hasValidDates && endDate ? formatDate(endDate) : null,
+    requestedQuantity,
+    Boolean(selectedProduct) && hasValidDates
+  );
+  const submitDisabled = !selectedProduct
+    || !rentability.isRentableNow
+    || (hasValidDates && availabilityQuery.data !== null && !availabilityQuery.data?.canRequest);
   const submitLabel = !selectedProduct
     ? 'Selecciona un producto'
     : !rentability.isRentableNow
       ? rentability.availabilityLabel
+      : hasValidDates && availabilityQuery.data && !availabilityQuery.data.canRequest
+        ? 'Sin disponibilidad'
       : 'Crear Alquiler';
 
   return (

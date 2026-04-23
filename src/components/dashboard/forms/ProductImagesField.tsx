@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ProductImagesFieldProps, ImageFile } from "./image-upload/types";
 import ImageDropZone from "./image-upload/ImageDropZone";
@@ -23,30 +23,50 @@ const ProductImagesContent = ({
                 typeof image?.id === "string" && typeof image?.url === "string"
         )
         : [];
+    const initialImageIdsRef = useRef(new Set(images.map((image) => image.id)));
+    const currentImagesRef = useRef(images);
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
+    useEffect(() => {
+        currentImagesRef.current = images;
+    }, [images]);
+
+    const commitImages = (nextImages: ImageFile[]) => {
+        currentImagesRef.current = nextImages;
+        field.onChange(nextImages);
+    };
 
     const handleFiles = async (files: File[]) => {
-        // 1. Validate and create local objects with IDs
-        const newImages = validateAndProcessFiles(files, images);
+        const newImages = validateAndProcessFiles(files, currentImagesRef.current);
 
         if (newImages.length === 0) return;
 
-        // 2. Optimistically update UI
-        const updatedImages = [...images, ...newImages];
-        field.onChange(updatedImages);
+        commitImages([...currentImagesRef.current, ...newImages]);
 
-        // 3. Upload to Backend
         for (const img of newImages) {
             try {
                 toast.info(`Subiendo ${img.file.name}...`);
-                await uploadImage(img.file, img.id);
+                const uploadedImageId = await uploadImage(img.file);
+                commitImages(
+                    currentImagesRef.current.map((image) =>
+                        image.id === img.id
+                            ? {
+                                id: uploadedImageId,
+                                url: `${baseUrl}/api/media/images/${uploadedImageId}/MEDIUM`,
+                            }
+                            : image
+                    )
+                );
+                if (img.url.startsWith("blob:")) {
+                    URL.revokeObjectURL(img.url);
+                }
                 toast.success(`Imagen subida: ${img.file.name}`);
             } catch (error) {
                 console.error("Upload error:", error);
                 toast.error(`Error al subir ${img.file.name}`);
 
-                // Revert this specific image on failure
-                const current = Array.isArray(field.value) ? field.value : [];
-                field.onChange(current.filter((image) => image.id !== img.id));
+                commitImages(currentImagesRef.current.filter((image) => image.id !== img.id));
+                URL.revokeObjectURL(img.url);
             }
         }
     };
@@ -77,27 +97,28 @@ const ProductImagesContent = ({
     };
 
     const removeImage = async (id: string) => {
-        const imageToRemove = images.find(img => img.id === id);
+        const currentImages = currentImagesRef.current;
+        const imageToRemove = currentImages.find(img => img.id === id);
         if (!imageToRemove) return;
 
-        // 1. Optimistically remove from UI
-        const filteredImages = images.filter((image) => image.id !== id);
-        field.onChange(filteredImages);
+        const filteredImages = currentImages.filter((image) => image.id !== id);
+        commitImages(filteredImages);
 
-        // Revoke object URL
         if (imageToRemove.url.startsWith('blob:')) {
             URL.revokeObjectURL(imageToRemove.url);
         }
 
-        // 2. Delete from Backend
+        if (initialImageIdsRef.current.has(id)) {
+            toast.success("Imagen quitada del formulario");
+            return;
+        }
+
         try {
             await deleteImage(id);
             toast.success("Imagen eliminada");
         } catch (error) {
             console.error("Delete error:", error);
-            toast.error("Error al eliminar la imagen del servidor");
-            // Optionally re-add the image if delete fails?
-            // Usually better to let it desync than show a deleted image.
+            toast.error("La imagen se quitó del formulario, pero no se pudo limpiar en el servidor");
         }
     };
 

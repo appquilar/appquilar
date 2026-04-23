@@ -34,7 +34,6 @@ export interface ChangePasswordData {
  * The token is usually present in the URL.
  */
 export interface ResetPasswordData {
-    email: string;
     token: string;
     newPassword: string;
 }

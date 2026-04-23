@@ -21,16 +21,20 @@ import {
 import type { CompanyPlanType } from "@/domain/models/Subscription";
 import {
     buildBillingBaseUrl,
-    buildBillingReturnUrl,
+    buildBillingPortalReturnUrl,
 } from "@/hooks/useBillingReturnSync";
 import { extractBackendErrorMessage } from "@/utils/backendError";
+import { getBillingErrorMessage } from "@/utils/billingError";
 import { isCompanyAdminUser } from "@/domain/models/User";
 
 const COMPANY_PLAN_LABELS: Record<CompanyPlanType, string> = {
     starter: "Starter",
     pro: "Pro",
     enterprise: "Enterprise",
+    early_bird: "Early Bird",
 };
+
+const FOUNDING_ACCOUNT_LABEL = "Cuenta fundadora";
 
 const STATUS_LABELS: Record<string, string> = {
     active: "Activa",
@@ -102,16 +106,23 @@ const CompanySubscriptionSettingsCard = () => {
         try {
             const response = await createPortalMutation.mutateAsync({
                 scope: "company",
-                returnUrl: buildBillingReturnUrl(currentBaseUrl, "company"),
+                returnUrl: buildBillingPortalReturnUrl(currentBaseUrl, "company", {
+                    planType: currentPlan,
+                    subscriptionStatus: companyContext.subscriptionStatus,
+                    subscriptionCancelAtPeriodEnd:
+                        companyContext.subscriptionCancelAtPeriodEnd,
+                }),
             });
 
             newTab.location.href = response.url;
         } catch (error) {
             newTab.close();
             console.error("Error creating company portal session", error);
-            const backendError = extractBackendErrorMessage(error);
             toast.error(
-                backendError ?? "No se pudo abrir el Customer Portal de la empresa."
+                getBillingErrorMessage(
+                    error,
+                    "No se pudo abrir el Customer Portal de la empresa."
+                )
             );
         }
     };
@@ -176,7 +187,7 @@ const CompanySubscriptionSettingsCard = () => {
                                 variant="outline"
                                 className="cursor-default bg-sky-100 text-sky-700 border-sky-200"
                             >
-                                Early Bird
+                                {FOUNDING_ACCOUNT_LABEL}
                             </Badge>
                         )}
                     </div>

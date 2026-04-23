@@ -35,6 +35,7 @@ export interface User {
     companyContext?: CompanyContext | null;
     planType?: UserPlanType | null;
     subscriptionStatus?: SubscriptionStatus | null;
+    subscriptionCancelAtPeriodEnd?: boolean | null;
     productSlotLimit?: number | null;
     capabilities?: FeatureCapabilities | null;
     entitlements?: SubscriptionEntitlements<UserPlanType> | null;
@@ -63,6 +64,7 @@ export function createUser(params: {
     companyContext?: CompanyContext | null;
     planType?: UserPlanType | null;
     subscriptionStatus?: SubscriptionStatus | null;
+    subscriptionCancelAtPeriodEnd?: boolean | null;
     productSlotLimit?: number | null;
     capabilities?: FeatureCapabilities | null;
     entitlements?: SubscriptionEntitlements<UserPlanType> | null;
@@ -85,6 +87,7 @@ export function createUser(params: {
         companyContext: params.companyContext ?? null,
         planType: params.planType ?? null,
         subscriptionStatus: params.subscriptionStatus ?? null,
+        subscriptionCancelAtPeriodEnd: params.subscriptionCancelAtPeriodEnd ?? null,
         productSlotLimit: params.productSlotLimit ?? null,
         capabilities: params.capabilities ?? null,
         entitlements: params.entitlements ?? null,

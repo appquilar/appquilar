@@ -7,6 +7,7 @@ import {
   RentMessageListParams,
   RentMessageListResponse,
   RentUnreadMessagesCount,
+  RentSummary,
   CreateRentData,
   CreateRentMessageData,
   UpdateRentData,
@@ -63,6 +64,23 @@ export class MockRentalRepository implements RentalRepository {
       total: filtered.length,
       page: params.page ?? 1,
       perPage: params.perPage ?? filtered.length,
+    };
+  }
+
+  async getSummary(ownerId?: string): Promise<RentSummary> {
+    const now = new Date();
+    const ownerRentals = this.rentals.filter((rental) => ownerId ? rental.ownerId === ownerId : true);
+    const renterRentals = this.rentals.filter((rental) => rental.renterId !== null);
+
+    const buildSummary = (items: Rental[]) => ({
+      total: items.length,
+      upcoming: items.filter((item) => !item.isLead && item.endDate >= now).length,
+      past: items.filter((item) => !item.isLead && item.endDate < now).length,
+    });
+
+    return {
+      owner: buildSummary(ownerRentals),
+      renter: buildSummary(renterRentals),
     };
   }
 
@@ -152,6 +170,7 @@ export class MockRentalRepository implements RentalRepository {
         },
         startDate: data.startDate,
         endDate: data.endDate,
+        requestedQuantity: data.requestedQuantity,
         deposit: data.deposit,
         price: data.price,
         depositReturned: null,
@@ -175,6 +194,7 @@ export class MockRentalRepository implements RentalRepository {
         endDate: data.endDate ?? rental.endDate,
         deposit: data.deposit ?? rental.deposit,
         price: data.price ?? rental.price,
+        requestedQuantity: data.requestedQuantity ?? rental.requestedQuantity,
         depositReturned: data.depositReturned ?? rental.depositReturned,
         proposalValidUntil: data.proposalValidUntil ?? rental.proposalValidUntil,
         status: data.status ?? rental.status,

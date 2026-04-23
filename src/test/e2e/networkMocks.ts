@@ -45,8 +45,6 @@ const productsPayload = {
         description: "Taladro",
         publication_status: "published",
         image_ids: [],
-        deposit: { amount: 15000, currency: "EUR" },
-        tiers: [{ days_from: 1, days_to: 5, price_per_day: { amount: 900, currency: "EUR" } }],
         categories: [{ id: "cat-1", name: "Vehículos", slug: "vehiculos" }],
         owner_data: {
           owner_id: "company-1",
@@ -62,8 +60,6 @@ const productsPayload = {
         description: "Bicicleta",
         publication_status: "published",
         image_ids: [],
-        deposit: { amount: 30000, currency: "EUR" },
-        tiers: [{ days_from: 1, days_to: 5, price_per_day: { amount: 1800, currency: "EUR" } }],
         categories: [{ id: "cat-2", name: "Bicicletas", slug: "bicicletas" }],
         owner_data: {
           owner_id: "company-1",
@@ -75,6 +71,80 @@ const productsPayload = {
     total: 2,
     page: 1,
   },
+};
+
+const productDetailPayload = {
+  success: true,
+  data: {
+    id: "product-1",
+    internal_id: "P-001",
+    name: "Taladro profesional",
+    slug: "taladro-profesional",
+    description: "Taladro para obra y reformas.",
+    publication_status: "published",
+    is_rental_enabled: true,
+    image_ids: [],
+    categories: [{ id: "cat-1", name: "Vehículos", slug: "vehiculos" }],
+    owner_data: {
+      owner_id: "company-1",
+      type: "company",
+      name: "Alquileres Norte",
+      slug: "alquileres-norte",
+      address: {
+        street: "Calle Mayor 7",
+        street2: null,
+        city: "Madrid",
+        postal_code: "28013",
+        state: "Comunidad de Madrid",
+        country: "España",
+      },
+      geo_location: {
+        latitude: 40.4168,
+        longitude: -3.7038,
+        circle: [],
+      },
+    },
+  },
+};
+
+const publicCompanyProfilePayload = {
+  success: true,
+  data: {
+    name: "Alquileres Norte",
+    slug: "alquileres-norte",
+    description: "Catálogo profesional para rodajes, eventos y obra ligera.",
+    profile_picture_id: null,
+    header_image_id: null,
+    location: {
+      city: "Madrid",
+      state: "Comunidad de Madrid",
+      country: "España",
+      display_label: "Madrid, Comunidad de Madrid, España",
+    },
+  },
+};
+
+const publicCompanyProductsPayload = {
+  success: true,
+  total: 1,
+  page: 1,
+  data: [
+    {
+      id: "product-1",
+      internal_id: "P-001",
+      name: "Taladro profesional",
+      slug: "taladro-profesional",
+      description: "Taladro",
+      publication_status: "published",
+      image_ids: [],
+      categories: [{ id: "cat-1", name: "Vehículos", slug: "vehiculos" }],
+      owner_data: {
+        owner_id: "company-1",
+        type: "company",
+        name: "Alquileres Norte",
+      },
+    },
+  ],
 };
 
 const meUnauthorizedPayload = {
@@ -117,6 +187,21 @@ export const registerNetworkMocks = async (page: Page): Promise<void> => {
 
     if (path === "/api/products/search") {
       await json(route, productsPayload);
+      return;
+    }
+
+    if (path === "/api/products/taladro-profesional") {
+      await json(route, productDetailPayload);
+      return;
+    }
+
+    if (path === "/api/public/companies/alquileres-norte") {
+      await json(route, publicCompanyProfilePayload);
+      return;
+    }
+
+    if (path === "/api/public/companies/alquileres-norte/products") {
+      await json(route, publicCompanyProductsPayload);
       return;
     }
 

@@ -8,7 +8,10 @@ import {
   buildBillingBaseUrl,
   buildBillingCheckoutSuccessUrl,
 } from "@/hooks/useBillingReturnSync";
-import { extractBackendErrorMessage } from "@/utils/backendError";
+import {
+  getUserProCheckoutErrorMessage,
+  useUserProCheckout,
+} from "@/hooks/useUserProCheckout";
 
 interface UpgradeToProLinkProps {
   onAfterNavigate?: () => void;
@@ -17,6 +20,7 @@ interface UpgradeToProLinkProps {
 const UpgradeToProLink = ({ onAfterNavigate }: UpgradeToProLinkProps) => {
   const { currentUser } = useAuth();
   const createCheckoutMutation = useCreateCheckoutSession();
+  const userProCheckout = useUserProCheckout();
 
   if (!currentUser) {
     return null;
@@ -38,6 +42,14 @@ const UpgradeToProLink = ({ onAfterNavigate }: UpgradeToProLinkProps) => {
     const currentUrl = window.location.href;
     const currentBaseUrl = buildBillingBaseUrl(currentUrl);
 
+    if (!userProCheckout.isCheckoutAvailable) {
+      toast.error(
+        userProCheckout.unavailableMessage ??
+          "User Pro no esta disponible para activar ahora mismo."
+      );
+      return;
+    }
+
     try {
       const checkoutSession = await createCheckoutMutation.mutateAsync({
         scope: "user",
@@ -50,9 +62,11 @@ const UpgradeToProLink = ({ onAfterNavigate }: UpgradeToProLinkProps) => {
       window.location.assign(checkoutSession.url);
     } catch (error) {
       console.error("Error creating user checkout session", error);
-      const backendError = extractBackendErrorMessage(error);
       toast.error(
-        backendError ?? "No se pudo iniciar el checkout para el plan Pro."
+        getUserProCheckoutErrorMessage(
+          error,
+          "No se pudo iniciar el checkout para el plan Pro."
+        )
       );
     }
   };
@@ -62,13 +76,17 @@ const UpgradeToProLink = ({ onAfterNavigate }: UpgradeToProLinkProps) => {
       onClick={() => {
         void handleUpgradeToPro();
       }}
-      disabled={createCheckoutMutation.isPending}
+      disabled={createCheckoutMutation.isPending || userProCheckout.isLoading}
       className="w-full rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-left transition-colors hover:bg-orange-100 disabled:opacity-60 disabled:cursor-not-allowed"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <p className="text-sm font-semibold text-orange-600">
-            {createCheckoutMutation.isPending ? "Redirigiendo..." : "Hazte Pro"}
+            {createCheckoutMutation.isPending
+              ? "Redirigiendo..."
+              : userProCheckout.isLoading
+                ? "Cargando plan..."
+                : "Hazte Pro"}
           </p>
           <p className="text-xs text-zinc-600">
             Accede a metricas de visitas y mensajes por producto.

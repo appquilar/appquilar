@@ -11,6 +11,7 @@ type UserEngagementByProductDto = {
     product_id: string;
     product_name: string;
     product_slug: string;
+    product_internal_id?: string;
     total_views: number;
     unique_visitors: number;
     messages_total: number;
@@ -98,6 +99,7 @@ export class ApiUserEngagementRepository implements UserEngagementRepository {
             productId: dto.product_id,
             productName: dto.product_name,
             productSlug: dto.product_slug,
+            productInternalId: dto.product_internal_id ?? "",
             totalViews: dto.total_views,
             uniqueVisitors: dto.unique_visitors,
             messagesTotal: dto.messages_total,
@@ -124,4 +126,3 @@ export class ApiUserEngagementRepository implements UserEngagementRepository {
         };
     }
 }
-

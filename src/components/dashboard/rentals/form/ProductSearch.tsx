@@ -1,5 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { Product } from '@/domain/models/Product';
+import { getProductAvailabilityLabel } from '@/application/hooks/useProductInventory';
 
 interface ProductSearchProps {
   productSearch: string;
@@ -12,24 +13,6 @@ interface ProductSearchProps {
 const getBasePrice = (product: Product): number | null => {
   const tier = product.price?.tiers?.[0];
   return tier ? tier.pricePerDay : null;
-};
-
-const getAvailabilityLabel = (product: Product): string => {
-  const availableQuantity = product.inventorySummary?.availableQuantity ?? Math.max(0, product.quantity ?? 1);
-
-  if (product.publicationStatus !== 'published') {
-    return 'No publicado';
-  }
-
-  if (!product.isRentalEnabled) {
-    return 'Alquiler pausado';
-  }
-
-  if (availableQuantity <= 0) {
-    return 'Sin stock';
-  }
-
-  return `Disponible (${availableQuantity})`;
 };
 
 const ProductSearch = ({
@@ -73,7 +56,7 @@ const ProductSearch = ({
                     : 'Precio no disponible'}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {getAvailabilityLabel(product)}
+                  {getProductAvailabilityLabel(product, true)}
                 </div>
               </div>
             ))

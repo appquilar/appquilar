@@ -119,21 +119,24 @@ type DashboardSeedFixture = {
   apiUrl: string;
 };
 
-const runWithTimeout = async (callback: () => Promise<void>, timeoutMs: number): Promise<void> => {
-  await Promise.race([
-    callback(),
-    new Promise<void>((resolve) => {
-      setTimeout(() => resolve(), timeoutMs);
-    }),
-  ]);
-};
-
 export const test = base.extend<{ seed: DashboardSeedFixture; coverageCapture: void }>({
   coverageCapture: [
     async ({ page }, use, testInfo) => {
       await use();
-      await runWithTimeout(async () => explorePageForCoverage(page), explorationTimeoutMs);
-      await runWithTimeout(async () => persistPageCoverage(page, testInfo), persistTimeoutMs);
+      const skipCoverageExploration = testInfo.annotations.some(
+        (annotation) => annotation.type === "skipCoverageExploration"
+      );
+      const skipCoveragePersistence = testInfo.annotations.some(
+        (annotation) => annotation.type === "skipCoveragePersistence"
+      );
+
+      if (!skipCoverageExploration) {
+        await explorePageForCoverage(page, { budgetMs: explorationTimeoutMs });
+      }
+
+      if (!skipCoveragePersistence) {
+        await persistPageCoverage(page, testInfo, { budgetMs: persistTimeoutMs });
+      }
     },
     { auto: true },
   ],

@@ -1,18 +1,32 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Check, Search, Square } from "lucide-react";
+import { Check, Search, SlidersHorizontal, Square } from "lucide-react";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ProductGrid from "@/components/category/ProductGrid";
 import LoadingState from "@/components/category/LoadingState";
+import DynamicPropertyFiltersSection, {
+    type DynamicRangeFilters,
+    type DynamicValueFilters,
+} from "@/components/category/DynamicPropertyFiltersSection";
+import { Button } from "@/components/ui/button";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
 
 import type { Product as DomainProduct } from "@/domain/models/Product";
 import type { Category } from "@/domain/models/Category";
+import type { AvailableDynamicFilter } from "@/domain/models/DynamicProperty";
 import { usePublicProductSearchWithCategories } from "@/application/hooks/usePublicProductSearch";
+import { useCategoryDynamicProperties } from "@/application/hooks/useCategoryDynamicProperties";
 import { usePublicSiteCategories } from "@/application/hooks/usePublicSiteCategories";
 import { useSeo } from "@/hooks/useSeo";
-import { PUBLIC_PATHS, buildAbsolutePublicUrl, buildSearchPath } from "@/domain/config/publicRoutes";
+import { buildAbsolutePublicUrl, buildSearchPath } from "@/domain/config/publicRoutes";
 
 const EMPTY_PRODUCTS: DomainProduct[] = [];
 const EMPTY_CATEGORY_IDS: string[] = [];
@@ -32,11 +46,6 @@ type CategoryTreeNode = Category & {
 type CheckboxState = {
     checked: boolean;
     indeterminate: boolean;
-};
-
-const getDailyPrice = (product: DomainProduct): number => {
-  const tiers = product.price?.tiers ?? [];
-  return tiers[0]?.pricePerDay ?? 0;
 };
 
 const buildCategoryTree = (categories: Category[]): CategoryTreeNode[] => {
@@ -92,8 +101,178 @@ const getNodeCheckboxState = (
     };
 };
 
+const parseDynamicValueFilters = (searchParams: URLSearchParams): DynamicValueFilters => {
+    const filters: DynamicValueFilters = {};
+
+    searchParams.forEach((value, key) => {
+        const match = key.match(/^property_values\[(.+)\]\[\]$/);
+        if (!match || value.trim().length === 0) {
+            return;
+        }
+
+        const code = match[1];
+        filters[code] = [...(filters[code] ?? []), value.trim()];
+    });
+
+    return filters;
+};
+
+const parseDynamicRangeFilters = (searchParams: URLSearchParams): DynamicRangeFilters => {
+    const filters: DynamicRangeFilters = {};
+
+    searchParams.forEach((value, key) => {
+        const match = key.match(/^property_ranges\[(.+)\]\[(min|max)\]$/);
+        if (!match || value.trim().length === 0) {
+            return;
+        }
+
+        const parsedValue = Number.parseFloat(value);
+        if (!Number.isFinite(parsedValue)) {
+            return;
+        }
+
+        const [, code, boundary] = match;
+        filters[code] = {
+            ...(filters[code] ?? {}),
+            [boundary]: parsedValue,
+        };
+    });
+
+    return filters;
+};
+
+interface SearchFiltersPanelProps {
+    availableDynamicFilters: AvailableDynamicFilter[];
+    categoryTree: CategoryTreeNode[];
+    locationError: string | null;
+    isLocating: boolean;
+    selectedCategorySet: Set<string>;
+    selectedDynamicRangeFilters: DynamicRangeFilters;
+    selectedDynamicValueFilters: DynamicValueFilters;
+    selectedRadius: string;
+    showDynamicFilterBlock: boolean;
+    onApply: () => Promise<boolean> | boolean;
+    onRadiusChange: (value: string) => void;
+    onToggleCategoryTreeNode: (node: CategoryTreeNode) => void;
+    onToggleDynamicOption: (filterCode: string, optionValue: string, checked: boolean) => void;
+    onUpdateDynamicRangeFilter: (filterCode: string, boundary: "min" | "max", rawValue: string) => void;
+}
+
+const SearchFiltersPanel = ({
+    availableDynamicFilters,
+    categoryTree,
+    locationError,
+    isLocating,
+    selectedCategorySet,
+    selectedDynamicRangeFilters,
+    selectedDynamicValueFilters,
+    selectedRadius,
+    showDynamicFilterBlock,
+    onApply,
+    onRadiusChange,
+    onToggleCategoryTreeNode,
+    onToggleDynamicOption,
+    onUpdateDynamicRangeFilter,
+}: SearchFiltersPanelProps) => {
+    const renderNode = (currentNode: CategoryTreeNode, depth: number): JSX.Element => {
+        const state = getNodeCheckboxState(currentNode, selectedCategorySet);
+
+        return (
+            <div key={currentNode.id}>
+                <button
+                    type="button"
+                    onClick={() => onToggleCategoryTreeNode(currentNode)}
+                    className="flex w-full items-center gap-2 rounded py-1.5 text-left text-sm hover:bg-muted/40"
+                    style={{ paddingLeft: `${depth * 14}px` }}
+                >
+                    <span
+                        className={`flex h-4 w-4 items-center justify-center rounded border ${
+                            state.checked || state.indeterminate
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border"
+                        }`}
+                    >
+                        {state.checked ? (
+                            <Check size={12} />
+                        ) : state.indeterminate ? (
+                            <Square size={8} fill="currentColor" />
+                        ) : null}
+                    </span>
+                    <span className="truncate">{currentNode.name}</span>
+                </button>
+
+                {currentNode.children.length > 0 && (
+                    <div className="space-y-0.5">
+                        {currentNode.children.map((child) => renderNode(child, depth + 1))}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <div className="space-y-5">
+            <Button
+                type="button"
+                onClick={() => {
+                    void onApply();
+                }}
+                disabled={isLocating}
+                variant="outline"
+                className="h-10 w-full justify-center"
+            >
+                {isLocating ? "Obteniendo ubicación..." : "Aplicar filtros"}
+            </Button>
+
+            <div>
+                <h2 className="mb-1 text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Filtros
+                </h2>
+                <p className="text-sm text-muted-foreground">Refina tu búsqueda</p>
+            </div>
+
+            <div>
+                <label className="mb-1 block text-sm font-medium">Distancia</label>
+                <select
+                    value={selectedRadius}
+                    onChange={(event) => onRadiusChange(event.target.value)}
+                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                    {DISTANCE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            <div>
+                <h3 className="mb-2 text-sm font-medium">Categorías</h3>
+                {locationError && (
+                    <p className="mb-3 text-xs text-destructive">{locationError}</p>
+                )}
+
+                <div className="max-h-[45vh] space-y-2 overflow-y-auto pr-1 sm:max-h-[60vh]">
+                    {categoryTree.map((node) => renderNode(node, 0))}
+                </div>
+            </div>
+
+            {showDynamicFilterBlock && (
+                <DynamicPropertyFiltersSection
+                    availableDynamicFilters={availableDynamicFilters}
+                    selectedDynamicRangeFilters={selectedDynamicRangeFilters}
+                    selectedDynamicValueFilters={selectedDynamicValueFilters}
+                    onToggleDynamicOption={onToggleDynamicOption}
+                    onUpdateDynamicRangeFilter={onUpdateDynamicRangeFilter}
+                />
+            )}
+        </div>
+    );
+};
+
 const SearchPage = () => {
     const [params, setParams] = useSearchParams();
+    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
     const queryFromUrl = (params.get("q") ?? "").trim();
     const categoriesFromUrl = useMemo(() => {
         const raw = params.get("categories");
@@ -121,14 +300,27 @@ const SearchPage = () => {
         const parsed = Number.parseFloat(raw);
         return Number.isFinite(parsed) ? parsed : undefined;
     }, [params]);
+    const dynamicValueFiltersFromUrl = useMemo(
+        () => parseDynamicValueFilters(params),
+        [params]
+    );
+    const dynamicRangeFiltersFromUrl = useMemo(
+        () => parseDynamicRangeFilters(params),
+        [params]
+    );
 
     const [inputValue, setInputValue] = useState(queryFromUrl);
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(categoriesFromUrl);
     const [selectedRadius, setSelectedRadius] = useState(radiusFromUrl);
+    const [selectedDynamicValueFilters, setSelectedDynamicValueFilters] =
+        useState<DynamicValueFilters>(dynamicValueFiltersFromUrl);
+    const [selectedDynamicRangeFilters, setSelectedDynamicRangeFilters] =
+        useState<DynamicRangeFilters>(dynamicRangeFiltersFromUrl);
     const [isLocating, setIsLocating] = useState(false);
     const [locationError, setLocationError] = useState<string | null>(null);
 
     const { allCategories } = usePublicSiteCategories();
+    const dynamicPropertiesQuery = useCategoryDynamicProperties(categoriesFromUrl);
 
     useEffect(() => {
         setInputValue(queryFromUrl);
@@ -140,6 +332,12 @@ const SearchPage = () => {
     useEffect(() => {
         setSelectedRadius(radiusFromUrl);
     }, [radiusFromUrl]);
+    useEffect(() => {
+        setSelectedDynamicValueFilters(dynamicValueFiltersFromUrl);
+    }, [dynamicValueFiltersFromUrl]);
+    useEffect(() => {
+        setSelectedDynamicRangeFilters(dynamicRangeFiltersFromUrl);
+    }, [dynamicRangeFiltersFromUrl]);
 
     const { data, isLoading, isFetching } = usePublicProductSearchWithCategories(
         queryFromUrl,
@@ -148,6 +346,10 @@ const SearchPage = () => {
             latitude: latitudeFromUrl,
             longitude: longitudeFromUrl,
             radiusKm: radiusFromUrl === "any" ? undefined : Number.parseInt(radiusFromUrl, 10),
+        },
+        {
+            propertyValues: dynamicValueFiltersFromUrl,
+            propertyRanges: dynamicRangeFiltersFromUrl,
         }
     );
     const categoryTree = useMemo(() => buildCategoryTree(allCategories), [allCategories]);
@@ -156,6 +358,10 @@ const SearchPage = () => {
         [selectedCategoryIds]
     );
     const domainProducts = data?.products ?? EMPTY_PRODUCTS;
+    const availableDynamicFilters = data?.availableDynamicFilters ?? [];
+    const showDynamicFilterBlock =
+        Boolean(dynamicPropertiesQuery.data?.dynamicFiltersEnabled)
+        && availableDynamicFilters.length > 0;
 
     const products = useMemo(() => {
         return domainProducts.map((product) => ({
@@ -167,8 +373,9 @@ const SearchPage = () => {
             thumbnailUrl: product.thumbnailUrl,
             description: product.description ?? "",
             price: {
-                daily: getDailyPrice(product),
+                daily: product.price?.daily ?? 0,
                 deposit: product.price?.deposit,
+                tiers: product.price?.tiers,
             },
             company: {
                 id: product.ownerData?.ownerId ?? "",
@@ -212,13 +419,15 @@ const SearchPage = () => {
                 next.add(node.id);
                 for (const id of leafIds) next.add(id);
             }
+
+            setSelectedDynamicValueFilters({});
+            setSelectedDynamicRangeFilters({});
+
             return Array.from(next);
         });
     };
 
-    const applyFilters = () => {
-        void applyFiltersAsync();
-    };
+    const applyFilters = async (): Promise<boolean> => applyFiltersAsync();
 
     const requestUserLocation = async (): Promise<{ latitude: number; longitude: number }> => {
         if (!("geolocation" in navigator)) {
@@ -238,7 +447,7 @@ const SearchPage = () => {
         });
     };
 
-    const applyFiltersAsync = async () => {
+    const applyFiltersAsync = async (): Promise<boolean> => {
         const nextQuery = inputValue.trim();
         const nextCategories = selectedCategoryIds;
         const nextRadius = selectedRadius;
@@ -261,7 +470,7 @@ const SearchPage = () => {
                             ? error.message
                             : "No se pudo obtener tu ubicación."
                     );
-                    return;
+                    return false;
                 } finally {
                     setIsLocating(false);
                 }
@@ -289,7 +498,67 @@ const SearchPage = () => {
             nextParams.set("longitude", String(nextLongitude));
         }
 
+        if (nextCategories.length > 0) {
+            Object.entries(selectedDynamicValueFilters).forEach(([code, values]) => {
+                values.forEach((value) => {
+                    if (value.trim().length > 0) {
+                        nextParams.append(`property_values[${code}][]`, value);
+                    }
+                });
+            });
+
+            Object.entries(selectedDynamicRangeFilters).forEach(([code, range]) => {
+                if (range.min !== undefined) {
+                    nextParams.set(`property_ranges[${code}][min]`, String(range.min));
+                }
+
+                if (range.max !== undefined) {
+                    nextParams.set(`property_ranges[${code}][max]`, String(range.max));
+                }
+            });
+        }
+
         setParams(nextParams);
+        return true;
+    };
+
+    const toggleDynamicOption = (filterCode: string, optionValue: string, checked: boolean) => {
+        setSelectedDynamicValueFilters((previous) => {
+            const currentValues = previous[filterCode] ?? [];
+            const nextValues = checked
+                ? Array.from(new Set([...currentValues, optionValue]))
+                : currentValues.filter((value) => value !== optionValue);
+
+            if (nextValues.length === 0) {
+                const { [filterCode]: _removed, ...rest } = previous;
+                return rest;
+            }
+
+            return {
+                ...previous,
+                [filterCode]: nextValues,
+            };
+        });
+    };
+
+    const updateDynamicRangeFilter = (filterCode: string, boundary: "min" | "max", rawValue: string) => {
+        setSelectedDynamicRangeFilters((previous) => {
+            const parsedValue = rawValue.trim().length === 0 ? undefined : Number.parseFloat(rawValue);
+            const nextRange = {
+                ...(previous[filterCode] ?? {}),
+                [boundary]: Number.isFinite(parsedValue as number) ? parsedValue : undefined,
+            };
+
+            if (nextRange.min === undefined && nextRange.max === undefined) {
+                const { [filterCode]: _removed, ...rest } = previous;
+                return rest;
+            }
+
+            return {
+                ...previous,
+                [filterCode]: nextRange,
+            };
+        });
     };
 
     return (
@@ -297,93 +566,68 @@ const SearchPage = () => {
             <Header />
             <main className="public-main public-section flex-1">
                 <div className="public-container grid grid-cols-1 gap-6 lg:grid-cols-[250px_1fr] xl:grid-cols-[270px_1fr]">
-                    <aside className="h-fit rounded-xl border border-border/70 bg-card p-4 lg:sticky lg:top-[var(--public-sticky-offset)]">
-                        <button
-                            type="button"
-                            onClick={applyFilters}
-                            disabled={isLocating}
-                            className="mb-4 h-9 w-full rounded-lg border border-border bg-transparent text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                            {isLocating ? "Obteniendo ubicación..." : "Aplicar filtros"}
-                        </button>
-
-                        <h2 className="mb-1 text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">Filtros</h2>
-                        <p className="mb-4 text-sm text-muted-foreground">Refina tu búsqueda</p>
-
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium mb-1">
-                                Distancia
-                            </label>
-                            <select
-                                value={selectedRadius}
-                                onChange={(event) => setSelectedRadius(event.target.value)}
-                                className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                            >
-                                {DISTANCE_OPTIONS.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <h3 className="text-sm font-medium mb-2">Categorías</h3>
-                        {locationError && (
-                            <p className="mb-3 text-xs text-destructive">{locationError}</p>
-                        )}
-
-                        <div className="space-y-2 max-h-[45vh] sm:max-h-[60vh] overflow-y-auto pr-1">
-                            {categoryTree.map((node) => {
-                                const renderNode = (
-                                    currentNode: CategoryTreeNode,
-                                    depth: number
-                                ): JSX.Element => {
-                                    const state = getNodeCheckboxState(
-                                        currentNode,
-                                        selectedCategorySet
-                                    );
-
-                                    return (
-                                        <div key={currentNode.id}>
-                                            <button
-                                                type="button"
-                                                onClick={() => toggleCategoryTreeNode(currentNode)}
-                                                className="w-full flex items-center gap-2 text-left py-1.5 text-sm hover:bg-muted/40 rounded"
-                                                style={{ paddingLeft: `${depth * 14}px` }}
-                                            >
-                                                <span
-                                                    className={`h-4 w-4 rounded border flex items-center justify-center ${
-                                                        state.checked || state.indeterminate
-                                                            ? "border-primary bg-primary/10 text-primary"
-                                                            : "border-border"
-                                                    }`}
-                                                >
-                                                    {state.checked ? (
-                                                        <Check size={12} />
-                                                    ) : state.indeterminate ? (
-                                                        <Square size={8} fill="currentColor" />
-                                                    ) : null}
-                                                </span>
-                                                <span className="truncate">{currentNode.name}</span>
-                                            </button>
-
-                                            {currentNode.children.length > 0 && (
-                                                <div className="space-y-0.5">
-                                                    {currentNode.children.map((child) =>
-                                                        renderNode(child, depth + 1)
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                };
-
-                                return renderNode(node, 0);
-                            })}
-                        </div>
+                    <aside className="hidden h-fit rounded-xl border border-border/70 bg-card p-4 lg:sticky lg:top-[var(--public-sticky-offset)] lg:block">
+                        <SearchFiltersPanel
+                            availableDynamicFilters={availableDynamicFilters}
+                            categoryTree={categoryTree}
+                            locationError={locationError}
+                            isLocating={isLocating}
+                            selectedCategorySet={selectedCategorySet}
+                            selectedDynamicRangeFilters={selectedDynamicRangeFilters}
+                            selectedDynamicValueFilters={selectedDynamicValueFilters}
+                            selectedRadius={selectedRadius}
+                            showDynamicFilterBlock={showDynamicFilterBlock}
+                            onApply={applyFilters}
+                            onRadiusChange={setSelectedRadius}
+                            onToggleCategoryTreeNode={toggleCategoryTreeNode}
+                            onToggleDynamicOption={toggleDynamicOption}
+                            onUpdateDynamicRangeFilter={updateDynamicRangeFilter}
+                        />
                     </aside>
 
                     <section className="lg:pl-1">
+                        <div className="mb-4 lg:hidden">
+                            <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+                                <SheetTrigger asChild>
+                                    <Button type="button" variant="outline" className="w-full justify-center gap-2">
+                                        <SlidersHorizontal className="h-4 w-4" />
+                                        Filtros
+                                    </Button>
+                                </SheetTrigger>
+                                <SheetContent side="left" className="flex w-[92vw] max-w-sm flex-col p-0">
+                                    <div className="sticky top-0 z-10 border-b bg-background px-5 py-4">
+                                        <SheetHeader>
+                                            <SheetTitle>Filtros de búsqueda</SheetTitle>
+                                        </SheetHeader>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto p-5">
+                                        <SearchFiltersPanel
+                                            availableDynamicFilters={availableDynamicFilters}
+                                            categoryTree={categoryTree}
+                                            locationError={locationError}
+                                            isLocating={isLocating}
+                                            selectedCategorySet={selectedCategorySet}
+                                            selectedDynamicRangeFilters={selectedDynamicRangeFilters}
+                                            selectedDynamicValueFilters={selectedDynamicValueFilters}
+                                            selectedRadius={selectedRadius}
+                                            showDynamicFilterBlock={showDynamicFilterBlock}
+                                            onApply={async () => {
+                                                const applied = await applyFilters();
+                                                if (applied) {
+                                                    setMobileFiltersOpen(false);
+                                                }
+                                                return applied;
+                                            }}
+                                            onRadiusChange={setSelectedRadius}
+                                            onToggleCategoryTreeNode={toggleCategoryTreeNode}
+                                            onToggleDynamicOption={toggleDynamicOption}
+                                            onUpdateDynamicRangeFilter={updateDynamicRangeFilter}
+                                        />
+                                    </div>
+                                </SheetContent>
+                            </Sheet>
+                        </div>
+
                         <h1 className="mb-5 text-2xl md:text-3xl font-semibold">Buscar productos</h1>
 
                         <form onSubmit={handleSubmit} className="mb-6">

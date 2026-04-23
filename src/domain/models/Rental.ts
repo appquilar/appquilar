@@ -38,6 +38,7 @@ export interface Rental {
   ownerLocation?: RentalOwnerLocation | null;
   startDate: Date;
   endDate: Date;
+  requestedQuantity: number;
   deposit: Money;
   price: Money;
   depositReturned?: Money | null;

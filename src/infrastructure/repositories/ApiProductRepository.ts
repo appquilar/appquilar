@@ -1,15 +1,23 @@
 import {
     InventoryAllocation,
+    InventoryUnit,
     Product,
     ProductFormData,
+    ProductPublicAvailability,
     ProductInventorySummary,
     PublicationStatusType
 } from '@/domain/models/Product';
+import type {
+    AvailableDynamicFilter,
+    AvailableDynamicFilterOption,
+    ProductDynamicProperties,
+} from '@/domain/models/DynamicProperty';
 import {
     ProductRepository,
     ProductSearchCriteria,
     ProductListResponse,
     ProductFilters,
+    ProductOwnerSummary,
     RentalCostBreakdown
 } from '@/domain/repositories/ProductRepository';
 import { ApiClient } from '@/infrastructure/http/ApiClient';
@@ -34,6 +42,64 @@ export class ApiProductRepository implements ProductRepository {
         return {};
     }
 
+    private unwrapCollectionPayload<T>(response: T): T | any {
+        if (!response || typeof response !== "object") {
+            return response;
+        }
+
+        const payload = response as Record<string, unknown>;
+        const hasWrappedData = payload.success !== undefined && payload.data !== undefined;
+        if (!hasWrappedData) {
+            return response;
+        }
+
+        const hasTopLevelCollectionMetadata =
+            Array.isArray(payload.data)
+            || typeof payload.total === "number"
+            || typeof payload.page === "number"
+            || typeof payload.per_page === "number"
+            || Array.isArray(payload.available_dynamic_filters);
+
+        return hasTopLevelCollectionMetadata ? response : payload.data;
+    }
+
+    private unwrapListPayload<T>(response: unknown): T[] {
+        if (Array.isArray(response)) {
+            return response as T[];
+        }
+
+        if (!response || typeof response !== "object") {
+            return [];
+        }
+
+        const payload = response as Record<string, unknown>;
+        if (Array.isArray(payload.data)) {
+            return payload.data as T[];
+        }
+
+        if (!payload.data || typeof payload.data !== "object") {
+            return [];
+        }
+
+        const nestedPayload = payload.data as Record<string, unknown>;
+        return Array.isArray(nestedPayload.data) ? (nestedPayload.data as T[]) : [];
+    }
+
+    private resolveInventoryMode(apiData: any): "unmanaged" | "managed_serialized" {
+        const explicitMode = apiData.inventory_mode ?? apiData.inventory_summary?.inventory_mode;
+        const inventoryEnabled = apiData.is_inventory_enabled ?? apiData.inventory_summary?.is_inventory_enabled ?? false;
+
+        if (explicitMode === "managed_serialized") {
+            return "managed_serialized";
+        }
+
+        if (explicitMode === "unmanaged") {
+            return "unmanaged";
+        }
+
+        return inventoryEnabled ? "managed_serialized" : "unmanaged";
+    }
+
     async search(criteria: ProductSearchCriteria): Promise<ProductListResponse> {
         const queryParams = new URLSearchParams();
         if (criteria.text) queryParams.append('text', criteria.text);
@@ -45,22 +111,38 @@ export class ApiProductRepository implements ProductRepository {
         if (criteria.categories?.length) {
             criteria.categories.forEach(c => queryParams.append('categories[]', c));
         }
+        if (criteria.property_values) {
+            Object.entries(criteria.property_values).forEach(([code, values]) => {
+                values.forEach((value) => queryParams.append(`property_values[${code}][]`, value));
+            });
+        }
+        if (criteria.property_ranges) {
+            Object.entries(criteria.property_ranges).forEach(([code, range]) => {
+                if (range.min !== undefined) {
+                    queryParams.append(`property_ranges[${code}][min]`, range.min.toString());
+                }
+                if (range.max !== undefined) {
+                    queryParams.append(`property_ranges[${code}][max]`, range.max.toString());
+                }
+            });
+        }
 
         try {
-            const response = await this.client.get<{ data: any[], total: number, page: number }>(
+            const response = await this.client.get<{ data: any[], total: number, page: number, available_dynamic_filters?: any[] }>(
                 `/api/products/search?${queryParams.toString()}`
             );
 
-            const payload = (response as any).data && (response as any).success !== undefined
-                ? (response as any).data
-                : response;
+            const payload = this.unwrapCollectionPayload(response);
 
             const items = Array.isArray(payload.data) ? payload.data : (Array.isArray(payload) ? payload : []);
 
             return {
                 data: items.map((item: any) => this.mapToDomain(item)),
                 total: payload.total || items.length,
-                page: payload.page || 1
+                page: payload.page || 1,
+                availableDynamicFilters: Array.isArray(payload.available_dynamic_filters)
+                    ? payload.available_dynamic_filters.map((filter: any) => this.mapAvailableDynamicFilter(filter))
+                    : [],
             };
         } catch (error) {
             console.error('Search failed', error);
@@ -77,7 +159,9 @@ export class ApiProductRepository implements ProductRepository {
         try {
             const response = await this.client.get<any>(
                 `/api/products/${id}`,
-                { headers: this.getAuthHeaders() }
+                {
+                    headers: this.getAuthHeaders(),
+                }
             );
             const data = (response as any).data ? (response as any).data : response;
             return this.mapToDomain(data);
@@ -94,8 +178,7 @@ export class ApiProductRepository implements ProductRepository {
     async getBySlug(slug: string): Promise<Product | null> {
         try {
             const response = await this.client.get<any>(
-                `/api/products/${slug}`,
-                { headers: this.getAuthHeaders() }
+                `/api/products/${slug}`
             );
             const data = (response as any).data ? (response as any).data : response;
             return this.mapToDomain(data);
@@ -135,15 +218,21 @@ export class ApiProductRepository implements ProductRepository {
             if (filters?.id) queryParams.append('id', filters.id);
             if (filters?.internalId) queryParams.append('internalId', filters.internalId);
             if (filters?.categoryId) queryParams.append('categoryId', filters.categoryId);
-            if (filters?.publicationStatus) queryParams.append('publicationStatus', filters.publicationStatus);
+            if (filters?.publicationStatus) {
+                const publicationStatuses = Array.isArray(filters.publicationStatus)
+                    ? filters.publicationStatus
+                    : [filters.publicationStatus];
+
+                if (publicationStatuses.length > 0) {
+                    queryParams.append('publicationStatus', publicationStatuses.join(','));
+                }
+            }
 
             const response = await this.client.get<any>(`${endpoint}?${queryParams.toString()}`, {
                 headers: this.getAuthHeaders()
             });
 
-            const payload = (response as any)?.success !== undefined && (response as any)?.data !== undefined
-                ? (response as any).data
-                : response;
+            const payload = this.unwrapCollectionPayload(response);
 
             const items: any[] = Array.isArray(payload?.data)
                 ? payload.data
@@ -167,9 +256,34 @@ export class ApiProductRepository implements ProductRepository {
         }
     }
 
+    async getOwnerSummary(
+        ownerId: string,
+        ownerType: 'company' | 'user'
+    ): Promise<ProductOwnerSummary> {
+        const endpoint = ownerType === 'company'
+            ? `/api/companies/${ownerId}/products/summary`
+            : `/api/users/${ownerId}/products/summary`;
+
+        const response = await this.client.get<any>(endpoint, {
+            headers: this.getAuthHeaders(),
+        });
+
+        const payload = (response as any).data ? (response as any).data : response;
+
+        return {
+            total: Number(payload?.total ?? 0),
+            draft: Number(payload?.draft ?? 0),
+            published: Number(payload?.published ?? 0),
+            archived: Number(payload?.archived ?? 0),
+            active: Number(payload?.active ?? 0),
+        };
+    }
+
     async getProductsByCategoryId(categoryId: string): Promise<Product[]> {
         try {
-            const response = await this.client.get<{ data: any[] }>(`/api/categories/${categoryId}/products`);
+            const response = await this.client.get<{ data: any[] }>(`/api/categories/${categoryId}/products`, {
+                headers: this.getAuthHeaders()
+            });
             const data = (response as any).data && Array.isArray((response as any).data)
                 ? (response as any).data
                 : ((response as any).data?.data || []);
@@ -187,6 +301,8 @@ export class ApiProductRepository implements ProductRepository {
         if (!dto.product_id) {
             dto.product_id = crypto.randomUUID();
         }
+
+        dto.publication_status = data.publicationStatus;
 
         await this.client.post<void>(
             '/api/products',
@@ -212,21 +328,17 @@ export class ApiProductRepository implements ProductRepository {
 
         // 2. Handle Status Transition
         if (data.publicationStatus) {
-            try {
-                let statusEndpoint = '';
-                if (data.publicationStatus === 'published') {
-                    statusEndpoint = `/api/products/${id}/publish`;
-                } else if (data.publicationStatus === 'draft') {
-                    statusEndpoint = `/api/products/${id}/unpublish`;
-                } else if (data.publicationStatus === 'archived') {
-                    statusEndpoint = `/api/products/${id}/archive`;
-                }
+            let statusEndpoint = '';
+            if (data.publicationStatus === 'published') {
+                statusEndpoint = `/api/products/${id}/publish`;
+            } else if (data.publicationStatus === 'draft') {
+                statusEndpoint = `/api/products/${id}/unpublish`;
+            } else if (data.publicationStatus === 'archived') {
+                statusEndpoint = `/api/products/${id}/archive`;
+            }
 
-                if (statusEndpoint) {
-                    await this.client.patch(statusEndpoint, {}, { headers: this.getAuthHeaders() });
-                }
-            } catch (statusError) {
-                console.error("Failed to update product status", statusError);
+            if (statusEndpoint) {
+                await this.client.patch(statusEndpoint, {}, { headers: this.getAuthHeaders() });
             }
         }
 
@@ -236,37 +348,33 @@ export class ApiProductRepository implements ProductRepository {
     }
 
     async deleteProduct(id: string): Promise<boolean> {
-        try {
-            await this.client.patch(
-                `/api/products/${id}/archive`,
-                {},
-                { headers: this.getAuthHeaders() }
-            );
-            return true;
-        } catch (error) {
-            console.error('Error deleting product', error);
-            return false;
-        }
+        await this.client.delete(
+            `/api/products/${id}`,
+            undefined,
+            {
+                headers: this.getAuthHeaders(),
+                skipParseJson: true,
+            }
+        );
+
+        return true;
     }
 
     async publishProduct(id: string): Promise<boolean> {
-        try {
-            await this.client.patch(
-                `/api/products/${id}/publish`,
-                {},
-                { headers: this.getAuthHeaders() }
-            );
-            return true;
-        } catch (error) {
-            console.error('Error publishing product', error);
-            return false;
-        }
+        await this.client.patch(
+            `/api/products/${id}/publish`,
+            {},
+            { headers: this.getAuthHeaders() }
+        );
+
+        return true;
     }
 
-    async calculateRentalCost(id: string, startDate: string, endDate: string): Promise<RentalCostBreakdown> {
+    async calculateRentalCost(id: string, startDate: string, endDate: string, quantity: number): Promise<RentalCostBreakdown> {
         const queryParams = new URLSearchParams();
         queryParams.append('start_date', startDate);
         queryParams.append('end_date', endDate);
+        queryParams.append('quantity', String(Math.max(1, quantity)));
 
         const response = await this.client.get<any>(
             `/api/products/${id}/rental-cost?${queryParams.toString()}`,
@@ -281,12 +389,31 @@ export class ApiProductRepository implements ProductRepository {
             productId: payload.product_id,
             startDate: payload.start_date,
             endDate: payload.end_date,
+            requestedQuantity: Number(payload.requested_quantity ?? quantity ?? 1),
             days: payload.days,
             pricePerDay: payload.price_per_day,
             rentalPrice: payload.rental_price,
             deposit: payload.deposit,
             totalPrice: payload.total_price,
         };
+    }
+
+    async checkAvailability(productId: string, startDate: string, endDate: string, quantity: number): Promise<ProductPublicAvailability> {
+        const queryParams = new URLSearchParams();
+        queryParams.append('start_date', startDate);
+        queryParams.append('end_date', endDate);
+        queryParams.append('quantity', String(Math.max(1, quantity)));
+
+        const response = await this.client.get<any>(
+            `/api/products/${productId}/availability?${queryParams.toString()}`,
+            { headers: this.getAuthHeaders() }
+        );
+
+        const payload = (response as any).data && (response as any).success !== undefined
+            ? (response as any).data
+            : response;
+
+        return this.mapProductAvailability(payload);
     }
 
     async getInventorySummary(productId: string): Promise<ProductInventorySummary | null> {
@@ -314,16 +441,50 @@ export class ApiProductRepository implements ProductRepository {
                 { headers: this.getAuthHeaders() }
             );
 
-            const payload = (response as any).data && (response as any).success !== undefined
-                ? (response as any).data
-                : response;
-
-            const items = Array.isArray(payload?.data) ? payload.data : [];
+            const items = this.unwrapListPayload<any>(response);
             return items.map((item: any) => this.mapInventoryAllocation(item));
         } catch (error) {
             console.error(`Error fetching inventory allocations for product ${productId}`, error);
             return [];
         }
+    }
+
+    async getInventoryUnits(productId: string): Promise<InventoryUnit[]> {
+        try {
+            const response = await this.client.get<any>(
+                `/api/products/${productId}/inventory/units`,
+                { headers: this.getAuthHeaders() }
+            );
+
+            const items = this.unwrapListPayload<any>(response);
+            return items.map((item: any) => this.mapInventoryUnit(item));
+        } catch (error) {
+            console.error(`Error fetching inventory units for product ${productId}`, error);
+            return [];
+        }
+    }
+
+    async updateInventoryUnit(
+        productId: string,
+        unitId: string,
+        data: { code?: string; status?: InventoryUnit["status"] }
+    ): Promise<InventoryUnit> {
+        const response = await this.client.patch<any>(
+            `/api/products/${productId}/inventory/units/${unitId}`,
+            {
+                ...(data.code ? { code: data.code } : {}),
+                ...(data.status ? { status: data.status } : {}),
+            },
+            {
+                headers: this.getAuthHeaders(),
+            }
+        );
+
+        const payload = (response as any).data && (response as any).success !== undefined
+            ? (response as any).data
+            : response;
+
+        return this.mapInventoryUnit(payload);
     }
 
     async adjustInventory(productId: string, totalQuantity: number): Promise<void> {
@@ -360,12 +521,17 @@ export class ApiProductRepository implements ProductRepository {
             description: apiData.description || '',
             quantity: Number(apiData.quantity ?? apiData.inventory_summary?.total_quantity ?? 1),
             isRentalEnabled: Boolean(apiData.is_rental_enabled ?? apiData.inventory_summary?.is_rental_enabled ?? true),
+            isInventoryEnabled: Boolean(apiData.is_inventory_enabled ?? apiData.inventory_summary?.is_inventory_enabled ?? true),
+            inventoryMode: this.resolveInventoryMode(apiData),
+            bookingPolicy: apiData.booking_policy ?? 'owner_managed',
+            allowsQuantityRequest: Boolean(apiData.allows_quantity_request ?? true),
             imageUrl: primaryImageId ? `${this.baseUrl}/api/media/images/${primaryImageId}/MEDIUM` : '',
             thumbnailUrl: primaryImageId ? `${this.baseUrl}/api/media/images/${primaryImageId}/THUMBNAIL` : '',
 
             image_ids: imageIds,
 
             publicationStatus: status,
+            dynamicProperties: this.mapDynamicProperties(apiData.dynamic_properties),
 
             price: {
                 daily: Array.isArray(apiData.tiers) && apiData.tiers.length > 0
@@ -426,6 +592,13 @@ export class ApiProductRepository implements ProductRepository {
 
     private mapToDto(data: ProductFormData, includeQuantity: boolean = true): any {
         const product = data as any;
+        const imageIds = Array.isArray(product.images)
+            ? product.images.map((img: any) => img.id).filter(Boolean)
+            : Array.isArray(product.image_ids)
+                ? product.image_ids.filter((imageId: unknown): imageId is string =>
+                    typeof imageId === 'string' && imageId.length > 0
+                )
+                : [];
 
         const dto: any = {
             product_id: product.id,
@@ -433,10 +606,12 @@ export class ApiProductRepository implements ProductRepository {
             slug: data.slug,
             internal_id: data.internalId || data.slug || product.id,
             description: data.description,
-            is_rental_enabled: data.isRentalEnabled,
+            is_rental_enabled: true,
+            inventory_mode: data.inventoryMode ?? 'unmanaged',
             company_id: product.company?.id || data.companyId,
             category_id: product.category?.id || data.categoryId,
-            image_ids: product.images?.map((img: any) => img.id).filter(Boolean) || [],
+            image_ids: imageIds,
+            dynamic_properties: data.dynamicProperties ?? product.dynamicProperties ?? {},
 
             deposit: {
                 amount: Math.round((data.price.deposit || 0) * 100),
@@ -469,7 +644,9 @@ export class ApiProductRepository implements ProductRepository {
             reservedQuantity: Number(apiData.reserved_quantity ?? 0),
             availableQuantity: Number(apiData.available_quantity ?? 0),
             isRentalEnabled: Boolean(apiData.is_rental_enabled ?? true),
+            isInventoryEnabled: Boolean(apiData.is_inventory_enabled ?? true),
             capabilityState: apiData.capability_state ?? 'disabled',
+            inventoryMode: this.resolveInventoryMode(apiData),
             isRentableNow: Boolean(apiData.is_rentable_now ?? false),
             unavailabilityReason: apiData.unavailability_reason ?? null,
         };
@@ -482,11 +659,78 @@ export class ApiProductRepository implements ProductRepository {
             productId: apiData.product_id,
             productInternalId: apiData.product_internal_id,
             allocatedQuantity: Number(apiData.allocated_quantity ?? 1),
+            assignedUnitIds: Array.isArray(apiData.assigned_unit_ids)
+                ? apiData.assigned_unit_ids.map((unitId: unknown) => String(unitId))
+                : [],
             state: apiData.state,
             startsAt: apiData.starts_at,
             endsAt: apiData.ends_at,
             createdAt: apiData.created_at,
             releasedAt: apiData.released_at ?? null,
+        };
+    }
+
+    private mapInventoryUnit(apiData: any): InventoryUnit {
+        return {
+            unitId: apiData.unit_id ?? '',
+            productId: apiData.product_id ?? '',
+            code: apiData.code ?? '',
+            status: apiData.status ?? 'available',
+            sortOrder: Number(apiData.sort_order ?? 1),
+            nextAllocation: apiData.next_allocation
+                ? {
+                    rentId: apiData.next_allocation.rent_id ?? '',
+                    startsAt: apiData.next_allocation.starts_at ?? '',
+                    endsAt: apiData.next_allocation.ends_at ?? '',
+                    state: apiData.next_allocation.state ?? 'reserved',
+                }
+                : null,
+        };
+    }
+
+    private mapProductAvailability(apiData: any): ProductPublicAvailability {
+        return {
+            canRequest: Boolean(apiData.can_request ?? false),
+            status: apiData.status ?? 'unavailable',
+            message: apiData.message ?? '',
+            managedByPlatform: Boolean(apiData.managed_by_platform ?? false),
+        };
+    }
+
+    private mapDynamicProperties(apiData: any): ProductDynamicProperties | undefined {
+        if (!apiData || typeof apiData !== "object" || Array.isArray(apiData)) {
+            return undefined;
+        }
+
+        return apiData as ProductDynamicProperties;
+    }
+
+    private mapAvailableDynamicFilter(apiData: any): AvailableDynamicFilter {
+        return {
+            code: apiData.code ?? "",
+            label: apiData.label ?? "",
+            type: apiData.type ?? "select",
+            unit: apiData.unit ?? null,
+            options: Array.isArray(apiData.options)
+                ? apiData.options.map((option: any): AvailableDynamicFilterOption => ({
+                    value: option.value ?? "",
+                    label: option.label ?? option.value ?? "",
+                    count: Number(option.count ?? 0),
+                    selected: Boolean(option.selected ?? false),
+                }))
+                : undefined,
+            range: apiData.range
+                ? {
+                    min: apiData.range.min ?? null,
+                    max: apiData.range.max ?? null,
+                }
+                : undefined,
+            selectedRange: apiData.selected_range
+                ? {
+                    min: apiData.selected_range.min ?? null,
+                    max: apiData.selected_range.max ?? null,
+                }
+                : undefined,
         };
     }
 }

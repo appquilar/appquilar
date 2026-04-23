@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useRentals } from '@/application/hooks/useRentals';
-import { useOwnedProductsCount } from '@/application/hooks/useProducts';
+import { useRentSummary, useRentals } from '@/application/hooks/useRentals';
+import { useOwnerProductSummary } from '@/application/hooks/useProducts';
 import { useCurrentUser } from '@/application/hooks/useCurrentUser';
 import { RentalRoleTab, RentalStatusFilter } from '@/domain/models/RentalFilters';
 
@@ -20,73 +20,29 @@ export const useRentalsData = () => {
   const ownerType = user?.companyId ? 'company' : 'user';
   const isUserLoaded = Boolean(user);
 
-  const renterAvailabilityQuery = useRentals({
-    role: 'renter',
-    page: 1,
-    perPage: 1,
-  }, { enabled: isUserLoaded });
-
-  const renterPastAvailabilityQuery = useRentals({
-    role: 'renter',
-    timeline: 'past',
-    page: 1,
-    perPage: 1,
-  }, { enabled: isUserLoaded });
-
-  const ownerAvailabilityQuery = useRentals({
-    role: 'owner',
+  const rentSummaryQuery = useRentSummary({
     ownerId: ownerReferenceId,
-    page: 1,
-    perPage: 1,
-  }, { enabled: isUserLoaded && Boolean(ownerReferenceId) });
-
-  const ownerPastAvailabilityQuery = useRentals({
-    role: 'owner',
-    ownerId: ownerReferenceId,
-    timeline: 'past',
-    page: 1,
-    perPage: 1,
-  }, { enabled: isUserLoaded && Boolean(ownerReferenceId) });
-
-  const ownedProductsCountQuery = useOwnedProductsCount({
+    enabled: isUserLoaded,
+  });
+  const ownerProductSummaryQuery = useOwnerProductSummary({
     ownerId: ownerReferenceId,
     ownerType,
+    enabled: isUserLoaded && Boolean(ownerReferenceId),
   });
 
-  const ownedPublishedProductsCountQuery = useOwnedProductsCount({
-    ownerId: ownerReferenceId,
-    ownerType,
-    filters: {
-      publicationStatus: 'published',
-    },
-  });
+  const hasRentsAsRenter = (rentSummaryQuery.data?.renter.total ?? 0) > 0;
+  const hasPastRentsAsRenter = (rentSummaryQuery.data?.renter.past ?? 0) > 0;
+  const hasRentsAsOwner = (rentSummaryQuery.data?.owner.total ?? 0) > 0;
+  const hasPastRentsAsOwner = (rentSummaryQuery.data?.owner.past ?? 0) > 0;
 
-  const ownedArchivedProductsCountQuery = useOwnedProductsCount({
-    ownerId: ownerReferenceId,
-    ownerType,
-    filters: {
-      publicationStatus: 'archived',
-    },
-  });
-
-  const hasRentsAsRenter = renterAvailabilityQuery.total > 0;
-  const hasPastRentsAsRenter = renterPastAvailabilityQuery.total > 0;
-  const hasRentsAsOwner = ownerAvailabilityQuery.total > 0;
-  const hasPastRentsAsOwner = ownerPastAvailabilityQuery.total > 0;
-
-  const totalOwnedProducts = ownedProductsCountQuery.data ?? 0;
-  const archivedOwnedProducts = ownedArchivedProductsCountQuery.data ?? 0;
-  const hasPublishedProductsForRent = (ownedPublishedProductsCountQuery.data ?? 0) > 0;
+  const totalOwnedProducts = ownerProductSummaryQuery.data?.total ?? 0;
+  const archivedOwnedProducts = ownerProductSummaryQuery.data?.archived ?? 0;
+  const hasPublishedProductsForRent = (ownerProductSummaryQuery.data?.published ?? 0) > 0;
   const hasNonArchivedProductsForRent = Math.max(0, totalOwnedProducts - archivedOwnedProducts) > 0;
 
   const isRoleAvailabilityLoading = isUserLoaded && (
-    renterAvailabilityQuery.isLoading ||
-    renterPastAvailabilityQuery.isLoading ||
-    ownerAvailabilityQuery.isLoading ||
-    ownerPastAvailabilityQuery.isLoading ||
-    ownedProductsCountQuery.isLoading ||
-    ownedPublishedProductsCountQuery.isLoading ||
-    ownedArchivedProductsCountQuery.isLoading
+    rentSummaryQuery.isLoading ||
+    ownerProductSummaryQuery.isLoading
   );
 
   const shouldForceRenterRole = !hasNonArchivedProductsForRent && !hasPastRentsAsOwner;
