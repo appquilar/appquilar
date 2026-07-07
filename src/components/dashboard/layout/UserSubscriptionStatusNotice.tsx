@@ -28,17 +28,17 @@ const UserSubscriptionStatusNotice = () => {
   }
 
   const isPaused = currentUser.subscriptionStatus === "paused";
-  const actionLabel = "Abrir suscripcion";
+  const actionLabel = "Abrir suscripción";
   const title = isScheduledForCancellation
-    ? "Tu suscripcion User Pro terminara al final del periodo actual"
+    ? "Tu suscripción User Pro terminará al final del periodo actual"
     : isPaused
-    ? "Detectamos un problema de pago en tu suscripcion User Pro"
-    : "Tu suscripcion User Pro esta cancelada";
+    ? "Detectamos un problema de pago en tu suscripción User Pro"
+    : "Tu suscripción User Pro está cancelada";
   const body = isScheduledForCancellation
-    ? "Seguiras teniendo acceso hasta entonces. Si fue un error, desde la suscripcion puedes mantener User Pro sin abrir un checkout nuevo."
+    ? "Seguirás teniendo acceso hasta entonces. Si fue un error, desde la suscripción puedes mantener User Pro sin abrir un checkout nuevo."
     : isPaused
-    ? "Stripe esta reintentando el cobro. Revisa la suscripcion para recuperar metricas y beneficios de User Pro."
-    : "Actualmente estas en modo Explorador. Inicia una nueva activacion de User Pro para recuperar el plan de pago.";
+    ? "Stripe está reintentando el cobro. Revisa la suscripción para recuperar métricas y beneficios de User Pro."
+    : "Actualmente estás en modo Explorador. Inicia una nueva activación de User Pro para recuperar el plan de pago.";
 
   const handleOpenSubscription = (event: MouseEvent<HTMLAnchorElement>) => {
     if (location.pathname !== "/dashboard/config") {

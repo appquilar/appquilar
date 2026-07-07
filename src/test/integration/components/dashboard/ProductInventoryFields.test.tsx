@@ -278,12 +278,12 @@ describe("ProductInventoryFields", () => {
       />
     );
 
-    expect(screen.getByText("Calendario de ocupacion")).toBeInTheDocument();
+    expect(screen.getByText("Calendario de ocupación")).toBeInTheDocument();
 
-    const codeInput = screen.getByLabelText("Codigo interno de la unidad CAST-001");
+    const codeInput = screen.getByLabelText("Código interno de la unidad CAST-001");
     await user.clear(codeInput);
     await user.type(codeInput, "CAST-RENAMED");
-    await user.click(screen.getByLabelText("Guardar codigo de la unidad CAST-001"));
+    await user.click(screen.getByLabelText("Guardar código de la unidad CAST-001"));
 
     expect(mutateAsync).toHaveBeenCalledWith({
       productId: "product-1",

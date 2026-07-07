@@ -47,6 +47,10 @@ export interface ReactivateSubscriptionInput {
     scope: BillingScope;
 }
 
+export interface SynchronizeSubscriptionInput {
+    scope: BillingScope;
+}
+
 export interface SynchronizeCheckoutSessionInput {
     scope: BillingScope;
     sessionId: string;
@@ -72,4 +76,8 @@ export interface CheckoutSessionSynchronizationResult {
 
 export interface SubscriptionReactivationResult {
     reactivated: boolean;
+}
+
+export interface SubscriptionSynchronizationResult {
+    synchronized: boolean;
 }

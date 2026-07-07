@@ -10,6 +10,7 @@ export type RentStatus =
   | 'rejected'
   | 'expired';
 export type RentOwnerType = 'user' | 'company';
+export type ProductPublicationStatus = 'draft' | 'published' | 'archived';
 
 export interface RentalOwnerLocation {
   street?: string | null;
@@ -28,6 +29,7 @@ export interface Rental {
   productId: string;
   productName?: string | null;
   productSlug?: string | null;
+  productPublicationStatus?: ProductPublicationStatus | null;
   productInternalId?: string | null;
   ownerId: string;
   ownerName?: string | null;

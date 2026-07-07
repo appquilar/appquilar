@@ -28,7 +28,7 @@ const RentalDetailsHeader = ({ rental }: RentalDetailsHeaderProps) => {
             {rental.productName || 'Producto sin nombre'}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Gestiona el estado, la conversacion y las acciones del alquiler desde aqui.
+            Gestiona el estado, la conversación y las acciones del alquiler desde aquí.
           </p>
         </div>
       </div>

@@ -41,18 +41,18 @@ const getDepositResolution = (rental: Rental): string => {
 
 const getDepositResolutionDetail = (rental: Rental): string => {
   if (rental.deposit.amount <= 0) {
-    return 'No se ha requerido fianza para esta operacion.';
+    return 'No se ha requerido fianza para esta operación.';
   }
 
   if (!rental.depositReturned || rental.depositReturned.amount <= 0) {
-    return 'Todavia no se ha registrado la devolucion de la fianza.';
+    return 'Todavía no se ha registrado la devolución de la fianza.';
   }
 
   if (rental.depositReturned.amount >= rental.deposit.amount) {
-    return 'La devolucion de la fianza ya se ha completado.';
+    return 'La devolución de la fianza ya se ha completado.';
   }
 
-  return `Se han devuelto ${formatMoneyFromCents(rental.depositReturned.amount, rental.depositReturned.currency)} y queda una retencion parcial.`;
+  return `Se han devuelto ${formatMoneyFromCents(rental.depositReturned.amount, rental.depositReturned.currency)} y queda una retención parcial.`;
 };
 
 interface SummaryTileProps {
@@ -85,11 +85,12 @@ const RentalDetailsCard = ({
   formattedStartDate,
   formattedEndDate
 }: RentalDetailsCardProps) => {
-  const publicProductHref = buildProductPath(rental.productSlug ?? rental.productId);
+  const isPublicProductAvailable = rental.productPublicationStatus === 'published' && Boolean(rental.productSlug);
+  const publicProductHref = isPublicProductAvailable ? buildProductPath(rental.productSlug as string) : null;
   const ownerEditProductHref = `/dashboard/products/${rental.productId}`;
   const canOwnerEditProduct = viewerRole === 'owner' || viewerRole === 'admin';
   const shouldShowRenterPublicButton = viewerRole === 'renter';
-  const actionLinkLabel = canOwnerEditProduct ? 'Abrir producto' : 'Ver producto publico';
+  const actionLinkLabel = canOwnerEditProduct ? 'Abrir producto' : 'Ver producto público';
   const actionLinkHref = canOwnerEditProduct ? ownerEditProductHref : publicProductHref;
   const actionLinkIsExternal = !canOwnerEditProduct;
   const requestedQuantityLabel = `${rental.requestedQuantity} ${rental.requestedQuantity === 1 ? 'unidad' : 'unidades'}`;
@@ -120,14 +121,14 @@ const RentalDetailsCard = ({
             )}
           </div>
 
-          {(shouldShowRenterPublicButton || canOwnerEditProduct) && (
+          {(canOwnerEditProduct || (shouldShowRenterPublicButton && actionLinkHref)) && (
             <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
               {actionLinkIsExternal ? (
-                <a href={actionLinkHref} target="_blank" rel="noopener noreferrer">
+                <a href={actionLinkHref ?? '#'} target="_blank" rel="noopener noreferrer">
                   {actionLinkLabel}
                 </a>
               ) : (
-                <Link to={actionLinkHref}>
+                <Link to={ownerEditProductHref}>
                   {actionLinkLabel}
                 </Link>
               )}
@@ -148,8 +149,8 @@ const RentalDetailsCard = ({
 
           <SummaryTile
             icon={Clock}
-            label="Duracion"
-            value={`${durationDays} ${durationDays === 1 ? 'dia' : 'dias'}`}
+            label="Duración"
+            value={`${durationDays} ${durationDays === 1 ? 'día' : 'días'}`}
           />
 
           <SummaryTile
@@ -166,7 +167,7 @@ const RentalDetailsCard = ({
 
           <SummaryTile
             icon={Tag}
-            label="Tipo de operacion"
+            label="Tipo de operación"
             value={summaryTypeLabel}
           />
 
@@ -184,15 +185,21 @@ const RentalDetailsCard = ({
             hint={
               rental.depositReturned && rental.depositReturned.amount > 0
                 ? `Devuelta: ${formatMoneyFromCents(rental.depositReturned.amount, rental.depositReturned.currency)}`
-                : 'Sin devolucion registrada todavia.'
+                : 'Sin devolución registrada todavía.'
             }
           />
         </div>
 
-        {!shouldShowRenterPublicButton && !canOwnerEditProduct && (
+        {shouldShowRenterPublicButton && !isPublicProductAvailable && (
+          <p className="text-sm text-muted-foreground">
+            El producto ya no está publicado.
+          </p>
+        )}
+
+        {!shouldShowRenterPublicButton && !canOwnerEditProduct && publicProductHref && (
           <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
             <a href={publicProductHref} target="_blank" rel="noopener noreferrer">
-              Ver producto publico
+              Ver producto público
             </a>
           </Button>
         )}

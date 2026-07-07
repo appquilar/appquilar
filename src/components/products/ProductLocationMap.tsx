@@ -13,9 +13,11 @@ const ProductLocationMap = ({ city, state, coordinates = [-2.4637, 36.8381], pol
     const mapContainer = useRef<HTMLDivElement>(null);
     const [mapError, setMapError] = useState<string | null>(null);
     const mapsUrl = useMemo(() => {
-        const query = [city, state].filter(Boolean).join(', ');
+        const query = coordinates
+            ? `${coordinates[1]},${coordinates[0]}`
+            : [city, state].filter(Boolean).join(', ');
         return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-    }, [city, state]);
+    }, [city, coordinates, state]);
 
     useProductLocationMap({
         containerRef: mapContainer,

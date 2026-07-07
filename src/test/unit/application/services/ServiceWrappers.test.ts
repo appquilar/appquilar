@@ -243,6 +243,7 @@ describe("application service wrappers", () => {
         role: "ROLE_CONTRIBUTOR",
         status: "PENDING",
         expiresAt: null,
+        hasExistingAccount: false,
       })),
       acceptInvitation: createMockFn(async () => undefined),
     };
@@ -320,6 +321,7 @@ describe("application service wrappers", () => {
       role: "ROLE_CONTRIBUTOR",
       status: "PENDING",
       expiresAt: null,
+      hasExistingAccount: false,
     });
     await companyInvitationService.acceptInvitation({ token: "invitation" } as never);
     await companyMembershipService.createCompany({ companyId: "company-1" } as never);

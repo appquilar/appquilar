@@ -530,7 +530,7 @@ describe("useProducts hooks", () => {
     ).rejects.toThrow("boom");
 
     expect(toastErrorMock).toHaveBeenCalledWith(
-      "No se pudo crear el producto. Intentalo de nuevo en unos minutos."
+      "No se pudo crear el producto. Inténtalo de nuevo en unos minutos."
     );
     expect(toastErrorMock).toHaveBeenCalledWith("Error al actualizar el producto");
     expect(toastErrorMock).toHaveBeenCalledWith("boom");

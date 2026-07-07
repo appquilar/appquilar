@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { categoryService } from "@/compositionRoot";
+import { filterVisiblePublicCategories } from "@/domain/config/publicCategoryVisibility";
 import type { Category } from "@/domain/models/Category";
 
 const PAGE_SIZE = 50;
@@ -17,8 +18,9 @@ export function useAllPlatformCategories() {
             setIsLoading(true);
             setError(null);
 
+            const allCategories: Category[] = [];
+
             try {
-                const allCategories: Category[] = [];
                 let page = 1;
                 let total = 0;
 
@@ -43,13 +45,17 @@ export function useAllPlatformCategories() {
                         new Map(allCategories.map((category) => [category.id, category])).values()
                     );
 
-                    setCategories(uniqueCategories);
+                    setCategories(filterVisiblePublicCategories(uniqueCategories));
                 }
             } catch (err) {
                 if (!cancelled) {
                     console.error("Error loading all platform categories:", err);
                     setError("Error al cargar categorías");
-                    setCategories([]);
+                    if (allCategories.length > 0) {
+                        setCategories(filterVisiblePublicCategories(Array.from(
+                            new Map(allCategories.map((category) => [category.id, category])).values()
+                        )));
+                    }
                 }
             } finally {
                 if (!cancelled) {

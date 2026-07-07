@@ -1,9 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { screen } from "@testing-library/react";
 
+import ProductCard from "@/components/products/ProductCard";
 import { renderWithProviders } from "@/test/utils/renderWithProviders";
-
-const useAuthMock = vi.fn();
 
 const product = {
     id: "product-1",
@@ -31,34 +30,15 @@ const product = {
     reviewCount: 0,
 };
 
-const loadProductCard = async () => {
-    vi.resetModules();
-    vi.doMock("@/context/AuthContext", () => ({
-        useAuth: () => useAuthMock(),
-    }));
-
-    return import("@/components/products/ProductCard");
-};
-
 describe("ProductCard integration", () => {
-    beforeEach(() => {
-        useAuthMock.mockReset();
-    });
-
-    it("blurs pricing for anonymous visitors", async () => {
-        useAuthMock.mockReturnValue({ isAuthenticated: false });
-        const { default: ProductCard } = await loadProductCard();
-
+    it("shows real pricing for anonymous visitors", () => {
         renderWithProviders(<ProductCard product={product} />);
 
-        expect(screen.getByTestId("product-card-public-price-mask")).toBeInTheDocument();
-        expect(screen.queryByText("18€/día", { exact: false })).not.toBeInTheDocument();
+        expect(screen.getByText("Herramientas • 18€/día • 60€ fianza")).toBeInTheDocument();
+        expect(screen.queryByTestId("product-card-public-price-mask")).not.toBeInTheDocument();
     });
 
-    it("shows real pricing for authenticated users", async () => {
-        useAuthMock.mockReturnValue({ isAuthenticated: true });
-        const { default: ProductCard } = await loadProductCard();
-
+    it("shows product identity and pricing together", () => {
         renderWithProviders(<ProductCard product={product} />);
 
         expect(screen.getByText("P-001")).toBeInTheDocument();

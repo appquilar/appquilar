@@ -208,7 +208,7 @@ describe("UserSubscriptionSettingsCard", () => {
         });
 
         await user.click(
-            screen.getByRole("button", { name: "Gestionar suscripcion" })
+            screen.getByRole("button", { name: "Gestionar suscripción" })
         );
 
         await waitFor(() => {
@@ -258,7 +258,7 @@ describe("UserSubscriptionSettingsCard", () => {
             route: "/dashboard/config",
         });
 
-        expect(screen.getByText("Cancelacion programada")).toBeInTheDocument();
+        expect(screen.getByText("Cancelación programada")).toBeInTheDocument();
         expect(
             screen.getByRole("button", { name: "Mantener User Pro" })
         ).toBeInTheDocument();
@@ -270,7 +270,7 @@ describe("UserSubscriptionSettingsCard", () => {
         await waitFor(() => {
             expect(reactivate).toHaveBeenCalledTimes(1);
             expect(toastSuccessMock).toHaveBeenCalledWith(
-                "User Pro seguira activo al final del periodo."
+                "User Pro seguirá activo al final del periodo."
             );
         });
     });

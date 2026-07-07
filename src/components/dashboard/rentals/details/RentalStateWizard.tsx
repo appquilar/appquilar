@@ -59,7 +59,7 @@ const RentalStateWizard = ({
       ? 'Tienda'
       : nextStepInfo.actionRequiredBy === 'renter'
       ? 'Cliente'
-      : 'Sin accion pendiente';
+      : 'Sin acción pendiente';
   const infoBoxClassName =
     nextStepInfo.tone === 'success'
       ? 'border-emerald-200 bg-emerald-50'
@@ -71,13 +71,13 @@ const RentalStateWizard = ({
   const proposalValidityValue = rental.proposalValidUntil
     ? formatDisplayDate(rental.proposalValidUntil)
     : rental.status === 'proposal_pending_renter'
-    ? 'Sin fecha limite'
+    ? 'Sin fecha límite'
     : 'Sin propuesta activa';
   const proposalValidityDescription = rental.proposalValidUntil
-    ? 'La fecha puede ajustarse si cambian los terminos.'
+    ? 'La fecha puede ajustarse si cambian los términos.'
     : rental.status === 'proposal_pending_renter'
     ? 'La propuesta sigue abierta hasta que se acepte, cambie o caduque.'
-    : 'Todavia no hay una propuesta enviada al cliente.';
+    : 'Todavía no hay una propuesta enviada al cliente.';
   const viewerRoleLabel =
     viewerRole === 'owner'
       ? 'Tienda'
@@ -133,8 +133,8 @@ const RentalStateWizard = ({
                 <p className="mt-1 text-sm font-semibold">{actionRequiredLabel}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {nextStepInfo.actionRequiredBy
-                    ? `La siguiente accion corresponde a ${actionRequiredLabel.toLowerCase()}.`
-                    : 'No hay ninguna accion pendiente ahora mismo.'}
+                    ? `La siguiente acción corresponde a ${actionRequiredLabel.toLowerCase()}.`
+                    : 'No hay ninguna acción pendiente ahora mismo.'}
                 </p>
               </div>
 
@@ -183,9 +183,9 @@ const RentalStateWizard = ({
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="text-sm font-semibold">Aceptacion de la version actual</h3>
+                <h3 className="text-sm font-semibold">Aceptación de la versión actual</h3>
                 <p className="text-sm text-muted-foreground">
-                  Muestra si tienda y cliente estan alineados sobre la propuesta actual.
+                  Muestra si tienda y cliente están alineados sobre la propuesta actual.
                 </p>
               </div>
 
@@ -193,13 +193,13 @@ const RentalStateWizard = ({
                 <div className="rounded-lg border bg-background px-3 py-2">
                   <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Tienda</p>
                   <p className="mt-1 text-sm font-semibold">
-                    {rental.ownerProposalAccepted ? 'Version actual aceptada' : 'Pendiente de confirmar'}
+                    {rental.ownerProposalAccepted ? 'Versión actual aceptada' : 'Pendiente de confirmar'}
                   </p>
                 </div>
                 <div className="rounded-lg border bg-background px-3 py-2">
                   <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Cliente</p>
                   <p className="mt-1 text-sm font-semibold">
-                    {rental.renterProposalAccepted ? 'Version actual aceptada' : 'Pendiente de revisar'}
+                    {rental.renterProposalAccepted ? 'Versión actual aceptada' : 'Pendiente de revisar'}
                   </p>
                 </div>
               </div>
@@ -211,14 +211,14 @@ const RentalStateWizard = ({
           <div>
             <h3 className="text-sm font-semibold">Acciones disponibles</h3>
             <p className="text-sm text-muted-foreground">
-              Solo se muestran acciones validas para tu rol y el estado actual.
+              Solo se muestran acciones válidas para tu rol y el estado actual.
             </p>
           </div>
 
           {transitions.some((item) => item.requiresProposalValidUntil) && (
             <div className="grid gap-2 sm:max-w-sm">
               <label className="text-sm font-medium" htmlFor="proposal-valid-until">
-                Propuesta valida hasta (opcional)
+                Propuesta válida hasta (opcional)
               </label>
               <Input
                 id="proposal-valid-until"

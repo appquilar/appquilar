@@ -59,7 +59,7 @@ describe("useUserProCheckout", () => {
 
     expect(result.current.isCheckoutAvailable).toBe(false);
     expect(result.current.unavailableMessage).toBe(
-      "User Pro todavia no esta configurado para checkout en Stripe."
+      "User Pro todavía no está configurado para checkout en Stripe."
     );
   });
 
@@ -122,13 +122,13 @@ describe("useUserProCheckout", () => {
       "Estamos comprobando la disponibilidad de User Pro."
     );
     expect(renderHook(() => useUserProCheckout()).result.current.unavailableMessage).toBe(
-      "User Pro no esta disponible para activar ahora mismo."
+      "User Pro no está disponible para activar ahora mismo."
     );
     expect(renderHook(() => useUserProCheckout()).result.current.unavailableMessage).toBe(
-      "User Pro no esta disponible para activar ahora mismo."
+      "User Pro no está disponible para activar ahora mismo."
     );
     expect(renderHook(() => useUserProCheckout()).result.current.unavailableMessage).toBe(
-      "User Pro no esta disponible para activar ahora mismo."
+      "User Pro no está disponible para activar ahora mismo."
     );
 
     const stripeProductOnly = renderHook(() => useUserProCheckout());
@@ -146,7 +146,7 @@ describe("useUserProCheckout", () => {
         },
         "Fallback"
       )
-    ).toBe("User Pro todavia no esta configurado para checkout en Stripe.");
+    ).toBe("User Pro todavía no está configurado para checkout en Stripe.");
 
     expect(
       getUserProCheckoutErrorMessage(
@@ -157,7 +157,7 @@ describe("useUserProCheckout", () => {
         },
         "Fallback"
       )
-    ).toBe("User Pro todavia no esta configurado para checkout en Stripe.");
+    ).toBe("User Pro todavía no está configurado para checkout en Stripe.");
 
     expect(
       getUserProCheckoutErrorMessage(

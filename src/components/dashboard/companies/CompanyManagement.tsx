@@ -87,7 +87,7 @@ const CompanyManagement = () => {
         },
         {
             key: "status",
-            header: "Suscripcion",
+            header: "Suscripción",
             cell: (company: CompanyAdminSummary) => (
                 <Badge className={STATUS_STYLES[company.subscriptionStatus]}>
                     {STATUS_LABELS[company.subscriptionStatus]}
@@ -141,7 +141,7 @@ const CompanyManagement = () => {
             {!isAuthLoading && !isAdmin && !userCompanyId && (
                 <div className="rounded-md border p-4">
                     <p className="text-sm text-muted-foreground">
-                        Esta vista de empresas esta disponible solo para administradores.
+                        Esta vista de empresas está disponible solo para administradores.
                     </p>
                 </div>
             )}

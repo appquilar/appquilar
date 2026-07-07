@@ -54,7 +54,6 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
             setIsLoading(true);
             const captchaToken = await execute("register");
             await register(data.firstName, data.lastName, data.email, data.password, captchaToken);
-            onSuccess?.();
         } catch (error) {
             const fields = (error as { payload?: { errors?: Record<string, string[]> } })?.payload?.errors;
             if (fields) {
@@ -78,8 +77,15 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
             setSubmitError(
                 error instanceof Error ? error.message : "No se pudo crear la cuenta. Inténtalo de nuevo."
             );
+            return;
         } finally {
             setIsLoading(false);
+        }
+
+        try {
+            await onSuccess?.();
+        } catch (error) {
+            console.error("Post-signup UI refresh failed", error);
         }
     };
 

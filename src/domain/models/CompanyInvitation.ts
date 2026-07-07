@@ -20,4 +20,5 @@ export interface CompanyInvitationStatus {
     role: string;
     status: CompanyInvitationStatusValue;
     expiresAt: string | null;
+    hasExistingAccount: boolean;
 }

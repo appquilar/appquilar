@@ -13,15 +13,17 @@ import {
   UpdateRentData,
   UpdateRentStatusData
 } from '@/domain/repositories/RentalRepository';
-import { Rental, RentOwnerType, RentStatus } from '@/domain/models/Rental';
+import { ProductPublicationStatus, Rental, RentOwnerType, RentStatus } from '@/domain/models/Rental';
 import { Money } from '@/domain/models/Money';
 import { RentalMessage } from '@/domain/models/RentalMessage';
 
 interface RentDto {
+  id?: string;
   rent_id: string;
   product_id: string;
   product_name?: string | null;
   product_slug?: string | null;
+  product_publication_status?: ProductPublicationStatus | null;
   product_internal_id?: string | null;
   owner_id: string;
   owner_type: string;
@@ -169,10 +171,11 @@ export class ApiRentalRepository implements RentalRepository {
     const ownerType = String(dto.owner_type).toLowerCase() === 'company' ? 'company' : 'user';
 
     return {
-      id: dto.rent_id,
+      id: dto.rent_id ?? dto.id ?? '',
       productId: dto.product_id,
       productName: dto.product_name ?? null,
       productSlug: dto.product_slug ?? null,
+      productPublicationStatus: dto.product_publication_status ?? null,
       productInternalId: dto.product_internal_id ?? null,
       ownerId: dto.owner_id,
       ownerType: ownerType as RentOwnerType,
@@ -293,7 +296,11 @@ export class ApiRentalRepository implements RentalRepository {
       const response = await this.client.get<RentDto>(`/api/rents/${id}`, {
         headers: this.getAuthHeaders(),
       });
-      const payload = (response as any).data ? (response as any).data : response;
+      const raw = response as any;
+      const payload = raw?.data?.rent ?? raw?.data?.data ?? raw?.data ?? raw?.rent ?? raw;
+      if (!payload || typeof payload !== 'object') {
+        return null;
+      }
       return this.mapToDomain(payload);
     } catch (error) {
       console.error(`Error fetching rent ${id}`, error);

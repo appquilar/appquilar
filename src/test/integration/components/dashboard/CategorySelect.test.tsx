@@ -11,7 +11,7 @@ vi.mock("@/application/hooks/useAllPlatformCategories", () => ({
 }));
 
 describe("CategorySelect", () => {
-  it("filters categories without being sensitive to case or accents", async () => {
+  it("selects categories from the native select", async () => {
     const onChange = vi.fn();
 
     useAllPlatformCategoriesMock.mockReturnValue({
@@ -28,19 +28,10 @@ describe("CategorySelect", () => {
         value={null}
         onChange={onChange}
         placeholder="Seleccionar categoría del producto"
-        searchPlaceholder="Buscar categoría por nombre..."
       />
     );
 
-    await userEvent.click(screen.getByRole("combobox"));
-
-    const input = screen.getByPlaceholderText("Buscar categoría por nombre...");
-    await userEvent.type(input, "camping");
-
-    expect(screen.getByText("Cámping")).toBeInTheDocument();
-    expect(screen.queryByText("Herramientas")).not.toBeInTheDocument();
-
-    await userEvent.click(screen.getByText("Cámping"));
+    await userEvent.selectOptions(screen.getByRole("combobox"), "cat-1");
 
     expect(onChange).toHaveBeenCalledWith("cat-1");
   });

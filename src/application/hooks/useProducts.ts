@@ -46,6 +46,10 @@ const isMachineReadableBackendCode = (value: string): boolean => /^[a-z0-9_.-]+$
 const getProductPlanLimitErrorMessage = (error: unknown): string | null => {
     const backendCode = extractBackendErrorCode(error);
 
+    if (backendCode === 'product.publish.images_required') {
+        return 'Añade al menos una imagen para publicar el producto.';
+    }
+
     if (backendCode === 'subscription.user.product_limit_reached') {
         return 'Has alcanzado el limite de productos publicados de tu plan. Puedes seguir guardando borradores, pero para publicar otro producto necesitas liberar uno ya publicado o mejorar tu plan.';
     }
@@ -261,9 +265,16 @@ export const useCreateProduct = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (data: ProductFormData) => productService.createProduct(data),
-        onSuccess: () => {
+        onSuccess: (data) => {
             toast.success('Guardado correcto');
             queryClient.invalidateQueries({ queryKey: ['products'] });
+            if (data?.id) {
+                queryClient.invalidateQueries({ queryKey: ['product', data.id] });
+                queryClient.invalidateQueries({ queryKey: ['productInventory', data.id] });
+            }
+            if (data?.slug) {
+                queryClient.invalidateQueries({ queryKey: ['product', 'slug', data.slug] });
+            }
         },
         onError: (error) => {
             console.error('Error creating product:', error);
@@ -273,7 +284,7 @@ export const useCreateProduct = () => {
             toast.error(
                 getProductMutationErrorMessage(
                     error,
-                    'No se pudo crear el producto. Intentalo de nuevo en unos minutos.'
+                    'No se pudo crear el producto. Inténtalo de nuevo en unos minutos.'
                 )
             );
         }

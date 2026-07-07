@@ -64,12 +64,14 @@ const CompanyInvitationPage = () => {
     const companyId = searchParams.get("company_id") ?? "";
     const token = searchParams.get("token") ?? "";
     const invitedEmail = (searchParams.get("email") ?? "").trim().toLowerCase();
+    const invitedCompanyName = (searchParams.get("company_name") ?? "").trim();
+    const invitedRole = (searchParams.get("role") ?? "").trim();
     const isLinkValid = Boolean(companyId && token);
 
-    const { currentUser, login } = useAuth();
+    const { currentUser, login, logout } = useAuth();
     const invitationStatusQuery = useCompanyInvitationStatus(companyId, token, isLinkValid);
     const acceptInvitation = useAcceptCompanyInvitation();
-    const [mode, setMode] = useState<"existing" | "new">("existing");
+    const [mode, setMode] = useState<"existing" | "new">("new");
     const [alreadyAccepted, setAlreadyAccepted] = useState(false);
 
     const existingAccountForm = useForm<ExistingAccountFormValues>({
@@ -103,12 +105,21 @@ const CompanyInvitationPage = () => {
     const invitationStatus = invitationStatusQuery.data?.status;
     const backendInvitedEmail = invitationStatusQuery.data?.email.trim().toLowerCase() ?? "";
     const backendCompanyName = invitationStatusQuery.data?.companyName.trim() ?? "";
-    const effectiveInvitedEmail = invitedEmail || backendInvitedEmail;
-    const effectiveInvitedRole = invitationStatusQuery.data?.role ?? "";
+    const effectiveInvitedEmail = backendInvitedEmail || invitedEmail;
+    const effectiveCompanyName = backendCompanyName || invitedCompanyName;
+    const effectiveInvitedRole = invitationStatusQuery.data?.role ?? invitedRole;
     const isInvitationAccepted = alreadyAccepted || invitationStatus === "ACCEPTED";
     const isInvitationExpired = invitationStatus === "EXPIRED";
     const isInvitationSuspended = invitationStatus === "SUSPENDED";
     const isInvitationUnavailable = isInvitationExpired || isInvitationSuspended;
+    const canAttemptAcceptanceFromLink = isLinkValid && effectiveInvitedEmail.length > 0;
+    const currentUserEmail = currentUser?.email.trim().toLowerCase() ?? "";
+    const isLoggedInWithDifferentEmail = Boolean(
+        currentUser &&
+        effectiveInvitedEmail &&
+        currentUserEmail !== effectiveInvitedEmail
+    );
+    const shouldBlockOnInvitationStatusError = invitationStatusQuery.isError && !canAttemptAcceptanceFromLink;
     const requiresInvitationEmail =
         !currentUser &&
         !invitationStatusQuery.isLoading &&
@@ -120,6 +131,12 @@ const CompanyInvitationPage = () => {
             setAlreadyAccepted(true);
         }
     }, [invitationStatus]);
+
+    useEffect(() => {
+        if (!currentUser && invitationStatusQuery.data && !isInvitationAccepted) {
+            setMode(invitationStatusQuery.data.hasExistingAccount ? "existing" : "new");
+        }
+    }, [currentUser, invitationStatusQuery.data, isInvitationAccepted]);
 
     const acceptAsAuthenticatedUser = async () => {
         await acceptInvitation.mutateAsync({
@@ -153,6 +170,11 @@ const CompanyInvitationPage = () => {
             console.error("Error accepting invitation as logged user", error);
             toast.error(getKnownBackendErrorMessage(error, "No se pudo aceptar la invitación con esta cuenta."));
         }
+    };
+
+    const onSwitchAccount = async () => {
+        await logout();
+        setMode(invitationStatusQuery.data?.hasExistingAccount ? "existing" : "new");
     };
 
     const onExistingAccountSubmit = async (values: ExistingAccountFormValues) => {
@@ -279,7 +301,7 @@ const CompanyInvitationPage = () => {
                                 Comprobando invitación...
                             </p>
                         </div>
-                    ) : invitationStatusQuery.isError ? (
+                    ) : shouldBlockOnInvitationStatusError ? (
                         <div className="space-y-4">
                             <p className="text-sm text-destructive">
                                 La invitación no existe o el enlace ya no es válido.
@@ -317,6 +339,18 @@ const CompanyInvitationPage = () => {
                                 Ir al dashboard
                             </Button>
                         </div>
+                    ) : currentUser && isLoggedInWithDifferentEmail ? (
+                        <div className="space-y-4">
+                            <p className="text-sm text-destructive">
+                                Esta invitación es para {effectiveInvitedEmail}, pero has iniciado sesión como {currentUser.email}.
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                                Cierra sesión y entra con la cuenta invitada para aceptarla.
+                            </p>
+                            <Button onClick={onSwitchAccount} disabled={isSubmitting} className="w-full">
+                                Cerrar sesión y cambiar cuenta
+                            </Button>
+                        </div>
                     ) : currentUser ? (
                         <div className="space-y-4">
                             <p className="text-sm text-muted-foreground">
@@ -333,9 +367,9 @@ const CompanyInvitationPage = () => {
                                 <Label htmlFor="company-invitation-email">Email invitado</Label>
                                 <Input id="company-invitation-email" value={effectiveInvitedEmail} readOnly disabled />
                             </div>
-                            {(backendCompanyName || effectiveInvitedRole) && (
+                            {(effectiveCompanyName || effectiveInvitedRole) && (
                                 <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-                                    {backendCompanyName && <p>Empresa: <span className="font-medium text-foreground">{backendCompanyName}</span></p>}
+                                    {effectiveCompanyName && <p>Empresa: <span className="font-medium text-foreground">{effectiveCompanyName}</span></p>}
                                     {effectiveInvitedRole && <p>Rol: <span className="font-medium text-foreground">{roleLabel(effectiveInvitedRole)}</span></p>}
                                 </div>
                             )}

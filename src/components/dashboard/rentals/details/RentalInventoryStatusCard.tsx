@@ -83,6 +83,9 @@ const RentalInventoryStatusCard = ({ rental, viewerRole }: RentalInventoryStatus
     (allocation) => allocation.rentId === rental.id && allocation.state !== "released",
   ) ?? null;
   const shouldHaveActiveAllocation = rental.status === "rental_confirmed" || rental.status === "rental_active";
+  const isManualInventory = inventory !== null && (
+    inventory.inventoryMode !== "managed_serialized" || !inventory.isInventoryEnabled
+  );
   const assignedUnitIds = currentAllocation?.assignedUnitIds ?? [];
   const assignedUnits = (unitsQuery.data ?? []).filter((unit) => assignedUnitIds.includes(unit.unitId));
   const productHref = `/dashboard/products/${rental.productId}`;
@@ -122,10 +125,10 @@ const RentalInventoryStatusCard = ({ rental, viewerRole }: RentalInventoryStatus
 
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">
-                {inventory.inventoryMode === "managed_serialized" ? "Unidades identificadas" : "Gestion manual"}
+                {inventory.inventoryMode === "managed_serialized" ? "Unidades identificadas" : "Sin reserva automática"}
               </Badge>
               <Badge variant="outline" className={inventory.isInventoryEnabled ? "border-emerald-200 bg-emerald-50 text-emerald-700" : ""}>
-                {inventory.isInventoryEnabled ? "Inventario activo" : "Inventario inactivo"}
+                {inventory.isInventoryEnabled ? "Bloqueo automático activo" : "Sin bloqueo automático"}
               </Badge>
               {currentAllocation && (
                 <Badge variant="outline" className={getAllocationBadgeClassName(currentAllocation.state)}>
@@ -136,7 +139,9 @@ const RentalInventoryStatusCard = ({ rental, viewerRole }: RentalInventoryStatus
 
             {shouldHaveActiveAllocation && !currentAllocation && (
               <p className="rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
-                Este alquiler no tiene una reserva automática de inventario. Revisa que el producto tenga inventario gestionado activo si esperas bloqueo de unidades.
+                {isManualInventory
+                  ? "Este producto está en gestión manual: Appquilar no bloquea unidades automáticamente para este alquiler. Coordina la disponibilidad fuera del inventario."
+                  : "Este alquiler debería tener una reserva automática, pero no se ha encontrado una asignación. Revisa el inventario gestionado del producto."}
               </p>
             )}
 
@@ -155,16 +160,16 @@ const RentalInventoryStatusCard = ({ rental, viewerRole }: RentalInventoryStatus
                       <TableHeader>
                         <TableRow>
                           <TableHead>Codigo interno</TableHead>
-                          <TableHead>Estado unidad</TableHead>
-                          <TableHead>Estado alquiler</TableHead>
+                          <TableHead>Estado en este alquiler</TableHead>
+                          <TableHead>Estado base de unidad</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {assignedUnits.map((unit) => (
                           <TableRow key={unit.unitId}>
                             <TableCell className="font-medium">{unit.code}</TableCell>
-                            <TableCell>{getUnitStatusLabel(unit.status)}</TableCell>
                             <TableCell>{formatAllocationState(currentAllocation.state)}</TableCell>
+                            <TableCell>{getUnitStatusLabel(unit.status)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

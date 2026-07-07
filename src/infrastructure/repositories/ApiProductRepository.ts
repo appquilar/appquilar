@@ -295,7 +295,7 @@ export class ApiProductRepository implements ProductRepository {
         }
     }
 
-    async createProduct(data: ProductFormData): Promise<void> {
+    async createProduct(data: ProductFormData): Promise<Product> {
         const dto = this.mapToDto(data);
 
         if (!dto.product_id) {
@@ -304,14 +304,25 @@ export class ApiProductRepository implements ProductRepository {
 
         dto.publication_status = data.publicationStatus;
 
-        await this.client.post<void>(
+        const response = await this.client.post<any>(
             '/api/products',
             dto,
             {
                 headers: this.getAuthHeaders(),
-                skipParseJson: true
             }
         );
+
+        const payload = response?.data && response?.success !== undefined
+            ? response.data
+            : response;
+        const createdProductId = payload?.product_id ?? dto.product_id;
+        const createdProduct = await this.getById(createdProductId);
+
+        if (!createdProduct) {
+            throw new Error('Failed to retrieve created product');
+        }
+
+        return createdProduct;
     }
 
     async updateProduct(id: string, data: ProductFormData): Promise<Product> {

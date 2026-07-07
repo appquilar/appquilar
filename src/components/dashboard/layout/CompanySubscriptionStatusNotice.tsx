@@ -23,11 +23,11 @@ const CompanySubscriptionStatusNotice = () => {
 
     const isPaused = companyContext.subscriptionStatus === "paused";
     const title = isPaused
-        ? "Hay un problema con el cobro de la suscripcion de empresa"
-        : "La suscripcion de tu empresa esta cancelada";
+        ? "Hay un problema con el cobro de la suscripción de empresa"
+        : "La suscripción de tu empresa está cancelada";
     const body = isPaused
-        ? "Stripe esta reintentando el cobro. Revisa la gestion de la suscripcion para evitar restricciones en el equipo."
-        : "La empresa ha perdido el acceso por falta de pago. Revisa la gestion de la suscripcion para reactivarla o migra a modo Explorador.";
+        ? "Stripe está reintentando el cobro. Revisa la gestión de la suscripción para evitar restricciones en el equipo."
+        : "La empresa ha perdido el acceso por falta de pago. Revisa la gestión de la suscripción para reactivarla o migra a modo Explorador.";
 
     return (
         <div className="mb-4 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-slate-900 sm:px-5">
@@ -44,7 +44,7 @@ const CompanySubscriptionStatusNotice = () => {
                         to={`/dashboard/companies/${companyContext.companyId}`}
                         className="inline-flex items-center gap-1.5 text-sm font-medium text-[#F19D70] transition-opacity hover:opacity-80"
                     >
-                        Gestionar suscripcion
+                        Gestionar suscripción
                         <ArrowRight className="h-4 w-4" />
                     </Link>
                 </div>

@@ -274,6 +274,20 @@ describe("ApiProductRepository", () => {
             .spyOn(globalThis.crypto, "randomUUID")
             .mockReturnValue("00000000-0000-4000-8000-000000000123");
         apiClient.post.mockResolvedValue(undefined);
+        apiClient.get.mockResolvedValueOnce({
+            data: {
+                id: "00000000-0000-4000-8000-000000000123",
+                name: "Taladro",
+                slug: "taladro",
+                description: "Taladro percutor",
+                quantity: 4,
+                is_inventory_enabled: true,
+                inventory_mode: "managed_serialized",
+                publication_status: "published",
+                image_ids: ["image-1"],
+                categories: [{ id: "category-1", name: "Herramientas", slug: "herramientas" }],
+            },
+        });
 
         const repository = new ApiProductRepository(
             apiClient as unknown as ConstructorParameters<typeof ApiProductRepository>[0],
@@ -347,7 +361,6 @@ describe("ApiProductRepository", () => {
             },
             {
                 headers: {},
-                skipParseJson: true,
             }
         );
 

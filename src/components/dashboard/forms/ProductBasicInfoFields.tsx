@@ -110,7 +110,6 @@ const ProductBasicInfoFields = ({ control }: ProductBasicInfoFieldsProps) => {
                                 onChange={field.onChange}
                                 onCategorySelect={handleCategoryChange}
                                 placeholder="Seleccionar categoría del producto"
-                                searchPlaceholder="Buscar categoría por nombre..."
                             />
                         </FormControl>
                         <FormMessage />

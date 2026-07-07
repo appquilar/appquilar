@@ -88,7 +88,7 @@ const SearchToolbar = ({
             selectedStatuses.length === DEFAULT_PRODUCT_PUBLICATION_STATUSES.length
             && DEFAULT_PRODUCT_PUBLICATION_STATUSES.every((status) => selectedStatuses.includes(status))
         ) {
-            return 'Borrador + Publicado';
+            return 'Borradores y publicados';
         }
 
         return PUBLICATION_STATUS_OPTIONS
@@ -164,7 +164,7 @@ const SearchToolbar = ({
                                 className="w-full"
                                 onClick={handleClearFilters}
                             >
-                                Restaurar borrador + publicado
+                                Restaurar borradores y publicados
                             </Button>
                         </div>
                     </PopoverContent>

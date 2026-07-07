@@ -18,6 +18,7 @@ const {
         getRentById: vi.fn(),
         updateRentStatus: vi.fn(),
         updateRent: vi.fn(),
+        createRentMessage: vi.fn(),
         listRents: vi.fn(),
         listRentMessages: vi.fn(),
     },
@@ -141,8 +142,8 @@ describe("application rental hooks coverage", () => {
             queryKey: ["rentConversations"],
         });
         expect(toastMock).toHaveBeenCalledWith({
-            title: "Accion aplicada",
-            description: "Se proceso la accion sobre Reserva confirmada.",
+            title: "Acción aplicada",
+            description: "Se procesó la acción sobre Reserva confirmada.",
         });
 
         await expect(
@@ -211,8 +212,11 @@ describe("application rental hooks coverage", () => {
 
         await act(async () => {
             await result.current.handleDepositResolution({
-                amount: 500,
-                currency: "EUR",
+                depositReturned: {
+                    amount: 500,
+                    currency: "EUR",
+                },
+                retentionReason: "Daño en la carcasa",
             });
         });
 
@@ -221,6 +225,9 @@ describe("application rental hooks coverage", () => {
                 amount: 500,
                 currency: "EUR",
             },
+        });
+        expect(rentalServiceMock.createRentMessage).toHaveBeenCalledWith("rent-1", {
+            content: "Motivo de retención parcial de fianza:\nDaño en la carcasa",
         });
         expect(wrapperData.invalidateQueriesSpy).toHaveBeenCalledWith({
             queryKey: ["rent", "rent-1"],

@@ -4,7 +4,7 @@ import { extractBackendErrorCode } from "@/utils/backendError";
 import { getBillingErrorMessage } from "@/utils/billingError";
 
 const USER_PRO_REACTIVATION_NOT_AVAILABLE_MESSAGE =
-    "Esta suscripcion ya no puede mantenerse automaticamente. Inicia un nuevo checkout para volver a User Pro.";
+    "Esta suscripción ya no puede mantenerse automáticamente. Inicia un nuevo checkout para volver a User Pro.";
 
 export const getUserSubscriptionReactivationErrorMessage = (
     error: unknown,

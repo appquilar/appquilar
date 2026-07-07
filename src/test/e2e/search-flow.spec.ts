@@ -20,7 +20,7 @@ test("hero search navigates to search page and shows results", async ({ page }) 
     })
     .toBe(buildSearchPath("taladro"));
   await expect(page.getByRole("heading", { name: "Taladro profesional" })).toBeVisible();
-  await expect(page.getByTestId("product-card-public-price-mask").first()).toBeVisible();
+  await expect(page.getByText("Herramientas • 18€/día • 75€ fianza").first()).toBeVisible();
 
   await page.getByRole("link", { name: "Ver producto" }).first().click();
 

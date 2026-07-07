@@ -15,6 +15,7 @@ interface CompanyInvitationStatusDto {
     role?: string;
     status?: string;
     expires_at?: string | null;
+    has_existing_account?: boolean;
 }
 
 type CompanyInvitationStatusResponseDto =
@@ -52,6 +53,7 @@ export class ApiCompanyInvitationRepository implements CompanyInvitationReposito
             role: payload.role ?? "",
             status: normalizeStatus(payload.status),
             expiresAt: payload.expires_at ?? null,
+            hasExistingAccount: payload.has_existing_account === true,
         };
     }
 

@@ -5,7 +5,6 @@ import { Edit, Trash } from "lucide-react";
 import { Link } from "react-router-dom";
 import { buildProductPath } from "@/domain/config/publicRoutes";
 import { getVisibleProductDailyPricing } from "@/domain/services/ProductPricingService";
-import { useAuth } from "@/context/AuthContext";
 
 export interface ProductPrice {
     daily: number; // (en tu UI ahora mismo lo estás mostrando directo)
@@ -56,10 +55,8 @@ const formatCompactEuroAmount = (amount: number): string => (
 );
 
 const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
-    const { isAuthenticated } = useAuth();
     const raw = product.thumbnailUrl || product.imageUrl || "";
     const imgSrc = raw.trim().length > 0 ? raw : PLACEHOLDER;
-    const shouldBlurPricing = !isAuthenticated;
     const hasDeposit = typeof product.price.deposit === "number" && product.price.deposit > 0;
     const visibleDailyPricing = getVisibleProductDailyPricing(product.price);
     const pricingLabel = visibleDailyPricing.amount === null
@@ -90,22 +87,8 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
             <CardContent className="px-4 py-1">
                 <p className="mb-1 text-[12px] text-muted-foreground">
                     {product.category?.name ? `${product.category.name} • ` : ""}
-                    {shouldBlurPricing ? (
-                        <span
-                            data-testid="product-card-public-price-mask"
-                            aria-hidden="true"
-                            className="inline-flex items-center gap-1 blur-[5px] select-none"
-                        >
-                            <span>149€/día</span>
-                            <span>•</span>
-                            <span>450€ fianza</span>
-                        </span>
-                    ) : (
-                        <>
-                            {pricingLabel}
-                            {hasDeposit ? ` • ${product.price.deposit}€ fianza` : ""}
-                        </>
-                    )}
+                    {pricingLabel}
+                    {hasDeposit ? ` • ${formatCompactEuroAmount(product.price.deposit!)}€ fianza` : ""}
                 </p>
                 <p className="text-[13px] leading-snug line-clamp-2">{product.description}</p>
             </CardContent>

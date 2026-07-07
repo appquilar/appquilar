@@ -149,6 +149,65 @@ describe("ApiRentalRepository", () => {
     );
   });
 
+  it("maps renter rent detail payloads from nested response envelopes", async () => {
+    apiClient.get.mockResolvedValueOnce({
+      success: true,
+      data: {
+        rent: {
+          id: "rent-renter-1",
+          product_id: "product-1",
+          product_name: "Bicicleta gravel talla M",
+          product_slug: "bicicleta-gravel",
+          product_publication_status: "published",
+          product_internal_id: "MTP-001",
+          owner_id: "company-1",
+          owner_type: "company",
+          owner_name: "Mountain Pro Rentals",
+          renter_id: "renter-1",
+          renter_name: "Explorer Renter",
+          renter_email: "explorer.renter@appquilar.test",
+          owner_location: {
+            city: "Bilbao",
+            state: "Bizkaia",
+            country: "España",
+          },
+          start_date: "2026-07-15",
+          end_date: "2026-07-17",
+          requested_quantity: 1,
+          deposit: { amount: 65000, currency: "EUR" },
+          price: { amount: 14700, currency: "EUR" },
+          deposit_returned: { amount: 0, currency: "EUR" },
+          status: "proposal_pending_renter",
+          is_lead: true,
+          proposal_valid_until: "2026-07-10",
+          owner_proposal_accepted: true,
+          renter_proposal_accepted: false,
+        },
+      },
+    });
+
+    const rent = await repository.getRentById("rent-renter-1");
+
+    expect(apiClient.get).toHaveBeenCalledWith("/api/rents/rent-renter-1", {
+      headers: {
+        Authorization: "Bearer jwt-token",
+      },
+    });
+    expect(rent).toMatchObject({
+      id: "rent-renter-1",
+      ownerType: "company",
+      ownerName: "Mountain Pro Rentals",
+      renterId: "renter-1",
+      renterEmail: "explorer.renter@appquilar.test",
+      status: "proposal_pending_renter",
+      productPublicationStatus: "published",
+      productInternalId: "MTP-001",
+      ownerProposalAccepted: true,
+      renterProposalAccepted: false,
+    });
+    expect(rent?.proposalValidUntil).toEqual(new Date(2026, 6, 10, 23, 59, 59));
+  });
+
   it("handles fallback date parsing, single rent fetch errors and message mapping", async () => {
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 

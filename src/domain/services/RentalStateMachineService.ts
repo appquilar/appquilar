@@ -161,7 +161,7 @@ export class RentalStateMachineService {
       if ((actor === 'owner' && ownerCanComplete) || actor === 'admin') {
         options.push({
           to: 'rental_completed',
-          label: 'Marcar devolucion',
+          label: 'Marcar devolución',
           variant: 'default',
         });
       }
@@ -217,7 +217,7 @@ export class RentalStateMachineService {
     if (rental.status === 'lead_pending') {
       return {
         title: 'Responder a la consulta',
-        description: 'La tienda puede revisar los terminos, enviar una propuesta o rechazarla.',
+        description: 'La tienda puede revisar los términos, enviar una propuesta o rechazarla.',
         actionRequiredBy: 'owner',
         tone: 'default',
       };
@@ -226,7 +226,7 @@ export class RentalStateMachineService {
     if (proposalExpired) {
       return {
         title: 'La propuesta ha expirado',
-        description: 'Hace falta volver a revisar los terminos para retomar el alquiler.',
+        description: 'Hace falta volver a revisar los términos para retomar el alquiler.',
         actionRequiredBy: null,
         tone: 'warning',
       };
@@ -245,7 +245,7 @@ export class RentalStateMachineService {
       if (!rental.ownerProposalAccepted) {
         return {
           title: 'Falta confirmar la propuesta',
-          description: 'La tienda debe confirmar esta version para cerrar la reserva.',
+          description: 'La tienda debe confirmar esta versión para cerrar la reserva.',
           actionRequiredBy: 'owner',
           tone: 'default',
         };
@@ -258,7 +258,7 @@ export class RentalStateMachineService {
         description:
           now >= rental.startDate
             ? 'La tienda ya puede marcar la recogida cuando entregue el producto.'
-            : 'Todo esta listo para la recogida en la fecha acordada.',
+            : 'Todo está listo para la recogida en la fecha acordada.',
         actionRequiredBy: now >= rental.startDate ? 'owner' : null,
         tone: now >= rental.startDate ? 'default' : 'success',
       };
@@ -266,7 +266,7 @@ export class RentalStateMachineService {
 
     if (rental.status === 'rental_active') {
       return {
-        title: 'Pendiente de devolucion',
+        title: 'Pendiente de devolución',
         description: 'La tienda puede cerrar el alquiler cuando reciba el producto.',
         actionRequiredBy: 'owner',
         tone: 'default',
@@ -276,7 +276,7 @@ export class RentalStateMachineService {
     if (rental.status === 'rental_completed') {
       return {
         title: 'Alquiler cerrado',
-        description: 'El alquiler ya esta completado. Solo queda revisar la resolucion de la fianza si aplica.',
+        description: 'El alquiler ya está completado. Solo queda revisar la resolución de la fianza si aplica.',
         actionRequiredBy: null,
         tone: 'success',
       };
@@ -284,7 +284,7 @@ export class RentalStateMachineService {
 
     if (rental.status === 'cancelled') {
       return {
-        title: 'Operacion cancelada',
+        title: 'Operación cancelada',
         description: 'Este alquiler ya no tiene acciones operativas disponibles.',
         actionRequiredBy: null,
         tone: 'neutral',

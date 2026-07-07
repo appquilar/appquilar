@@ -45,7 +45,7 @@ const UpgradeToProLink = ({ onAfterNavigate }: UpgradeToProLinkProps) => {
     if (!userProCheckout.isCheckoutAvailable) {
       toast.error(
         userProCheckout.unavailableMessage ??
-          "User Pro no esta disponible para activar ahora mismo."
+          "User Pro no está disponible para activar ahora mismo."
       );
       return;
     }
@@ -89,7 +89,7 @@ const UpgradeToProLink = ({ onAfterNavigate }: UpgradeToProLinkProps) => {
                 : "Hazte Pro"}
           </p>
           <p className="text-xs text-zinc-600">
-            Accede a metricas de visitas y mensajes por producto.
+            Accede a métricas de visitas y mensajes por producto.
           </p>
         </div>
         <Gem size={16} className="mt-1 shrink-0 text-orange-500" />

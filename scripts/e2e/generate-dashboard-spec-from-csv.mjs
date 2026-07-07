@@ -429,19 +429,13 @@ for (const moduleGroup of modules) {
         }
 
         await page.goto(testCase.path);
-        await expect(page.locator("body")).toBeVisible();
 
         if (testCase.role === "anonymous" && testCase.path.startsWith("/dashboard")) {
           await expect(page).toHaveURL(/\\\/$/);
           return;
         }
 
-        if (testCase.expectedText.length > 0) {
-          const expectedLocator = page.getByText(testCase.expectedText, { exact: false });
-          if ((await expectedLocator.count()) > 0) {
-            await expect(expectedLocator.first()).toBeVisible();
-          }
-        }
+        await expect(page.getByText(testCase.expectedText, { exact: false }).first()).toBeVisible();
       });
     }
   });

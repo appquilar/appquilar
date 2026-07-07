@@ -133,7 +133,7 @@ export interface ProductRepository {
     /**
      * Create a new product
      */
-    createProduct(productData: ProductFormData): Promise<void>;
+    createProduct(productData: ProductFormData): Promise<Product>;
 
     /**
      * Update an existing product

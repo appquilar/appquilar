@@ -13,7 +13,7 @@ NC = \033[0m # No color
 
 NETWORK_NAME = appquilar
 
-.PHONY: help install dev dev-landing dev-domains-setup dev-domains-up dev-domains-down stripe-check-account stripe-listen dev-e2e-seed e2e-seed-server landing-sync landing-build-sync build build-landing up up-prod down down-prod restart logs clean test test-unit test-integration test-e2e test-e2e-dashboard test-e2e-dashboard-shard test-e2e-dashboard-ui test-e2e-dashboard-ui-shard e2e-dashboard-generate test-ci coverage coverage-e2e coverage-top coverage-all ensure-playwright start start-prod exec destroy rebuild network check-be shell
+.PHONY: help install dev dev-landing dev-domains-setup dev-domains-up dev-domains-down stripe-check-account stripe-listen dev-e2e-seed e2e-seed-server landing-sync landing-build-sync build build-landing up up-prod down down-prod restart logs clean test test-quality test-unit test-integration test-e2e test-e2e-dashboard test-e2e-dashboard-shard test-e2e-dashboard-ui test-e2e-dashboard-ui-shard e2e-dashboard-generate test-ci coverage coverage-e2e coverage-top coverage-all ensure-playwright start start-prod exec destroy rebuild network check-be shell
 
 STRIPE = stripe
 STRIPE_EXPECTED_ACCOUNT_ID ?= acct_1T1MQ2COjGpVsE06
@@ -50,6 +50,7 @@ help:
 	@echo "  make rebuild     - Equivalent to clean + build + up"
 	@echo "  make shell       - Enter the FE container to execute npm or other commands"
 	@echo "  make test        - Run all FE tests (unit + integration + public e2e + dashboard e2e)"
+	@echo "  make test-quality - Run FE meaningful-test guard"
 	@echo "  make test-unit   - Run FE unit tests"
 	@echo "  make test-integration - Run FE integration tests"
 	@echo "  make test-e2e    - Run all FE end-to-end tests (public + dashboard)"
@@ -236,6 +237,10 @@ test:
 	@$(PLAYWRIGHT) install --with-deps chromium >/dev/null 2>&1 || $(PLAYWRIGHT) install chromium >/dev/null
 	@echo "${GREEN}Running all FE tests...${NC}"
 	$(NPM) test
+
+test-quality:
+	@echo "${GREEN}Running FE meaningful-test guard...${NC}"
+	$(NPM) run test:quality
 
 test-unit:
 	@echo "${GREEN}Running FE unit tests...${NC}"

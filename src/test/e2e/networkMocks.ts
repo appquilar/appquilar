@@ -45,7 +45,9 @@ const productsPayload = {
         description: "Taladro",
         publication_status: "published",
         image_ids: [],
-        categories: [{ id: "cat-1", name: "Vehículos", slug: "vehiculos" }],
+        deposit: { amount: 7500, currency: "EUR" },
+        tiers: [{ days_from: 1, days_to: null, price_per_day: { amount: 1800, currency: "EUR" } }],
+        categories: [{ id: "cat-1", name: "Herramientas", slug: "herramientas" }],
         owner_data: {
           owner_id: "company-1",
           type: "company",
@@ -60,7 +62,9 @@ const productsPayload = {
         description: "Bicicleta",
         publication_status: "published",
         image_ids: [],
-        categories: [{ id: "cat-2", name: "Bicicletas", slug: "bicicletas" }],
+        deposit: { amount: 4000, currency: "EUR" },
+        tiers: [{ days_from: 1, days_to: null, price_per_day: { amount: 1200, currency: "EUR" } }],
+        categories: [{ id: "cat-2", name: "Audio", slug: "audio" }],
         owner_data: {
           owner_id: "company-1",
           type: "company",
@@ -84,7 +88,9 @@ const productDetailPayload = {
     publication_status: "published",
     is_rental_enabled: true,
     image_ids: [],
-    categories: [{ id: "cat-1", name: "Vehículos", slug: "vehiculos" }],
+    deposit: { amount: 7500, currency: "EUR" },
+    tiers: [{ days_from: 1, days_to: null, price_per_day: { amount: 1800, currency: "EUR" } }],
+    categories: [{ id: "cat-1", name: "Herramientas", slug: "herramientas" }],
     owner_data: {
       owner_id: "company-1",
       type: "company",
@@ -137,7 +143,9 @@ const publicCompanyProductsPayload = {
       description: "Taladro",
       publication_status: "published",
       image_ids: [],
-      categories: [{ id: "cat-1", name: "Vehículos", slug: "vehiculos" }],
+      deposit: { amount: 7500, currency: "EUR" },
+      tiers: [{ days_from: 1, days_to: null, price_per_day: { amount: 1800, currency: "EUR" } }],
+      categories: [{ id: "cat-1", name: "Herramientas", slug: "herramientas" }],
       owner_data: {
         owner_id: "company-1",
         type: "company",

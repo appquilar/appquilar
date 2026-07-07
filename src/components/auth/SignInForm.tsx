@@ -102,13 +102,19 @@ const SignInForm = ({
 
         try {
             await login(values.email, values.password);
-            onSuccess?.();
         } catch (error) {
             setLoginError(
                 isInvalidCredentialsError(error)
                     ? "El correo electrónico o la contraseña no son correctos."
                     : "No se pudo iniciar sesión. Inténtalo de nuevo.",
             );
+            return;
+        }
+
+        try {
+            await onSuccess?.();
+        } catch (error) {
+            console.error("Post-login UI refresh failed", error);
         }
     };
 

@@ -557,6 +557,17 @@ export const useBillingReturnSync = (): void => {
                             error
                         );
                     }
+                } else if (billingReturnContext.currentState) {
+                    try {
+                        await billingService.synchronizeSubscription({
+                            scope: billingReturnContext.scope,
+                        });
+                    } catch (error) {
+                        console.warn(
+                            "Billing subscription synchronization failed; retrying current user refresh.",
+                            error
+                        );
+                    }
                 }
 
                 for (let attempt = 0; attempt < attempts; attempt += 1) {

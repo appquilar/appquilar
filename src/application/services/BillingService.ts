@@ -8,7 +8,9 @@ import type {
     MigrateCompanyToExplorerInput,
     ReactivateSubscriptionInput,
     SubscriptionReactivationResult,
+    SubscriptionSynchronizationResult,
     SynchronizeCheckoutSessionInput,
+    SynchronizeSubscriptionInput,
 } from "@/domain/models/Billing";
 import type { BillingRepository } from "@/domain/repositories/BillingRepository";
 
@@ -37,6 +39,12 @@ export class BillingService {
         input: ReactivateSubscriptionInput
     ): Promise<SubscriptionReactivationResult> {
         return this.billingRepository.reactivateSubscription(input);
+    }
+
+    async synchronizeSubscription(
+        input: SynchronizeSubscriptionInput
+    ): Promise<SubscriptionSynchronizationResult> {
+        return this.billingRepository.synchronizeSubscription(input);
     }
 
     async synchronizeCheckoutSession(

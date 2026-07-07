@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
 import { queryClient } from "@/composition/queryClient";
 import { useRouteCurrentUserRefresh } from "@/hooks/useRouteCurrentUserRefresh";

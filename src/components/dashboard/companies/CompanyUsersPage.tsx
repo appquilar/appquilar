@@ -51,6 +51,11 @@ const CompanyUsersPage = () => {
     const removeMutation = useRemoveCompanyUser();
     const updateRoleMutation = useUpdateCompanyUserRole();
     const companyContext = currentUser?.companyContext ?? null;
+    const teamManagementState =
+        companyContext?.entitlements?.capabilities?.teamManagement?.state
+        ?? companyContext?.capabilities?.teamManagement?.state
+        ?? "enabled";
+    const canManageTeam = canManage && teamManagementState === "enabled";
 
     const companyName = useMemo(() => {
         return getUserCompanyName(currentUser) ?? "Empresa";
@@ -102,9 +107,11 @@ const CompanyUsersPage = () => {
             });
             toast.success("Invitación enviada correctamente.");
             setInviteDialogOpen(false);
+            return true;
         } catch (error) {
             console.error("Error inviting company user", error);
             toast.error(getKnownBackendErrorMessage(error, "No se pudo enviar la invitación."));
+            return false;
         }
     };
 
@@ -147,7 +154,7 @@ const CompanyUsersPage = () => {
                 <Button
                     onClick={() => setInviteDialogOpen(true)}
                     className="gap-2"
-                    disabled={inviteMutation.isPending || isTeamLimitReached}
+                    disabled={inviteMutation.isPending || isTeamLimitReached || !canManageTeam}
                 >
                     <Mail size={16} />
                     Invitar usuario
@@ -160,6 +167,12 @@ const CompanyUsersPage = () => {
                     <Button asChild size="sm" variant="outline" className="mt-3 bg-white">
                         <Link to="/dashboard/upgrade">Ver planes</Link>
                     </Button>
+                </div>
+            )}
+
+            {!canManageTeam && (
+                <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                    La gestión de usuarios no está disponible con la suscripción actual.
                 </div>
             )}
 
@@ -178,7 +191,8 @@ const CompanyUsersPage = () => {
             {!usersQuery.isLoading && !usersQuery.isError && (
                 <CompanyUsersTable
                     users={usersQuery.data ?? []}
-                    canManage={true}
+                    canManage={canManageTeam}
+                    currentUserId={currentUser?.id ?? null}
                     onRoleChange={handleRoleChange}
                     onRemoveUser={handleRemoveUser}
                     isMutating={removeMutation.isPending || updateRoleMutation.isPending}
@@ -186,10 +200,10 @@ const CompanyUsersPage = () => {
             )}
 
             <InviteUserDialog
-                open={inviteDialogOpen && !isTeamLimitReached}
+                open={inviteDialogOpen && !isTeamLimitReached && canManageTeam}
                 onOpenChange={setInviteDialogOpen}
                 onSubmit={handleInviteUser}
-                disabled={inviteMutation.isPending || isTeamLimitReached}
+                disabled={inviteMutation.isPending || isTeamLimitReached || !canManageTeam}
             />
         </div>
     );

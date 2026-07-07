@@ -88,7 +88,7 @@ describe("CompanySubscriptionSettingsCard", () => {
     it("shows the Early Bird plan once and labels the founding flag separately", () => {
         renderWithProviders(<CompanySubscriptionSettingsCard />);
 
-        expect(screen.getByText("Suscripcion de empresa")).toBeInTheDocument();
+        expect(screen.getByText("Suscripción de empresa")).toBeInTheDocument();
         expect(screen.getAllByText("Early Bird")).toHaveLength(1);
         expect(screen.getByText("Cuenta fundadora")).toBeInTheDocument();
         expect(screen.getByText("Activa")).toBeInTheDocument();
@@ -142,7 +142,7 @@ describe("CompanySubscriptionSettingsCard", () => {
 
         renderWithProviders(<CompanySubscriptionSettingsCard />);
 
-        await user.click(screen.getByRole("button", { name: "Gestionar suscripcion" }));
+        await user.click(screen.getByRole("button", { name: "Gestionar suscripción" }));
 
         await waitFor(() => {
             expect(mutateAsync).toHaveBeenCalledWith(
@@ -170,12 +170,12 @@ describe("CompanySubscriptionSettingsCard", () => {
 
         renderWithProviders(<CompanySubscriptionSettingsCard />);
 
-        await user.click(screen.getByRole("button", { name: "Gestionar suscripcion" }));
+        await user.click(screen.getByRole("button", { name: "Gestionar suscripción" }));
 
         expect(openMock).toHaveBeenCalledWith("", "_blank");
         expect(mutateAsync).not.toHaveBeenCalled();
         expect(toastErrorMock).toHaveBeenCalledWith(
-            "No se pudo abrir una nueva pestana. Revisa el bloqueador de ventanas emergentes."
+            "No se pudo abrir una nueva pestaña. Revisa el bloqueador de ventanas emergentes."
         );
     });
 
@@ -229,7 +229,7 @@ describe("CompanySubscriptionSettingsCard", () => {
 
         renderWithProviders(<CompanySubscriptionSettingsCard />);
 
-        expect(screen.getByText("La suscripcion de empresa esta cancelada")).toBeInTheDocument();
+        expect(screen.getByText("La suscripción de empresa está cancelada")).toBeInTheDocument();
 
         await user.click(screen.getByRole("button", { name: "Migrar a Explorador" }));
 
@@ -292,8 +292,8 @@ describe("CompanySubscriptionSettingsCard", () => {
 
         renderWithProviders(<CompanySubscriptionSettingsCard />);
 
-        expect(screen.getByText("Hay un problema con el cobro de la suscripcion")).toBeInTheDocument();
-        expect(screen.getByText("Usuario que conservara la propiedad")).toBeInTheDocument();
+        expect(screen.getByText("Hay un problema con el cobro de la suscripción")).toBeInTheDocument();
+        expect(screen.getByText("Usuario que conservará la propiedad")).toBeInTheDocument();
         expect(screen.getByText("owner-1@appquilar.test")).toBeInTheDocument();
     });
 

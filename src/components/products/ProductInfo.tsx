@@ -120,6 +120,7 @@ const ProductInfo = ({
     const providerLocationLabel = product.providerLocationLabel;
     const visibleDailyPricing = getVisibleProductDailyPricing(price);
     const hasVisibleDailyPrice = visibleDailyPricing.amount !== null;
+    const pricingFallbackLabel = tiers.length > 0 ? "Ver tarifas" : "Consultar";
     const pricingTitle = visibleDailyPricing.isFromLaterTier ? "Primera tarifa pública" : "Precio Base";
     const pricingDescription = visibleDailyPricing.isFromLaterTier && visibleDailyPricing.daysFrom
         ? `Disponible a partir de ${visibleDailyPricing.daysFrom} días`
@@ -182,85 +183,81 @@ const ProductInfo = ({
             )}
 
             <div>
-                {isLoggedIn ? (
-                    <>
-                        <h3 className="mb-3 flex items-center gap-2 text-base font-semibold">
-                            Tarifas de Alquiler
-                        </h3>
+                <h3 className="mb-3 flex items-center gap-2 text-base font-semibold">
+                    Tarifas de Alquiler
+                </h3>
 
-                        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-                            <div className="p-5 border-b border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{pricingTitle}</p>
-                                    <p className="text-xs text-muted-foreground mt-0.5">{pricingDescription}</p>
-                                </div>
-                                <div className="text-left sm:text-right">
-                                    <span className="text-2xl font-bold text-foreground">
-                                        {hasVisibleDailyPrice ? `${visibleDailyPricing.amount!.toFixed(2)}€` : "Consultar"}
-                                    </span>
-                                    {hasVisibleDailyPrice && <span className="text-muted-foreground ml-1">/ día</span>}
-                                </div>
+                <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                    <div className="p-5 border-b border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{pricingTitle}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{pricingDescription}</p>
+                        </div>
+                        <div className="text-left sm:text-right">
+                            <span className="text-2xl font-bold text-foreground">
+                                {hasVisibleDailyPrice ? `${visibleDailyPricing.amount!.toFixed(2)}€` : pricingFallbackLabel}
+                            </span>
+                            {hasVisibleDailyPrice && <span className="text-muted-foreground ml-1">/ día</span>}
+                        </div>
+                    </div>
+
+                    {hasDeposit && (
+                        <div className="px-5 py-3 border-b border-border flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-white">
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium">Fianza</span>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <Info size={14} className="text-muted-foreground cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Importe reembolsable al finalizar el alquiler</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             </div>
-
-                            {hasDeposit && (
-                                <div className="px-5 py-3 border-b border-border flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-white">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-medium">Fianza</span>
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger>
-                                                    <Info size={14} className="text-muted-foreground cursor-help" />
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>Importe reembolsable al finalizar el alquiler</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </div>
-                                    <span className="font-medium text-foreground">{price.deposit!.toFixed(2)}€</span>
-                                </div>
-                            )}
-
-                            {tiers.length > 0 && (
-                                <div className="p-0">
-                                    <div className="px-5 py-3 bg-muted/10 border-b border-border">
-                                        <p className="text-sm font-semibold text-foreground">Descuentos por duración</p>
-                                    </div>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow className="hover:bg-transparent border-border">
-                                                <TableHead className="w-1/2 pl-5">Duración</TableHead>
-                                                <TableHead className="text-right pr-5">Precio por día</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {tiers.map((tier, index) => (
-                                                <TableRow key={index} className="hover:bg-muted/5 border-border">
-                                                    <TableCell className="pl-5 font-medium">
-                                                        {tier.daysFrom} {tier.daysTo ? `a ${tier.daysTo}` : '+'} días
-                                                    </TableCell>
-                                                    <TableCell className="text-right pr-5 text-foreground font-semibold">
-                                                        {Number(tier.pricePerDay || 0).toFixed(2)}€
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            )}
+                            <span className="font-medium text-foreground">{price.deposit!.toFixed(2)}€</span>
                         </div>
-                        <div className="mt-3 flex gap-2 rounded-lg border border-border bg-muted/20 p-3 text-sm leading-6 text-muted-foreground">
-                            <Info size={16} className="mt-0.5 shrink-0 text-primary" />
-                            <p>{paymentPolicyCopy}</p>
+                    )}
+
+                    {tiers.length > 0 && (
+                        <div className="p-0">
+                            <div className="px-5 py-3 bg-muted/10 border-b border-border">
+                                <p className="text-sm font-semibold text-foreground">Descuentos por duración</p>
+                            </div>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="hover:bg-transparent border-border">
+                                        <TableHead className="w-1/2 pl-5">Duración</TableHead>
+                                        <TableHead className="text-right pr-5">Precio por día</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {tiers.map((tier, index) => (
+                                        <TableRow key={index} className="hover:bg-muted/5 border-border">
+                                            <TableCell className="pl-5 font-medium">
+                                                {tier.daysFrom} {tier.daysTo ? `a ${tier.daysTo}` : '+'} días
+                                            </TableCell>
+                                            <TableCell className="text-right pr-5 text-foreground font-semibold">
+                                                {Number(tier.pricePerDay || 0).toFixed(2)}€
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
                         </div>
-                    </>
-                ) : (
-                    <div className="rounded-lg bg-secondary p-4 sm:p-5">
+                    )}
+                </div>
+
+                <div className="mt-3 flex gap-2 rounded-lg border border-border bg-muted/20 p-3 text-sm leading-6 text-muted-foreground">
+                    <Info size={16} className="mt-0.5 shrink-0 text-primary" />
+                    <p>{paymentPolicyCopy}</p>
+                </div>
+
+                {!isLoggedIn && (
+                    <div className="mt-3 rounded-lg bg-secondary p-4 sm:p-5">
                         <p className="max-w-xl text-[15px] leading-6 text-foreground">
-                            Crea tu cuenta para ver tarifas, calcular el alquiler y contactar con el proveedor.
-                        </p>
-                        <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                            {paymentPolicyCopy}
+                            Crea tu cuenta para calcular el alquiler y contactar con el proveedor.
                         </p>
                         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                             <Button

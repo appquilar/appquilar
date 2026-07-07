@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ApiError } from "@/infrastructure/http/ApiClient";
@@ -11,6 +11,7 @@ const {
   mockInvalidateQueries,
   mockFetchQuery,
   mockSetQueryData,
+  mockGetQueryData,
   mockClearQueryClient,
   mockCreateCompany,
   mockAuthService,
@@ -18,6 +19,7 @@ const {
   mockInvalidateQueries: vi.fn(),
   mockFetchQuery: vi.fn(),
   mockSetQueryData: vi.fn(),
+  mockGetQueryData: vi.fn(),
   mockClearQueryClient: vi.fn(),
   mockCreateCompany: vi.fn(),
   mockAuthService: {
@@ -46,6 +48,7 @@ vi.mock("@/composition/queryClient", () => ({
     invalidateQueries: mockInvalidateQueries,
     fetchQuery: mockFetchQuery,
     setQueryData: mockSetQueryData,
+    getQueryData: mockGetQueryData,
     clear: mockClearQueryClient,
   },
 }));
@@ -84,6 +87,7 @@ describe("AuthContext", () => {
     mockInvalidateQueries.mockReset();
     mockFetchQuery.mockReset();
     mockSetQueryData.mockReset();
+    mockGetQueryData.mockReset();
     mockClearQueryClient.mockReset();
     mockCreateCompany.mockReset();
 
@@ -116,6 +120,7 @@ describe("AuthContext", () => {
     mockSetQueryData.mockImplementation((queryKey, updater) => {
       activeQueryClient.setQueryData(queryKey, updater);
     });
+    mockGetQueryData.mockImplementation((queryKey) => activeQueryClient.getQueryData(queryKey));
     mockClearQueryClient.mockImplementation(() => {
       activeQueryClient.clear();
     });
@@ -236,6 +241,143 @@ describe("AuthContext", () => {
       expect(mockSetQueryData).toHaveBeenCalledWith(["currentUser"], null);
       expect(mockInvalidateQueries).toHaveBeenCalled();
     });
+  });
+
+  it("keeps provider login successful when post-login cache refresh fails", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const providerUser = {
+      id: "company-owner-mountain",
+      firstName: "Sergio",
+      lastName: "Mountain",
+      email: "sergio.mountain@appquilar.test",
+      roles: ["ROLE_USER"],
+      address: null,
+      location: null,
+      planType: "user_pro",
+      subscriptionStatus: "active",
+      companyContext: {
+        companyId: "mountain-pro",
+        companyName: "Mountain Pro Rentals",
+        companyRole: "ROLE_ADMIN",
+        isCompanyOwner: true,
+        planType: "pro",
+        subscriptionStatus: "active",
+        subscriptionCancelAtPeriodEnd: false,
+        isFoundingAccount: false,
+        productSlotLimit: 50,
+        capabilities: {},
+        entitlements: null,
+      },
+    };
+
+    try {
+      mockAuthService.getCurrentUser.mockResolvedValueOnce(null);
+      mockAuthService.login.mockResolvedValue(providerUser);
+      mockInvalidateQueries.mockRejectedValue(new Error("dashboard refetch failed"));
+
+      renderAuthProvider();
+
+      await waitFor(() => {
+        expect(screen.getByTestId("loading")).toHaveTextContent("false");
+      });
+
+      await userEvent.click(screen.getByRole("button", { name: "login" }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("authenticated")).toHaveTextContent("true");
+        expect(screen.getByTestId("email")).toHaveTextContent("sergio.mountain@appquilar.test");
+      });
+      expect(consoleError).toHaveBeenCalledWith(
+        "Post-auth cache refresh failed",
+        expect.any(Error)
+      );
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
+  it("treats login as successful when the token was saved and the first user load failed", async () => {
+    let currentSession: { token: string } | null = null;
+    const loggedInUser = {
+      id: "renter-manual",
+      firstName: "Renta",
+      lastName: "Manual",
+      email: "renter.manual@appquilar.test",
+      roles: ["ROLE_USER"],
+      address: null,
+      location: null,
+      planType: "explorer",
+      subscriptionStatus: "active",
+    };
+
+    mockAuthService.getCurrentSessionSync.mockImplementation(() => currentSession);
+    mockAuthService.getCurrentSession.mockImplementation(async () => currentSession);
+    mockAuthService.getCurrentUser.mockResolvedValue(null);
+    mockAuthService.login.mockImplementation(async () => {
+      currentSession = { token: "new-login-token" };
+      throw new Error("Failed to fetch");
+    });
+    mockAuthService.refreshCurrentUser.mockResolvedValueOnce(loggedInUser);
+
+    renderAuthProvider();
+
+    await userEvent.click(screen.getByRole("button", { name: "login" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("authenticated")).toHaveTextContent("true");
+      expect(screen.getByTestId("email")).toHaveTextContent("renter.manual@appquilar.test");
+    });
+  });
+
+  it("keeps a cached user when a stale route refresh fails transiently", async () => {
+    const invitedUser = {
+      id: "invited-user-1",
+      firstName: "Ana",
+      lastName: "Lopez",
+      email: "invitee@appquilar.test",
+      roles: ["ROLE_USER"],
+      address: null,
+      location: null,
+    };
+    let staleRefresh: (() => Promise<unknown>) | null = null;
+
+    const CaptureProbe = () => {
+      const auth = useAuth();
+      staleRefresh ??= auth.refreshCurrentUser;
+
+      return <div data-testid="stale-email">{auth.currentUser?.email ?? "none"}</div>;
+    };
+
+    mockAuthService.getCurrentUser.mockReturnValue(new Promise(() => undefined));
+
+    render(
+      <QueryClientProvider client={activeQueryClient}>
+        <AuthProvider>
+          <CaptureProbe />
+        </AuthProvider>
+      </QueryClientProvider>
+    );
+
+    expect(staleRefresh).not.toBeNull();
+
+    act(() => {
+      activeQueryClient.setQueryData(["currentUser"], invitedUser);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("stale-email")).toHaveTextContent("invitee@appquilar.test");
+    });
+
+    mockAuthService.refreshCurrentUser.mockRejectedValueOnce(
+      new ApiError("projection lag", 500, { message: "try again" })
+    );
+
+    await act(async () => {
+      await staleRefresh?.();
+    });
+
+    expect(activeQueryClient.getQueryData(["currentUser"])).toEqual(invitedUser);
+    expect(screen.getByTestId("stale-email")).toHaveTextContent("invitee@appquilar.test");
   });
 
   it("refreshes current user against the backend and updates the auth state", async () => {

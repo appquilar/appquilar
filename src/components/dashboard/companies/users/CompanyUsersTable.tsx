@@ -38,6 +38,7 @@ const statusLabelMap: Record<string, string> = {
 interface CompanyUsersTableProps {
     users: CompanyUserMembership[];
     canManage: boolean;
+    currentUserId?: string | null;
     onRoleChange: (userId: string, role: CompanyUserRole) => Promise<void>;
     onRemoveUser: (userId: string) => Promise<void>;
     isMutating?: boolean;
@@ -46,6 +47,7 @@ interface CompanyUsersTableProps {
 export const CompanyUsersTable = ({
     users,
     canManage,
+    currentUserId = null,
     onRoleChange,
     onRemoveUser,
     isMutating = false,
@@ -73,56 +75,60 @@ export const CompanyUsersTable = ({
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {users.map((user) => (
-                        <TableRow key={`${user.companyId}:${user.userId ?? user.email}`}>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>
-                                {canManage && user.userId ? (
-                                    <Select
-                                        value={user.role}
-                                        onValueChange={(value) => {
-                                            void onRoleChange(user.userId!, value as CompanyUserRole);
-                                        }}
-                                        disabled={isMutating}
-                                    >
-                                        <SelectTrigger className="w-full min-w-[140px] sm:w-[170px]">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {COMPANY_USER_ROLES.map((role) => (
-                                                <SelectItem key={role.value} value={role.value}>
-                                                    {role.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                ) : (
-                                    <span>{roleLabelMap[user.role] ?? user.role}</span>
-                                )}
-                            </TableCell>
-                            <TableCell>
-                                <Badge variant="secondary">
-                                    {statusLabelMap[user.status] ?? user.status}
-                                </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                                {canManage && user.userId && (
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() => {
-                                            void onRemoveUser(user.userId!);
-                                        }}
-                                        disabled={isMutating}
-                                        className="text-destructive hover:text-destructive"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                        <span className="sr-only">Eliminar usuario</span>
-                                    </Button>
-                                )}
-                            </TableCell>
-                        </TableRow>
-                    ))}
+                    {users.map((user) => {
+                        const isCurrentUser = typeof user.userId === "string" && user.userId === currentUserId;
+
+                        return (
+                            <TableRow key={`${user.companyId}:${user.userId ?? user.email}`}>
+                                <TableCell>{user.email}</TableCell>
+                                <TableCell>
+                                    {canManage && user.userId && !isCurrentUser ? (
+                                        <Select
+                                            value={user.role}
+                                            onValueChange={(value) => {
+                                                void onRoleChange(user.userId!, value as CompanyUserRole);
+                                            }}
+                                            disabled={isMutating}
+                                        >
+                                            <SelectTrigger className="w-full min-w-[140px] sm:w-[170px]">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {COMPANY_USER_ROLES.map((role) => (
+                                                    <SelectItem key={role.value} value={role.value}>
+                                                        {role.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    ) : (
+                                        <span>{roleLabelMap[user.role] ?? user.role}</span>
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    <Badge variant="secondary">
+                                        {statusLabelMap[user.status] ?? user.status}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    {canManage && user.userId && !isCurrentUser && (
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => {
+                                                void onRemoveUser(user.userId!);
+                                            }}
+                                            disabled={isMutating}
+                                            className="text-destructive hover:text-destructive"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="sr-only">Eliminar usuario</span>
+                                        </Button>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        );
+                    })}
                 </TableBody>
             </Table>
         </div>

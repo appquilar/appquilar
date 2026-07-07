@@ -886,6 +886,7 @@ describe("ApiRepository coverage helpers", () => {
       role: "ROLE_CONTRIBUTOR",
       status: "ACCEPTED",
       expiresAt: "2026-07-10T12:00:00+00:00",
+      hasExistingAccount: false,
     });
 
     await invitationRepository.acceptInvitation({

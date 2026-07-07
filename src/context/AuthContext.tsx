@@ -17,6 +17,7 @@ import { authService, companyMembershipService } from "@/composition/auth";
 import { queryClient } from "@/composition/queryClient";
 import { UserRole } from "@/domain/models/UserRole";
 import type { AuthSession } from "@/domain/models/AuthSession";
+import { isAuthenticated as hasAuthenticatedSession } from "@/domain/models/AuthSession";
 import { Uuid } from "@/domain/valueObject/uuidv4";
 import type { CreateCompanyInput } from "@/domain/models/CompanyMembership";
 import {
@@ -24,7 +25,7 @@ import {
     extractBackendErrorStatus,
 } from "@/utils/backendError";
 import { useCurrentUser } from "@/application/hooks/useCurrentUser";
-import { isPlatformAdminUser, isRegularUser } from "@/domain/models/User";
+import { createUser, isPlatformAdminUser, isRegularUser } from "@/domain/models/User";
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -78,6 +79,30 @@ const resolveAuthBlockMessage = (error: unknown): string | null => {
     return null;
 };
 
+const isFetchNetworkError = (error: unknown): boolean =>
+    error instanceof Error &&
+    /Failed to fetch|fetch failed|Load failed|NetworkError/i.test(error.message);
+
+const createRegisteredUserFallback = (
+    data: RegisterUserData,
+    session: AuthSession,
+): User =>
+    createUser({
+        id: session.userId ?? "",
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        roles: session.roles.length > 0 ? session.roles : [UserRole.REGULAR_USER],
+        planType: "explorer",
+        subscriptionStatus: "active",
+    });
+
+const shouldPreserveCurrentUserAfterRefreshError = (error: unknown): boolean => {
+    const status = extractBackendErrorStatus(error);
+
+    return isFetchNetworkError(error) || (status !== null && status >= 500);
+};
+
 export const useAuth = (): AuthContextType => {
     const ctx = useContext(AuthContext);
     if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
@@ -92,21 +117,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [, forceAuthRender] = useState(0);
 
     const { user: currentUser, isLoading: isCurrentUserLoading, error } = useCurrentUser();
+    const hasSession = hasAuthenticatedSession(authService.getCurrentSessionSync());
     const resolvedAuthBlockMessage = error
         ? resolveAuthBlockMessage(error)
         : authBlockMessage;
-    const isLoading = isCurrentUserLoading;
+    const isLoading = hasSession && isCurrentUserLoading;
 
     const setCurrentUserQueryData = (user: User | null) => {
         queryClient.setQueryData(["currentUser"], user);
     };
 
-    const resetQueryCacheForIdentity = async (user: User | null) => {
+    const getCurrentUserQueryData = (): User | null =>
+        queryClient.getQueryData<User | null>(["currentUser"]) ?? null;
+
+    const invalidateAuthQueries = (
+        filters: Parameters<typeof queryClient.invalidateQueries>[0],
+    ) => {
+        void queryClient.invalidateQueries(filters).catch((error) => {
+            console.error("Post-auth cache refresh failed", error);
+        });
+    };
+
+    const resetQueryCacheForIdentity = (user: User | null) => {
         setCurrentUserQueryData(user);
         forceAuthRender((current) => current + 1);
-        await queryClient.invalidateQueries({
+        invalidateAuthQueries({
             predicate: (query) => query.queryKey[0] !== "currentUser",
         });
+    };
+
+    const invalidatePublicSessionQueries = () => {
+        invalidateAuthQueries({ queryKey: ["product"] });
+        invalidateAuthQueries({ queryKey: ["products"] });
+        invalidateAuthQueries({ queryKey: ["category", "public"] });
     };
 
     //
@@ -119,8 +162,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setAuthBlockMessage(null);
             return user;
         } catch (error) {
+            const blockMessage = resolveAuthBlockMessage(error);
+
+            if (blockMessage) {
+                setCurrentUserQueryData(null);
+                setAuthBlockMessage(blockMessage);
+                return null;
+            }
+
+            const userToPreserve = currentUser ?? getCurrentUserQueryData();
+            if (userToPreserve && shouldPreserveCurrentUserAfterRefreshError(error)) {
+                setCurrentUserQueryData(userToPreserve);
+                setAuthBlockMessage(null);
+                return userToPreserve;
+            }
+
             setCurrentUserQueryData(null);
-            setAuthBlockMessage(resolveAuthBlockMessage(error));
+            setAuthBlockMessage(null);
             return null;
         }
     };
@@ -130,16 +188,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     //
     const login = async (email: string, password: string): Promise<void> => {
         setAuthBlockMessage(null);
+        const previousToken = authService.getCurrentSessionSync()?.token ?? null;
 
         try {
             const credentials: LoginCredentials = { email, password };
 
             const user = await authService.login(credentials);
-            await resetQueryCacheForIdentity(user);
-            await queryClient.invalidateQueries({ queryKey: ["product"] });
-            await queryClient.invalidateQueries({ queryKey: ["products"] });
-            await queryClient.invalidateQueries({ queryKey: ["category", "public"] });
+            resetQueryCacheForIdentity(user);
+            invalidatePublicSessionQueries();
         } catch (error) {
+            const session = authService.getCurrentSessionSync();
+            if (
+                session &&
+                hasAuthenticatedSession(session) &&
+                session.token !== previousToken
+            ) {
+                const user = await authService.refreshCurrentUser().catch(() => null);
+                if (user) {
+                    resetQueryCacheForIdentity(user);
+                    invalidatePublicSessionQueries();
+                    setAuthBlockMessage(null);
+                    return;
+                }
+            }
+
             setAuthBlockMessage(resolveAuthBlockMessage(error));
             throw error;
         }
@@ -163,8 +235,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             captchaToken,
         };
 
-        await authService.register(data);
-        await login(email, password);
+        const previousToken = authService.getCurrentSessionSync()?.token ?? null;
+
+        const loginRegisteredUser = async (registrationError?: unknown) => {
+            let lastLoginError: unknown = null;
+
+            for (let attempt = 0; attempt < 2; attempt += 1) {
+                try {
+                    await login(email, password);
+                    return;
+                } catch (loginError) {
+                    lastLoginError = loginError;
+                    const session = authService.getCurrentSessionSync();
+
+                    if (
+                        session &&
+                        hasAuthenticatedSession(session) &&
+                        session.token !== previousToken
+                    ) {
+                        setAuthBlockMessage(null);
+                        resetQueryCacheForIdentity(createRegisteredUserFallback(data, session));
+                        invalidatePublicSessionQueries();
+                        return;
+                    }
+
+                    if (!isFetchNetworkError(loginError)) {
+                        break;
+                    }
+                }
+            }
+
+            throw lastLoginError ?? registrationError;
+        };
+
+        try {
+            await authService.register(data);
+        } catch (error) {
+            if (!isFetchNetworkError(error)) {
+                throw error;
+            }
+
+            await loginRegisteredUser(error);
+            return;
+        }
+
+        await loginRegisteredUser();
     };
 
     //
@@ -208,7 +323,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await authService.logout();
         setAuthBlockMessage(null);
 
-        await resetQueryCacheForIdentity(null);
+        resetQueryCacheForIdentity(null);
     };
 
     const upgradeToCompany = async (
@@ -278,7 +393,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         <AuthContext.Provider
             value={{
                 isLoggedIn: Boolean(currentUser),
-                isAuthenticated: Boolean(currentUser),
+                isAuthenticated: hasSession && !resolvedAuthBlockMessage,
                 currentUser,
                 authBlockMessage: resolvedAuthBlockMessage,
                 isLoading,

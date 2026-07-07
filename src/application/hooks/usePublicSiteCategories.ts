@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { compositionRoot } from "@/compositionRoot";
+import { filterVisiblePublicCategories } from "@/domain/config/publicCategoryVisibility";
 import type { Category } from "@/domain/models/Category";
 import type { Site } from "@/domain/models/Site";
 
@@ -76,7 +77,7 @@ async function fetchPublicSiteCategories(siteId: string): Promise<Omit<CacheEntr
     return {
         siteId,
         site,
-        categories,
+        categories: filterVisiblePublicCategories(categories),
     };
 }
 
@@ -139,7 +140,7 @@ export const usePublicSiteCategories = () => {
     };
 
     const site: Site | null = query.data?.site ?? cached?.site ?? null;
-    const allCategories: Category[] = query.data?.categories ?? cached?.categories ?? [];
+    const allCategories: Category[] = filterVisiblePublicCategories(query.data?.categories ?? cached?.categories ?? []);
 
     const categoryById = useMemo(() => {
         const map = new Map<string, Category>();

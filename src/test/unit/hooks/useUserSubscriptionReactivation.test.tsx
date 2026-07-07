@@ -94,7 +94,7 @@ describe("useUserSubscriptionReactivation", () => {
                 "Fallback"
             )
         ).toBe(
-            "Esta suscripcion ya no puede mantenerse automaticamente. Inicia un nuevo checkout para volver a User Pro."
+            "Esta suscripción ya no puede mantenerse automáticamente. Inicia un nuevo checkout para volver a User Pro."
         );
 
         expect(

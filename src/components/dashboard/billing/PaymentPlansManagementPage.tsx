@@ -746,7 +746,7 @@ const PaymentPlansManagementPage = () => {
                                             <div className="rounded-lg border bg-muted/20 p-4 text-xs text-muted-foreground">
                                                 <p>Stripe product: {selectedPlan.price.stripeProductId ?? "sin configurar"}</p>
                                                 <p>Stripe price: {selectedPlan.price.stripePriceId ?? "sin configurar"}</p>
-                                                <p>Version de precio: {selectedPlan.price.version}</p>
+                                                <p>Versión de precio: {selectedPlan.price.version}</p>
                                             </div>
 
                                             <div className="flex justify-end">

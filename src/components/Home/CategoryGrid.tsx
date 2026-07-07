@@ -19,21 +19,18 @@ const FALLBACK: FeaturedCategoryVM[] = [
         name: 'Eléctricas',
         slug: 'power-tools',
         imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
-        count: 42,
     },
     {
         id: '2',
         name: 'Manuales',
         slug: 'hand-tools',
         imageUrl: 'https://images.unsplash.com/photo-1487252665478-49b61b47f302',
-        count: 38,
     },
     {
         id: '3',
         name: 'Jardín',
         slug: 'gardening',
         imageUrl: 'https://images.unsplash.com/photo-1469041797191-50ace28483c3',
-        count: 24,
     },
 ];
 

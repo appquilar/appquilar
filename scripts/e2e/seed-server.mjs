@@ -973,11 +973,6 @@ const handleApiRequest = async (req, res, parsedUrl) => {
   }
 
   if (pathname.startsWith("/api/categories/") && method === "GET") {
-    const authenticated = requireAuth(req, res);
-    if (!authenticated) {
-      return;
-    }
-
     const idOrSlug = decodeURIComponent(pathname.split("/")[3]);
     const category = state.categories.find(
       (row) => row.id === idOrSlug || row.slug === idOrSlug
@@ -1215,7 +1210,14 @@ const handleApiRequest = async (req, res, parsedUrl) => {
       return;
     }
 
-    if (action === "publish") product.publication_status = "published";
+    if (action === "publish") {
+      if (!Array.isArray(product.image_ids) || product.image_ids.length === 0) {
+        sendJson(res, 400, { success: false, error: ["product.publish.images_required"] });
+        return;
+      }
+
+      product.publication_status = "published";
+    }
     if (action === "unpublish") product.publication_status = "draft";
     if (action === "archive") product.publication_status = "archived";
 
@@ -1242,6 +1244,15 @@ const handleApiRequest = async (req, res, parsedUrl) => {
     if (typeof body.name === "string") product.name = body.name;
     if (typeof body.slug === "string") product.slug = body.slug;
     if (typeof body.description === "string") product.description = body.description;
+    if (
+      product.publication_status === "published"
+      && Array.isArray(body.image_ids)
+      && body.image_ids.length === 0
+    ) {
+      sendJson(res, 400, { success: false, error: ["product.publish.images_required"] });
+      return;
+    }
+
     if (Array.isArray(body.image_ids)) product.image_ids = body.image_ids;
     if (body.deposit) product.deposit = body.deposit;
     if (Array.isArray(body.tiers)) product.tiers = body.tiers;

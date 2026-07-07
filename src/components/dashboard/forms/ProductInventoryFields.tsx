@@ -286,7 +286,7 @@ const ProductInventoryFields = ({
             });
             toast.success("Codigo interno actualizado");
         } catch (_error) {
-            toast.error("No se pudo actualizar el codigo interno");
+            toast.error("No se pudo actualizar el código interno");
         }
     };
 
@@ -489,7 +489,7 @@ const ProductInventoryFields = ({
                                             <TableHead>Codigo interno</TableHead>
                                             <TableHead>Estado</TableHead>
                                             <TableHead>Próxima reserva</TableHead>
-                                            <TableHead className="w-[140px] text-right">Accion</TableHead>
+                                            <TableHead className="w-[140px] text-right">Acción</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -500,7 +500,7 @@ const ProductInventoryFields = ({
                                                         value={unitCodeDrafts[unit.unitId] ?? unit.code}
                                                         onChange={(event) =>
                                                             handleUnitCodeDraftChange(unit.unitId, event.target.value)}
-                                                        aria-label={`Codigo interno de la unidad ${unit.code}`}
+                                                        aria-label={`Código interno de la unidad ${unit.code}`}
                                                         disabled={!canEditInventory || updateInventoryUnitMutation.isPending}
                                                     />
                                                 </TableCell>
@@ -538,7 +538,7 @@ const ProductInventoryFields = ({
                                                         type="button"
                                                         variant="outline"
                                                         size="sm"
-                                                        aria-label={`Guardar codigo de la unidad ${unit.code}`}
+                                                        aria-label={`Guardar código de la unidad ${unit.code}`}
                                                         disabled={
                                                             !canEditInventory
                                                             || updateInventoryUnitMutation.isPending

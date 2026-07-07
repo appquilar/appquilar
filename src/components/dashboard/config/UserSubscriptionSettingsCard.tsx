@@ -87,19 +87,19 @@ const UserSubscriptionSettingsCard = () => {
     const displayedPlan: UserPlanType = isSubscriptionInactive ? "user_pro" : currentPlan;
     const shouldShowPortalAction = isUserPro || isPaused;
     const helperText = isScheduledForCancellation
-        ? "La suscripcion seguira activa hasta el final del periodo actual. Si cambias de idea, puedes mantener User Pro sin empezar un checkout nuevo."
+        ? "La suscripción seguirá activa hasta el final del periodo actual. Si cambias de idea, puedes mantener User Pro sin empezar un checkout nuevo."
         : !isUserPro
           ? isCanceled
-              ? "Tu suscripcion fue cancelada. Inicia un nuevo checkout para reactivar User Pro y recuperar metricas."
+              ? "Tu suscripción fue cancelada. Inicia un nuevo checkout para reactivar User Pro y recuperar métricas."
               : isSubscriptionInactive
-                ? "Tu suscripcion no esta activa. Revisa Stripe para recuperar metricas y beneficios de User Pro."
-                : "Activa User Pro para ver metricas y gestionar tu suscripcion desde Stripe."
+                ? "Tu suscripción no está activa. Revisa Stripe para recuperar métricas y beneficios de User Pro."
+                : "Activa User Pro para ver métricas y gestionar tu suscripción desde Stripe."
           : null;
 
     const handleOpenUserPortal = async () => {
         const newTab = window.open("", "_blank");
         if (!newTab) {
-            toast.error("No se pudo abrir una nueva pestana. Revisa el bloqueador de ventanas emergentes.");
+            toast.error("No se pudo abrir una nueva pestaña. Revisa el bloqueador de ventanas emergentes.");
             return;
         }
         newTab.opener = null;
@@ -130,13 +130,13 @@ const UserSubscriptionSettingsCard = () => {
     const handleKeepUserPro = async () => {
         try {
             await userSubscriptionReactivation.reactivate();
-            toast.success("User Pro seguira activo al final del periodo.");
+            toast.success("User Pro seguirá activo al final del periodo.");
         } catch (error) {
             console.error("Error reactivating user subscription", error);
             toast.error(
                 getUserSubscriptionReactivationErrorMessage(
                     error,
-                    "No se pudo mantener la suscripcion User Pro."
+                    "No se pudo mantener la suscripción User Pro."
                 )
             );
         }
@@ -146,7 +146,7 @@ const UserSubscriptionSettingsCard = () => {
         if (!userProCheckout.isCheckoutAvailable) {
             toast.error(
                 userProCheckout.unavailableMessage ??
-                    "User Pro no esta disponible para activar ahora mismo."
+                    "User Pro no está disponible para activar ahora mismo."
             );
             return;
         }
@@ -184,7 +184,7 @@ const UserSubscriptionSettingsCard = () => {
                 <div className="space-y-2">
                     <p className="text-sm font-medium flex items-center gap-2">
                         <CreditCard className="h-4 w-4" />
-                        Suscripcion de usuario
+                        Suscripción de usuario
                     </p>
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -207,7 +207,7 @@ const UserSubscriptionSettingsCard = () => {
                                 variant="outline"
                                 className="cursor-default bg-amber-100 text-amber-700 border-amber-200"
                             >
-                                Cancelacion programada
+                                Cancelación programada
                             </Badge>
                         ) : isSubscriptionInactive ? (
                             <Badge
@@ -216,14 +216,14 @@ const UserSubscriptionSettingsCard = () => {
                             >
                                 {STATUS_LABELS[currentStatus] ?? currentStatus}
                             </Badge>
-                        ) : (
+                        ) : !isUserPro ? (
                             <Badge
                                 variant="outline"
                                 className="cursor-default bg-slate-200 text-slate-700 border-transparent"
                             >
                                 Gratuita
                             </Badge>
-                        )}
+                        ) : null}
                     </div>
                     {helperText && (
                         <p className="text-xs text-muted-foreground">
@@ -261,7 +261,7 @@ const UserSubscriptionSettingsCard = () => {
                         className="gap-2 w-full sm:w-auto bg-white hover:bg-gray-100"
                     >
                         <ExternalLink className="h-4 w-4" />
-                        Gestionar suscripcion
+                        Gestionar suscripción
                     </Button>
                 ) : (
                     <Button

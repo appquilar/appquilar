@@ -25,6 +25,7 @@ const configuredWorkers = resolveWorkers(process.env.PLAYWRIGHT_WORKERS);
 
 export default defineConfig({
   testDir: "./src/test/e2e/dashboard",
+  testIgnore: ["**/generated/**"],
   // Needed for real test-level sharding (otherwise sharding is file-based).
   fullyParallel: !isCoverageRun,
   forbidOnly: isCiRun,

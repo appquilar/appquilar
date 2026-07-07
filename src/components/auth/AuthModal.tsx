@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
     Dialog,
@@ -24,7 +23,6 @@ interface AuthModalProps {
 
 const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
     const [activeTab, setActiveTab] = useState<"signin" | "signup" | "forgot">(
         "signin",
     );
@@ -84,17 +82,13 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         return returnTo;
     };
 
-    const handleAuthSuccess = async () => {
+    const handleAuthSuccess = () => {
         const returnTo = sessionStorage.getItem(authModalReturnToStorageKey);
         sessionStorage.removeItem(authModalReturnToStorageKey);
-        await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ["product"] }),
-            queryClient.invalidateQueries({ queryKey: ["products"] }),
-        ]);
-        await queryClient.refetchQueries({ queryKey: ["product"], type: "active" });
+        const target = resolveReturnTo(returnTo);
+
         onClose();
 
-        const target = resolveReturnTo(returnTo);
         if (target) {
             navigate(target);
         }

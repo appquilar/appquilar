@@ -98,7 +98,7 @@ const CompanySubscriptionSettingsCard = () => {
     const handleOpenCompanyPortal = async () => {
         const newTab = window.open("", "_blank");
         if (!newTab) {
-            toast.error("No se pudo abrir una nueva pestana. Revisa el bloqueador de ventanas emergentes.");
+            toast.error("No se pudo abrir una nueva pestaña. Revisa el bloqueador de ventanas emergentes.");
             return;
         }
         newTab.opener = null;
@@ -130,12 +130,12 @@ const CompanySubscriptionSettingsCard = () => {
     const handleMigrateToExplorer = async () => {
         const selectedOwner = targetOwnerUserId || defaultOwnerCandidate;
         if (requiresOwnerSelection && !selectedOwner) {
-            toast.error("Selecciona el usuario que conservara la propiedad.");
+            toast.error("Selecciona el usuario que conservará la propiedad.");
             return;
         }
 
         const confirmed = window.confirm(
-            "Esta accion no se puede deshacer. Se eliminara la empresa y se migraran productos y alquileres al usuario seleccionado."
+            "Esta acción no se puede deshacer. Se eliminará la empresa y se migrarán productos y alquileres al usuario seleccionado."
         );
 
         if (!confirmed) {
@@ -154,7 +154,7 @@ const CompanySubscriptionSettingsCard = () => {
         } catch (error) {
             console.error("Error migrating company to explorer", error);
             const backendError = extractBackendErrorMessage(error);
-            toast.error(backendError ?? "No se pudo completar la migracion a Explorador.");
+            toast.error(backendError ?? "No se pudo completar la migración a Explorador.");
         }
     };
 
@@ -167,7 +167,7 @@ const CompanySubscriptionSettingsCard = () => {
                 <div className="space-y-2">
                     <p className="text-sm font-medium flex items-center gap-2">
                         <CreditCard className="h-4 w-4" />
-                        Suscripcion de empresa
+                        Suscripción de empresa
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
                         <Badge
@@ -202,7 +202,7 @@ const CompanySubscriptionSettingsCard = () => {
                     className="gap-2 w-full sm:w-auto bg-white hover:bg-gray-100"
                 >
                     <ExternalLink className="h-4 w-4" />
-                    Gestionar suscripcion
+                    Gestionar suscripción
                 </Button>
             </div>
 
@@ -213,13 +213,13 @@ const CompanySubscriptionSettingsCard = () => {
                         <div className="space-y-2 text-sm">
                             <p className="font-semibold">
                                 {isPaused
-                                    ? "Hay un problema con el cobro de la suscripcion"
-                                    : "La suscripcion de empresa esta cancelada"}
+                                    ? "Hay un problema con el cobro de la suscripción"
+                                    : "La suscripción de empresa está cancelada"}
                             </p>
                             <p>
                                 {isPaused
-                                    ? "Stripe esta reintentando el cobro. Puedes resolver el pago desde el portal o migrar a un perfil Explorador."
-                                    : "Puedes migrar a un perfil de usuario Explorador. Esta accion movera productos y alquileres a un unico administrador y eliminara la empresa. No se puede deshacer."}
+                                    ? "Stripe está reintentando el cobro. Puedes resolver el pago desde el portal o migrar a un perfil Explorador."
+                                    : "Puedes migrar a un perfil de usuario Explorador. Esta acción moverá productos y alquileres a un único administrador y eliminará la empresa. No se puede deshacer."}
                             </p>
                         </div>
                     </div>
@@ -228,7 +228,7 @@ const CompanySubscriptionSettingsCard = () => {
                         {requiresOwnerSelection && (
                             <div className="space-y-1">
                                 <p className="text-xs font-medium text-slate-700">
-                                    Usuario que conservara la propiedad
+                                    Usuario que conservará la propiedad
                                 </p>
                                 <Select
                                     value={targetOwnerUserId}

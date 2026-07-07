@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -80,6 +80,12 @@ const ProductFormPage = () => {
     const { mutateAsync: createProduct } = useCreateProduct();
     const { mutateAsync: updateProduct } = useUpdateProduct();
 
+    useEffect(() => {
+        if (isAddMode) {
+            setLastSavedProduct(null);
+        }
+    }, [isAddMode]);
+
     const handleSaveProduct = async (updatedProduct: Partial<Product>) => {
         try {
             if (updatedProduct.publicationStatus === 'published' && !hasRequiredAddress) {
@@ -91,11 +97,10 @@ const ProductFormPage = () => {
                 return;
             }
 
-            const savedProductId = typeof updatedProduct.id === 'string' && updatedProduct.id.length > 0
-                ? updatedProduct.id
-                : productId;
-
             if (isAddMode) {
+                const fallbackCreatedProductId = typeof updatedProduct.id === 'string' && updatedProduct.id.length > 0
+                    ? updatedProduct.id
+                    : null;
                 const createPayload = {
                     ...(updatedProduct as Partial<ProductFormData>),
                 };
@@ -107,26 +112,32 @@ const ProductFormPage = () => {
                 }
 
                 // Al usar mutateAsync, se ejecutará el onSuccess del hook que hace invalidateQueries(['products'])
-                await createProduct(createPayload as ProductFormData);
-                if (savedProductId) {
+                const createdProduct = await createProduct(createPayload as ProductFormData) as Product | undefined;
+                const createdProductId = typeof createdProduct?.id === 'string' && createdProduct.id.length > 0
+                    ? createdProduct.id
+                    : fallbackCreatedProductId;
+
+                if (createdProductId) {
                     setLastSavedProduct({
-                        id: savedProductId,
-                        slug: typeof updatedProduct.slug === 'string' && updatedProduct.slug.length > 0
-                            ? updatedProduct.slug
-                            : savedProductId,
+                        id: createdProductId,
+                        slug: createdProduct?.slug || updatedProduct.slug || createdProductId,
                     });
-                    navigate(`/dashboard/products/${encodeURIComponent(savedProductId)}`, { replace: true });
+                    navigate(`/dashboard/products/${encodeURIComponent(createdProductId)}`, { replace: true });
                 }
             } else {
-                await updateProduct({
+                const savedProduct = await updateProduct({
                     id: productId as string,
                     data: updatedProduct as ProductFormData
                 });
+                const savedProductSlug = typeof savedProduct?.slug === 'string' && savedProduct.slug.length > 0
+                    ? savedProduct.slug
+                    : typeof updatedProduct.slug === 'string' && updatedProduct.slug.length > 0
+                        ? updatedProduct.slug
+                        : product?.slug || (productId as string);
+
                 setLastSavedProduct({
                     id: productId as string,
-                    slug: typeof updatedProduct.slug === 'string' && updatedProduct.slug.length > 0
-                        ? updatedProduct.slug
-                        : product?.slug || productId as string,
+                    slug: savedProductSlug,
                 });
             }
         } catch (error) {

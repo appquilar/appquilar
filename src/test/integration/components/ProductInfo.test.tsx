@@ -80,8 +80,10 @@ describe("ProductInfo", () => {
             />
         );
 
+        expect(screen.getAllByText("24.50€").length).toBeGreaterThan(0);
+        expect(screen.getByText("80.00€")).toBeInTheDocument();
         expect(
-            screen.getByText("Crea tu cuenta para ver tarifas, calcular el alquiler y contactar con el proveedor.")
+            screen.getByText("Crea tu cuenta para calcular el alquiler y contactar con el proveedor.")
         ).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Crear cuenta gratis" })).toBeInTheDocument();
         expect(screen.queryByTestId("rental-calculator")).not.toBeInTheDocument();

@@ -11,7 +11,7 @@ import { renderWithProviders } from "@/test/utils/renderWithProviders";
 
 const uploadImageMock = vi.fn();
 const deleteImageMock = vi.fn();
-const toastInfoMock = vi.fn();
+const toastLoadingMock = vi.fn();
 const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
 const createObjectUrlMock = vi.fn();
@@ -26,7 +26,7 @@ vi.mock("@/application/hooks/useMediaActions", () => ({
 
 vi.mock("sonner", () => ({
     toast: {
-        info: (...args: unknown[]) => toastInfoMock(...args),
+        loading: (...args: unknown[]) => toastLoadingMock(...args),
         success: (...args: unknown[]) => toastSuccessMock(...args),
         error: (...args: unknown[]) => toastErrorMock(...args),
     },
@@ -59,13 +59,14 @@ describe("ProductImagesField", () => {
     beforeEach(() => {
         uploadImageMock.mockReset();
         deleteImageMock.mockReset();
-        toastInfoMock.mockReset();
+        toastLoadingMock.mockReset();
         toastSuccessMock.mockReset();
         toastErrorMock.mockReset();
         createObjectUrlMock.mockReset();
         revokeObjectUrlMock.mockReset();
 
         uploadImageMock.mockResolvedValue("server-image-1");
+        toastLoadingMock.mockReturnValue("upload-toast-1");
         createObjectUrlMock.mockReturnValue("blob:temp-image-1");
         Object.defineProperty(URL, "createObjectURL", {
             writable: true,
@@ -102,6 +103,7 @@ describe("ProductImagesField", () => {
         expect(screen.getByTestId("images-json")).not.toHaveTextContent("blob:temp-image-1");
         expect(screen.getAllByAltText("Preview")).toHaveLength(1);
         expect(revokeObjectUrlMock).toHaveBeenCalledWith("blob:temp-image-1");
-        expect(toastSuccessMock).toHaveBeenCalledWith("Imagen subida: cover.png");
+        expect(toastLoadingMock).toHaveBeenCalledWith("Subiendo cover.png...");
+        expect(toastSuccessMock).toHaveBeenCalledWith("Imagen subida: cover.png", { id: "upload-toast-1" });
     });
 });

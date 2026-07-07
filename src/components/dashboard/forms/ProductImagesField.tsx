@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ProductImagesFieldProps, ImageFile } from "./image-upload/types";
 import ImageDropZone from "./image-upload/ImageDropZone";
@@ -17,12 +17,15 @@ const ProductImagesContent = ({
     const [isDragging, setIsDragging] = useState(false);
     const { deleteImage, uploadImage } = useMediaActions();
 
-    const images: ImageFile[] = Array.isArray(field.value)
-        ? field.value.filter(
-            (image): image is ImageFile =>
-                typeof image?.id === "string" && typeof image?.url === "string"
-        )
-        : [];
+    const images: ImageFile[] = useMemo(
+        () => Array.isArray(field.value)
+            ? field.value.filter(
+                (image): image is ImageFile =>
+                    typeof image?.id === "string" && typeof image?.url === "string"
+            )
+            : [],
+        [field.value]
+    );
     const initialImageIdsRef = useRef(new Set(images.map((image) => image.id)));
     const currentImagesRef = useRef(images);
     const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
@@ -44,8 +47,8 @@ const ProductImagesContent = ({
         commitImages([...currentImagesRef.current, ...newImages]);
 
         for (const img of newImages) {
+            const toastId = toast.loading(`Subiendo ${img.file.name}...`);
             try {
-                toast.info(`Subiendo ${img.file.name}...`);
                 const uploadedImageId = await uploadImage(img.file);
                 commitImages(
                     currentImagesRef.current.map((image) =>
@@ -60,10 +63,10 @@ const ProductImagesContent = ({
                 if (img.url.startsWith("blob:")) {
                     URL.revokeObjectURL(img.url);
                 }
-                toast.success(`Imagen subida: ${img.file.name}`);
+                toast.success(`Imagen subida: ${img.file.name}`, { id: toastId });
             } catch (error) {
                 console.error("Upload error:", error);
-                toast.error(`Error al subir ${img.file.name}`);
+                toast.error(`Error al subir ${img.file.name}`, { id: toastId });
 
                 commitImages(currentImagesRef.current.filter((image) => image.id !== img.id));
                 URL.revokeObjectURL(img.url);

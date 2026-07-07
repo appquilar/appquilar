@@ -6,9 +6,9 @@ import { extractBackendErrorCode } from "@/utils/backendError";
 import { getBillingErrorMessage } from "@/utils/billingError";
 
 const USER_PRO_UNAVAILABLE_MESSAGE =
-    "User Pro no esta disponible para activar ahora mismo.";
+    "User Pro no está disponible para activar ahora mismo.";
 const USER_PRO_STRIPE_NOT_CONFIGURED_MESSAGE =
-    "User Pro todavia no esta configurado para checkout en Stripe.";
+    "User Pro todavía no está configurado para checkout en Stripe.";
 
 const hasStripeBillableId = (plan: PaymentPlan | null | undefined): boolean =>
     Boolean(plan?.price.stripePriceId?.trim() || plan?.price.stripeProductId?.trim());

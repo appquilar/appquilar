@@ -442,7 +442,7 @@ const DashboardOverview = () => {
         if (!userProCheckout.isCheckoutAvailable) {
             toast.error(
                 userProCheckout.unavailableMessage ??
-                    "User Pro no esta disponible para activar ahora mismo."
+                    "User Pro no está disponible para activar ahora mismo."
             );
             return;
         }

@@ -13,12 +13,14 @@ const {
   mockInvalidateQueries,
   mockFetchQuery,
   mockSetQueryData,
+  mockGetQueryData,
   mockCreateCompany,
   mockAuthService,
 } = vi.hoisted(() => ({
   mockInvalidateQueries: vi.fn(),
   mockFetchQuery: vi.fn(),
   mockSetQueryData: vi.fn(),
+  mockGetQueryData: vi.fn(),
   mockCreateCompany: vi.fn(),
   mockAuthService: {
     getCurrentUser: vi.fn(),
@@ -46,6 +48,7 @@ vi.mock("@/composition/queryClient", () => ({
     invalidateQueries: mockInvalidateQueries,
     fetchQuery: mockFetchQuery,
     setQueryData: mockSetQueryData,
+    getQueryData: mockGetQueryData,
   },
 }));
 
@@ -189,6 +192,7 @@ describe("AuthContext behavior", () => {
     mockInvalidateQueries.mockReset();
     mockFetchQuery.mockReset();
     mockSetQueryData.mockReset();
+    mockGetQueryData.mockReset();
     mockCreateCompany.mockReset();
 
     mockAuthService.getCurrentUser.mockReset();
@@ -214,6 +218,7 @@ describe("AuthContext behavior", () => {
     mockSetQueryData.mockImplementation((queryKey, updater) => {
       activeQueryClient.setQueryData(queryKey, updater);
     });
+    mockGetQueryData.mockImplementation((queryKey) => activeQueryClient.getQueryData(queryKey));
   });
 
   it("derives role access from platform-admin entitlement overrides", async () => {
@@ -279,6 +284,86 @@ describe("AuthContext behavior", () => {
         token: "reset-token",
         newPassword: "new-password",
       });
+    });
+  });
+
+  it("keeps a product signup authenticated when registration response is lost after account creation", async () => {
+    const user = userEvent.setup();
+    const session = {
+      token: "new-jwt-token",
+      userId: "user-2",
+      roles: [UserRole.REGULAR_USER],
+      expiresAt: null,
+    };
+
+    mockAuthService.getCurrentSessionSync.mockReturnValue(null);
+    mockAuthService.getCurrentSession.mockResolvedValue(null);
+    mockAuthService.register.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    mockAuthService.login.mockImplementationOnce(async () => {
+      mockAuthService.getCurrentSessionSync.mockReturnValue(session);
+      mockAuthService.getCurrentSession.mockResolvedValue(session);
+      throw new TypeError("Failed to fetch");
+    });
+
+    renderAuthProvider();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("email")).toHaveTextContent("none");
+    });
+
+    await user.click(screen.getByRole("button", { name: "register" }));
+
+    await waitFor(() => {
+      expect(mockAuthService.login).toHaveBeenCalledWith({
+        email: "victor@appquilar.com",
+        password: "Password123!",
+      });
+      expect(screen.getByTestId("email")).toHaveTextContent("victor@appquilar.com");
+      expect(screen.getByTestId("last-error")).toHaveTextContent("none");
+    });
+  });
+
+  it("retries autologin when signup succeeds but the first login response is lost", async () => {
+    const user = userEvent.setup();
+    const session = {
+      token: "new-jwt-token",
+      userId: "user-2",
+      roles: [UserRole.REGULAR_USER],
+      expiresAt: null,
+    };
+    const registeredUser = {
+      id: "user-2",
+      firstName: "Victor",
+      lastName: "Saavedra",
+      email: "victor@appquilar.com",
+      roles: [UserRole.REGULAR_USER],
+      address: null,
+      location: null,
+    };
+
+    mockAuthService.getCurrentSessionSync.mockReturnValue(null);
+    mockAuthService.getCurrentSession.mockResolvedValue(null);
+    mockAuthService.register.mockResolvedValueOnce(undefined);
+    mockAuthService.login
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockImplementationOnce(async () => {
+        mockAuthService.getCurrentSessionSync.mockReturnValue(session);
+        mockAuthService.getCurrentSession.mockResolvedValue(session);
+        return registeredUser;
+      });
+
+    renderAuthProvider();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("email")).toHaveTextContent("none");
+    });
+
+    await user.click(screen.getByRole("button", { name: "register" }));
+
+    await waitFor(() => {
+      expect(mockAuthService.login).toHaveBeenCalledTimes(2);
+      expect(screen.getByTestId("email")).toHaveTextContent("victor@appquilar.com");
+      expect(screen.getByTestId("last-error")).toHaveTextContent("none");
     });
   });
 

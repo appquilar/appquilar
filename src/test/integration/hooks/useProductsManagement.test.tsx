@@ -525,7 +525,7 @@ describe("useProductsManagement", () => {
 
         expect(blockedPortalSession).not.toHaveBeenCalled();
         expect(toastErrorMock).toHaveBeenCalledWith(
-            "No se pudo abrir una nueva pestana. Revisa el bloqueador de ventanas emergentes."
+            "No se pudo abrir una nueva pestaña. Revisa el bloqueador de ventanas emergentes."
         );
 
         const newTab = {

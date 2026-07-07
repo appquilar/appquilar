@@ -58,6 +58,7 @@ const ProductCard = ({
 
     const { url: mediaThumbUrl } = useMediaUrl(firstImageId, "THUMBNAIL", { enabled: !raw });
     const imgSrc = raw.length > 0 ? raw : mediaThumbUrl ?? PLACEHOLDER;
+    const hasPublishableImage = raw.length > 0 || firstImageId !== null;
 
     const getStatusConfig = (status: PublicationStatusType = 'draft') => {
         const baseClasses = "border backdrop-blur-md shadow-sm font-medium";
@@ -109,16 +110,19 @@ const ProductCard = ({
     }).format(product.price?.deposit ?? 0);
     const canPublish = product.publicationStatus === "draft";
     const showDeleteButton = Boolean(onDelete);
-    const isPublishBlockedByPlan = canPublish && isPublicationLimitReached;
-    const showPublishButton = canPublish && Boolean(onPublish) && !isPublishBlockedByPlan;
+    const isPublishBlockedByMissingImages = canPublish && Boolean(onPublish) && !hasPublishableImage;
+    const isPublishBlockedByPlan = canPublish && !isPublishBlockedByMissingImages && isPublicationLimitReached;
+    const showPublishButton = canPublish && Boolean(onPublish) && hasPublishableImage && !isPublishBlockedByPlan;
+    const showMissingImagesButton = isPublishBlockedByMissingImages;
     const showUpgradeButton = canPublish
         && Boolean(onPublicationLimitCta)
         && Boolean(publicationLimitCtaLabel)
         && isPublishBlockedByPlan;
     const showLimitReachedButton = canPublish && isPublishBlockedByPlan && !showUpgradeButton;
-    const hasSecondaryActions = showPublishButton || showUpgradeButton || showLimitReachedButton || showDeleteButton;
+    const hasSecondaryActions = showPublishButton || showMissingImagesButton || showUpgradeButton || showLimitReachedButton || showDeleteButton;
     const secondaryActionsCount = [
         showPublishButton,
+        showMissingImagesButton,
         showUpgradeButton,
         showLimitReachedButton,
         showDeleteButton,
@@ -228,6 +232,18 @@ const ProductCard = ({
                                 >
                                     <Rocket size={14} />
                                     Publicar (hacer visible)
+                                </Button>
+                            )}
+                            {showMissingImagesButton && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 text-xs gap-1.5 border-slate-300 text-slate-500"
+                                    disabled
+                                    title="Añade al menos una imagen antes de publicar"
+                                >
+                                    <Rocket size={14} />
+                                    Añade imágenes para publicar
                                 </Button>
                             )}
                             {showUpgradeButton && (

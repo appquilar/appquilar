@@ -16,11 +16,11 @@ interface ProtectedRouteProps {
  * para decidir si mostrar el contenido o redirigir.
  */
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-    const { currentUser, isLoading, authBlockMessage } = useAuth();
+    const { currentUser, isAuthenticated, isLoading, authBlockMessage } = useAuth();
     const location = useLocation();
 
     // Mientras AuthContext está cargando (llamando a /me), no sabemos aún si hay sesión.
-    if (isLoading) {
+    if (isLoading || (isAuthenticated && !currentUser && !authBlockMessage)) {
         return (
             <div className="flex min-h-[60vh] items-center justify-center">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">

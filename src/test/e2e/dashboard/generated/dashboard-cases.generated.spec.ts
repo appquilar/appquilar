@@ -2180,24 +2180,10 @@ const modules: Array<{ module: string; cases: GeneratedCase[] }> = [
   }
 ];
 
-const shouldSkipCoverageCapture = (testCaseId: string): boolean =>
-  testCaseId.startsWith("BILL-WBH-") || testCaseId === "STATS-TRK-004";
-
 for (const moduleGroup of modules) {
   test.describe(`${moduleGroup.module}`, () => {
     for (const testCase of moduleGroup.cases) {
-      test(`${testCase.id} - ${testCase.title}`, async ({ page, request, seed }, testInfo) => {
-        if (shouldSkipCoverageCapture(testCase.id)) {
-          testInfo.annotations.push({
-            type: "skipCoverageExploration",
-            description: "Targeted webhook variants already reuse covered public routes.",
-          });
-          testInfo.annotations.push({
-            type: "skipCoveragePersistence",
-            description: "Targeted webhook variants are coverage-teardown heavy but behaviorally redundant.",
-          });
-        }
-
+      test(`${testCase.id} - ${testCase.title}`, async ({ page, request, seed }) => {
         await seed.reset(request);
         await seed.clearToken(page);
 
@@ -2206,19 +2192,13 @@ for (const moduleGroup of modules) {
         }
 
         await page.goto(testCase.path, { waitUntil: "domcontentloaded" });
-        await expect(page.locator("body")).toHaveCount(1);
 
         if (testCase.role === "anonymous" && testCase.path.startsWith("/dashboard")) {
           await expect(page).toHaveURL(/\/$/);
           return;
         }
 
-        if (testCase.expectedText.length > 0) {
-          const expectedLocator = page.getByText(testCase.expectedText, { exact: false });
-          if ((await expectedLocator.count()) > 0) {
-            await expect(expectedLocator.first()).toBeVisible();
-          }
-        }
+        await expect(page.getByText(testCase.expectedText, { exact: false }).first()).toBeVisible();
       });
     }
   });

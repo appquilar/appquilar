@@ -8,6 +8,12 @@ import { getUserCompanyId, isPlatformAdminUser } from '@/domain/models/User';
 import { toast } from '@/components/ui/use-toast';
 import { useCurrentUser } from './useCurrentUser';
 import { ApiError } from '@/infrastructure/http/ApiClient';
+import { RENT_CONVERSATIONS_KEY, RENT_MESSAGES_KEY, RENT_UNREAD_KEY } from './useRentalMessages';
+
+interface DepositResolutionInput {
+  depositReturned: Money;
+  retentionReason?: string | null;
+}
 
 interface UseRentalDetailsReturn {
   rental: Rental | null;
@@ -28,7 +34,7 @@ interface UseRentalDetailsReturn {
     deposit?: Money;
     price?: Money;
   }) => Promise<void>;
-  handleDepositResolution: (depositReturned: Money) => Promise<void>;
+  handleDepositResolution: (input: DepositResolutionInput) => Promise<void>;
   calculateDurationDays: () => number;
   formatDate: (date: Date) => string;
 }
@@ -70,8 +76,8 @@ export const useRentalDetails = (id: string | undefined): UseRentalDetailsReturn
       }
 
       toast({
-        title: 'Accion aplicada',
-        description: `Se proceso la accion sobre ${RentalStatusService.getStatusLabel(input.status)}.`,
+        title: 'Acción aplicada',
+        description: `Se procesó la acción sobre ${RentalStatusService.getStatusLabel(input.status)}.`,
       });
     },
     onError: (error) => {
@@ -127,16 +133,39 @@ export const useRentalDetails = (id: string | undefined): UseRentalDetailsReturn
   });
 
   const depositResolutionMutation = useMutation({
-    mutationFn: async (depositReturned: Money) => {
+    mutationFn: async (input: DepositResolutionInput) => {
       if (!id) return;
+      const rental = rentalQuery.data;
+      const reason = input.retentionReason?.trim() ?? '';
+      const isPartialRetention = Boolean(
+        rental &&
+          input.depositReturned.amount < rental.deposit.amount
+      );
+
+      if (isPartialRetention && reason.length === 0) {
+        throw new Error('deposit.retention_reason_required');
+      }
+
       await rentalService.updateRent(id, {
-        depositReturned,
+        depositReturned: input.depositReturned,
       });
+
+      if (isPartialRetention) {
+        await rentalService.createRentMessage(id, {
+          content: [
+            'Motivo de retención parcial de fianza:',
+            reason,
+          ].join('\n'),
+        });
+      }
     },
     onSuccess: async () => {
       if (!id) return;
       await queryClient.invalidateQueries({ queryKey: ['rent', id] });
       await queryClient.invalidateQueries({ queryKey: ['rents'] });
+      await queryClient.invalidateQueries({ queryKey: [RENT_MESSAGES_KEY, id], exact: false });
+      await queryClient.invalidateQueries({ queryKey: [RENT_UNREAD_KEY], exact: false });
+      await queryClient.invalidateQueries({ queryKey: [RENT_CONVERSATIONS_KEY], exact: false });
 
       toast({
         title: 'Fianza actualizada',
@@ -230,8 +259,8 @@ export const useRentalDetails = (id: string | undefined): UseRentalDetailsReturn
     handleRentalUpdate: async (data) => {
       await updateRentalMutation.mutateAsync(data);
     },
-    handleDepositResolution: async (depositReturned) => {
-      await depositResolutionMutation.mutateAsync(depositReturned);
+    handleDepositResolution: async (input) => {
+      await depositResolutionMutation.mutateAsync(input);
     },
     calculateDurationDays,
     formatDate,

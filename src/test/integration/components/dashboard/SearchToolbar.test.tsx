@@ -43,7 +43,7 @@ describe("SearchToolbar", () => {
     renderWithProviders(<SearchToolbarHarness />);
 
     const statusButton = screen.getByRole("button", {
-      name: /estado: borrador \+ publicado/i,
+      name: /estado: borradores y publicados/i,
     });
 
     await user.click(statusButton);
@@ -59,7 +59,7 @@ describe("SearchToolbar", () => {
 
     expect(
       screen.getByRole("button", {
-        name: /estado: borrador \+ publicado/i,
+        name: /estado: borradores y publicados/i,
       })
     ).toBeInTheDocument();
   });

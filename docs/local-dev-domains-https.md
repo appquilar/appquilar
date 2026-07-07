@@ -60,6 +60,31 @@ make down
 - `VITE_API_BASE_URL` is forced to `https://dev.api.appquilar.com` in `make up`.
 - Caddy config: `docker/dev-domains/Caddyfile`.
 
+## Google Maps in local
+
+Google Maps API keys are restricted by HTTP referrer. If you run Vite directly on
+`http://127.0.0.1:5173` or `http://localhost:5173`, the key must allow those
+referrers. For the HTTPS local stack, allow:
+
+```text
+https://dev.appquilar.com/*
+```
+
+Recommended non-production referrers:
+
+```text
+http://localhost:*
+http://127.0.0.1:*
+https://dev.appquilar.com/*
+https://staging.appquilar.com/*
+https://appquilar.com/*
+```
+
+If the key is not authorized, Appquilar keeps the manual address form usable and
+shows a link to open the location in Google Maps. Product pages build that link
+from exact coordinates when available, so the public fallback remains useful even
+when the embedded map is blocked by referrer rules.
+
 ## Stripe in local
 
 Use the local HTTPS domains for browser flows:

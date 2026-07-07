@@ -63,7 +63,7 @@ export class ProductService {
         return this.repository.getProductsByCategoryId(categoryId);
     }
 
-    async createProduct(productData: ProductFormData): Promise<void> {
+    async createProduct(productData: ProductFormData): Promise<Product> {
         return this.repository.createProduct(productData);
     }
 

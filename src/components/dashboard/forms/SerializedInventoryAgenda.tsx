@@ -104,9 +104,9 @@ const SerializedInventoryAgenda = ({
     return (
         <div className="space-y-4 rounded-xl border border-border p-4">
             <div className="space-y-1">
-                <p className="font-medium">Calendario de ocupacion</p>
+                <p className="font-medium">Calendario de ocupación</p>
                 <p className="text-sm text-muted-foreground">
-                    Cada unidad tiene su propia agenda para el rango seleccionado. Si hay muchos dias, puedes desplazarte en horizontal.
+                    Cada unidad tiene su propia agenda para el rango seleccionado. Si hay muchos días, puedes desplazarte en horizontal.
                 </p>
             </div>
 

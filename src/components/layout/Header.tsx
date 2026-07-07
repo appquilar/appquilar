@@ -184,7 +184,7 @@ const Header = () => {
                     <div className="mx-auto relative flex h-[70px] w-full max-w-[1320px] items-center px-4 sm:px-6">
                         <Sheet open={mobileCategoriesOpen} onOpenChange={setMobileCategoriesOpen}>
                             <SheetTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full">
+                                <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full">
                                     <Menu size={20} />
                                 </Button>
                             </SheetTrigger>
@@ -282,6 +282,7 @@ const Header = () => {
                                 </Sheet>
                             ) : (
                                 <Button
+                                    type="button"
                                     variant="outline"
                                     size="icon"
                                     data-trigger-login
@@ -328,6 +329,7 @@ const Header = () => {
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button
+                                        type="button"
                                         variant="outline"
                                         size="sm"
                                         className="h-10 rounded-full border-border/80 px-4 text-sm"
@@ -365,6 +367,7 @@ const Header = () => {
                             </Popover>
                         ) : (
                             <Button
+                                type="button"
                                 variant="outline"
                                 size="sm"
                                 data-trigger-login
@@ -376,6 +379,7 @@ const Header = () => {
                         )}
 
                         <Button
+                            type="button"
                             size="sm"
                             onClick={handleSellClick}
                             className="h-10 rounded-full px-5 text-sm"

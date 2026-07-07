@@ -255,4 +255,40 @@ describe("ProductFormPage", () => {
     expect(screen.getByTestId("location-display")).toHaveTextContent("/dashboard/products/product-1/edit");
     expect(screen.queryByText("products-list")).not.toBeInTheDocument();
   });
+
+  it("uses the persisted backend slug for the publication link after updating", async () => {
+    const user = userEvent.setup();
+
+    useProductMock.mockReturnValue({
+      data: {
+        ...productEditFormState.payload,
+        id: "product-1",
+        slug: "old-slug",
+      },
+      isLoading: false,
+      error: null,
+    });
+    productEditFormState.payload = {
+      ...productEditFormState.payload,
+      slug: "local-form-slug",
+    };
+    updateProductMutateMock.mockResolvedValue({
+      ...productEditFormState.payload,
+      id: "product-1",
+      slug: "backend-normalized-slug",
+    });
+
+    renderWithProviders(
+      <Routes>
+        <Route path="/dashboard/products/:productId/edit" element={<ProductFormPage />} />
+      </Routes>,
+      { route: "/dashboard/products/product-1/edit" }
+    );
+
+    await user.click(screen.getByRole("button", { name: "save-product" }));
+
+    const publicationLink = await screen.findByRole("link", { name: "Ver publicación" });
+
+    expect(publicationLink).toHaveAttribute("href", "/producto/backend-normalized-slug");
+  });
 });

@@ -3,14 +3,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Rental } from '@/domain/models/Rental';
 import { Money } from '@/domain/models/Money';
 import { toast } from '@/components/ui/use-toast';
 
+interface DepositResolutionInput {
+  depositReturned: Money;
+  retentionReason?: string | null;
+}
+
 interface RentalDepositResolutionCardProps {
   rental: Rental;
   isSaving: boolean;
-  onResolve: (depositReturned: Money) => Promise<void>;
+  onResolve: (input: DepositResolutionInput) => Promise<void>;
 }
 
 const formatMoneyFromCents = (amount: number, currency: string): string => {
@@ -55,8 +61,13 @@ const RentalDepositResolutionCard = ({
   const [amount, setAmount] = useState(() =>
     toAmountInput(rental.depositReturned?.amount ?? rental.deposit.amount)
   );
+  const [retentionReason, setRetentionReason] = useState('');
   const maxAmount = rental.deposit.amount / 100;
   const returnedAmount = rental.depositReturned?.amount ?? 0;
+  const parsedAmountInCents = parseAmountToCents(amount);
+  const isPartialRetention = parsedAmountInCents !== null && parsedAmountInCents < rental.deposit.amount;
+  const hasChanges = parsedAmountInCents !== null && parsedAmountInCents !== returnedAmount;
+  const hasRequiredReason = !isPartialRetention || retentionReason.trim().length > 0;
 
   useEffect(() => {
     setAmount(toAmountInput(rental.depositReturned?.amount ?? rental.deposit.amount));
@@ -84,9 +95,21 @@ const RentalDepositResolutionCard = ({
       return;
     }
 
+    if (amountInCents < rental.deposit.amount && retentionReason.trim().length === 0) {
+      toast({
+        title: 'Motivo obligatorio',
+        description: 'Indica el motivo de la retención parcial de la fianza.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     await onResolve({
-      amount: amountInCents,
-      currency: rental.deposit.currency,
+      depositReturned: {
+        amount: amountInCents,
+        currency: rental.deposit.currency,
+      },
+      retentionReason,
     });
   };
 
@@ -131,7 +154,21 @@ const RentalDepositResolutionCard = ({
             />
           </div>
 
-          <Button type="submit" disabled={isSaving}>
+          {isPartialRetention && (
+            <div className="space-y-1">
+              <Label htmlFor="deposit-retention-reason">Motivo de la retención parcial</Label>
+              <Textarea
+                id="deposit-retention-reason"
+                value={retentionReason}
+                onChange={(event) => setRetentionReason(event.target.value)}
+                maxLength={1000}
+                placeholder="Describe el daño, falta de devolución o coste acordado."
+                className="min-h-[96px]"
+              />
+            </div>
+          )}
+
+          <Button type="submit" disabled={isSaving || !hasChanges || !hasRequiredReason}>
             {isSaving ? 'Guardando...' : 'Guardar resolución'}
           </Button>
         </form>

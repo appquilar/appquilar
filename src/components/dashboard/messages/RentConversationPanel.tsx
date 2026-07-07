@@ -65,7 +65,8 @@ const RentConversationPanel = ({
 }: RentConversationPanelProps) => {
   const rentalStatus: RentStatus = rental.status;
   const isCancelled = rentalStatus === 'cancelled';
-  const publicProductHref = buildProductPath(rental.productSlug ?? rental.productId);
+  const isPublicProductAvailable = rental.productPublicationStatus === 'published' && Boolean(rental.productSlug);
+  const publicProductHref = isPublicProductAvailable ? buildProductPath(rental.productSlug as string) : null;
 
   const { messages, isLoading, error } = useRentalMessages(
     rentId,
@@ -220,7 +221,7 @@ const RentConversationPanel = ({
     if (isCancelled) {
       form.setError('content', {
         type: 'manual',
-        message: 'Este alquiler esta cancelado y no admite nuevos mensajes.',
+        message: 'Este alquiler está cancelado y no admite nuevos mensajes.',
       });
       return;
     }
@@ -270,7 +271,7 @@ const RentConversationPanel = ({
     <div className="flex h-full flex-col">
       <div className="border-b px-4 py-3">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold">Conversacion del alquiler</h2>
+          <h2 className="text-sm font-semibold">Conversación del alquiler</h2>
           <div className="flex items-center gap-2">
             <Button
               type="button"
@@ -289,17 +290,20 @@ const RentConversationPanel = ({
       </div>
 
       <div className="border-b bg-muted/20 px-4 py-3 text-sm">
-        <p className="font-medium text-foreground">Gestiona estados y terminos desde el detalle del alquiler.</p>
+        <p className="font-medium text-foreground">Gestiona estados y términos desde el detalle del alquiler.</p>
         <div className="mt-2 flex flex-wrap gap-2">
           <Button asChild size="sm">
             <Link to={`/dashboard/rentals/${rentId}`}>Abrir deal room</Link>
           </Button>
-          {viewerRole === 'renter' && (
+          {viewerRole === 'renter' && publicProductHref && (
             <Button asChild size="sm" variant="outline">
               <a href={publicProductHref} target="_blank" rel="noopener noreferrer">
-                Ver producto publico
+                Ver producto público
               </a>
             </Button>
+          )}
+          {viewerRole === 'renter' && !publicProductHref && (
+            <span className="text-sm text-muted-foreground">Producto no publicado</span>
           )}
         </div>
       </div>
@@ -319,7 +323,7 @@ const RentConversationPanel = ({
 
         {!isLoading && !error && messages.length === 0 && optimisticMessages.length === 0 && (
           <div className="h-full min-h-24 flex items-center justify-center text-sm text-muted-foreground">
-            No hay mensajes todavia.
+            No hay mensajes todavía.
           </div>
         )}
 
@@ -402,11 +406,17 @@ const RentConversationPanel = ({
       <div className="border-t px-4 py-3">
         {isCancelled && (
           <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            El alquiler ha sido cancelado. Si quieres retomarlo, tendras que generar uno nuevo haciendo click{' '}
-            <Link to={publicProductHref} className="font-medium underline">
-              aqui
-            </Link>
-            .
+            {publicProductHref ? (
+              <>
+                El alquiler ha sido cancelado. Si quieres retomarlo, tendrás que generar uno nuevo desde{' '}
+                <Link to={publicProductHref} className="font-medium underline">
+                  la ficha del producto
+                </Link>
+                .
+              </>
+            ) : (
+              'El alquiler ha sido cancelado. El producto ya no está publicado.'
+            )}
           </div>
         )}
 
@@ -416,7 +426,7 @@ const RentConversationPanel = ({
             {...form.register('content', {
               validate: {
                 notBlank: (value) => value.trim().length > 0 || 'Escribe un mensaje',
-                maxLength: (value) => value.length <= 2000 || 'Maximo 2000 caracteres',
+                maxLength: (value) => value.length <= 2000 || 'Máximo 2000 caracteres',
               },
             })}
           />

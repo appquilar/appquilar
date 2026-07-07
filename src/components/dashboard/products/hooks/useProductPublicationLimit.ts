@@ -171,7 +171,7 @@ export function useProductPublicationLimit() {
                 if (!userProCheckout.isCheckoutAvailable) {
                     toast.error(
                         userProCheckout.unavailableMessage ??
-                            "User Pro no esta disponible para activar ahora mismo."
+                            "User Pro no está disponible para activar ahora mismo."
                     );
                     return;
                 }
@@ -193,7 +193,7 @@ export function useProductPublicationLimit() {
 
             const newTab = window.open("", "_blank");
             if (!newTab) {
-                toast.error("No se pudo abrir una nueva pestana. Revisa el bloqueador de ventanas emergentes.");
+                toast.error("No se pudo abrir una nueva pestaña. Revisa el bloqueador de ventanas emergentes.");
                 return;
             }
             newTab.opener = null;

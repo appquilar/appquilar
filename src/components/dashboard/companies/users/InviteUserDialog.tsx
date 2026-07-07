@@ -11,7 +11,7 @@ import type { CompanyUserRole } from "@/domain/models/CompanyMembership";
 interface InviteUserDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSubmit: (data: { email: string; role: CompanyUserRole }) => Promise<void>;
+    onSubmit: (data: { email: string; role: CompanyUserRole }) => Promise<boolean | void>;
     disabled?: boolean;
 }
 
@@ -34,7 +34,10 @@ export const InviteUserDialog = ({
     });
 
     const handleSubmit = async (data: InviteUserFormData) => {
-        await onSubmit(data);
+        const submitted = await onSubmit(data);
+        if (submitted === false) {
+            return;
+        }
         form.reset({
             email: "",
             role: "ROLE_CONTRIBUTOR",
@@ -47,7 +50,7 @@ export const InviteUserDialog = ({
                 <DialogHeader>
                     <DialogTitle>Invitar usuario</DialogTitle>
                     <DialogDescription>
-                        Envia una invitacion para que otra persona acceda a esta empresa.
+                        Envía una invitación para que otra persona acceda a esta empresa.
                     </DialogDescription>
                 </DialogHeader>
 

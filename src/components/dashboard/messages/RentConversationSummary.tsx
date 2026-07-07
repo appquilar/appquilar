@@ -33,17 +33,18 @@ const RentConversationSummary = ({
 }: RentConversationSummaryProps) => {
   const isMobile = useIsMobile();
   const rental = conversation.rental;
-  const publicProductHref = buildProductPath(rental.productSlug ?? rental.productId);
+  const isPublicProductAvailable = rental.productPublicationStatus === 'published' && Boolean(rental.productSlug);
+  const publicProductHref = isPublicProductAvailable ? buildProductPath(rental.productSlug as string) : null;
   const estimatedTotal = rental.price.amount + rental.deposit.amount;
   const ownerName = rental.ownerName ?? 'Sin nombre';
-  const ownerAddress = rental.ownerLocation?.label ?? 'Direccion no disponible';
+  const ownerAddress = rental.ownerLocation?.label ?? 'Dirección no disponible';
   const nextStepInfo = RentalStateMachineService.getNextStepInfo(rental);
   const actionRequiredLabel =
     nextStepInfo.actionRequiredBy === 'owner'
       ? 'Tienda'
       : nextStepInfo.actionRequiredBy === 'renter'
-      ? 'Renter'
-      : 'Sin accion pendiente';
+      ? 'Cliente'
+      : 'Sin acción pendiente';
 
   return (
     <Card className="flex h-full min-h-0 flex-col overflow-hidden">
@@ -59,7 +60,7 @@ const RentConversationSummary = ({
               className="w-full"
               onClick={onBackToConversation}
             >
-              Volver a la conversacion
+              Volver a la conversación
             </Button>
           </div>
         )}
@@ -125,12 +126,17 @@ const RentConversationSummary = ({
             </Link>
           </Button>
 
-          {conversation.role === 'renter' && (
+          {conversation.role === 'renter' && publicProductHref && (
             <Button asChild variant="outline" className="w-full">
               <a href={publicProductHref} target="_blank" rel="noopener noreferrer">
-                Ver producto publico
+                Ver producto público
               </a>
             </Button>
+          )}
+          {conversation.role === 'renter' && !publicProductHref && (
+            <p className="text-sm text-muted-foreground">
+              El producto ya no está publicado.
+            </p>
           )}
         </div>
       </CardContent>

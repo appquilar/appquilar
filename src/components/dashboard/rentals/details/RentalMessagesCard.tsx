@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Send } from 'lucide-react';
+import type { RentMessageSenderRole } from '@/domain/models/RentalMessage';
 import {
   useCreateRentalMessage,
   useMarkRentMessagesAsRead,
@@ -35,15 +36,18 @@ const formatTimestamp = (date: Date): string =>
     minute: '2-digit',
   });
 
-const senderRoleLabel: Record<'owner' | 'renter', string> = {
+const senderRoleLabel: Record<RentMessageSenderRole, string> = {
   owner: 'Tienda',
   renter: 'Cliente',
+  system: 'Sistema',
 };
 
 const RentalMessagesCard = ({ rentId }: RentalMessagesCardProps) => {
   const { messages, isLoading, error } = useRentalMessages(rentId, { page: 1, perPage: 200 });
   const createMessageMutation = useCreateRentalMessage(rentId);
   const markAsReadMutation = useMarkRentMessagesAsRead(rentId);
+  const markAsRead = markAsReadMutation.mutate;
+  const isMarkingAsRead = markAsReadMutation.isPending;
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const hasMarkedAsReadRef = useRef<string | null>(null);
   const hasMessages = messages.length > 0;
@@ -68,15 +72,15 @@ const RentalMessagesCard = ({ rentId }: RentalMessagesCardProps) => {
     if (
       isLoading
       || error
-      || markAsReadMutation.isPending
+      || isMarkingAsRead
       || hasMarkedAsReadRef.current === rentId
     ) {
       return;
     }
 
     hasMarkedAsReadRef.current = rentId;
-    markAsReadMutation.mutate();
-  }, [rentId, isLoading, error, markAsReadMutation]);
+    markAsRead();
+  }, [rentId, isLoading, error, isMarkingAsRead, markAsRead]);
 
   const onSubmit = async (values: RentalMessageFormValues) => {
     const content = values.content.trim();
@@ -95,7 +99,7 @@ const RentalMessagesCard = ({ rentId }: RentalMessagesCardProps) => {
     } catch (_error) {
       form.setError('content', {
         type: 'server',
-        message: 'No se pudo enviar el mensaje. Intentalo de nuevo.',
+        message: 'No se pudo enviar el mensaje. Inténtalo de nuevo.',
       });
     }
   };
@@ -105,10 +109,10 @@ const RentalMessagesCard = ({ rentId }: RentalMessagesCardProps) => {
       <CardHeader className="space-y-2 p-5 pb-4 sm:p-6 sm:pb-4">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          <CardTitle className="text-lg font-semibold">Conversacion</CardTitle>
+          <CardTitle className="text-lg font-semibold">Conversación</CardTitle>
         </div>
         <CardDescription>
-          Resuelve el alquiler desde aqui sin tener que volver al inbox.
+          Resuelve el alquiler desde aquí sin tener que volver al inbox.
         </CardDescription>
       </CardHeader>
 
@@ -132,7 +136,7 @@ const RentalMessagesCard = ({ rentId }: RentalMessagesCardProps) => {
 
           {!isLoading && !error && messages.length === 0 && (
             <div className="flex h-full min-h-24 items-center justify-center text-sm text-muted-foreground">
-              Todavia no hay mensajes en este alquiler.
+              Todavía no hay mensajes en este alquiler.
             </div>
           )}
 
@@ -173,7 +177,7 @@ const RentalMessagesCard = ({ rentId }: RentalMessagesCardProps) => {
               rules={{
                 validate: {
                   notBlank: (value) => value.trim().length > 0 || 'Escribe un mensaje',
-                  maxLength: (value) => value.length <= 2000 || 'Maximo 2000 caracteres',
+                  maxLength: (value) => value.length <= 2000 || 'Máximo 2000 caracteres',
                 },
               }}
               render={({ field }) => (

@@ -50,12 +50,36 @@ export interface RequestOptions {
     format?: ResponseFormat;
 }
 
+const normalizeLocalhostBaseUrl = (baseUrl: string): string => {
+    if (typeof window === "undefined") {
+        return baseUrl;
+    }
+
+    try {
+        const url = new URL(baseUrl);
+        const currentHost = window.location.hostname;
+
+        if (
+            (url.hostname === "localhost" || url.hostname === "127.0.0.1") &&
+            (currentHost === "localhost" || currentHost === "127.0.0.1") &&
+            url.hostname !== currentHost
+        ) {
+            url.hostname = currentHost;
+            return url.toString().replace(/\/+$/, "");
+        }
+    } catch {
+        return baseUrl;
+    }
+
+    return baseUrl;
+};
+
 export class ApiClient {
     private readonly baseUrl: string;
     private readonly defaultHeaders: Record<string, string>;
 
     constructor(config: ApiClientConfig) {
-        this.baseUrl = config.baseUrl.replace(/\/+$/, "");
+        this.baseUrl = normalizeLocalhostBaseUrl(config.baseUrl).replace(/\/+$/, "");
         this.defaultHeaders = config.defaultHeaders ?? {};
     }
 

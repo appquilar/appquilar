@@ -240,7 +240,7 @@ describe("RentalStateMachineService", () => {
     expect(transitions).toEqual([
       {
         to: "rental_completed",
-        label: "Marcar devolucion",
+        label: "Marcar devolución",
         variant: "default",
       },
     ]);
@@ -357,7 +357,7 @@ describe("RentalStateMachineService", () => {
       actionRequiredBy: "renter",
     });
     expect(RentalStateMachineService.getNextStepInfo(activeRental)).toMatchObject({
-      title: "Pendiente de devolucion",
+      title: "Pendiente de devolución",
       actionRequiredBy: "owner",
     });
   });
@@ -395,7 +395,7 @@ describe("RentalStateMachineService", () => {
       tone: "success",
     });
     expect(RentalStateMachineService.getNextStepInfo(cancelledRental)).toMatchObject({
-      title: "Operacion cancelada",
+      title: "Operación cancelada",
       tone: "neutral",
     });
     expect(RentalStateMachineService.getNextStepInfo(rejectedRental)).toMatchObject({

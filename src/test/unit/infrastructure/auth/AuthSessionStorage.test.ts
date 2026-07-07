@@ -101,7 +101,7 @@ describe("AuthSessionStorage", () => {
     expect(localStorage.getItem("auth_token")).toBeNull();
   });
 
-  it("tolerates inaccessible browser storage and still returns an in-memory session", () => {
+  it("falls back to memory when browser storage is inaccessible", () => {
     const localStorageGetter = vi
       .spyOn(window, "localStorage", "get")
       .mockImplementation(() => {
@@ -123,7 +123,7 @@ describe("AuthSessionStorage", () => {
       roles: [],
       expiresAt: null,
     });
-    expect(storage.getCurrentSession()).toBeNull();
+    expect(storage.getCurrentSession()).toEqual(session);
 
     localStorageGetter.mockRestore();
   });

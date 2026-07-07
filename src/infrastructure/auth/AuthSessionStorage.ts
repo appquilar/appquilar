@@ -9,23 +9,37 @@ const STORAGE_KEY = "auth_token";
 
 interface JwtPayloadLike {
     sub?: string;
+    user_id?: string;
     roles?: unknown;
     exp?: number;
     [key: string]: unknown;
 }
 
-/**
- * Safe access to window.localStorage (not available in SSR).
- */
-function getStorage(): Storage | null {
+function getBrowserStorage(name: "localStorage" | "sessionStorage"): Storage | null {
     if (typeof window === "undefined") {
         return null;
     }
 
     try {
-        return window.localStorage;
+        return window[name];
     } catch {
         return null;
+    }
+}
+
+function setTokenInStorage(storage: Storage | null, token: string): void {
+    try {
+        storage?.setItem(STORAGE_KEY, token);
+    } catch {
+        // Fall back to the next storage layer.
+    }
+}
+
+function removeTokenFromStorage(storage: Storage | null): void {
+    try {
+        storage?.removeItem(STORAGE_KEY);
+    } catch {
+        // Ignore storage cleanup failures and just treat the session as missing.
     }
 }
 
@@ -83,14 +97,15 @@ function mapRoles(payloadRoles: unknown): UserRole[] {
  *   from the token (e.g. JWT claims). We never persist roles separately.
  */
 export class AuthSessionStorage {
+    private memoryToken: string | null = null;
+
     /**
      * Persists the token and returns the corresponding AuthSession.
      */
     saveToken(token: string): AuthSession {
-        const storage = getStorage();
-        if (storage) {
-            storage.setItem(STORAGE_KEY, token);
-        }
+        this.memoryToken = token;
+        setTokenInStorage(getBrowserStorage("localStorage"), token);
+        setTokenInStorage(getBrowserStorage("sessionStorage"), token);
 
         return this.buildSessionFromToken(token);
     }
@@ -99,19 +114,16 @@ export class AuthSessionStorage {
      * Clears any persisted token.
      */
     clear(): void {
-        const storage = getStorage();
-        if (!storage) {
-            return;
-        }
-
-        storage.removeItem(STORAGE_KEY);
+        this.memoryToken = null;
+        removeTokenFromStorage(getBrowserStorage("localStorage"));
+        removeTokenFromStorage(getBrowserStorage("sessionStorage"));
     }
 
     /**
      * Restores the current session from storage, if present.
      */
     getCurrentSession(): AuthSession | null {
-        return this.restoreSessionFromStorage(getStorage());
+        return this.restoreSessionFromStorage();
     }
 
     /**
@@ -126,9 +138,11 @@ export class AuthSessionStorage {
         }
 
         const userId =
-            typeof payload.sub === "string" && payload.sub.length > 0
-                ? payload.sub
-                : null;
+            typeof payload.user_id === "string" && payload.user_id.length > 0
+                ? payload.user_id
+                : typeof payload.sub === "string" && payload.sub.length > 0
+                  ? payload.sub
+                  : null;
 
         const roles = mapRoles(payload.roles);
 
@@ -146,15 +160,16 @@ export class AuthSessionStorage {
     }
 
     getCurrentSessionSync(): AuthSession | null {
-        return this.restoreSessionFromStorage(getStorage());
+        return this.restoreSessionFromStorage();
     }
 
-    private restoreSessionFromStorage(storage: Storage | null): AuthSession | null {
-        if (!storage) {
-            return null;
-        }
-
-        const token = storage.getItem(STORAGE_KEY);
+    private restoreSessionFromStorage(): AuthSession | null {
+        const localStorage = getBrowserStorage("localStorage");
+        const sessionStorage = getBrowserStorage("sessionStorage");
+        const token =
+            localStorage?.getItem(STORAGE_KEY)
+            ?? sessionStorage?.getItem(STORAGE_KEY)
+            ?? this.memoryToken;
         if (!token) {
             return null;
         }
@@ -165,11 +180,9 @@ export class AuthSessionStorage {
             return session;
         }
 
-        try {
-            storage.removeItem(STORAGE_KEY);
-        } catch {
-            // Ignore storage cleanup failures and just treat the session as missing.
-        }
+        removeTokenFromStorage(localStorage);
+        removeTokenFromStorage(sessionStorage);
+        this.memoryToken = null;
 
         return null;
     }

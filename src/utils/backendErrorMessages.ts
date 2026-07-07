@@ -3,6 +3,8 @@ import { extractBackendErrorCode, extractBackendErrorMessage } from "@/utils/bac
 const KNOWN_BACKEND_MESSAGES: Record<string, string> = {
     "subscription.company.team_limit_reached":
         "Tu plan Starter incluye solo el propietario. Sube a Pro para invitar equipo.",
+    "subscription.company.team_limit_owner_only":
+        "Tu plan Starter incluye solo el propietario. Sube a Pro para invitar equipo.",
     "company.user.access_denied":
         "No tienes permisos para gestionar usuarios de esta empresa.",
     "company.accept_invitation.user_already_exists":

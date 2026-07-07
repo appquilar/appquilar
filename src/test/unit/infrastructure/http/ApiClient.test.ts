@@ -35,6 +35,18 @@ describe("ApiClient", () => {
     });
   });
 
+  it("keeps local API host aligned with the current local app host", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+    const client = new ApiClient({ baseUrl: "http://127.0.0.1:8000" });
+
+    await client.get<{ ok: boolean }>("/health");
+
+    expect(fetchMock.mock.calls[0][0]).toBe(`http://${window.location.hostname}:8000/health`);
+  });
+
   it("sends JSON payload and merged headers on POST", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")

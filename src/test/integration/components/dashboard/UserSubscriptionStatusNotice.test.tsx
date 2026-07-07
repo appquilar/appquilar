@@ -34,7 +34,7 @@ describe("UserSubscriptionStatusNotice", () => {
     });
 
     expect(
-      screen.getByRole("link", { name: "Abrir suscripcion" })
+      screen.getByRole("link", { name: "Abrir suscripción" })
     ).toHaveAttribute("href", "/dashboard/config#user-subscription-settings");
   });
 
@@ -56,14 +56,14 @@ describe("UserSubscriptionStatusNotice", () => {
     renderWithProviders(
       <>
         <UserSubscriptionStatusNotice />
-        <div id="user-subscription-settings">Suscripcion</div>
+        <div id="user-subscription-settings">Suscripción</div>
       </>,
       {
         route: "/dashboard/config",
       }
     );
 
-    await user.click(screen.getByRole("link", { name: "Abrir suscripcion" }));
+    await user.click(screen.getByRole("link", { name: "Abrir suscripción" }));
 
     expect(scrollIntoViewMock).toHaveBeenCalledWith({
       behavior: "smooth",
@@ -90,10 +90,10 @@ describe("UserSubscriptionStatusNotice", () => {
     });
 
     expect(
-      screen.getByText("Tu suscripcion User Pro terminara al final del periodo actual")
+      screen.getByText("Tu suscripción User Pro terminará al final del periodo actual")
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Abrir suscripcion" })
+      screen.getByRole("link", { name: "Abrir suscripción" })
     ).toHaveAttribute("href", "/dashboard/config#user-subscription-settings");
   });
 });

@@ -8,7 +8,9 @@ import type {
     MigrateCompanyToExplorerInput,
     ReactivateSubscriptionInput,
     SubscriptionReactivationResult,
+    SubscriptionSynchronizationResult,
     SynchronizeCheckoutSessionInput,
+    SynchronizeSubscriptionInput,
 } from "@/domain/models/Billing";
 
 export interface BillingRepository {
@@ -16,6 +18,7 @@ export interface BillingRepository {
     createCompanyUpgradeCheckoutSession(input: CreateCompanyUpgradeCheckoutSessionInput): Promise<BillingSessionResult>;
     createCustomerPortalSession(input: CreateCustomerPortalSessionInput): Promise<BillingSessionResult>;
     reactivateSubscription(input: ReactivateSubscriptionInput): Promise<SubscriptionReactivationResult>;
+    synchronizeSubscription(input: SynchronizeSubscriptionInput): Promise<SubscriptionSynchronizationResult>;
     synchronizeCheckoutSession(input: SynchronizeCheckoutSessionInput): Promise<CheckoutSessionSynchronizationResult>;
     migrateCompanyToExplorer(input: MigrateCompanyToExplorerInput): Promise<CompanyMigrationResult>;
 }
