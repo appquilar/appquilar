@@ -56,7 +56,7 @@ test.describe("Dashboard Core (seeded API)", () => {
     await expect(page.getByText(/Ventajas de User Pro/i)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Hazte Pro" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Hazte empresa" })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: /Gestionar suscripcion/i })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /Gestionar suscripción/i })).toHaveCount(0);
 
     await page.goto("/dashboard/users");
     await expect(page).toHaveURL(/\/dashboard\/users$/);
@@ -416,7 +416,7 @@ test.describe("Dashboard Core (seeded API)", () => {
     await expect(page.getByRole("heading", { name: "Estado y acciones" })).toBeVisible({ timeout: 15000 });
     await expect(page.getByText("Deal room", { exact: true })).toBeVisible();
     await expect(page.getByText("Resumen del alquiler", { exact: true })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 3, name: "Conversacion" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 3, name: "Conversación" })).toBeVisible();
 
     const hasHorizontalOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth + 1
@@ -436,7 +436,7 @@ test.describe("Dashboard Core (seeded API)", () => {
     await expect(page.getByRole("heading", { name: "Mensajes" })).toBeVisible();
 
     await page.getByRole("button", { name: /Taladro percutor 18V/i }).first().click();
-    await expect(page.getByText("Conversacion del alquiler")).toBeVisible();
+    await expect(page.getByText("Conversación del alquiler")).toBeVisible();
   });
 
   test("regular user can access personal configuration but not admin pages", async ({ page, request, seed }) => {

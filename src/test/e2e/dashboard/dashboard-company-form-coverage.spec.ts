@@ -79,10 +79,10 @@ test.describe("Dashboard Company Form Coverage", () => {
     await page.getByRole("link", { name: "Empresa" }).click();
     await expect(page).toHaveURL(/\/dashboard\/companies\/company-1/);
     await expect(page.getByRole("heading", { name: "Mi empresa" })).toBeVisible();
-    await expect(page.getByText("Suscripcion de empresa")).toBeVisible();
+    await expect(page.getByText("Suscripción de empresa")).toBeVisible();
 
     await installPopupHarness(page);
-    await page.getByRole("button", { name: "Gestionar suscripcion" }).click();
+    await page.getByRole("button", { name: "Gestionar suscripción" }).click();
     await expect.poll(() => getPopupHref(page)).toBe("https://example.test/company-portal-company-form");
 
     const phoneInput = page.getByLabel("Número de teléfono");

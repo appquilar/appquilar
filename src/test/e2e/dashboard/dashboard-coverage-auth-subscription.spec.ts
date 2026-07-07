@@ -418,16 +418,16 @@ test.describe("Dashboard Coverage Auth + Subscription Matrix", () => {
     });
 
     await page.goto("/dashboard/config");
-    await expect(page.getByRole("button", { name: "Gestionar suscripcion" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Gestionar suscripción" })).toBeVisible();
 
     await installPopupHarness(page);
     await setPopupBlocked(page, true);
 
-    await page.getByRole("button", { name: "Gestionar suscripcion" }).click();
-    await expect(page.getByText(/No se pudo abrir una nueva pestana/i)).toBeVisible();
+    await page.getByRole("button", { name: "Gestionar suscripción" }).click();
+    await expect(page.getByText(/No se pudo abrir una nueva pestaña/i)).toBeVisible();
 
     await setPopupBlocked(page, false);
-    await page.getByRole("button", { name: "Gestionar suscripcion" }).click();
+    await page.getByRole("button", { name: "Gestionar suscripción" }).click();
     await expect(page.getByText("billing.user_portal.unavailable")).toBeVisible();
 
     await expect
@@ -437,7 +437,7 @@ test.describe("Dashboard Coverage Auth + Subscription Matrix", () => {
       })
       .toBe(1);
 
-    await page.getByRole("button", { name: "Gestionar suscripcion" }).click();
+    await page.getByRole("button", { name: "Gestionar suscripción" }).click();
     await expect
       .poll(async () => {
         const successState = await getPopupState(page);
@@ -556,16 +556,16 @@ test.describe("Dashboard Coverage Auth + Subscription Matrix", () => {
     });
 
     await page.goto("/dashboard/companies/company-1");
-    await expect(page.getByText("Suscripcion de empresa", { exact: true })).toBeVisible();
+    await expect(page.getByText("Suscripción de empresa", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Migrar a Explorador" })).toBeVisible();
 
     await installPopupHarness(page);
     await setPopupBlocked(page, true);
-    await page.getByRole("button", { name: "Gestionar suscripcion" }).click();
-    await expect(page.getByText(/No se pudo abrir una nueva pestana/i)).toBeVisible();
+    await page.getByRole("button", { name: "Gestionar suscripción" }).click();
+    await expect(page.getByText(/No se pudo abrir una nueva pestaña/i)).toBeVisible();
 
     await setPopupBlocked(page, false);
-    await page.getByRole("button", { name: "Gestionar suscripcion" }).click();
+    await page.getByRole("button", { name: "Gestionar suscripción" }).click();
     await expect(page.getByText("billing.company_portal.unavailable")).toBeVisible();
 
     await expect
@@ -575,7 +575,7 @@ test.describe("Dashboard Coverage Auth + Subscription Matrix", () => {
       })
       .toBe(1);
 
-    await page.getByRole("button", { name: "Gestionar suscripcion" }).click();
+    await page.getByRole("button", { name: "Gestionar suscripción" }).click();
     await expect
       .poll(async () => {
         const afterCompanyPortalSuccess = await getPopupState(page);

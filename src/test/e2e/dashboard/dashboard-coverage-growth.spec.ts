@@ -18,6 +18,7 @@ const routePendingInvitationStatus = async (page: Page, email: string) => {
           role: "ROLE_CONTRIBUTOR",
           status: "PENDING",
           expires_at: null,
+          has_existing_account: false,
         },
       }),
     });
@@ -67,7 +68,7 @@ test.describe("Dashboard Coverage Growth", () => {
     });
 
     await page.goto(`${invitationBasePath}&email=coverage.new@appquilar.test`);
-    await page.getByRole("button", { name: "Crear cuenta" }).click();
+    await page.getByRole("button", { name: "Crear cuenta", exact: true }).click();
 
     await page.getByPlaceholder("Tu nombre").fill("Cove");
     await page.getByPlaceholder("Tus apellidos").fill("Rage");
@@ -78,7 +79,7 @@ test.describe("Dashboard Coverage Growth", () => {
       timeout: 15000,
     });
 
-    await page.getByRole("button", { name: "Crear cuenta" }).click();
+    await page.getByRole("button", { name: "Crear cuenta", exact: true }).click();
     await page.getByRole("button", { name: "Crear cuenta y aceptar invitación" }).click();
 
     await expect(page.getByText("Nombre inválido")).toBeVisible({ timeout: 15000 });
@@ -99,7 +100,7 @@ test.describe("Dashboard Coverage Growth", () => {
     });
 
     await page.goto(`${invitationBasePath}&email=brand.new@appquilar.test`);
-    await page.getByRole("button", { name: "Crear cuenta" }).click();
+    await page.getByRole("button", { name: "Crear cuenta", exact: true }).click();
 
     await page.getByPlaceholder("Tu nombre").fill("Brand");
     await page.getByPlaceholder("Tus apellidos").fill("New");
@@ -403,9 +404,9 @@ test.describe("Dashboard Coverage Growth", () => {
     });
 
     await page.goto("/dashboard/companies/company-1");
-    await expect(page.getByText("Suscripcion de empresa", { exact: true })).toBeVisible();
+    await expect(page.getByText("Suscripción de empresa", { exact: true })).toBeVisible();
     await expect(
-      page.getByText("Hay un problema con el cobro de la suscripcion", { exact: true })
+      page.getByText("Hay un problema con el cobro de la suscripción", { exact: true })
     ).toBeVisible();
 
     await page.getByRole("combobox").first().click();
@@ -413,6 +414,7 @@ test.describe("Dashboard Coverage Growth", () => {
 
     await page.getByRole("button", { name: "Migrar a Explorador" }).click();
     await expect(page).toHaveURL(/\/dashboard\/config$/);
+    await page.unrouteAll({ behavior: "ignoreErrors" });
   });
 
   test("messages dashboard covers status transitions, cancelled state and rich-editor controls", async ({
@@ -445,7 +447,7 @@ test.describe("Dashboard Coverage Growth", () => {
     });
 
     await page.goto("/dashboard/messages?rent_id=rent-3");
-    await expect(page.getByRole("heading", { name: "Conversacion del alquiler" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Conversación del alquiler" })).toBeVisible();
 
     await page.getByRole("button", { name: "Insertar emoji" }).click();
     await page.getByRole("button", { name: "😀" }).click();

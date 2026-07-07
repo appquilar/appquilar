@@ -3,7 +3,7 @@ import { expect, test, type Page } from "./fixtures";
 const invitationPath = "/company-invitation?company_id=company-1&token=seed-token";
 const jsonHeaders = { "content-type": "application/json" };
 
-const routeInvitationStatus = async (page: Page, email: string) => {
+const routeInvitationStatus = async (page: Page, email: string, hasExistingAccount = false) => {
   await page.route("**/api/companies/company-1/invitations/seed-token", async (route) => {
     await route.fulfill({
       status: 200,
@@ -16,6 +16,7 @@ const routeInvitationStatus = async (page: Page, email: string) => {
           role: "ROLE_CONTRIBUTOR",
           status: "PENDING",
           expires_at: null,
+          has_existing_account: hasExistingAccount,
         },
       }),
     });
@@ -49,7 +50,7 @@ test.describe("Dashboard Coverage Targeted", () => {
   });
 
   test("company invitation accepts with existing account", async ({ page }) => {
-    await routeInvitationStatus(page, "user.e2e@appquilar.test");
+    await routeInvitationStatus(page, "user.e2e@appquilar.test", true);
     await routeInvitationAccept(page);
 
     await page.goto(`${invitationPath}&email=user.e2e@appquilar.test`);
@@ -169,7 +170,7 @@ test.describe("Dashboard Coverage Targeted", () => {
 
     await page.goto("/dashboard/messages?rent_id=rent-1");
     await expect(page.getByRole("heading", { name: "Mensajes" })).toBeVisible();
-    await expect(page.getByText("Conversacion del alquiler")).toBeVisible();
+    await expect(page.getByText("Conversación del alquiler")).toBeVisible();
 
     const editor = page.getByTestId("rent-message-editor");
     await editor.click();

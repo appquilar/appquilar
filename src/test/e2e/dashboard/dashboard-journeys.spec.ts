@@ -648,7 +648,7 @@ test.describe("Dashboard Journeys (seeded API)", () => {
       }
       await expect.poll(async () => rentStates.get(rentId)?.status).toBe("rental_active");
 
-      const completeRentalButton = page.getByRole("button", { name: "Marcar devolucion" }).first();
+      const completeRentalButton = page.getByRole("button", { name: "Marcar devolución" }).first();
       const canCompleteFromUi = await completeRentalButton
         .isVisible({ timeout: 3000 })
         .catch(() => false);
@@ -666,7 +666,7 @@ test.describe("Dashboard Journeys (seeded API)", () => {
       }
       await expect.poll(async () => rentStates.get(rentId)?.status).toBe("rental_completed");
       const canStillSeeCompleteButton = await page
-        .getByRole("button", { name: "Marcar devolucion" })
+        .getByRole("button", { name: "Marcar devolución" })
         .isVisible({ timeout: 1000 })
         .catch(() => false);
       expect(canStillSeeCompleteButton).toBe(false);
@@ -710,9 +710,9 @@ test.describe("Dashboard Journeys (seeded API)", () => {
       await page.getByRole("button", { name: "Marcar recogida" }).click();
       await expect.poll(async () => rentStates.get("rent-1")?.status).toBe("rental_active");
 
-      await page.getByRole("button", { name: "Marcar devolucion" }).click();
+      await page.getByRole("button", { name: "Marcar devolución" }).click();
       await expect.poll(async () => rentStates.get("rent-1")?.status).toBe("rental_completed");
-      await expect(page.getByRole("button", { name: "Marcar devolucion" })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Marcar devolución" })).toHaveCount(0);
     } finally {
       await safeUnrouteAll(page);
     }
@@ -733,9 +733,9 @@ test.describe("Dashboard Journeys (seeded API)", () => {
     await expect(page.getByText("Invitación enviada correctamente.")).toBeVisible();
     await expect(page.getByRole("dialog", { name: "Invitar usuario" })).toHaveCount(0);
 
-    const adminRow = page.getByRole("row", { name: /company\.admin\.e2e@appquilar\.test/i });
-    await adminRow.getByRole("combobox").click();
-    await page.getByRole("option", { name: "Colaborador" }).click();
+    const memberRow = page.getByRole("row", { name: /user\.e2e@appquilar\.test/i });
+    await memberRow.getByRole("combobox").click();
+    await page.getByRole("option", { name: "Administrador" }).click();
 
     await switchActor(page, request, seed, "user", "/dashboard/companies/company-1/users");
     await page.route("**/api/me", async (route) => {
@@ -878,7 +878,7 @@ test.describe("Dashboard Journeys (seeded API)", () => {
         });
       });
 
-      await page.route("**/api/users/33333333-3333-4333-8333-333333333333/products**", async (route) => {
+      await page.route("**/api/users/*/products**", async (route) => {
         const requestUrl = new URL(route.request().url());
         const publicationStatus = requestUrl.searchParams.get("publicationStatus");
 
@@ -916,7 +916,7 @@ test.describe("Dashboard Journeys (seeded API)", () => {
                   slug: "escalera-telescopica",
                   description: "Draft para matriz de limites.",
                   publication_status: "draft",
-                  image_ids: [],
+                  image_ids: ["product-3-image"],
                   deposit: { amount: 9000, currency: "EUR" },
                   tiers: [
                     {
@@ -928,7 +928,7 @@ test.describe("Dashboard Journeys (seeded API)", () => {
                   categories: [{ id: "cat-1", name: "Herramientas", slug: "herramientas" }],
                   category_id: "cat-1",
                   owner_data: {
-                    owner_id: "33333333-3333-4333-8333-333333333333",
+                    owner_id: userMePayload?.data?.id ?? userMePayload?.data?.user_id,
                     type: "user",
                     name: "Uri User",
                     address: null,
@@ -944,7 +944,7 @@ test.describe("Dashboard Journeys (seeded API)", () => {
       });
 
       await page.route(
-        "**/api/users/33333333-3333-4333-8333-333333333333/products/summary",
+        "**/api/users/*/products/summary",
         async (route) => {
           if (matrixMode !== "user_explorer" && matrixMode !== "user_pro") {
             await route.continue();
@@ -1008,7 +1008,7 @@ test.describe("Dashboard Journeys (seeded API)", () => {
                   slug: "compresor-draft",
                   description: "Draft de empresa para validar limite.",
                   publication_status: "draft",
-                  image_ids: [],
+                  image_ids: ["company-draft-1-image"],
                   deposit: { amount: 10000, currency: "EUR" },
                   tiers: [
                     {

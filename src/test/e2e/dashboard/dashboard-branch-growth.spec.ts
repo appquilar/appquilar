@@ -373,13 +373,13 @@ test.describe("Dashboard branch growth", () => {
     });
 
     await page.goto(
-      "/buscar?categories=cat-1,cat-2,cat-3&property_values[color][]=rojo&property_ranges[potencia][min]=20&property_ranges[potencia][max]=80&radius=abc&latitude=nope&longitude=bad"
+      "/buscar?categories=cat-2&property_values[color][]=rojo&property_ranges[potencia][min]=20&property_ranges[potencia][max]=80&radius=abc&latitude=nope&longitude=bad"
     );
 
     await expect(page.locator("aside select")).toHaveValue("any");
     await expect(page.getByText("Propiedades")).toBeVisible();
 
-    await page.locator("aside button").filter({ hasText: "Vehículos" }).first().click();
+    await page.getByRole("button", { name: "Accesorios" }).first().click();
     await page.getByRole("button", { name: "Aplicar filtros" }).click();
 
     await expect(page).not.toHaveURL(/categories=/);
