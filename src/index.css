@@ -228,7 +228,7 @@
 
   .auth-modal-content[data-state="closed"],
   body:has(.auth-modal-content[data-state="closed"]) .ui-dialog-overlay {
-    animation: none;
+    animation: none !important;
   }
 
   .dashboard-premium {
