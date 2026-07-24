@@ -226,6 +226,11 @@
     backdrop-filter: blur(6px);
   }
 
+  .auth-modal-content[data-state="closed"],
+  body:has(.auth-modal-content[data-state="closed"]) .ui-dialog-overlay {
+    animation: none;
+  }
+
   .dashboard-premium {
     --background: 220 33% 98%;
     --foreground: 215 28% 11%;
